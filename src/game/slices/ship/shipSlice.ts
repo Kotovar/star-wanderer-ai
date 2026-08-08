@@ -1,4 +1,5 @@
 import type { GameStore, SetState, Module } from "@/game/types";
+import type { JettisonTarget } from "./helpers/jettison";
 import { WeaponTypeTotal } from "@/game/types";
 import {
     getTotalConsumption,
@@ -16,6 +17,7 @@ import {
     enableAllModules as enableAllModulesHelper,
     moveModule as moveModuleHelper,
     canPlaceModule as canPlaceModuleHelper,
+    jettisonCargo as jettisonCargoHelper,
 } from "./helpers";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
@@ -94,6 +96,9 @@ interface ShipSlice {
      * @returns Общая грузоподъёмность (по умолчанию 40 на модуль)
      */
     getCargoCapacity: () => number;
+
+    /** Выбрасывает груз за борт: необратимо, без возмещения */
+    jettisonCargo: (target: JettisonTarget, quantity: number) => void;
 
     /**
      * Вычисляет стоимость перелёта в другой сектор
@@ -231,6 +236,9 @@ export const createShipSlice = (
         const state = get();
         return getDrillLevel(state);
     },
+
+    jettisonCargo: (target, quantity) =>
+        jettisonCargoHelper(target, quantity, set, get),
 
     getCargoCapacity: () => {
         const state = get();

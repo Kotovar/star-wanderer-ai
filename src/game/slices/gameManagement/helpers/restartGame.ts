@@ -102,6 +102,7 @@ export const restartGame = (
       ...initialState.research,
       resources: patch.researchResources,
     },
+    gases: patch.gases ?? {},
     raceReputation: patchedReputation,
     knownRaces,
     startTemplateId: templateId,

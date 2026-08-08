@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getGasVolume } from "@/game/slices/ship/helpers/getCurrentCargo";
 import { Button } from "@/components/ui/button";
 import { SectionPanel } from "../SectionPanel";
 import { TRADE_GOODS } from "../../constants";
@@ -14,6 +15,7 @@ import {
     getCrisisMarketMultiplier,
 } from "@/game/stations/crisisMarket";
 import { GoodInfoModal } from "../GoodInfoModal";
+import { GasSaleSection } from "./GasSaleSection";
 
 interface TradeTabProps {
     stationId: string;
@@ -49,9 +51,11 @@ export function TradeTab({
     sellOnly,
 }: TradeTabProps) {
     const probes = useGameStore((s) => s.probes);
+    const gases = useGameStore((s) => s.gases);
     const currentCargo =
         ship.cargo.reduce((s, c) => s + c.quantity, 0) +
         ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
+        getGasVolume(gases) +
         probes;
     const availSpace = cargoCapacity - currentCargo;
 
@@ -64,6 +68,8 @@ export function TradeTab({
 
     return (
         <div className="flex flex-col gap-2.5 flex-1 min-h-0 overflow-y-auto scrollbar-gutter-stable pr-1 pb-2">
+            <GasSaleSection />
+
             {stationId &&
                 tradeGoodsKeys.map((goodId) => {
                     const good = { id: goodId, ...TRADE_GOODS[goodId] };

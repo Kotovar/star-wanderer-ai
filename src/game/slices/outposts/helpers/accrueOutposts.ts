@@ -1,4 +1,5 @@
 import {
+    CRYOGEN_BURN_PER_TURN,
     GAS_BY_ATMOSPHERE,
     GAS_COLLECTOR_BUNKER_CAP,
     GAS_COLLECTOR_RATE,
@@ -48,6 +49,18 @@ export function accrueOutposts(
             },
         };
     });
+}
+
+/**
+ * Сжигает криоген за ход. Возвращает новый запас газов либо `null`, если
+ * жечь нечего — тогда вызывающий не трогает состояние вовсе.
+ */
+export function burnCryogen(
+    gases: Partial<Record<GasType, number>>,
+): Partial<Record<GasType, number>> | null {
+    const stock = gases.cryogen ?? 0;
+    if (stock <= 0) return null;
+    return { ...gases, cryogen: Math.max(0, stock - CRYOGEN_BURN_PER_TURN) };
 }
 
 /** Заполнен ли бункер целиком — постройка простаивает и ждёт вывоза */

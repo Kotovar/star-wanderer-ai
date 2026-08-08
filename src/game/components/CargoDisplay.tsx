@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import type { GasType } from "@/game/types/outposts";
+import { getGasVolume } from "@/game/slices/ship/helpers/getCurrentCargo";
 import { useGameStore } from "../store";
 import { TRADE_GOODS } from "../constants/goods";
 import { DELIVERY_GOODS } from "../constants/contracts";
@@ -8,6 +10,7 @@ import { WEAPON_TYPES } from "../constants/weapons";
 import { useTranslation } from "@/lib/useTranslation";
 import { getLocationName } from "@/lib/translationHelpers";
 import { GoodInfoModal } from "./GoodInfoModal";
+import { JettisonDialog } from "./JettisonDialog";
 import { WeaponDetailDialog } from "./WeaponDetailDialog";
 import { ModuleDetailDialog } from "./ModuleList";
 import {
@@ -19,7 +22,7 @@ import {
 import { GameDialogContent } from "./GameDialog";
 import type { CargoItem, Contract, Goods, Module } from "../types";
 
-type SectionKey = "weapons" | "modules" | "contracts" | "trade" | "probes";
+type SectionKey = "weapons" | "modules" | "contracts" | "trade" | "probes" | "gases";
 
 function findFreeGridPosition(
     modules: Module[],
@@ -207,6 +210,7 @@ function ContractCargoDialog({
 export function CargoDisplay() {
     const ship = useGameStore((s) => s.ship);
     const probes = useGameStore((s) => s.probes);
+    const gases = useGameStore((s) => s.gases);
     const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
     const installCraftedWeapon = useGameStore((s) => s.installCraftedWeapon);
     const installModuleFromCargo = useGameStore(
@@ -220,6 +224,8 @@ export function CargoDisplay() {
     const [weaponInfo, setWeaponInfo] = useState<string | null>(null);
     const [moduleInfo, setModuleInfo] = useState<CargoItem | null>(null);
     const [showProbeInfo, setShowProbeInfo] = useState(false);
+    const [gasInfo, setGasInfo] = useState<GasType | null>(null);
+    const [showJettison, setShowJettison] = useState(false);
     const [contractInfo, setContractInfo] = useState<CargoItem | null>(null);
     const [collapsed, setCollapsed] = useState<Record<SectionKey, boolean>>({
         weapons: false,
@@ -227,6 +233,7 @@ export function CargoDisplay() {
         contracts: false,
         trade: false,
         probes: false,
+        gases: false,
     });
     const [expandedWeaponIdx, setExpandedWeaponIdx] = useState<number | null>(
         null,
@@ -249,7 +256,8 @@ export function CargoDisplay() {
     const totalCapacity = getCargoCapacity();
     const contractCargo = ship.cargo.reduce((sum, c) => sum + c.quantity, 0);
     const tradeCargo = ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0);
-    const totalCargo = contractCargo + tradeCargo + probes;
+    const gasCargo = getGasVolume(gases);
+    const totalCargo = contractCargo + tradeCargo + gasCargo + probes;
     const isOverflow = totalCargo > totalCapacity;
     const fillPercent =
         totalCapacity > 0
@@ -313,10 +321,21 @@ export function CargoDisplay() {
                         }}
                     />
                 </div>
-                <div className="mt-2 grid grid-cols-4 gap-1 text-center text-[10px]">
+                {totalCargo > 0 && (
+                    <button
+                        type="button"
+                        onClick={() => setShowJettison(true)}
+                        title={t("cargo.jettison_hint")}
+                        className="mt-2 w-full cursor-pointer border border-[#552028] bg-transparent px-2 py-1 text-[10px] uppercase tracking-wider text-[#8a6a70] hover:border-[#ff0040] hover:text-[#ff667f]"
+                    >
+                        🗑 {t("cargo.jettison_title")}
+                    </button>
+                )}
+                <div className="mt-2 grid grid-cols-5 gap-1 text-center text-[10px]">
                     <CargoMetric label={t("cargo.section_contracts")} value={contractCargo} />
                     <CargoMetric label={t("cargo.section_trade")} value={tradeCargo} />
                     <CargoMetric label={t("cargo.section_modules")} value={moduleItems.length} />
+                    <CargoMetric label={t("cargo.section_gases")} value={gasCargo} />
                     <CargoMetric label={t("cargo.section_probes")} value={probes} />
                 </div>
             </div>
@@ -536,6 +555,38 @@ export function CargoDisplay() {
                         </div>
                     )}
 
+                    {/* GASES */}
+                    {gasCargo > 0 && (
+                        <div>
+                            <SectionHeader
+                                label={t("cargo.section_gases")}
+                                count={gasCargo}
+                                color="#00d4ff"
+                                collapsed={collapsed.gases}
+                                onToggle={() => toggle("gases")}
+                            />
+                            {!collapsed.gases &&
+                                (
+                                    Object.entries(gases ?? {}) as [
+                                        GasType,
+                                        number,
+                                    ][]
+                                )
+                                    .filter(([, amount]) => amount > 0)
+                                    .map(([gas, amount]) => (
+                                        <button
+                                            key={gas}
+                                            type="button"
+                                            onClick={() => setGasInfo(gas)}
+                                            title={t("good_info.open_hint")}
+                                            className="block w-full cursor-pointer border border-[#00d4ff] bg-[rgba(0,0,0,0.3)] p-2 mb-1.5 text-left text-xs text-[#00d4ff] hover:bg-[rgba(0,212,255,0.12)]"
+                                        >
+                                            {t(`gases.${gas}.name`)} x{amount}т
+                                        </button>
+                                    ))}
+                        </div>
+                    )}
+
                     {/* PROBES */}
                     {probes > 0 && (
                         <div>
@@ -678,6 +729,25 @@ export function CargoDisplay() {
                     }}
                     onClose={() => setModuleInfo(null)}
                 />
+            )}
+            {showJettison && (
+                <JettisonDialog onClose={() => setShowJettison(false)} />
+            )}
+            {gasInfo && (
+                <CargoInfoDialog
+                    title={t(`gases.${gasInfo}.name`)}
+                    onClose={() => setGasInfo(null)}
+                >
+                    <div>{t(`gases.${gasInfo}.desc`)}</div>
+                    <div className="mt-2 text-[#8a9ba3]">
+                        {t(`gases.${gasInfo}.use`)}
+                    </div>
+                    <div className="mt-2 text-[#00d4ff]">
+                        {t("cargo_info.gas_in_hold", {
+                            qty: gases?.[gasInfo] ?? 0,
+                        })}
+                    </div>
+                </CargoInfoDialog>
             )}
             {showProbeInfo && (
                 <CargoInfoDialog

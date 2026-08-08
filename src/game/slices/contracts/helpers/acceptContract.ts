@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCurrentCargo } from "@/game/slices/ship/helpers/getCurrentCargo";
 import type { GameStore, SetState, Contract } from "@/game/types";
 import { DELIVERY_GOODS } from "@/game/constants";
 import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "../constants";
@@ -77,10 +78,7 @@ export const acceptContract = (
         // Проверяем реальный объём груза контракта против суммарной вместимости
         const cargoAmount = contract.quantity ?? DELIVERY_CONTRACT_CARGO_AMOUNT;
 
-        const cur =
-            state.ship.cargo.reduce((s, c) => s + c.quantity, 0) +
-            state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
-            state.probes;
+        const cur = getCurrentCargo(state);
 
         if (cur + cargoAmount > getCargoCapacity(state)) {
             get().addLog( i18nStore.t("game_logs.acceptContract_5"), "error");

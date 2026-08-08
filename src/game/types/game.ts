@@ -27,6 +27,7 @@ import type {
 } from "./locations/locations";
 import type { LogEntry } from "./logs";
 import type { GasType, Outpost } from "./outposts";
+import type { JettisonTarget } from "@/game/slices/ship/helpers/jettison";
 import type { OutpostsSlice } from "@/game/slices/outposts/createOutpostsSlice";
 import type { Module, WeaponCounts, WeaponType } from "./modules";
 import type { RaceId } from "./races";
@@ -237,6 +238,8 @@ export interface GameActions {
   getFuelEfficiency: () => number;
   getDrillLevel: () => number;
   getCargoCapacity: () => number;
+  /** Выбрасывает груз за борт: необратимо, без возмещения */
+  jettisonCargo: (target: JettisonTarget, quantity: number) => void;
   getEffectiveScanRange: () => number;
   canScanObject: (objectType: LocationType, objectTier?: number) => boolean;
   getEarlyWarningChance: (threatLevel: number) => number;

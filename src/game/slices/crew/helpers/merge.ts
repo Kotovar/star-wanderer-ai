@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCurrentCargo } from "@/game/slices/ship/helpers/getCurrentCargo";
 import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants/races";
 import type { GameState, GameStore, CrewMember, Module } from "@/game/types";
 import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
@@ -112,10 +113,7 @@ export const unmergeFromModule = (
     // Предупредить если груз переполнится после отмены сращивания
     if (moduleShip?.type === "cargo") {
         const state = get();
-        const currentCargo =
-            state.ship.cargo.reduce((s, c) => s + c.quantity, 0) +
-            state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
-            state.probes;
+        const currentCargo = getCurrentCargo(state);
         const capacityAfter = getCargoCapacity({
             ...state,
             crew: state.crew.map((c) =>

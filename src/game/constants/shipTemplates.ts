@@ -1,5 +1,6 @@
 import type { Module } from "@/game/types/modules";
 import type { CrewBuildOptions } from "@/game/crew/buildCrewMember";
+import type { GasType } from "@/game/types/outposts";
 import type { ResearchResourceType } from "@/game/types/research";
 
 // ─── Ship Class (placeholder for future implementation) ──────────────────────
@@ -34,6 +35,8 @@ export interface ShipTemplate {
   probes: number;
   /** Стартовые ресурсы исследований */
   researchResources?: Partial<Record<ResearchResourceType, number>>;
+  /** Стартовый газ с аванпостов — только dev-шаблоны, чтобы смотреть механику без забега */
+  gases?: Partial<Record<GasType, number>>;
   /** Только dev-шаблон: начать со всеми изученными технологиями */
   startWithAllTechs?: boolean;
   /** Совместимые классы (null = все) — для будущей фильтрации */
@@ -258,6 +261,9 @@ const createDevAllTechExplorer = (arsenal: ShipTemplate): ShipTemplate => ({
   fuel: arsenal.fuel,
   maxFuel: arsenal.maxFuel,
   probes: arsenal.probes,
+  // Все четыре газа сразу: три продаваемых — чтобы увидеть блок продажи на
+  // станции, и криоген — чтобы увидеть, как он горит сам и режет расход
+  gases: { deuterium: 24, polymers: 18, biosynth: 12, cryogen: 6 },
   startWithAllTechs: true,
 });
 

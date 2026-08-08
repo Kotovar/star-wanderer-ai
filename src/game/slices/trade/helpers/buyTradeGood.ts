@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCurrentCargo } from "@/game/slices/ship/helpers/getCurrentCargo";
 import { getActiveModule } from "@/game/modules";
 import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
 import { playSound } from "@/sounds";
@@ -82,10 +83,7 @@ const validateBuyTradeGood = (
     }
 
     // Проверка места в грузовом отсеке
-    const currentCargo =
-        state.ship.cargo.reduce((s, c) => s + c.quantity, 0) +
-        state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
-        state.probes;
+    const currentCargo = getCurrentCargo(state);
 
     const cargoCapacity = getCargoCapacity(state);
 

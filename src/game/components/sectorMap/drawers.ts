@@ -3784,3 +3784,61 @@ export function drawWreckField(
 
   ctx.globalAlpha = 1;
 }
+
+/**
+ * Значок постройки игрока поверх локации.
+ *
+ * Без него аванпост виден только если зайти внутрь локации, и «прилететь за
+ * добычей» превращается в перебор точек наугад. Полный бункер светится ярче:
+ * именно он и есть повод менять маршрут.
+ */
+export function drawOutpostBadge(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  bunkerFull: boolean,
+) {
+  const bx = x + 13;
+  const by = y - 13;
+  const color = bunkerFull ? "#ffb000" : "#00d4ff";
+
+  ctx.save();
+
+  if (bunkerFull) {
+    const glow = ctx.createRadialGradient(bx, by, 0, bx, by, 11);
+    glow.addColorStop(0, "rgba(255,176,0,0.45)");
+    glow.addColorStop(1, "transparent");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(bx, by, 11, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Корпус: приземистая коробка на опорах
+  ctx.fillStyle = "#0b1218";
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(bx - 5.5, by - 4, 11, 7, 1.5);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(bx - 4, by + 3);
+  ctx.lineTo(bx - 5.5, by + 6);
+  ctx.moveTo(bx + 4, by + 3);
+  ctx.lineTo(bx + 5.5, by + 6);
+  ctx.stroke();
+
+  // Мачта
+  ctx.beginPath();
+  ctx.moveTo(bx, by - 4);
+  ctx.lineTo(bx, by - 8);
+  ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(bx, by - 8.5, 1.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}

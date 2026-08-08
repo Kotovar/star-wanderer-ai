@@ -397,6 +397,14 @@ const migrations: Record<number, Migration> = {
     stateVersion: 23,
     crewAutomation: { enabled: false, memory: {} },
   }),
+
+  // Аванпосты: до 24-й версии полей не было, и чтение их на загрузке роняло игру
+  23: (raw) => ({
+    ...(raw as GameState),
+    stateVersion: 24,
+    outposts: [],
+    gases: {},
+  }),
 };
 
 /**

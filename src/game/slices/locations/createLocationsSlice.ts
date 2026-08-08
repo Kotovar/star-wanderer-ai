@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCurrentCargo } from "@/game/slices/ship/helpers/getCurrentCargo";
 import type {
     GameStore,
     SetState,
@@ -310,10 +311,7 @@ export const createLocationsSlice = (
             get().addLog( i18nStore.t("game_logs.createLocationsSlice_1"), "warning");
             return;
         }
-        const currentCargo =
-            state.ship.cargo.reduce((s, c) => s + c.quantity, 0) +
-            state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
-            state.probes;
+        const currentCargo = getCurrentCargo(state);
         const cargoCapacity = get().getCargoCapacity();
         if (currentCargo + count > cargoCapacity) {
             get().addLog( i18nStore.t("game_logs.createLocationsSlice_2"), "warning");

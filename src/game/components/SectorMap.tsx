@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { useGameStore } from "@/game/store";
+import { isBunkerFull } from "@/game/slices/outposts/helpers";
 import { getVisibleNavigatorTargetIds } from "@/game/navigator/intel";
 import { useTranslation } from "@/lib/useTranslation";
 import { getLocationName } from "@/lib/translationHelpers";
@@ -34,6 +35,7 @@ import {
   drawEnemy,
   drawFriendlyShip,
   drawGasGiant,
+  drawOutpostBadge,
   drawMeteors,
   drawParticles,
   drawPlanet,
@@ -220,6 +222,20 @@ export function SectorMap() {
   const syncNavigatorIntel = useGameStore((s) => s.syncNavigatorIntel);
   const navigatorTargets = useGameStore((s) => s.navigatorTargets);
   const knownLocationIntel = useGameStore((s) => s.knownLocationIntel);
+  const outposts = useGameStore((s) => s.outposts);
+
+  // Полный бункер рисуется иначе, поэтому состояние построек нужно рисовалке.
+  // Пересобираем только когда постройки реально изменились
+  const outpostBadges = useMemo(
+    () =>
+      new Map(
+        outposts.map((outpost) => [
+          outpost.locationId,
+          { full: isBunkerFull(outpost) },
+        ]),
+      ),
+    [outposts],
+  );
   const hasTelepathy = useGameStore((s) =>
     s.crew.some((c) => c.traits?.some((t) => t.effect?.seeHostility)),
   );
@@ -496,6 +512,12 @@ export function SectorMap() {
         }
       }
 
+      // Значок постройки игрока — поверх любого типа локации
+      const outpost = loc.outpostId ? outpostBadges.get(loc.id) : undefined;
+      if (outpost) {
+        drawOutpostBadge(ctx, x, y, outpost.full);
+      }
+
       // Draw label below the location
       // Without scanner, certain locations show as "Unknown object"
       // Distress signals are always visible (SOS beacon broadcasts location)
@@ -542,6 +564,7 @@ export function SectorMap() {
     canScanObject,
     canvasRef,
     completedLocations,
+    outpostBadges,
     currentSector,
     hasTelepathy,
     offset,

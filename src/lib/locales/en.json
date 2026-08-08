@@ -182,6 +182,12 @@
         "install_in_bay": "Bay",
         "no_free_bays": "No free weapon bays",
         "no_free_slots": "No space on ship grid",
+        "jettison_title": "Jettison cargo",
+        "jettison_hint": "Open the airlock: get rid of some cargo",
+        "jettison_warning": "Cargo goes into the void for good, with no compensation. Pick an amount with the slider, then press twice.",
+        "jettison_action": "Jettison",
+        "jettison_confirm": "Sure?",
+        "section_gases": "Gas",
         "section_probes": "Probes"
     },
     "modules": {
@@ -1689,6 +1695,7 @@
         }
     },
     "cargo_info": {
+        "gas_in_hold": "In the hold: {{qty}}t",
         "probes_title": "Research probes",
         "probes_desc": "Expendable expedition tool:",
         "probes_use_1": "• Analyze distress signals without spending a turn",
@@ -5185,6 +5192,10 @@
         }
     },
     "outposts": {
+        "gas_from_outposts": "Gas from outposts",
+        "gas_price": "{{price}}₢ per unit",
+        "sell_all": "Sell all · {{total}}₢",
+        "cryogen_burning": "Burns on its own: −{{value}} draw on every module",
         "gas_collector": "Gas collector",
         "build_gas_collector": "Build a gas collector",
         "build": "Build",
@@ -5202,18 +5213,22 @@
     },
     "gases": {
         "deuterium": {
+            "desc": "Heavy hydrogen skimmed from a gas giant's atmosphere. Fuel systems take it without processing.",
             "name": "Deuterium",
             "use": "feeds straight into fuel"
         },
         "polymers": {
+            "desc": "Methane fraction polymerised on site. Feeds spares and hybrid module assembly.",
             "name": "Synth-polymers",
             "use": "spares and module assembly"
         },
         "biosynth": {
+            "desc": "Ammonia biomass — feedstock for medicine and provisions. Pricier than the other gases and badly needed during epidemics.",
             "name": "Biosynth",
             "use": "medicine and provisions"
         },
         "cryogen": {
+            "desc": "Pressurised inert nitrogen. Never sold: it burns on its own and cools the power systems while supplies last.",
             "name": "Cryogen",
             "use": "never sold: cuts power draw"
         }
@@ -5274,6 +5289,9 @@
         }
     },
     "game_logs": {
+        "cargo_jettisoned": "🗑 Jettisoned: {{name}} ×{{qty}}",
+        "gas_sold": "💰 Sold: {{gas}} ×{{qty}} for {{total}}₢",
+        "gas_not_sellable": "This gas cannot be sold",
         "boostArtifact_1": "Select an active artifact!",
         "boostArtifact_2": "🔮 {{artifact_name}} is ready to be boosted!",
         "researchArtifact_1": "Artifact not found!",
@@ -5665,6 +5683,8 @@
         "outpost_built_gas_collector": "🛰️ Gas collector deployed: {{location}}, extracting {{gas}}",
         "outpost_collected": "📦 Hauled from the outpost: {{haul}}",
         "outpost_collect_empty": "The outpost bunker is empty",
+        "outpost_collect_no_room": "Cargo hold is full — nowhere to put the gas",
+        "outpost_collect_partial": "⚠ {{left}} left in the bunker: not enough cargo room",
         "outpost_collect_remote": "The haul can only be collected on site",
         "outpost_blocked_tech_missing": "Requires the Autonomous Systems technology",
         "outpost_blocked_limit_reached": "No more gas collectors can be built this run",

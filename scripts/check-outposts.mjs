@@ -19,11 +19,19 @@ const {
   GAS_COLLECTOR_FILL_TURNS,
   GAS_COLLECTOR_RATE,
   GAS_COLLECTOR_REQUIRED_DIVE_DEPTH,
+  GAS_SELL_RATE,
+  CRYOGEN_BURN_PER_TURN,
+  CRYOGEN_CONSUMPTION_REDUCTION,
   OUTPOST_LIMITS,
   OUTPOST_TECH_ID,
 } = await import("../src/game/constants/outposts.ts");
-const { accrueOutposts, getBunkerTotal, isBunkerFull, getBunkerEntries } =
-  await import("../src/game/slices/outposts/helpers/accrueOutposts.ts");
+const {
+  accrueOutposts,
+  burnCryogen,
+  getBunkerTotal,
+  isBunkerFull,
+  getBunkerEntries,
+} = await import("../src/game/slices/outposts/helpers/accrueOutposts.ts");
 const { getGasCollectorBlocker } = await import(
   "../src/game/slices/outposts/helpers/canBuildGasCollector.ts"
 );
@@ -207,6 +215,187 @@ assert.match(
   "вывоз обязан требовать присутствия на месте — иначе возвращаться незачем",
 );
 
+
+// ── Криоген: горит сам и кончается ─────────────────────────────────────────
+assert.equal(burnCryogen({}), null, "нечего жечь — состояние трогать нельзя");
+assert.equal(burnCryogen({ cryogen: 0 }), null);
+assert.deepEqual(burnCryogen({ cryogen: 5 }), {
+  cryogen: 5 - CRYOGEN_BURN_PER_TURN,
+});
+// Запас конечен: иначе один нырок давал бы вечную скидку на энергию
+let stock = { cryogen: 3, deuterium: 7 };
+for (let turn = 0; turn < 10; turn++) stock = burnCryogen(stock) ?? stock;
+assert.equal(stock.cryogen, 0, "криоген обязан кончаться");
+assert.equal(stock.deuterium, 7, "горение не должно трогать другие газы");
+
+assert.match(
+  source("game/slices/ship/helpers/getTotalConsumption.ts"),
+  /gases\?\.cryogen/,
+  "криоген не влияет на расход энергии — он тогда просто мусор в трюме",
+);
+assert.match(
+  source("game/slices/gameLoop/gameLoopSlice.ts"),
+  /burnCryogen\(/,
+  "криоген не горит по ходам",
+);
+assert.ok(CRYOGEN_CONSUMPTION_REDUCTION > 0);
+
+// ── Продажа: криоген не продаётся ни при каких условиях ────────────────────
+assert.equal(
+  Math.round(GAS_BASE_PRICE.cryogen * GAS_SELL_RATE),
+  0,
+  "криоген стал продаваемым — разница между четырьмя газами стёрта",
+);
+assert.ok(GAS_SELL_RATE > 0 && GAS_SELL_RATE < 1, "станция обязана брать своё");
+assert.match(
+  source("game/slices/outposts/helpers/sellGas.ts"),
+  /price <= 0/,
+  "продажа не отсекает непродаваемый газ",
+);
+
+// ── Значок постройки на карте сектора ──────────────────────────────────────
+assert.match(
+  source("game/components/sectorMap/drawers.ts"),
+  /drawOutpostBadge/,
+  "нет значка постройки — прилететь за добычей можно только перебором локаций",
+);
+assert.match(
+  source("game/components/SectorMap.tsx"),
+  /drawOutpostBadge\(ctx, x, y, outpost\.full\)/,
+  "значок не различает полный бункер, а это единственный повод менять маршрут",
+);
+
+// ── Старые сохранения не должны падать на новых полях ─────────────────────
+const migrations = source("game/saves/migrations.ts");
+assert.match(
+  migrations,
+  /outposts: \[\],\n\s*gases: \{\},/,
+  "нет миграции сейва: у сохранений до этой версии нет outposts и gases, и чтение их уронит загрузку",
+);
+const version = Number(
+  source("game/constants/version.ts").match(/CURRENT_STATE_VERSION = (\d+)/)?.[1],
+);
+assert.ok(
+  migrations.includes(`stateVersion: ${version},`),
+  `миграция до версии ${version} не найдена — версия поднята, а мигрировать нечем`,
+);
+
+// ── Стартовый газ: только dev-шаблоны, и он реально доезжает до состояния ──
+process.env.NODE_ENV = "development";
+const { SHIP_TEMPLATES } = await import("../src/game/constants/shipTemplates.ts");
+const withGases = SHIP_TEMPLATES.filter((tpl) => tpl.gases);
+for (const tpl of withGases) {
+  assert.ok(
+    tpl.id.startsWith("dev_"),
+    `${tpl.id} раздаёт газ на старте, а это не dev-шаблон — обычный забег обязан начинать с нуля`,
+  );
+  for (const gas of Object.keys(tpl.gases)) {
+    assert.ok(gas in GAS_BASE_PRICE, `${tpl.id}: неизвестный газ ${gas}`);
+  }
+}
+assert.match(
+  source("game/slices/gameManagement/helpers/restartGame.ts"),
+  /gases: patch\.gases \?\? \{\}/,
+  "стартовый газ не доезжает до состояния — поле в шаблоне будет молча игнорироваться",
+);
+
+// ── Газ занимает трюм ──────────────────────────────────────────────────────
+// Без этого бункер на 40 единиц не создаёт давления, и вывоз ничего не стоит.
+const { getCurrentCargo, getGasVolume } = await import(
+  "../src/game/slices/ship/helpers/getCurrentCargo.ts"
+);
+assert.equal(getGasVolume(undefined), 0, "сейв до миграции не должен падать");
+assert.equal(getGasVolume({ deuterium: 4, cryogen: 2 }), 6);
+
+const shipState = (held) => ({
+  ship: { cargo: [{ quantity: 3 }], tradeGoods: [{ quantity: 2 }] },
+  probes: 1,
+  gases: held,
+});
+assert.equal(getCurrentCargo(shipState({})), 6);
+assert.equal(
+  getCurrentCargo(shipState({ deuterium: 10 })),
+  16,
+  "газ не занимает трюм — тогда бункер и вместимость корабля ни на что не влияют",
+);
+
+// Ни одно место больше не считает занятый трюм в обход помощника: иначе газ
+// остался бы бесплатным в восьми проверках вместимости из девяти
+for (const path of [
+  "game/slices/travel/helpers/processTravel.ts",
+  "game/slices/trade/helpers/buyTradeGood.ts",
+  "game/slices/locations/createLocationsSlice.ts",
+  "game/slices/crew/helpers/merge.ts",
+  "game/slices/contracts/helpers/acceptContract.ts",
+]) {
+  assert.doesNotMatch(
+    source(path),
+    /cargo\.reduce\([\s\S]{0,120}tradeGoods\.reduce/,
+    `${path}: занятый трюм снова считается вручную, мимо getCurrentCargo`,
+  );
+}
+for (const path of [
+  "game/hooks/useCargoStatus.ts",
+  "game/components/CargoDisplay.tsx",
+  "game/components/station/TradeTab.tsx",
+]) {
+  assert.match(
+    source(path),
+    /getGasVolume/,
+    `${path}: показывает занятый трюм без учёта газа`,
+  );
+}
+
+// Полоса вместимости и разбивка обязаны сходиться: газ учтён в сумме, но не
+// показан — это и был баг «70 тонн груза, а видно только зонды»
+const cargoPanel = source("game/components/CargoDisplay.tsx");
+assert.match(
+  cargoPanel,
+  /cargo\.section_gases/,
+  "газ входит в занятое место, но не показан в разбивке — сумма не сходится с тем, что видно",
+);
+assert.match(
+  cargoPanel,
+  /grid-cols-5/,
+  "в разбивке осталось четыре колонки, а метрик стало пять",
+);
+for (const lang of ["ru", "en"]) {
+  const catalog = JSON.parse(
+    readFileSync(new URL(`../src/lib/locales/${lang}.json`, import.meta.url), "utf8"),
+  );
+  assert.ok(catalog.cargo?.section_gases, `${lang}: нет cargo.section_gases`);
+  for (const key of ["gas_in_hold"]) {
+    assert.ok(catalog.cargo_info?.[key], `${lang}: нет cargo_info.${key}`);
+  }
+}
+
+// Вывоз упирается в трюм и оставляет остаток
+assert.match(
+  source("game/slices/outposts/helpers/collectOutpost.ts"),
+  /getFreeCargoSpace/,
+  "вывоз не смотрит на свободное место — газ появится из воздуха",
+);
+
+// ── Газ в трюме кликабелен и его можно выбросить ───────────────────────────
+// Криоген не продаётся и тратится по единице за ход: без выброса полный трюм
+// криогена был бы тупиком на десятки ходов.
+assert.match(
+  cargoPanel,
+  /onClick=\{\(\) => setGasInfo\(gas\)\}/,
+  "строки газа не кликабельны — остальные сущности трюма открывают модалку",
+);
+assert.doesNotMatch(
+  cargoPanel,
+  /gases\.\$\{gas\}\.use/,
+  "описание газа осталось прямо в списке трюма, ему место в модалке",
+);
+// Выброс газа переехал в общий шлюз — его держит check:jettison
+assert.match(
+  source("game/components/CargoDisplay.tsx"),
+  /JettisonDialog/,
+  "из трюма нельзя открыть шлюз, а криоген иначе не выбросить",
+);
+
 // ── Локали: ворота, газы и логи переведены на оба языка ────────────────────
 const BLOCKERS = [
   "tech_missing",
@@ -228,11 +417,15 @@ for (const lang of ["ru", "en"]) {
       `${lang}: нет лога outpost_blocked_${blocker}`,
     );
   }
+  for (const key of ["gas_from_outposts", "gas_price", "sell_all", "cryogen_burning"]) {
+    assert.ok(catalog.outposts?.[key], `${lang}: нет outposts.${key}`);
+  }
   for (const gas of gases) {
     assert.ok(catalog.gases?.[gas]?.name, `${lang}: нет имени газа ${gas}`);
     assert.ok(catalog.gases?.[gas]?.use, `${lang}: не сказано, зачем нужен ${gas}`);
+    assert.ok(catalog.gases?.[gas]?.desc, `${lang}: нет описания газа ${gas} для модалки`);
   }
-  for (const key of ["outpost_built_gas_collector", "outpost_collected", "outpost_collect_empty", "outpost_collect_remote"]) {
+  for (const key of ["outpost_built_gas_collector", "outpost_collected", "outpost_collect_empty", "outpost_collect_remote", "outpost_collect_no_room", "outpost_collect_partial", "gas_sold", "gas_not_sellable"]) {
     assert.ok(catalog.game_logs?.[key], `${lang}: нет лога ${key}`);
   }
 }

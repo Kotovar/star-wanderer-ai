@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { getCurrentCargo } from "@/game/slices/ship/helpers/getCurrentCargo";
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getSectorName } from "@/lib/translationHelpers";
 import type {
@@ -482,10 +483,7 @@ const applySpecialEventChoice = (
             const damage = handleAsteroidDamage(setState, getState);
 
             const state = getState();
-            const currentCargo =
-                state.ship.cargo.reduce((s, c) => s + c.quantity, 0) +
-                state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
-                state.probes;
+            const currentCargo = getCurrentCargo(state);
             const freeSpace = Math.max(
                 0,
                 getCargoCapacity(state) - currentCargo,

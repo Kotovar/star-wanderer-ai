@@ -1,4 +1,5 @@
 import { getRaceCrewBonus } from "@/game/races";
+import { CRYOGEN_CONSUMPTION_REDUCTION } from "@/game/constants/outposts";
 import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
 import { getStrongestRaceTechPerkValue } from "@/game/constants/techTree";
 import { getRunModifierValue } from "@/game/constants/launchModifiers";
@@ -56,6 +57,13 @@ export function getTotalConsumption(state: GameState): number {
         "moduleConsumptionReduction",
     );
 
+    // === Криогенное охлаждение ===
+    // Пока в запасе есть криоген, он горит и снижает расход каждого модуля.
+    // Складывается с переделкой реактора: оба режут одну и ту же величину.
+    const cryogenReduction =
+        (state.gases?.cryogen ?? 0) > 0 ? CRYOGEN_CONSUMPTION_REDUCTION : 0;
+    const totalReduction = consumptionReduction + cryogenReduction;
+
     // === Базовое потребление модулей ===
     let baseConsumption = 0;
 
@@ -67,11 +75,8 @@ export function getTotalConsumption(state: GameState): number {
         let moduleConsumption = shipModule.consumption ?? 0;
 
         // Потребляющие модули не могут стать бесплатными
-        if (consumptionReduction > 0 && moduleConsumption > 0) {
-            moduleConsumption = Math.max(
-                1,
-                moduleConsumption - consumptionReduction,
-            );
+        if (totalReduction > 0 && moduleConsumption > 0) {
+            moduleConsumption = Math.max(1, moduleConsumption - totalReduction);
         }
 
         // === Применяем расовые бонусы экипажа ===
