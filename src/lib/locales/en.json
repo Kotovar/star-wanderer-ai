@@ -5241,6 +5241,8 @@
         "service_craft": "Workbench",
         "service_hire": "Raise a settler · {{cost}}₢",
         "blocked_base_exists": "A base already stands — only one per run. Find it on the Progress tab",
+        "relay_title": "Relay",
+        "relay_hint": "Offers from neighbouring sectors. Contracts can only be taken on site",
         "gas_collector": "Gas collector",
         "build_gas_collector": "Build a gas collector",
         "build": "Build",

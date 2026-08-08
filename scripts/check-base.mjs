@@ -759,6 +759,75 @@ assert.match(
   "захваченная база продолжает присылать новости",
 );
 
+// ── Ретранслятор ловит работу в соседних секторах ─────────────────────────
+// Контракты лежат на планетах с генерации: модуль не создаёт работу, он даёт
+// услышать её, не прилетая
+const { getRelayOffers, getNeighbourSectors } = await import(
+  "../src/game/slices/outposts/helpers/relayContracts.ts"
+);
+
+const mkSector = (id, tier, angle, contracts = []) => ({
+  id,
+  tier,
+  name: `S${id}`,
+  mapAngle: angle,
+  locations: [
+    { id: `p${id}`, name: `P${id}`, type: "planet", contracts },
+  ],
+});
+const relaySectors = [
+  mkSector(1, 2, 0, [{ id: "c-home", reward: 100, desc: "contracts.desc_scan_planet" }]),
+  mkSector(2, 2, 0.2, [{ id: "c-near", reward: 500, desc: "contracts.desc_scan_planet" }]),
+  mkSector(3, 3, 0.3, [{ id: "c-tier3", reward: 900, desc: "contracts.desc_scan_planet" }]),
+  mkSector(4, 4, 0.4, [{ id: "c-far-tier", reward: 9999, desc: "contracts.desc_scan_planet" }]),
+  mkSector(5, 2, 3.1, [{ id: "c-far-angle", reward: 700, desc: "contracts.desc_scan_planet" }]),
+];
+const relayBase = { ...baseAt(withIce, { modules: ["relay"] }), sectorId: 1 };
+
+const offers = getRelayOffers([relayBase], relaySectors);
+const ids = offers.map((o) => o.contract.id);
+assert.ok(ids.includes("c-near"), "ретранслятор не слышит ближний сектор");
+assert.ok(
+  !ids.includes("c-home"),
+  "ретранслятор показывает свой же сектор — там и так всё видно",
+);
+assert.ok(
+  !ids.includes("c-far-tier"),
+  "ретранслятор дотягивается через два тира — соседство перестаёт что-то значить",
+);
+assert.deepEqual(
+  [...offers].sort((a, b) => b.contract.reward - a.contract.reward).map((o) => o.contract.id),
+  ids,
+  "предложения не отсортированы по награде — список для выбора маршрута, а не каталог",
+);
+
+// Без модуля молчит
+assert.deepEqual(
+  getRelayOffers([baseAt(withIce, { modules: [] })], relaySectors),
+  [],
+  "предложения приходят без ретранслятора",
+);
+assert.deepEqual(
+  getRelayOffers([{ ...relayBase, capturedAtTurn: 3 }], relaySectors),
+  [],
+  "захваченная база продолжает ловить контракты",
+);
+assert.deepEqual(getNeighbourSectors(relaySectors, undefined), []);
+
+// Список только читается: брать контракт по-прежнему можно лишь на месте
+const relayUi = source("game/components/RelayOffers.tsx");
+for (const action of ["acceptContract", "onClick"]) {
+  assert.ok(
+    !relayUi.includes(action),
+    `сводка ретранслятора позволяет ${action} — исчезает смысл куда-то лететь`,
+  );
+}
+assert.match(
+  source("game/components/CampaignProgressPanel.tsx"),
+  /<RelayOffers/,
+  "предложения ретранслятора негде посмотреть",
+);
+
 // ── Локали и подключение к экрану ──────────────────────────────────────────
 assert.match(
   source("game/components/EmptyPlanetPanel.tsx"),
@@ -809,7 +878,7 @@ for (const lang of ["ru", "en"]) {
     assert.ok(catalog.base_modules?.[id]?.name, `${lang}: нет имени модуля ${id}`);
     assert.ok(catalog.base_modules?.[id]?.desc, `${lang}: нет описания модуля ${id}`);
   }
-  for (const key of ["base", "build_base", "base_hint", "bunker", "dismantle", "upgrade", "blocked_not_explored", "status_title", "services", "service_repair", "service_heal", "service_store", "service_craft", "service_hire"]) {
+  for (const key of ["base", "build_base", "base_hint", "bunker", "dismantle", "upgrade", "blocked_not_explored", "status_title", "relay_title", "relay_hint", "services", "service_repair", "service_heal", "service_store", "service_craft", "service_hire"]) {
     assert.ok(catalog.outposts?.[key], `${lang}: нет outposts.${key}`);
   }
   for (const key of ["base_hired", "base_hire_no_room", "base_withdrawn", "outpost_built_base", "base_upgraded", "base_module_installed", "base_module_removed", "outpost_build_remote", "base_repaired", "base_healed", "base_stored", "base_service_remote"]) {

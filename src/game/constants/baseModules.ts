@@ -170,6 +170,10 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
 export const BASE_SERVICE_VALUES = {
     /** Ретранслятор: +к дальности сканирования, пока база цела */
     relayScanRange: 2,
+    /** Сколько соседних секторов он прослушивает */
+    relaySectorReach: 4,
+    /** Сколько предложений показывать: список для выбора маршрута, не каталог */
+    relayOfferLimit: 6,
     /** Склад: сколько единиц можно держать на базе сверх трюма */
     storageCapacity: 80,
     /** Ремдок: прочности модулям корабля за визит */

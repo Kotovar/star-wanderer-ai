@@ -1,5 +1,6 @@
 export * from "./accrueOutposts";
 export * from "./baseServices";
+export * from "./relayContracts";
 export * from "./baseStorage";
 export * from "./hireAtBase";
 export * from "./buildBase";

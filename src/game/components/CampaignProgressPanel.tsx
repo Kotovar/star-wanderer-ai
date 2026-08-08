@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import { RelayOffers } from "./RelayOffers";
+import { findBase, hasBaseService } from "@/game/slices/outposts/helpers";
 import { OutpostStatusList } from "./OutpostStatusList";
 import { useGameStore } from "@/game/store";
 import { RESEARCH_TREE } from "@/game/constants";
@@ -151,6 +153,9 @@ export function CampaignProgressPanel() {
   const { t } = useTranslation();
   const sectors = useGameStore((s) => s.galaxy.sectors);
   const outpostCount = useGameStore((s) => s.outposts.length);
+  const hasRelay = useGameStore((s) =>
+    hasBaseService(findBase(s.outposts), "relay"),
+  );
   const currentSector = useGameStore((s) => s.currentSector);
   const traveling = useGameStore((s) => s.traveling);
   const shipModules = useGameStore((s) => s.ship.modules);
@@ -501,6 +506,12 @@ export function CampaignProgressPanel() {
       {outpostCount > 0 && (
         <Section title={t("outposts.status_title")}>
           <OutpostStatusList />
+        </Section>
+      )}
+
+      {hasRelay && (
+        <Section title={t("outposts.relay_title")}>
+          <RelayOffers />
         </Section>
       )}
 
