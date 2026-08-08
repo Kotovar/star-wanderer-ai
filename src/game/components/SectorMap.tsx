@@ -231,7 +231,7 @@ export function SectorMap() {
       new Map(
         outposts.map((outpost) => [
           outpost.locationId,
-          { full: isBunkerFull(outpost) },
+          { full: isBunkerFull(outpost), isBase: outpost.kind === "base" },
         ]),
       ),
     [outposts],
@@ -515,7 +515,7 @@ export function SectorMap() {
       // Значок постройки игрока — поверх любого типа локации
       const outpost = loc.outpostId ? outpostBadges.get(loc.id) : undefined;
       if (outpost) {
-        drawOutpostBadge(ctx, x, y, outpost.full);
+        drawOutpostBadge(ctx, x, y, outpost.full, outpost.isBase);
       }
 
       // Draw label below the location

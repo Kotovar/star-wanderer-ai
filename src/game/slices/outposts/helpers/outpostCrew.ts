@@ -5,6 +5,7 @@ import {
 } from "@/game/constants/outposts";
 import { getBaseCrewSlots } from "@/game/constants/baseModules";
 import { getOutpostCrew } from "@/game/crew/stationed";
+import { getBarracksSlots } from "./baseServices";
 import type { CrewMember } from "@/game/types";
 import type { Outpost } from "@/game/types/outposts";
 
@@ -34,7 +35,7 @@ export function getOutpostOutputMultiplier(
 /** Сколько мест гарнизона у постройки: у базы их даёт уровень */
 export function getCrewSlots(outpost: Outpost): number {
     return outpost.kind === "base"
-        ? getBaseCrewSlots(outpost.level ?? 1)
+        ? getBaseCrewSlots(outpost.level ?? 1) + getBarracksSlots(outpost)
         : (OUTPOST_CREW_SLOTS[outpost.kind] ?? 0);
 }
 

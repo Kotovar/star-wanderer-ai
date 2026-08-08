@@ -3797,10 +3797,13 @@ export function drawOutpostBadge(
   x: number,
   y: number,
   bunkerFull: boolean,
+  isBase = false,
 ) {
   const bx = x + 13;
   const by = y - 13;
-  const color = bunkerFull ? "#ffb000" : "#00d4ff";
+  // База и сборщик — разные вещи, и на карте их надо различать: у базы
+  // мачты нет, зато есть скат крыши и она заметно шире
+  const color = bunkerFull ? "#ffb000" : isBase ? "#ffb000" : "#00d4ff";
 
   ctx.save();
 
@@ -3830,15 +3833,25 @@ export function drawOutpostBadge(
   ctx.lineTo(bx + 5.5, by + 6);
   ctx.stroke();
 
-  // Мачта
-  ctx.beginPath();
-  ctx.moveTo(bx, by - 4);
-  ctx.lineTo(bx, by - 8);
-  ctx.stroke();
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.arc(bx, by - 8.5, 1.6, 0, Math.PI * 2);
-  ctx.fill();
+  if (isBase) {
+    // Скат крыши: силуэт «дом», а не «антенна»
+    ctx.beginPath();
+    ctx.moveTo(bx - 7, by - 4);
+    ctx.lineTo(bx, by - 9);
+    ctx.lineTo(bx + 7, by - 4);
+    ctx.closePath();
+    ctx.stroke();
+  } else {
+    // Мачта
+    ctx.beginPath();
+    ctx.moveTo(bx, by - 4);
+    ctx.lineTo(bx, by - 8);
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(bx, by - 8.5, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.restore();
 }

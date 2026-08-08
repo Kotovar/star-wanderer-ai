@@ -1,4 +1,5 @@
 import { ARTIFACT_TYPES } from "@/game/constants";
+import { getRelayScanBonus } from "@/game/slices/outposts/helpers/baseServices";
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { getMaxCrewTraitBonus } from "@/game/traits";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
@@ -90,6 +91,10 @@ export const getEffectiveScanRange = (state: GameState) => {
             maxRange += Math.round(Math.sin(state.turn) * starEffect.scanRangeJitter);
         }
     }
+
+    // Ретранслятор на базе работает откуда угодно: в этом и смысл — он
+    // расширяет вашу картину галактики, пока вы летаете где-то ещё
+    maxRange += getRelayScanBonus(state.outposts ?? []);
 
     return maxRange;
 };

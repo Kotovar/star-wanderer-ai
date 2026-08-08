@@ -272,9 +272,20 @@ assert.match(
 );
 assert.match(
   source("game/components/SectorMap.tsx"),
-  /drawOutpostBadge\(ctx, x, y, outpost\.full\)/,
-  "значок не различает полный бункер, а это единственный повод менять маршрут",
+  /drawOutpostBadge\(ctx, x, y, outpost\.full, outpost\.isBase\)/,
+  "значок не различает полный бункер или базу со сборщиком",
 );
+// База одна за забег, сборщиков трое — на карте это разные вещи
+for (const path of [
+  "game/components/sectorMap/drawers.ts",
+  "game/galaxy/galaxy-map-utils.ts",
+]) {
+  assert.match(
+    source(path),
+    /isBase/,
+    `${path}: база и газосборник рисуются одинаково`,
+  );
+}
 
 // ── Старые сохранения не должны падать на новых полях ─────────────────────
 const migrations = source("game/saves/migrations.ts");

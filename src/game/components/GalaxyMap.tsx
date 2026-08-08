@@ -379,6 +379,7 @@ export function GalaxyMap() {
             outposts.map((outpost) => ({
                 sectorId: outpost.sectorId,
                 full: isBunkerFull(outpost),
+                isBase: outpost.kind === "base",
             })),
         [outposts],
     );

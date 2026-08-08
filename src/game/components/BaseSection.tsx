@@ -18,11 +18,12 @@ import {
     getBaseBlocker,
     getModuleBlocker,
     getOutpostOutputMultiplier,
+    hasBaseService,
 } from "@/game/slices/outposts/helpers";
 import { getOutpostCrew } from "@/game/crew/stationed";
 import { planetHasFeature, PLANET_FEATURES } from "@/game/planets";
 import type { Location } from "@/game/types";
-import type { BaseModuleId } from "@/game/types/outposts";
+import type { BaseModuleId, OutpostResource } from "@/game/types/outposts";
 
 interface Props {
     location: Location;
@@ -46,6 +47,11 @@ export function BaseSection({ location }: Props) {
     const installBaseModule = useGameStore((s) => s.installBaseModule);
     const removeBaseModule = useGameStore((s) => s.removeBaseModule);
     const collectOutpost = useGameStore((s) => s.collectOutpost);
+    const repairAtBase = useGameStore((s) => s.repairAtBase);
+    const healAtBase = useGameStore((s) => s.healAtBase);
+    const storeAtBase = useGameStore((s) => s.storeAtBase);
+    const ship = useGameStore((s) => s.ship);
+    const gases = useGameStore((s) => s.gases);
 
     const base = outposts.find((o) => o.locationId === location.id);
 
@@ -123,6 +129,18 @@ export function BaseSection({ location }: Props) {
     const multiplier = getOutpostOutputMultiplier(base, crew);
     const haul = Object.entries(base.bunker).filter(([, amount]) => amount > 0);
     const upgrade = BASE_UPGRADE_COST[level];
+    const canRepair = hasBaseService(base, "repair");
+    const canHeal = hasBaseService(base, "heal");
+    const canStore = hasBaseService(base, "storage");
+    // На склад кладём только то, что реально занимает трюм
+    const storable: [OutpostResource, number][] = canStore
+        ? [
+              ...ship.tradeGoods.map(
+                  (g) => [g.item as OutpostResource, g.quantity] as [OutpostResource, number],
+              ),
+              ...(Object.entries(gases) as [OutpostResource, number][]),
+          ].filter(([, amount]) => amount > 0)
+        : [];
 
     return (
         <div className="mt-2 border border-[#ffb00033] bg-[rgba(255,176,0,0.04)] p-2 sm:p-3">
@@ -229,6 +247,54 @@ export function BaseSection({ location }: Props) {
                     📦 {t("outposts.collect")}
                 </Button>
             </div>
+
+            {/* Услуги базы: то, ради чего её строят в глубоком космосе */}
+            {(canRepair || canHeal || canStore) && (
+                <div className="mt-2 border-t border-[#ffb00022] pt-2">
+                    <div className="text-[10px] text-[#8a9ba3] sm:text-xs">
+                        {t("outposts.services")}
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                        {canRepair && (
+                            <Button
+                                onClick={() => repairAtBase(base.id)}
+                                className="min-h-8 cursor-pointer border border-[#00d4ff] bg-transparent px-2 text-[10px] uppercase text-[#00d4ff] hover:bg-[rgba(0,212,255,0.12)]"
+                            >
+                                🔧 {t("outposts.service_repair")}
+                            </Button>
+                        )}
+                        {canHeal && (
+                            <Button
+                                onClick={() => healAtBase(base.id)}
+                                className="min-h-8 cursor-pointer border border-[#00ff41] bg-transparent px-2 text-[10px] uppercase text-[#00ff41] hover:bg-[rgba(0,255,65,0.12)]"
+                            >
+                                ⚕️ {t("outposts.service_heal")}
+                            </Button>
+                        )}
+                    </div>
+                    {canStore && storable.length > 0 && (
+                        <div className="mt-1.5">
+                            <div className="text-[10px] text-[#8a9ba3]">
+                                {t("outposts.service_store")}
+                            </div>
+                            <div className="mt-1 flex flex-wrap gap-1">
+                                {storable.map(([resource, amount]) => (
+                                    <Button
+                                        key={resource}
+                                        onClick={() =>
+                                            storeAtBase(base.id, resource, amount)
+                                        }
+                                        className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000]"
+                                    >
+                                        {describeHaulResource(resource, t)} ×
+                                        {amount}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Гарнизон и расширение */}
             <div className="mt-2 border-t border-[#ffb00022] pt-2 text-[10px] sm:text-xs">

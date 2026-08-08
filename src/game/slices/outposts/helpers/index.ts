@@ -1,4 +1,5 @@
 export * from "./accrueOutposts";
+export * from "./baseServices";
 export * from "./buildBase";
 export * from "./canBuildBase";
 export * from "./buildGasCollector";
@@ -10,3 +11,5 @@ export * from "./sellGas";
 export * from "./stationCrew";
 export * from "./routeHaul";
 export * from "./describeHaul";
+export * from "./useBaseServices";
+export * from "./storeAtBase";

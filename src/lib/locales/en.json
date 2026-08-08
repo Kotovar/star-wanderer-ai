@@ -5218,6 +5218,10 @@
         "module_feature_missing": "This planet does not suit the module",
         "module_not_enough_credits": "Not enough credits",
         "module_not_enough_resources": "Not enough materials",
+        "services": "Base services",
+        "service_repair": "Repair the ship",
+        "service_heal": "Treat the crew",
+        "service_store": "Offload to storage",
         "gas_collector": "Gas collector",
         "build_gas_collector": "Build a gas collector",
         "build": "Build",
@@ -5256,6 +5260,26 @@
         }
     },
     "base_modules": {
+        "relay": {
+            "name": "Relay",
+            "desc": "Extends scan range by +2 wherever you are."
+        },
+        "warehouse": {
+            "name": "Warehouse",
+            "desc": "Lets you offload cargo onto the base and pick it up later."
+        },
+        "repair_dock": {
+            "name": "Repair dock",
+            "desc": "Repairs ship modules right at the base. Costs a turn."
+        },
+        "med_bay": {
+            "name": "Medical bay",
+            "desc": "Heals the crew and clears assignment fatigue. Costs a turn."
+        },
+        "barracks": {
+            "name": "Barracks",
+            "desc": "+2 garrison slots at the base."
+        },
         "drill_shaft": {
             "name": "Drill shaft",
             "desc": "Minerals and rare minerals into the bunker. Rich deposits double the yield."
@@ -5722,6 +5746,13 @@
         "outpost_crew_remote": "The garrison can only be changed on site",
         "outpost_crew_no_slot": "No garrison slots left",
         "outpost_crew_no_module": "No module left aboard to put them in",
+        "base_service_remote": "Base services only work on site",
+        "base_repaired": "🔧 The repair dock restored {{count}} module(s)",
+        "base_repair_nothing": "Nothing to repair",
+        "base_healed": "⚕️ The medical bay treated the crew and cleared fatigue",
+        "base_heal_nothing": "Nobody needs treatment",
+        "base_stored": "📦 Into base storage: {{resource}} ×{{qty}}",
+        "base_store_full": "Base storage is full",
         "outpost_built_base": "🏗 Main base founded: {{location}}",
         "outpost_build_remote": "Building and rebuilding only works on site",
         "outpost_blocked_not_explored": "The planet is not fully surveyed",

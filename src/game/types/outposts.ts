@@ -16,7 +16,12 @@ export type OutpostKind = "gas_collector" | "base";
 export type BaseModuleId =
     | "drill_shaft"
     | "cryo_cracker"
-    | "field_lab";
+    | "field_lab"
+    | "relay"
+    | "warehouse"
+    | "repair_dock"
+    | "med_bay"
+    | "barracks";
 
 /**
  * Что вообще может лежать в бункере. Газ, торговый товар и научный ресурс

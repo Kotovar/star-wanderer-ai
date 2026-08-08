@@ -1062,25 +1062,29 @@ function drawStellarRemnant(
 export function drawOutpostSectorMarkers(
     ctx: CanvasRenderingContext2D,
     sectors: { id: number; tier: number; mapAngle?: number }[],
-    outposts: { sectorId: number; full: boolean }[],
+    outposts: { sectorId: number; full: boolean; isBase: boolean }[],
     centerX: number,
     centerY: number,
     maxRadius: number,
 ) {
     if (outposts.length === 0) return;
 
-    const bySector = new Map<number, boolean>();
+    const bySector = new Map<number, { full: boolean; isBase: boolean }>();
     for (const outpost of outposts) {
-        bySector.set(
-            outpost.sectorId,
-            (bySector.get(outpost.sectorId) ?? false) || outpost.full,
-        );
+        const seen = bySector.get(outpost.sectorId);
+        bySector.set(outpost.sectorId, {
+            full: (seen?.full ?? false) || outpost.full,
+            // База важнее сборщика: если в системе есть и то и другое,
+            // показываем базу — она одна за забег
+            isBase: (seen?.isBase ?? false) || outpost.isBase,
+        });
     }
 
     for (const sector of sectors) {
         if (sector.mapAngle === undefined) continue;
-        const anyFull = bySector.get(sector.id);
-        if (anyFull === undefined) continue;
+        const marker = bySector.get(sector.id);
+        if (marker === undefined) continue;
+        const anyFull = marker.full;
 
         const radius = getSectorRadius(maxRadius, sector.tier);
         const x = centerX + Math.cos(sector.mapAngle) * radius + 15;
@@ -1107,14 +1111,23 @@ export function drawOutpostSectorMarkers(
         ctx.fill();
         ctx.stroke();
 
-        ctx.beginPath();
-        ctx.moveTo(x, y - 3);
-        ctx.lineTo(x, y - 7);
-        ctx.stroke();
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(x, y - 7.5, 1.4, 0, Math.PI * 2);
-        ctx.fill();
+        if (marker.isBase) {
+            ctx.beginPath();
+            ctx.moveTo(x - 6, y - 3);
+            ctx.lineTo(x, y - 7.5);
+            ctx.lineTo(x + 6, y - 3);
+            ctx.closePath();
+            ctx.stroke();
+        } else {
+            ctx.beginPath();
+            ctx.moveTo(x, y - 3);
+            ctx.lineTo(x, y - 7);
+            ctx.stroke();
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y - 7.5, 1.4, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         ctx.restore();
     }

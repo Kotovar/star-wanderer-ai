@@ -17,7 +17,21 @@ export interface BaseModuleDef {
     requiresFeature?: PlanetFeatureId;
     /** Черта, которая удваивает выход */
     boostedBy?: PlanetFeatureId;
+    /** Служебный эффект: не добывает, а меняет правила */
+    service?: BaseService;
 }
+
+/**
+ * Что умеет служебный модуль. Ровно один эффект на модуль намеренно: слот
+ * стоит дорого, и «этот модуль делает три вещи» превратило бы выбор обратно
+ * в чек-лист.
+ */
+export type BaseService =
+    | "relay"
+    | "storage"
+    | "repair"
+    | "heal"
+    | "garrison";
 
 /**
  * Модули базы. Пока только добывающие — они дают базе смысл сами по себе.
@@ -60,7 +74,76 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         output: { ancient_data: 1, alien_biology: 1 },
         boostedBy: "ancient_traces",
     },
+    relay: {
+        id: "relay",
+        icon: "📡",
+        role: "scout",
+        cost: {
+            credits: 1600,
+            resources: { tech_salvage: 8, ancient_data: 4 },
+        },
+        output: {},
+        service: "relay",
+    },
+    warehouse: {
+        id: "warehouse",
+        icon: "📦",
+        role: "engineer",
+        cost: {
+            credits: 900,
+            resources: { tech_salvage: 10 },
+        },
+        output: {},
+        service: "storage",
+    },
+    repair_dock: {
+        id: "repair_dock",
+        icon: "🔧",
+        role: "engineer",
+        cost: {
+            credits: 1800,
+            resources: { tech_salvage: 14, rare_minerals: 8 },
+        },
+        output: {},
+        service: "repair",
+    },
+    med_bay: {
+        id: "med_bay",
+        icon: "⚕️",
+        role: "medic",
+        cost: {
+            credits: 1500,
+            resources: { alien_biology: 10, tech_salvage: 6 },
+        },
+        output: {},
+        service: "heal",
+    },
+    barracks: {
+        id: "barracks",
+        icon: "🛏",
+        role: "medic",
+        cost: {
+            credits: 1100,
+            resources: { tech_salvage: 8, energy_samples: 4 },
+        },
+        output: {},
+        service: "garrison",
+    },
 };
+
+/** Что даёт каждый служебный модуль в числах */
+export const BASE_SERVICE_VALUES = {
+    /** Ретранслятор: +к дальности сканирования, пока база цела */
+    relayScanRange: 2,
+    /** Склад: сколько единиц можно держать на базе сверх трюма */
+    storageCapacity: 80,
+    /** Ремдок: прочности модулям корабля за визит */
+    repairAmount: 40,
+    /** Медблок: здоровья экипажу за визит и снятие усталости */
+    healAmount: 40,
+    /** Казарма: дополнительные места гарнизона */
+    garrisonSlots: 2,
+} as const;
 
 /** Слоты по уровню базы: 1 → 2, 2 → 4, 3 → 6 */
 export const BASE_SLOTS_BY_LEVEL = [0, 2, 4, 6] as const;

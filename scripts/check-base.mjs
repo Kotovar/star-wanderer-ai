@@ -39,6 +39,9 @@ const { RESEARCH_RESOURCES } = await import(
   "../src/game/constants/research/resources.ts"
 );
 
+const source = (path) =>
+  readFileSync(new URL(`../src/${path}`, import.meta.url), "utf8");
+
 // ── Слотов обязано быть меньше, чем модулей ────────────────────────────────
 const moduleIds = Object.keys(BASE_MODULES);
 const maxSlots = BASE_SLOTS_BY_LEVEL[BASE_MAX_LEVEL];
@@ -73,9 +76,15 @@ for (const [id, def] of Object.entries(BASE_MODULES)) {
   assert.equal(def.id, id, `${id}: id внутри определения разошёлся с ключом`);
   assert.ok(def.role, `${id}: не сказано, какая профессия его усиливает`);
   assert.ok(def.cost.credits > 0, `${id}: бесплатный модуль`);
+  // Модуль либо добывает, либо оказывает услугу. Пустой слот-пожиратель,
+  // который не делает ни того ни другого, — просто потерянный слот
   assert.ok(
-    Object.keys(def.output).length > 0,
-    `${id}: модуль ничего не добывает`,
+    Object.keys(def.output).length > 0 || def.service,
+    `${id}: модуль не добывает и не оказывает услуги — слот потрачен впустую`,
+  );
+  assert.ok(
+    !(Object.keys(def.output).length > 0 && def.service),
+    `${id}: модуль и добывает, и оказывает услугу — слот перестаёт быть выбором`,
   );
   for (const resource of Object.keys(def.output)) {
     assert.ok(
@@ -256,9 +265,77 @@ assert.ok(
   "богатые залежи не усиливают буровую — черта планеты ни на что не влияет",
 );
 
+// ── Служебные модули ───────────────────────────────────────────────────────
+const { hasBaseService, getRelayScanBonus, getBarracksSlots } = await import(
+  "../src/game/slices/outposts/helpers/baseServices.ts"
+);
+const { getCrewSlots } = await import(
+  "../src/game/slices/outposts/helpers/outpostCrew.ts"
+);
+const { BASE_SERVICE_VALUES } = await import(
+  "../src/game/constants/baseModules.ts"
+);
+
+const services = Object.values(BASE_MODULES)
+  .map((def) => def.service)
+  .filter(Boolean);
+assert.equal(
+  new Set(services).size,
+  services.length,
+  "две постройки дают одну и ту же услугу — один из слотов становится лишним",
+);
+
+const withRelay = baseAt(withIce, { modules: ["relay"] });
+assert.equal(hasBaseService(withRelay, "relay"), true);
+assert.equal(hasBaseService(baseAt(withIce), "relay"), false);
+assert.equal(
+  getRelayScanBonus([withRelay]),
+  BASE_SERVICE_VALUES.relayScanRange,
+  "ретранслятор не расширяет дальность сканирования",
+);
+assert.equal(
+  getRelayScanBonus([]),
+  0,
+  "дальность растёт без построек — бонус берётся из воздуха",
+);
+
+// Ретранслятор обязан работать откуда угодно: в этом весь его смысл
+assert.match(
+  source("game/slices/scanner/helpers/getEffectiveScanRange.ts"),
+  /getRelayScanBonus\(state\.outposts/,
+  "ретранслятор не подключён к дальности сканирования",
+);
+
+// Казарма расширяет гарнизон, а не заменяет уровень
+const plainBase = baseAt(withIce, { level: 2 });
+const barracksBase = baseAt(withIce, { level: 2, modules: ["barracks"] });
+assert.equal(getBarracksSlots(plainBase), 0);
+assert.equal(
+  getCrewSlots(barracksBase) - getCrewSlots(plainBase),
+  BASE_SERVICE_VALUES.garrisonSlots,
+  "казарма не добавляет мест гарнизона",
+);
+
+// Услуги работают только на месте — иначе это кнопки из любой точки галактики
+for (const path of [
+  "game/slices/outposts/helpers/useBaseServices.ts",
+  "game/slices/outposts/helpers/storeAtBase.ts",
+]) {
+  assert.match(
+    source(path),
+    /currentLocation\?\.id !== outpost\.locationId/,
+    `${path}: услугой можно пользоваться, не прилетая на базу`,
+  );
+}
+
+// Служебные модули занимают те же слоты, что и добывающие — ради этого
+// выбор и остаётся выбором
+assert.ok(
+  moduleIds.length > maxSlots,
+  `модулей ${moduleIds.length} при ${maxSlots} слотах — на максимуме влезает всё, выбор исчез`,
+);
+
 // ── Локали и подключение к экрану ──────────────────────────────────────────
-const source = (path) =>
-  readFileSync(new URL(`../src/${path}`, import.meta.url), "utf8");
 assert.match(
   source("game/components/EmptyPlanetPanel.tsx"),
   /BaseSection/,
@@ -273,10 +350,10 @@ for (const lang of ["ru", "en"]) {
     assert.ok(catalog.base_modules?.[id]?.name, `${lang}: нет имени модуля ${id}`);
     assert.ok(catalog.base_modules?.[id]?.desc, `${lang}: нет описания модуля ${id}`);
   }
-  for (const key of ["base", "build_base", "base_hint", "bunker", "dismantle", "upgrade", "blocked_not_explored"]) {
+  for (const key of ["base", "build_base", "base_hint", "bunker", "dismantle", "upgrade", "blocked_not_explored", "services", "service_repair", "service_heal", "service_store"]) {
     assert.ok(catalog.outposts?.[key], `${lang}: нет outposts.${key}`);
   }
-  for (const key of ["outpost_built_base", "base_upgraded", "base_module_installed", "base_module_removed", "outpost_build_remote"]) {
+  for (const key of ["outpost_built_base", "base_upgraded", "base_module_installed", "base_module_removed", "outpost_build_remote", "base_repaired", "base_healed", "base_stored", "base_service_remote"]) {
     assert.ok(catalog.game_logs?.[key], `${lang}: нет лога ${key}`);
   }
 }
