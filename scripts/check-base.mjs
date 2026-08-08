@@ -636,6 +636,28 @@ assert.deepEqual(
 );
 assert.deepEqual(seedStartingOutposts(fakeSectors, undefined).outposts, []);
 
+// ── Отказ обязан говорить про базу, а не про сборщики ─────────────────────
+// Причины отказа общие, но лимит у них разный по смыслу: одна база против
+// трёх сборщиков. Общий текст сообщал «больше газосборников не построить»
+// на экране закладки базы и читался как сбой
+assert.match(
+  source("game/components/BaseSection.tsx"),
+  /blocked_base_exists/,
+  "отказ по лимиту базы берёт текст, написанный для газосборников",
+);
+for (const lang of ["ru", "en"]) {
+  const catalog = JSON.parse(
+    readFileSync(new URL(`../src/lib/locales/${lang}.json`, import.meta.url), "utf8"),
+  );
+  const text = catalog.outposts?.blocked_base_exists;
+  assert.ok(text, `${lang}: нет outposts.blocked_base_exists`);
+  assert.doesNotMatch(
+    text,
+    /газосборник|gas collector/i,
+    `${lang}: текст про лимит базы всё ещё поминает газосборники`,
+  );
+}
+
 // ── Локали и подключение к экрану ──────────────────────────────────────────
 assert.match(
   source("game/components/EmptyPlanetPanel.tsx"),

@@ -5240,6 +5240,7 @@
         "status_title": "Your outposts",
         "service_craft": "Workbench",
         "service_hire": "Raise a settler · {{cost}}₢",
+        "blocked_base_exists": "A base already stands — only one per run. Find it on the Progress tab",
         "gas_collector": "Gas collector",
         "build_gas_collector": "Build a gas collector",
         "build": "Build",

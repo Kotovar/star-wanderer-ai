@@ -165,7 +165,13 @@ export function BaseSection({ location }: Props) {
 
                 {blocker && (
                     <div className="mt-1.5 text-[10px] text-[#ffb000] sm:text-xs">
-                        {t(`outposts.blocked_${blocker}`)}
+                        {/* Причины отказа общие для базы и сборщика, но лимит
+                            у них разный по смыслу: одна база против трёх
+                            сборщиков. Общий текст говорил про сборщики даже
+                            здесь и звучал как сбой */}
+                        {blocker === "limit_reached"
+                            ? t("outposts.blocked_base_exists")
+                            : t(`outposts.blocked_${blocker}`)}
                     </div>
                 )}
 
