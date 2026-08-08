@@ -11,7 +11,11 @@ import { TRADE_GOODS } from "@/game/constants/goods";
 import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
-import { getWeaponTypeName } from "@/lib/translationHelpers";
+import {
+  getModuleRecipeName,
+  getRecipeDescription,
+  getWeaponTypeName,
+} from "@/lib/translationHelpers";
 
 export function CraftingTab() {
   const { t } = useTranslation();
@@ -143,7 +147,12 @@ export function CraftingTab() {
                         </span>
                       </div>
                       <div className="text-[#aaa] text-xs mb-2">
-                        {recipe.description}
+                        {getRecipeDescription(
+                          recipe.id,
+                          "weapon",
+                          t,
+                          recipe.description,
+                        )}
                       </div>
                       {/* Weapon stat preview */}
                       <div
@@ -311,14 +320,19 @@ export function CraftingTab() {
                       <div className="flex items-center gap-2 mb-1">
                         <span>{recipe.icon}</span>
                         <span className="font-bold text-sm text-[#00d4ff]">
-                          {recipe.name}
+                          {getModuleRecipeName(recipe.id, t, recipe.name)}
                         </span>
                         <span className="text-[10px] text-[#888] bg-[rgba(255,255,255,0.08)] px-1.5 py-0.5 rounded">
                           {t("crafting.one_time_use")}
                         </span>
                       </div>
                       <div className="text-[#aaa] text-xs mb-2">
-                        {recipe.description}
+                        {getRecipeDescription(
+                          recipe.id,
+                          "module",
+                          t,
+                          recipe.description,
+                        )}
                       </div>
                       {/* Module stat preview */}
                       {shopItem && (

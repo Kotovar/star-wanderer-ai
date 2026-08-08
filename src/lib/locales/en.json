@@ -4001,7 +4001,29 @@
         "tab_modules": "Modules",
         "no_weapon_recipes": "Research technologies to unlock weapon blueprints",
         "no_module_recipes": "Scout finds module blueprints on derelict ships",
-        "one_time_use": "One-time"
+        "one_time_use": "One-time",
+        "hybrid_module": "Hybrid module",
+        "recipe_learned": "Researched: {{recipe}}",
+        "recipe_not_learned": "Not researched: {{recipe}}",
+        "recipe_descriptions": {
+            "plasma": "Pierces 25% of armour and deals +30% damage to shields",
+            "drones": "Every hit adds +10% damage (max 10 stacks = x2)",
+            "antimatter": "x2.5 damage to shields — crushes enemy defences",
+            "quantum_torpedo": "Ignores shields entirely, striking modules directly",
+            "ion_cannon": "Hits shields only, but strips them twice as fast"
+        },
+        "module_names": {
+            "bio_research_lab": "Bio Research Laboratory",
+            "pulse_drive": "Pulse Drive",
+            "habitat_module": "Medical Corps",
+            "deep_survey_array": "Deep Survey Array"
+        },
+        "module_descriptions": {
+            "bio_research_lab": "Medical bay and laboratory in one: +10 research/turn, +8 HP healing/turn",
+            "pulse_drive": "Reactor and engine in one: +5 power, lower fuel consumption",
+            "habitat_module": "Medical bay with living quarters: +8 HP healing/turn, +6 crew slots",
+            "deep_survey_array": "Laboratory with a scanner: +8 research/turn, +3 scan range"
+        }
     },
     "tutorial": {
         "title": "WELCOME, CAPTAIN",

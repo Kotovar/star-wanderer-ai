@@ -21,7 +21,10 @@ import { getRunProfileArcProgress } from "@/game/galaxy/runProfileArcs";
 import { getRunProfile } from "@/game/galaxy/runProfiles";
 import { isLocationCountedAsVisited } from "@/game/progression/locationProgress";
 import { useTranslation } from "@/lib/useTranslation";
-import { getSectorName } from "@/lib/translationHelpers";
+import {
+    getSectorName,
+    getWeaponTypeName,
+} from "@/lib/translationHelpers";
 
 type Tone = "good" | "warning" | "danger" | "neutral";
 
@@ -631,16 +634,19 @@ export function CampaignProgressPanel() {
                         ? "border-[#ffb00088] bg-[rgba(255,176,0,0.08)] text-[#ffd27a]"
                         : "border-[#1a3320] bg-[rgba(0,0,0,0.22)] text-[#555]"
                     }`}
-                    title={
+                    title={t(
                       unlocked
-                        ? `Изучено: ${recipe.name}`
-                        : `Не изучено: ${recipe.name}`
-                    }
+                        ? "crafting.recipe_learned"
+                        : "crafting.recipe_not_learned",
+                      { recipe: getWeaponTypeName(recipe.weaponType, t, recipe.name) },
+                    )}
                   >
                     <span style={{ color: unlocked ? weapon.color : "#555" }}>
                       {recipe.icon}
                     </span>
-                    <span>{recipe.name}</span>
+                    <span>
+                      {getWeaponTypeName(recipe.weaponType, t, recipe.name)}
+                    </span>
                   </div>
                 );
               })}

@@ -9,7 +9,10 @@ import {
 } from "@/game/constants/crafting";
 import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { useTranslation } from "@/lib/useTranslation";
-import { getWeaponTypeName } from "@/lib/translationHelpers";
+import {
+  getModuleRecipeName,
+  getWeaponTypeName,
+} from "@/lib/translationHelpers";
 import type { CraftingRecipe, ModuleRecipe } from "@/game/types";
 
 type ExpandedId = string | null;
@@ -154,10 +157,10 @@ function ModulePreview({
         <span className="text-2xl leading-none">{recipe.icon}</span>
         <div className="flex-1 min-w-0">
           <div className="font-bold text-[11px] text-[#00d4ff] truncate">
-            {recipe.name}
+            {getModuleRecipeName(recipe.id, t, recipe.name)}
           </div>
           <div className="text-[#555] text-[9px] uppercase tracking-wider">
-            Гибридный модуль
+            {t("crafting.hybrid_module")}
           </div>
         </div>
         {shopItem && (
@@ -336,7 +339,7 @@ export function BlueprintsTab() {
                   <span>{recipe.icon}</span>
                   <div className="flex-1">
                     <div className="font-bold text-[#00d4ff]">
-                      {recipe.name}
+                      {getModuleRecipeName(recipe.id, t, recipe.name)}
                     </div>
                     <div className="text-[#555] text-[10px]">
                       {t("blueprints.craft_hint")} · {recipe.credits}₢ ·{" "}

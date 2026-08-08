@@ -162,3 +162,31 @@ export function getTradeGoodName(
     const translated = i18nT(key);
     return translated === key ? fallback || good : translated;
 }
+
+/** Название рецепта гибридного модуля. */
+export function getModuleRecipeName(
+    recipeId: string,
+    i18nT: (key: string) => string,
+    fallback = "",
+): string {
+    const key = `crafting.module_names.${recipeId}`;
+    const translated = i18nT(key);
+    return translated === key ? fallback || recipeId : translated;
+}
+
+/**
+ * Описание рецепта — оружия или гибридного модуля. Оба набора описаний
+ * захардкожены по-русски в constants/crafting.ts, каталог их перекрывает.
+ */
+export function getRecipeDescription(
+    recipeId: string,
+    kind: "weapon" | "module",
+    i18nT: (key: string) => string,
+    fallback = "",
+): string {
+    const section =
+        kind === "weapon" ? "recipe_descriptions" : "module_descriptions";
+    const key = `crafting.${section}.${recipeId}`;
+    const translated = i18nT(key);
+    return translated === key ? fallback : translated;
+}

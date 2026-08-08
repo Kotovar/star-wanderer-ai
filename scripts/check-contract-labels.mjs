@@ -206,6 +206,51 @@ assert.equal(
   "готовое задание обязано получать метку готовности",
 );
 
+// ── Экраны крафта: тот же объект не должен называться по-разному ────────────
+const { BlueprintsTab } = await import(
+  "../src/game/components/BlueprintsTab.tsx"
+);
+globalThis.__contractLabelState = {
+  ...globalThis.__contractLabelState,
+  research: {
+    researchedTechs: [],
+    unlockedRecipes: [
+      "plasma",
+      "drones",
+      "antimatter",
+      "quantum_torpedo",
+      "ion_cannon",
+    ],
+  },
+  moduleRecipes: [
+    "bio_research_lab",
+    "pulse_drive",
+    "habitat_module",
+    "deep_survey_array",
+  ],
+};
+i18nStore.changeLanguage("en");
+const blueprintsMarkup = renderToStaticMarkup(createElement(BlueprintsTab));
+assert.doesNotMatch(
+  blueprintsMarkup,
+  /[А-Яа-яЁё]/,
+  "русские названия рецептов протекли в английский интерфейс чертежей",
+);
+assert.ok(
+  blueprintsMarkup.includes("Ion Cannon"),
+  "рецепт оружия обязан называться так же, как в заказе на изготовление",
+);
+assert.ok(
+  blueprintsMarkup.includes("Deep Survey Array"),
+  "рецепт гибридного модуля тоже обязан переводиться",
+);
+i18nStore.changeLanguage("ru");
+const blueprintsRu = renderToStaticMarkup(createElement(BlueprintsTab));
+assert.ok(
+  blueprintsRu.includes("Ионная пушка"),
+  "русский каталог обязан продолжать работать",
+);
+
 // ── Все типы контрактов имеют человеческое имя, а не ключ ───────────────────
 const contractTypesSource = readFileSync(
   new URL("../src/game/types/contracts.ts", import.meta.url),
