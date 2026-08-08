@@ -32,7 +32,8 @@ export type BaseService =
     | "repair"
     | "heal"
     | "garrison"
-    | "defense";
+    | "defense"
+    | "craft";
 
 /**
  * Выработка задана от потолка, а не от «сколько не жалко»: шесть модулей на
@@ -152,6 +153,17 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         output: {},
         service: "defense",
     },
+    workbench: {
+        id: "workbench",
+        icon: "🛠",
+        role: "engineer",
+        cost: {
+            credits: 1700,
+            resources: { tech_salvage: 12, rare_minerals: 6 },
+        },
+        output: {},
+        service: "craft",
+    },
 };
 
 /** Что даёт каждый служебный модуль в числах */
@@ -168,6 +180,10 @@ export const BASE_SERVICE_VALUES = {
     garrisonSlots: 2,
     /** Турели: во сколько раз реже случается захват */
     turretProtection: 0.4,
+    /** Казарма: сколько стоит нанять поселенца выбранной профессии */
+    settlerCost: 1400,
+    /** Турели при штурме: насколько слабее рейдеры, потрёпанные обороной */
+    turretThreatRelief: 1,
 } as const;
 
 /** Слоты по уровню базы: 1 → 2, 2 → 4, 3 → 6 */

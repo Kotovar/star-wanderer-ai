@@ -5238,6 +5238,8 @@
         "potential_plain": "No features boost modules here — the base will run at ordinary output",
         "storage_free": "free",
         "status_title": "Your outposts",
+        "service_craft": "Workbench",
+        "service_hire": "Raise a settler · {{cost}}₢",
         "gas_collector": "Gas collector",
         "build_gas_collector": "Build a gas collector",
         "build": "Build",
@@ -5276,6 +5278,10 @@
         }
     },
     "base_modules": {
+        "workbench": {
+            "name": "Workbench",
+            "desc": "Craft weapons and modules at the base, no station needed."
+        },
         "turrets": {
             "name": "Turrets",
             "desc": "Captures become far less frequent."
@@ -5772,9 +5778,12 @@
         "base_healed": "⚕️ The medical bay treated the crew and cleared fatigue",
         "base_heal_nothing": "Nobody needs treatment",
         "base_withdrawn": "📤 From base storage: {{resource}} ×{{qty}}",
+        "base_hired": "👤 {{name}} ({{profession}}) grew up at the base and joined the crew",
+        "base_hire_no_room": "No room aboard for another crew member",
         "base_stored": "📦 Into base storage: {{resource}} ×{{qty}}",
         "base_store_full": "Base storage is full",
         "outpost_captured": "⚠ The gas collector has been captured: production halted",
+        "outposts_captured_many": "⚠ Raiders captured {{count}} of your outposts. Production there is halted",
         "outpost_captured_base": "⚠ Raiders captured the base: all production halted",
         "outpost_assault_started": "⚔ Assaulting the captured outpost",
         "outpost_assault_remote": "You can only assault on site",

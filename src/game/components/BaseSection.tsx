@@ -1,6 +1,15 @@
 "use client";
 
 import { useGameStore } from "@/game/store";
+import { useState } from "react";
+import {
+    Dialog,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { GameDialogContent } from "./GameDialog";
+import { CraftingTab } from "./station/CraftingTab";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import {
@@ -9,6 +18,7 @@ import {
     BASE_MAX_LEVEL,
     BASE_MODULES,
     BASE_SLOTS_BY_LEVEL,
+    BASE_SERVICE_VALUES,
     BASE_UPGRADE_COST,
 } from "@/game/constants/baseModules";
 import { RESEARCH_RESOURCES } from "@/game/constants";
@@ -27,6 +37,15 @@ import type { Location } from "@/game/types";
 import type { BaseModuleId, OutpostResource } from "@/game/types/outposts";
 import { OutpostGarrison } from "./OutpostGarrison";
 
+/** Кого можно вырастить на базе: профессии, которых станции дают неохотно */
+const HIREABLE_PROFESSIONS = [
+    "engineer",
+    "scientist",
+    "medic",
+    "gunner",
+    "scout",
+] as const;
+
 interface Props {
     location: Location;
 }
@@ -39,6 +58,7 @@ interface Props {
  * чек-листом. Ради этого вся система и затевалась.
  */
 export function BaseSection({ location }: Props) {
+    const [craftOpen, setCraftOpen] = useState(false);
     const { t } = useTranslation();
     const outposts = useGameStore((s) => s.outposts);
     const credits = useGameStore((s) => s.credits);
@@ -54,6 +74,7 @@ export function BaseSection({ location }: Props) {
     const storeAtBase = useGameStore((s) => s.storeAtBase);
     const storeCargoAtBase = useGameStore((s) => s.storeCargoAtBase);
     const withdrawCargoFromBase = useGameStore((s) => s.withdrawCargoFromBase);
+    const hireAtBase = useGameStore((s) => s.hireAtBase);
     const assaultOutpost = useGameStore((s) => s.assaultOutpost);
     const ship = useGameStore((s) => s.ship);
     const gases = useGameStore((s) => s.gases);
@@ -187,6 +208,8 @@ export function BaseSection({ location }: Props) {
     const canRepair = hasBaseService(base, "repair");
     const canHeal = hasBaseService(base, "heal");
     const canStore = hasBaseService(base, "storage");
+    const canCraft = hasBaseService(base, "craft");
+    const canHire = hasBaseService(base, "garrison");
     const storageFree = getStorageFree(base);
     // На склад кладём только то, что реально занимает трюм
     const storable: [OutpostResource, number][] = canStore
@@ -327,7 +350,44 @@ export function BaseSection({ location }: Props) {
                                 ⚕️ {t("outposts.service_heal")}
                             </Button>
                         )}
+                        {canCraft && (
+                            <Button
+                                onClick={() => setCraftOpen(true)}
+                                className="min-h-8 cursor-pointer border border-[#ffb000] bg-transparent px-2 text-[10px] uppercase text-[#ffb000] hover:bg-[rgba(255,176,0,0.12)]"
+                            >
+                                🛠 {t("outposts.service_craft")}
+                            </Button>
+                        )}
                     </div>
+                    {/* Казарма растит своих: профессию выбирает игрок, а не
+                        случай, и этим наём на базе отличается от станции */}
+                    {canHire && (
+                        <div className="mt-1.5">
+                            <div className="text-[10px] text-[#8a9ba3]">
+                                {t("outposts.service_hire", {
+                                    cost: BASE_SERVICE_VALUES.settlerCost,
+                                })}
+                            </div>
+                            <div className="mt-1 flex flex-wrap gap-1">
+                                {HIREABLE_PROFESSIONS.map((profession) => (
+                                    <Button
+                                        key={profession}
+                                        onClick={() =>
+                                            hireAtBase(base.id, profession)
+                                        }
+                                        disabled={
+                                            credits <
+                                            BASE_SERVICE_VALUES.settlerCost
+                                        }
+                                        className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000] disabled:cursor-default disabled:opacity-40"
+                                    >
+                                        {t(`professions.${profession}`)}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {canStore && (
                         <div className="mt-1.5">
                             <div className="text-[10px] text-[#8a9ba3]">
@@ -394,6 +454,26 @@ export function BaseSection({ location }: Props) {
                         </div>
                     )}
                 </div>
+            )}
+
+            {/* Верстак переиспользует вкладку станции, а не заводит второй
+                интерфейс крафта — экраны обязаны совпадать */}
+            {craftOpen && (
+                <Dialog open onOpenChange={() => setCraftOpen(false)}>
+                    <GameDialogContent variant="warning" className="max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="font-['Orbitron'] text-[#ffb000]">
+                                🛠 {t("outposts.service_craft")}
+                            </DialogTitle>
+                            <DialogDescription className="sr-only">
+                                {t("outposts.service_craft")}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="max-h-[60vh] overflow-y-auto">
+                            <CraftingTab />
+                        </div>
+                    </GameDialogContent>
+                </Dialog>
             )}
 
             <OutpostGarrison outpost={base} accent="#ffb000" />

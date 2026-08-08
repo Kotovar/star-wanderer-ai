@@ -4,6 +4,7 @@ import {
     buildBase,
     buildGasCollector,
     healAtBase,
+    hireAtBase,
     repairAtBase,
     storeAtBase,
     storeCargoAtBase,
@@ -33,6 +34,8 @@ export interface OutpostsSlice {
     repairAtBase: (outpostId: string) => void;
     /** Лечит экипаж и снимает усталость в медблоке базы. Стоит ход */
     healAtBase: (outpostId: string) => void;
+    /** Нанимает поселенца выбранной профессии в казарме базы */
+    hireAtBase: (outpostId: string, profession: string) => void;
     /** Кладёт предмет трюма на склад базы: груз задания, модуль, орудие */
     storeCargoAtBase: (outpostId: string, cargoIndex: number, quantity: number) => void;
     /** Забирает предмет со склада обратно в трюм */
@@ -64,6 +67,8 @@ export const createOutpostsSlice = (
     assaultOutpost: (outpostId) => assaultOutpost(outpostId, set, get),
     repairAtBase: (outpostId) => repairAtBase(outpostId, set, get),
     healAtBase: (outpostId) => healAtBase(outpostId, set, get),
+    hireAtBase: (outpostId, profession) =>
+        hireAtBase(outpostId, profession, set, get),
     storeAtBase: (outpostId, resource, quantity) =>
         storeAtBase(outpostId, resource, quantity, set, get),
     storeCargoAtBase: (outpostId, cargoIndex, quantity) =>

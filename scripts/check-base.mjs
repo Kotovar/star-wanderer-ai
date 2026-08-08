@@ -426,6 +426,42 @@ for (const action of ["buildBase(", "installBaseModule(", "stationCrew("]) {
   );
 }
 
+// ── Верстак, казарма и медблок делают то, что обещают ─────────────────────
+assert.equal(BASE_MODULES.workbench.service, "craft", "верстак не даёт крафта");
+assert.match(
+  source("game/components/BaseSection.tsx"),
+  /<CraftingTab \/>/,
+  "верстак заводит второй интерфейс крафта вместо вкладки станции — экраны разъедутся",
+);
+
+const hire = source("game/slices/outposts/helpers/hireAtBase.ts");
+assert.match(
+  hire,
+  /hasBaseService\(outpost, "garrison"\)/,
+  "поселенцев можно нанимать без казармы",
+);
+assert.match(
+  hire,
+  /getShipCrew\(state\.crew\)\.length >= state\.getCrewCapacity\(\)/,
+  "наём на базе обходит лимит экипажа",
+);
+
+// Медблок — причина оставить человека надолго, а не просто койка
+const crewTurn = source("game/slices/outposts/helpers/processOutpostCrew.ts");
+assert.match(
+  crewTurn,
+  /hasBaseService\(outpost, "heal"\)/,
+  "медблок не влияет на изоляцию — «оставить отдыхать» ничем не отличается от «забыть»",
+);
+
+// Турели встречают рейдеров огнём, а не только реже пускают
+const raids = source("game/slices/outposts/helpers/outpostRaids.ts");
+assert.match(
+  raids,
+  /turretThreatRelief/,
+  "турели не ослабляют захватчиков — при штурме их как будто и не было",
+);
+
 // ── Локали и подключение к экрану ──────────────────────────────────────────
 assert.match(
   source("game/components/EmptyPlanetPanel.tsx"),
@@ -476,10 +512,10 @@ for (const lang of ["ru", "en"]) {
     assert.ok(catalog.base_modules?.[id]?.name, `${lang}: нет имени модуля ${id}`);
     assert.ok(catalog.base_modules?.[id]?.desc, `${lang}: нет описания модуля ${id}`);
   }
-  for (const key of ["base", "build_base", "base_hint", "bunker", "dismantle", "upgrade", "blocked_not_explored", "status_title", "services", "service_repair", "service_heal", "service_store"]) {
+  for (const key of ["base", "build_base", "base_hint", "bunker", "dismantle", "upgrade", "blocked_not_explored", "status_title", "services", "service_repair", "service_heal", "service_store", "service_craft", "service_hire"]) {
     assert.ok(catalog.outposts?.[key], `${lang}: нет outposts.${key}`);
   }
-  for (const key of ["base_withdrawn", "outpost_built_base", "base_upgraded", "base_module_installed", "base_module_removed", "outpost_build_remote", "base_repaired", "base_healed", "base_stored", "base_service_remote"]) {
+  for (const key of ["base_hired", "base_hire_no_room", "base_withdrawn", "outpost_built_base", "base_upgraded", "base_module_installed", "base_module_removed", "outpost_build_remote", "base_repaired", "base_healed", "base_stored", "base_service_remote"]) {
     assert.ok(catalog.game_logs?.[key], `${lang}: нет лога ${key}`);
   }
 }

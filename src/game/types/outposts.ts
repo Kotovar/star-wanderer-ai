@@ -23,7 +23,8 @@ export type BaseModuleId =
     | "repair_dock"
     | "med_bay"
     | "barracks"
-    | "turrets";
+    | "turrets"
+    | "workbench";
 
 /**
  * Что вообще может лежать в бункере. Газ, торговый товар и научный ресурс

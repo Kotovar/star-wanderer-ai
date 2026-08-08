@@ -71,7 +71,13 @@ export function getRaidThreat(
     sectors: readonly Sector[],
 ): number {
     const tier = sectors.find((s) => s.id === outpost.sectorId)?.tier ?? 1;
-    return RAID_THREAT_BY_TIER[tier] ?? 1;
+    const base = RAID_THREAT_BY_TIER[tier] ?? 1;
+    // Турели не только реже пускают рейдеров, но и встречают их огнём:
+    // захватчики приходят потрёпанными, и отбивать постройку легче
+    const relief = hasBaseService(outpost, "defense")
+        ? BASE_SERVICE_VALUES.turretThreatRelief
+        : 0;
+    return Math.max(1, base - relief);
 }
 
 /**
@@ -110,14 +116,21 @@ export function processOutpostRaids(set: SetState, get: () => GameStore): void {
         ),
     }));
 
-    for (const outpost of captured) {
-        get().addLog(
-            i18nStore.t(
-                outpost.kind === "base"
-                    ? "game_logs.outpost_captured_base"
-                    : "game_logs.outpost_captured",
-            ),
-            "error",
-        );
-    }
+    // Одна запись на ход, а не по одной на каждую постройку: за ход могут
+    // пасть сразу несколько, и три одинаковых тревоги подряд читаются как
+    // сбой, а не как событие
+    const baseLost = captured.some((outpost) => outpost.kind === "base");
+    get().addLog(
+        captured.length === 1
+            ? i18nStore.t(
+                  baseLost
+                      ? "game_logs.outpost_captured_base"
+                      : "game_logs.outpost_captured",
+              )
+            : i18nStore.t("game_logs.outposts_captured_many", {
+                  count: captured.length,
+              }),
+        // Потеря базы громче: она одна за забег
+        baseLost ? "error" : "warning",
+    );
 }

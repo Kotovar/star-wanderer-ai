@@ -6,6 +6,7 @@ import {
     OUTPOST_ROLE,
 } from "@/game/constants/outposts";
 import { shiftHappiness } from "@/game/crew";
+import { hasBaseService } from "./baseServices";
 import type { GameStore, SetState } from "@/game/types";
 
 /**
@@ -32,10 +33,23 @@ export function processOutpostCrew(set: SetState, get: () => GameStore): void {
 
     if (state.turn % OUTPOST_ISOLATION_INTERVAL !== 0) return;
 
+    // Медблок на базе — это жилые условия, а не только койка для раненых:
+    // при нём человека можно оставить надолго, и «оставить отдыхать»
+    // становится осмысленным решением, а не эвфемизмом для забыть
+    const cared = new Set(
+        state.outposts
+            .filter((outpost) => hasBaseService(outpost, "heal"))
+            .map((outpost) => outpost.id),
+    );
+
     const lonely: string[] = [];
     set((s) => ({
         crew: s.crew.map((member) => {
             if (!member.outpostId) return member;
+            if (cared.has(member.outpostId)) {
+                // Не просто без штрафа: здесь человек восстанавливается
+                return shiftHappiness(member, OUTPOST_ISOLATION_MORALE);
+            }
             const shifted = shiftHappiness(member, -OUTPOST_ISOLATION_MORALE);
             if (shifted.happiness < member.happiness) lonely.push(member.name);
             return shifted;
