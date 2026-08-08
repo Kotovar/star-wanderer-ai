@@ -37,6 +37,12 @@ export function FriendlyShipPanel() {
   const displayCredits = Math.floor(credits);
 
   const { t } = useTranslation();
+  const getDeliveryCargoName = (cargo: string | undefined): string => {
+    if (!cargo) return "";
+    const key = `delivery_goods.${cargo}`;
+    const translated = t(key);
+    return translated === key ? cargo : translated;
+  };
 
   const hireCrew = useGameStore((s) => s.hireCrew);
   const getCrewCapacity = useGameStore((s) => s.getCrewCapacity);
@@ -410,7 +416,7 @@ export function FriendlyShipPanel() {
                     {c.desc}
                   </div>
                   <div className="text-[11px] mt-1 text-[#00ff41]">
-                    📦 {t("friendly_ship.cargo_label")}: {c.cargo} ({c.quantity ?? 10}т)
+                    📦 {t("friendly_ship.cargo_label")}: {getDeliveryCargoName(c.cargo)} ({c.quantity ?? 10}т)
                   </div>
                   <div className="text-[#ffb000] text-xs mt-1">
                     💰 {c.reward}₢

@@ -77,6 +77,9 @@ const { renderToStaticMarkup } = await import("react-dom/server");
 const { AsteroidBeltPanel } = await import(
   "../src/game/components/AsteroidBeltPanel.tsx"
 );
+const { FriendlyShipPanel } = await import(
+  "../src/game/components/FriendlyShipPanel.tsx"
+);
 
 globalThis.__playerFeedbackState = {
   currentLocation: {
@@ -135,5 +138,78 @@ for (const [locale, expected] of [
     expected,
   );
 }
+
+const deliveryState = {
+  currentSector: { tier: 1 },
+  currentLocation: {
+    id: "delivery-ship",
+    type: "friendly_ship",
+    name: "Курьер",
+    hasTrader: false,
+    hasCrew: false,
+    hasQuest: false,
+    hasDistress: false,
+  },
+  credits: 0,
+  probes: 0,
+  ship: {
+    modules: [],
+    cargo: [
+      {
+        item: "construction_materials",
+        quantity: 10,
+        contractId: "delivery-1",
+      },
+    ],
+    tradeGoods: [],
+    fuel: 0,
+  },
+  crew: [],
+  knownRaces: [],
+  raceReputation: {},
+  activeContracts: [
+    {
+      id: "delivery-1",
+      type: "delivery",
+      targetLocationId: "delivery-ship",
+      cargo: "construction_materials",
+      quantity: 10,
+      reward: 250,
+      desc: "Тестовая доставка",
+    },
+  ],
+  shipQuestsTaken: [],
+  hiredCrewFromShips: [],
+  friendlyShipStock: { "delivery-ship": {} },
+  distressRespondedShips: [],
+  discoverRace: () => {},
+  hireCrew: () => false,
+  getCrewCapacity: () => 5,
+  acceptContract: () => false,
+  completeDeliveryContract: () => {},
+  showSectorMap: () => {},
+  attackFriendlyShip: () => {},
+  addLog: () => {},
+};
+globalThis.__playerFeedbackState = deliveryState;
+
+const ru = JSON.parse(
+  readFileSync(new URL("../src/lib/locales/ru.json", import.meta.url), "utf8"),
+);
+const deliveryMarkup = renderToStaticMarkup(createElement(FriendlyShipPanel));
+assert.ok(
+  deliveryMarkup.includes(ru.delivery_goods.construction_materials),
+  "доставка должна показывать локализованное название груза",
+);
+assert.equal(deliveryMarkup.includes("construction_materials"), false);
+
+deliveryState.activeContracts[0].cargo = "legacy_payload";
+const legacyDeliveryMarkup = renderToStaticMarkup(
+  createElement(FriendlyShipPanel),
+);
+assert.ok(
+  legacyDeliveryMarkup.includes("legacy_payload"),
+  "неизвестный груз должен сохранить legacy-значение",
+);
 
 console.log("Player feedback checks passed");
