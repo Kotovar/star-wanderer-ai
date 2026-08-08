@@ -80,7 +80,10 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
             credits: 1400,
             resources: { tech_salvage: 6, ancient_data: 6 },
         },
-        output: { ancient_data: 0.4, alien_biology: 0.4 },
+        // 0.4 давали за 100 ходов 38% всей потребности дерева в биообразцах:
+        // лаборатория была сильнейшим модулем, а проверка её не видела —
+        // она считает кредиты, а наука кредитов не приносит
+        output: { ancient_data: 0.25, alien_biology: 0.2 },
         boostedBy: "ancient_traces",
     },
     relay: {

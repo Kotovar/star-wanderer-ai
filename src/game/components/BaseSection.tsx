@@ -16,6 +16,7 @@ import { RESEARCH_RESOURCES } from "@/game/constants";
 import {
     describeHaulResource,
     getBaseBlocker,
+    getBasePotential,
     getModuleBlocker,
     getOutpostOutputMultiplier,
     hasBaseService,
@@ -63,6 +64,8 @@ export function BaseSection({ location }: Props) {
         // висел на каждой пустой планете весь забег
         if (blocker === "wrong_location" || blocker === "tech_missing") return null;
 
+        const potential = getBasePotential(location.id);
+
         return (
             <div className="mt-2 border border-[#3c4b52] bg-[rgba(255,255,255,0.02)] p-2 sm:p-3">
                 <div className="text-[11px] uppercase tracking-wider text-[#b9c6cc] sm:text-xs">
@@ -103,6 +106,33 @@ export function BaseSection({ location }: Props) {
                             </span>
                         );
                     })}
+                </div>
+
+                {/* Что даст эта планета: 6000₢ слишком дорого, чтобы
+                    узнавать про непригодность уже после закладки */}
+                <div className="mt-1.5 text-[10px] leading-snug sm:text-xs">
+                    <div className="text-[#8a9ba3]">
+                        {t("outposts.potential_available", {
+                            list: potential.available
+                                .map((id) => t(`base_modules.${id}.name`))
+                                .join(", "),
+                        })}
+                    </div>
+                    <div
+                        className={
+                            potential.boosted.length > 0
+                                ? "text-[#00ff41]"
+                                : "text-[#666]"
+                        }
+                    >
+                        {potential.boosted.length > 0
+                            ? t("outposts.potential_boosted", {
+                                  list: potential.boosted
+                                      .map((id) => t(`base_modules.${id}.name`))
+                                      .join(", "),
+                              })
+                            : t("outposts.potential_plain")}
+                    </div>
                 </div>
 
                 {blocker && (

@@ -90,6 +90,64 @@ assert.ok(
   `база окупается за ${Math.round(basePayback)} ходов — вложение бессмысленно`,
 );
 
+// ── Реальное решение — это база первого уровня ────────────────────────────
+// Доходных модулей три, а слотов на максимуме шесть: апгрейды покупают
+// услуги, а не деньги. Считать окупаемость по максимальной базе значит
+// вешать стоимость расширений на одну буровую и получать неверное число.
+const firstLevelSlots = BASE_SLOTS_BY_LEVEL[1];
+
+const paybackFor = (pool) => {
+  const picked = pool.slice(0, firstLevelSlots);
+  const perTurn = picked.reduce((sum, mod) => sum + mod.perTurn, 0);
+  const cost = BASE_COST.credits + picked.reduce((sum, mod) => sum + mod.cost, 0);
+  return { perTurn, payback: cost / perTurn };
+};
+
+// Обычный случай: модули, которым не нужна редкая черта. Криокрекер сюда не
+// попадает — ледяные шапки есть у 12.5% планет, и считать по ним значит
+// мерить игру по счастливому случаю
+const anywhere = earners.filter(
+  (mod) => !BASE_MODULES[mod.id].requiresFeature,
+);
+const typical = paybackFor(anywhere);
+assert.ok(
+  typical.payback >= 80 && typical.payback <= 160,
+  `на обычной планете база первого уровня окупается за ${Math.round(typical.payback)} ходов — это и есть решение, которое принимает игрок`,
+);
+
+// Удачная планета ускоряет, но не должна делать вложение бесплатным
+const lucky = paybackFor(earners);
+assert.ok(
+  lucky.payback >= 50,
+  `на удачной планете база окупается за ${Math.round(lucky.payback)} ходов — везение важнее решений`,
+);
+assert.ok(
+  lucky.payback < typical.payback,
+  "удачная планета не даёт преимущества — черты ни на что не влияют",
+);
+
+// ── Наука тоже ценность, хоть и не в кредитах ─────────────────────────────
+// Проверка считает деньги и потому слепа к лаборатории. Ограничиваем её
+// иначе: ни один модуль не должен закрывать заметную долю всего дерева.
+const { RESEARCH_TREE } = await import("../src/game/constants/research/index.ts");
+const treeNeeds = {};
+for (const tech of Object.values(RESEARCH_TREE)) {
+  for (const [resource, amount] of Object.entries(tech.resources ?? {})) {
+    treeNeeds[resource] = (treeNeeds[resource] ?? 0) + amount;
+  }
+}
+const HORIZON = 100;
+for (const def of Object.values(BASE_MODULES)) {
+  for (const [resource, amount] of Object.entries(def.output)) {
+    if (!(resource in treeNeeds)) continue;
+    const share = (amount * HORIZON) / treeNeeds[resource];
+    assert.ok(
+      share <= 0.25,
+      `${def.id} за ${HORIZON} ходов закрывает ${(share * 100).toFixed(0)}% всей потребности дерева в «${resource}» — исследования перестают быть занятием`,
+    );
+  }
+}
+
 // ── База не должна обгонять активную игру ─────────────────────────────────
 // Эталон: бой и контракт на тире 3 — то, чем игрок зарабатывает руками
 const battleTier3 = calculateCombatLoot(3, undefined, 0.5);
@@ -155,7 +213,10 @@ for (const lang of ["ru", "en"]) {
 
 console.log("Outpost economy checks passed");
 console.log(
-  `  сборщик окупается за ${Math.round(collectorPayback)} ходов; база за ${Math.round(basePayback)}`,
+  `  сборщик окупается за ${Math.round(collectorPayback)} ходов`,
+);
+console.log(
+  `  база ур.1: обычная планета ${Math.round(typical.payback)} ходов, удачная ${Math.round(lucky.payback)}`,
 );
 console.log(
   `  база ${bestPerTurn.toFixed(0)}₢/ход, все постройки ${everything.toFixed(0)}₢/ход, активная игра ~${activePerTurn.toFixed(0)}₢/ход`,

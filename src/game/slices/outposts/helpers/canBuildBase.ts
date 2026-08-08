@@ -1,4 +1,6 @@
-import { BASE_COST } from "@/game/constants/baseModules";
+import { BASE_COST, BASE_MODULES } from "@/game/constants/baseModules";
+import { planetHasFeature } from "@/game/planets";
+import type { BaseModuleId } from "@/game/types/outposts";
 import { OUTPOST_LIMITS, OUTPOST_TECH_ID } from "@/game/constants/outposts";
 import type { GameState, Location } from "@/game/types";
 import type { OutpostBuildBlocker } from "@/game/types/outposts";
@@ -43,3 +45,28 @@ export function getBaseBlocker(
 }
 
 export const getBaseLimit = () => OUTPOST_LIMITS.base;
+
+/**
+ * Что эта планета даст базе: какие модули здесь возможны и какие удвоятся.
+ *
+ * Нужно до закладки: 6000₢ — слишком дорого, чтобы тратить их вслепую и
+ * узнавать про непригодную планету уже после.
+ */
+export function getBasePotential(locationId: string): {
+    available: BaseModuleId[];
+    boosted: BaseModuleId[];
+} {
+    const ids = Object.keys(BASE_MODULES) as BaseModuleId[];
+    return {
+        available: ids.filter(
+            (id) =>
+                !BASE_MODULES[id].requiresFeature ||
+                planetHasFeature(locationId, BASE_MODULES[id].requiresFeature),
+        ),
+        boosted: ids.filter(
+            (id) =>
+                BASE_MODULES[id].boostedBy &&
+                planetHasFeature(locationId, BASE_MODULES[id].boostedBy),
+        ),
+    };
+}

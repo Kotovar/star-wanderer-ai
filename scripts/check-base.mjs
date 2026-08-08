@@ -342,6 +342,41 @@ assert.match(
   "базу негде заложить: раздел не подключён к панели пустой планеты",
 );
 
+// Что даст планета, надо знать ДО того, как потратить 6000₢
+const { getBasePotential } = await import(
+  "../src/game/slices/outposts/helpers/canBuildBase.ts"
+);
+const plainPotential = getBasePotential(withoutIce);
+assert.ok(
+  !plainPotential.available.includes("cryo_cracker"),
+  "прогноз обещает крекер там, где его не поставить",
+);
+assert.ok(
+  plainPotential.available.length > 0,
+  "прогноз утверждает, что на планете нельзя вообще ничего",
+);
+assert.ok(
+  getBasePotential(withIce).available.includes("cryo_cracker"),
+  "прогноз не видит крекер там, где лёд есть",
+);
+assert.ok(
+  getBasePotential(richDeposits).boosted.includes("drill_shaft"),
+  "прогноз не показывает удвоение буровой на богатых залежах",
+);
+assert.match(
+  source("game/components/BaseSection.tsx"),
+  /getBasePotential\(/,
+  "игрок не видит, что даст планета, пока не потратит 6000₢",
+);
+for (const lang of ["ru", "en"]) {
+  const catalog = JSON.parse(
+    readFileSync(new URL(`../src/lib/locales/${lang}.json`, import.meta.url), "utf8"),
+  );
+  for (const key of ["potential_available", "potential_boosted", "potential_plain"]) {
+    assert.ok(catalog.outposts?.[key], `${lang}: нет outposts.${key}`);
+  }
+}
+
 for (const lang of ["ru", "en"]) {
   const catalog = JSON.parse(
     readFileSync(new URL(`../src/lib/locales/${lang}.json`, import.meta.url), "utf8"),
