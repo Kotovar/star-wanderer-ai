@@ -39,16 +39,29 @@ export function assaultOutpost(
 }
 
 /**
- * Возврат постройки после победы. Зовётся из общей обработки победы, а не
- * из боя аванпоста: победить можно и отступив-вернувшись, и любым другим
- * путём, а восстановить постройку надо ровно один раз.
+ * Возврат постройки после победы.
+ *
+ * Зовётся из общей обработки победы, а не из боя аванпоста: победить можно
+ * разными путями, а восстановить надо ровно один раз. Отсюда же и проверка
+ * места: пометка о штурме живёт до следующей победы, и без неё чужой бой
+ * засчитывался бы за отбитие.
  */
 export function resolveOutpostAssault(
     set: SetState,
     get: () => GameStore,
 ): void {
-    const outpostId = get().assaultingOutpostId;
+    const state = get();
+    const outpostId = state.assaultingOutpostId;
     if (!outpostId) return;
+
+    // Победа обязана быть одержана на месте. Иначе достаточно начать штурм,
+    // отступить, улететь и выиграть любой другой бой — постройка вернулась бы
+    // даром. Пометка снимается в любом случае, чтобы не тянуться за игроком
+    const outpost = state.outposts.find((o) => o.id === outpostId);
+    if (!outpost || state.currentLocation?.id !== outpost.locationId) {
+        set(() => ({ assaultingOutpostId: null }));
+        return;
+    }
 
     set((s) => ({
         assaultingOutpostId: null,
