@@ -37,6 +37,8 @@ export const acceptContract = (
             {
                 artifacts: state.artifacts,
                 researchedTechs: state.research.researchedTechs,
+                activeCrisis: state.activeCrisis,
+                unlockedRecipes: state.research.unlockedRecipes,
             },
         )
     ) {

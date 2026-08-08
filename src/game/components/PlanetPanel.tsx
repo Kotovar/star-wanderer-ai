@@ -301,6 +301,8 @@ export function PlanetPanel() {
     const completedLocations = useGameStore((s) => s.completedLocations);
     const artifacts = useGameStore((s) => s.artifacts);
     const researchedTechs = useGameStore((s) => s.research.researchedTechs);
+    const activeCrisis = useGameStore((s) => s.activeCrisis);
+    const unlockedRecipes = useGameStore((s) => s.research.unlockedRecipes);
     const get = useGameStore.getState;
 
     const { t } = useTranslation();
@@ -384,6 +386,8 @@ export function PlanetPanel() {
             isContractTargetAvailable(c, sectors, completedLocations, {
                 artifacts,
                 researchedTechs,
+                activeCrisis,
+                unlockedRecipes,
             }),
     );
 

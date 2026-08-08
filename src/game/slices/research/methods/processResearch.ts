@@ -12,6 +12,7 @@ import {
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
 import { getReputationChanges } from "@/game/contracts/completionRewards";
+import { seedFabricationOffers } from "@/game/contracts/seedResponseContracts";
 import type { GameStore, SetState, TechnologyId } from "@/game/types";
 import type { CraftingRecipeId } from "@/game/types/crafting";
 
@@ -80,6 +81,18 @@ const handleResearchCompletion = (
                   ]
                 : s.discoveredWeaponTypes,
     }));
+
+    // Новый рецепт сразу порождает заказы на изготовление впереди по маршруту:
+    // ждать стоходового обновления предложений было бы слишком долго
+    if (unlockedRecipeId && newWeaponBonus) {
+        set((s) => {
+            const sectors = seedFabricationOffers(
+                s.galaxy.sectors,
+                unlockedRecipeId,
+            );
+            return sectors ? { galaxy: { ...s.galaxy, sectors } } : {};
+        });
+    }
 
     // Логирование завершения
     get().addLog( i18nStore.t("game_logs.processResearch_1", { completedTech_name: completedTech.name }), "info");

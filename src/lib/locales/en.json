@@ -3061,7 +3061,7 @@
         "passes": "Passes",
         "deeper_richer": "Deeper deposits are richer, but every pass rocks the belt.",
         "collision_risk": "Collision risk",
-        "collision_hits_drill": "A collision hits the drill — the very tool doing the digging.",
+        "collision_hits_drill": "A collision damages the drill: the more worn it is, the poorer the yield.",
         "banked_so_far": "Already in the hold",
         "dig_deeper": "DIG DEEPER",
         "leave_with_haul": "LEAVE WITH THE HAUL",

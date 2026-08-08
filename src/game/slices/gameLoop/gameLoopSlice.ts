@@ -36,11 +36,11 @@ import { refreshVisitedPlanetContracts } from "@/game/contracts/refreshPlanetCon
 /**
  * Как часто планеты обновляют предложения контрактов.
  *
- * Должен быть заметно короче кризиса (~30 ходов), иначе crisis_response
- * не успевает появиться. Наплыв заданий это не вызывает: обновление лишь
- * добирает предложения до MAX_OPEN_CONTRACTS на планету.
+ * Динамические типы (crisis_response, fabrication) не ждут этого такта:
+ * они подсеваются по событию — старт кризиса и открытие рецепта, —
+ * см. seedResponseContracts.
  */
-const CONTRACT_REFRESH_INTERVAL = 20;
+const CONTRACT_REFRESH_INTERVAL = 100;
 
 /**
  * Интерфейс GameLoopSlice
@@ -70,8 +70,6 @@ export const createGameLoopSlice = (
         // Инициализация нового хода
         initNewTurn(set);
         const currentTurnState = get();
-        // Раз в 100 ходов предложения обновлялись бы реже, чем длится кризис
-        // (~30 ходов), поэтому crisis_response не успевал бы появиться ни разу.
         if (currentTurnState.turn % CONTRACT_REFRESH_INTERVAL === 0) {
             const sectors = refreshVisitedPlanetContracts(currentTurnState);
             if (sectors) {

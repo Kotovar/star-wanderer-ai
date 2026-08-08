@@ -9,6 +9,11 @@ const {
 const { isContractTargetAvailable } = await import(
   "../src/game/contracts/targetAvailability.ts"
 );
+const {
+  seedFabricationOffers,
+  seedCrisisResponseOffers,
+  dropStaleCrisisOffers,
+} = await import("../src/game/contracts/seedResponseContracts.ts");
 const { GLOBAL_CRISES } = await import("../src/game/constants/globalCrises.ts");
 const { TRADE_GOODS } = await import("../src/game/constants/goods.ts");
 const { CRAFTING_RECIPES } = await import("../src/game/constants/crafting.ts");
@@ -131,6 +136,89 @@ assert.equal(
 // ── Оба типа умеют платить опытом ───────────────────────────────────────────
 assert.ok(EXP_REWARDS.crisis_response.baseExp > 0);
 assert.ok(EXP_REWARDS.fabrication.baseExp > 0);
+
+// ── Событийный подсев: динамика не ждёт стоходового обновления ──────────────
+const planet = (id, visited, contracts = []) => ({
+  id,
+  name: id,
+  type: "planet",
+  visited,
+  contracts,
+  dominantRace: "human",
+});
+const makeSectors = () => [
+  {
+    id: 1,
+    name: "S1",
+    tier: 2,
+    locations: [
+      planet("visited", true),
+      planet("fresh", false),
+      { id: "belt", type: "asteroid_belt", name: "belt" },
+      { ...planet("empty", false), isEmpty: true },
+    ],
+  },
+];
+
+const findPlanet = (sectors, id) =>
+  sectors[0].locations.find((l) => l.id === id);
+
+// Заказы на новый рецепт ждут игрока впереди, а не на пройденных планетах
+const seeded = seedFabricationOffers(makeSectors(), "plasma");
+assert.ok(seeded, "открытие рецепта обязано подсеять заказы");
+assert.equal(findPlanet(seeded, "fresh").contracts.length, 1);
+assert.equal(findPlanet(seeded, "fresh").contracts[0].type, "fabrication");
+assert.equal(
+  findPlanet(seeded, "visited").contracts.length,
+  0,
+  "посещённые планеты доберут своё на обычном обновлении",
+);
+assert.equal(
+  findPlanet(seeded, "empty").contracts.length,
+  0,
+  "пустая планета не выдаёт заказов",
+);
+assert.equal(seedFabricationOffers(makeSectors(), "not_a_recipe"), null);
+
+// Повторное открытие того же рецепта не плодит дубликаты
+assert.equal(seedFabricationOffers(seeded, "plasma"), null);
+
+// Потолок предложений соблюдается
+const crowded = [
+  {
+    ...makeSectors()[0],
+    locations: [
+      planet(
+        "fresh",
+        false,
+        Array.from({ length: 5 }, (_, i) => ({ id: `x${i}`, type: "delivery" })),
+      ),
+    ],
+  },
+];
+assert.equal(seedFabricationOffers(crowded, "plasma"), null);
+
+// Кризис просит помощи сразу и по всей галактике, включая непосещённое
+const crisisState = { id: "epidemic", turnsRemaining: 30 };
+const withCrisis = seedCrisisResponseOffers(makeSectors(), crisisState);
+assert.ok(withCrisis, "старт кризиса обязан подсеять просьбы о помощи");
+for (const id of ["visited", "fresh"]) {
+  assert.equal(findPlanet(withCrisis, id).contracts[0].type, "crisis_response");
+}
+assert.equal(seedCrisisResponseOffers(withCrisis, crisisState), null);
+
+// Прошедший кризис уносит свои предложения с собой
+const cleaned = dropStaleCrisisOffers(withCrisis, null);
+assert.ok(cleaned, "предложения ушедшего кризиса обязаны сниматься");
+for (const id of ["visited", "fresh"]) {
+  assert.equal(findPlanet(cleaned, id).contracts.length, 0);
+}
+assert.equal(
+  dropStaleCrisisOffers(withCrisis, "epidemic"),
+  null,
+  "идущий кризис свои предложения не теряет",
+);
+assert.equal(dropStaleCrisisOffers(makeSectors(), null), null);
 
 // ── Оба типа завершаются на планете-заказчике ───────────────────────────────
 for (const contract of [early, order]) {

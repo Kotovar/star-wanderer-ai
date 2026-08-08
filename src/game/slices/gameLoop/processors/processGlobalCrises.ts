@@ -9,6 +9,10 @@ import {
   rollNextCrisisTurn,
 } from "@/game/constants/globalCrises";
 import { getCrisisStage } from "@/game/crises/escalation";
+import {
+  dropStaleCrisisOffers,
+  seedCrisisResponseOffers,
+} from "@/game/contracts/seedResponseContracts";
 
 /**
  * Выбирает случайный кризис, исключая только что завершившийся
@@ -72,7 +76,13 @@ export const processGlobalCrises = (
       if (crisis?.onEndEffect) {
         crisis.onEndEffect(set, get, crisisAfterTurn);
       }
-      set(() => ({ activeCrisis: null }));
+      set((s) => {
+        const sectors = dropStaleCrisisOffers(s.galaxy.sectors, null);
+        return {
+          activeCrisis: null,
+          ...(sectors ? { galaxy: { ...s.galaxy, sectors } } : {}),
+        };
+      });
       get().addLog(
         i18nStore.t("game_logs.crisis_ended", {
           icon: crisis?.icon ?? "",
@@ -111,18 +121,25 @@ export const processGlobalCrises = (
     const preparedData = crisis.onStartEffect?.(set, get) ?? undefined;
     const freshState = get();
     const nextPlannedCrisis = pickWeightedCrisis(freshState, crisis.id);
-    set(() => ({
-      activeCrisis: {
-        id: crisis.id,
-        turnsRemaining: crisis.duration,
-        data: preparedData,
-      },
-      discoveredCrisisIds: [
-        ...new Set([...freshState.discoveredCrisisIds, crisis.id]),
-      ],
-      nextCrisisTurn: rollNextCrisisTurn(turn, freshState),
-      nextCrisisId: nextPlannedCrisis.id,
-    }));
+    const startedCrisis = {
+      id: crisis.id,
+      turnsRemaining: crisis.duration,
+      data: preparedData,
+    };
+    set((s) => {
+      // Планеты просят помощи сразу, а не через сто ходов до следующего
+      // обновления предложений — кризис успел бы кончиться раньше
+      const sectors = seedCrisisResponseOffers(s.galaxy.sectors, startedCrisis);
+      return {
+        activeCrisis: startedCrisis,
+        discoveredCrisisIds: [
+          ...new Set([...freshState.discoveredCrisisIds, crisis.id]),
+        ],
+        nextCrisisTurn: rollNextCrisisTurn(turn, freshState),
+        nextCrisisId: nextPlannedCrisis.id,
+        ...(sectors ? { galaxy: { ...s.galaxy, sectors } } : {}),
+      };
+    });
     get().addLog( i18nStore.t("game_logs.processGlobalCrises_2", { icon: crisis.icon, value: i18nStore.t(crisis.nameKey), duration: crisis.duration }),
       "error",
     );
