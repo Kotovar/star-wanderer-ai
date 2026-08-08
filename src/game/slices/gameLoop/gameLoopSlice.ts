@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import {
     accrueOutposts,
     burnCryogen,
+    processBaseEvents,
     processOutpostCrew,
     processOutpostRaids,
 } from "@/game/slices/outposts/helpers";
@@ -172,6 +173,9 @@ export const createGameLoopSlice = (
         set((s) => ({
             outposts: accrueOutposts(s.outposts ?? [], s.galaxy.sectors, s.crew),
         }));
+
+        // Новости с базы: повод прилететь, а не только за бункером
+        processBaseEvents(set, get);
 
         // Рейды на постройки: их можно потерять и отбить обратно
         processOutpostRaids(set, get);

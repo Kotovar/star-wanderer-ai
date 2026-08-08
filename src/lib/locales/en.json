@@ -5278,6 +5278,13 @@
             "use": "never sold: cuts power draw"
         }
     },
+    "base_events": {
+        "vein_found": "⛏️ From the base: the garrison struck a vein — rare minerals in the bunker",
+        "salvage_run": "🔧 From the base: old machinery stripped, salvage into the bunker",
+        "lab_breakthrough": "🔬 From the base: the lab decoded ancient records",
+        "passing_trader": "💰 A trader stopped at the base and paid for lodging",
+        "long_shift": "😔 From the base: the shift ran long, the garrison is worn out"
+    },
     "base_modules": {
         "workbench": {
             "name": "Workbench",
@@ -5781,6 +5788,7 @@
         "base_withdrawn": "📤 From base storage: {{resource}} ×{{qty}}",
         "base_hired": "👤 {{name}} ({{profession}}) grew up at the base and joined the crew",
         "base_hire_no_room": "No room aboard for another crew member",
+        "base_service_no_supplies": "Not enough supplies: {{item}} x{{qty}} required",
         "base_stored": "📦 Into base storage: {{resource}} ×{{qty}}",
         "base_store_full": "Base storage is full",
         "outpost_captured": "⚠ The gas collector has been captured: production halted",

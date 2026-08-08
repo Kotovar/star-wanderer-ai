@@ -1,5 +1,7 @@
 import type { BaseModuleId, OutpostResource } from "@/game/types/outposts";
 import type { PlanetFeatureId } from "@/game/planets/features";
+import { getPlanetResourceProfile } from "@/game/planets/resourceProfile";
+import type { PlanetType } from "@/game/types/planets";
 import type { ResearchResourceType } from "@/game/types/research";
 
 export interface BaseModuleDef {
@@ -18,6 +20,12 @@ export interface BaseModuleDef {
     boostedBy?: PlanetFeatureId;
     /** Служебный эффект: не добывает, а меняет правила */
     service?: BaseService;
+    /**
+     * Добыча зависит от типа планеты: числа из `output` остаются, а сами
+     * ресурсы подставляются из профиля планеты. Так буровая на вулканическом
+     * мире и на кристаллическом даёт разное, как и планетарный бур.
+     */
+    followsPlanet?: boolean;
 }
 
 /**
@@ -56,7 +64,10 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         },
         // 80₢/ход до удвоения чертой. Числа дробные намеренно: остаток
         // копится в сотых, и редкий минерал выходит примерно раз в 17 ходов
+        // Ресурсы подставляются по типу планеты, числа — скорость добычи:
+        // первое значение идёт в товар, второе в научный образец
         output: { minerals: 0.5, rare_minerals: 0.06 },
+        followsPlanet: true,
         boostedBy: "rich_deposits",
     },
     cryo_cracker: {
@@ -163,8 +174,15 @@ export const BASE_SERVICE_VALUES = {
     storageCapacity: 80,
     /** Ремдок: прочности модулям корабля за визит */
     repairAmount: 40,
+    /**
+     * Расход на визит. Не кредиты намеренно: база обязана оставаться дешевле
+     * станции, но перестать быть даровой — иначе станционный ремонт нужен
+     * только когда некогда лететь, и целая услуга выпадает из игры.
+     */
+    repairCost: { item: "spares", quantity: 4 },
     /** Медблок: здоровья экипажу за визит и снятие усталости */
     healAmount: 40,
+    healCost: { item: "medicine", quantity: 3 },
     /** Казарма: дополнительные места гарнизона */
     garrisonSlots: 2,
     /** Турели: во сколько раз реже случается захват */
@@ -174,6 +192,34 @@ export const BASE_SERVICE_VALUES = {
     /** Турели при штурме: насколько слабее рейдеры, потрёпанные обороной */
     turretThreatRelief: 1,
 } as const;
+
+/**
+ * Во что превращается добыча модуля на конкретной планете.
+ *
+ * У модулей, следующих за планетой, числа остаются, а ресурсы берутся из её
+ * профиля: товар вместо товара, образец вместо образца. Остальные отдают то,
+ * что записано, где бы ни стояли.
+ */
+export function getModuleOutput(
+    id: BaseModuleId,
+    planetType?: PlanetType,
+): Partial<Record<OutpostResource, number>> {
+    const def = BASE_MODULES[id];
+    if (!def.followsPlanet) return def.output;
+
+    const profile = getPlanetResourceProfile(planetType);
+    const entries = Object.entries(def.output) as [OutpostResource, number][];
+    const goodRate = entries[0]?.[1] ?? 0;
+    const researchRate = entries[1]?.[1] ?? 0;
+
+    const out: Partial<Record<OutpostResource, number>> = {};
+    if (profile.good) out[profile.good] = goodRate;
+    // Планеты без товара отдают всё научным материалом, а не теряют половину
+    out[profile.research] =
+        (out[profile.research] ?? 0) +
+        (profile.good ? researchRate : goodRate + researchRate);
+    return out;
+}
 
 /**
  * Картинки. Путь строится из id, а не хранится полем у каждого модуля:

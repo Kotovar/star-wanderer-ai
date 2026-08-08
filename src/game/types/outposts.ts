@@ -90,3 +90,5 @@ export type OutpostBuildBlocker =
     | "wrong_location"
     | "not_enough_credits"
     | "not_enough_resources";
+
+export type { BaseEvent } from "@/game/constants/baseEvents";

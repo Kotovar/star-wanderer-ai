@@ -4,6 +4,43 @@ import { shiftHappiness } from "@/game/crew";
 import type { GameStore, SetState } from "@/game/types";
 import { hasBaseService } from "./baseServices";
 
+
+/**
+ * Списывает груз, которым платят за услугу базы. Возвращает `false`, если не
+ * хватило: услуга бесплатна в кредитах, но не в материалах.
+ */
+function takeSupplies(
+    cost: { item: string; quantity: number },
+    set: SetState,
+    get: () => GameStore,
+): boolean {
+    const held =
+        get().ship.tradeGoods.find((g) => g.item === cost.item)?.quantity ?? 0;
+    if (held < cost.quantity) {
+        get().addLog(
+            i18nStore.t("game_logs.base_service_no_supplies", {
+                item: i18nStore.t(`trade.goods.${cost.item}`),
+                qty: cost.quantity,
+            }),
+            "error",
+        );
+        return false;
+    }
+    set((s) => ({
+        ship: {
+            ...s.ship,
+            tradeGoods: s.ship.tradeGoods.flatMap((g) =>
+                g.item !== cost.item
+                    ? [g]
+                    : g.quantity > cost.quantity
+                      ? [{ ...g, quantity: g.quantity - cost.quantity }]
+                      : [],
+            ),
+        },
+    }));
+    return true;
+}
+
 /**
  * Ремдок: чинит модули корабля прямо на базе.
  *
@@ -29,6 +66,7 @@ export function repairAtBase(
         get().addLog(i18nStore.t("game_logs.base_repair_nothing"), "warning");
         return;
     }
+    if (!takeSupplies(BASE_SERVICE_VALUES.repairCost, set, get)) return;
 
     set((s) => ({
         turn: s.turn + 1,
@@ -81,6 +119,7 @@ export function healAtBase(
         get().addLog(i18nStore.t("game_logs.base_heal_nothing"), "warning");
         return;
     }
+    if (!takeSupplies(BASE_SERVICE_VALUES.healCost, set, get)) return;
 
     set((s) => ({
         turn: s.turn + 1,

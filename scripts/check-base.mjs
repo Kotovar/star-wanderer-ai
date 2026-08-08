@@ -658,6 +658,107 @@ for (const lang of ["ru", "en"]) {
   );
 }
 
+// ── Тип планеты определяет, что добывает база ──────────────────────────────
+// Иначе буровая выдаёт одни и те же минералы на вулканическом мире и на
+// кристаллическом, и двенадцать типов планет базе безразличны
+const { getModuleOutput } = await import("../src/game/constants/baseModules.ts");
+const { PLANET_TYPES } = await import("../src/game/constants/planets.ts");
+
+const drillYields = new Set(
+  PLANET_TYPES.map((type) => Object.keys(getModuleOutput("drill_shaft", type)).sort().join("+")),
+);
+assert.ok(
+  drillYields.size >= 4,
+  `буровая даёт всего ${drillYields.size} разных набора на двенадцати типах планет — тип снова ничего не значит`,
+);
+// Скорость сохраняется: меняется что добывают, а не сколько
+for (const type of PLANET_TYPES) {
+  const out = getModuleOutput("drill_shaft", type);
+  const total = Object.values(out).reduce((s, v) => s + v, 0);
+  assert.ok(
+    Math.abs(total - 0.56) < 1e-9,
+    `${type}: суммарная скорость буровой ${total} вместо 0.56 — тип планеты меняет не только добычу, но и темп`,
+  );
+  for (const resource of Object.keys(out)) {
+    assert.ok(getHaulKind(resource), `${type}: буровая даёт «${resource}», который некуда вывезти`);
+  }
+}
+// Модули без followsPlanet отдают своё где угодно
+assert.deepEqual(
+  getModuleOutput("field_lab", "Вулканическая"),
+  getModuleOutput("field_lab", "Ледяная"),
+  "лаборатория зависит от типа планеты, хотя не должна",
+);
+
+// ── Гарнизон хочет тех, кто нужен установленным модулям ────────────────────
+const { getWantedRoles, getOutpostOutputMultiplier } = await import(
+  "../src/game/slices/outposts/helpers/outpostCrew.ts"
+);
+const labBase = baseAt(withIce, { modules: ["field_lab", "med_bay"] });
+const roles = getWantedRoles(labBase);
+assert.ok(
+  roles.has("scientist") && roles.has("medic"),
+  `база с лабораторией и медблоком хочет ${[...roles]} — профессия модулей не учитывается`,
+);
+assert.ok(
+  !getWantedRoles(baseAt(withIce, { modules: [] })).has("scientist"),
+  "пустая база хочет учёного — профиль по умолчанию потерян",
+);
+const scientistMult = getOutpostOutputMultiplier(labBase, [
+  { id: 1, profession: "scientist", level: 1, outpostId: "b1" },
+]);
+const engineerMult = getOutpostOutputMultiplier(labBase, [
+  { id: 1, profession: "engineer", level: 1, outpostId: "b1" },
+]);
+assert.ok(
+  scientistMult > engineerMult,
+  "на базе с лабораторией инженер не хуже учёного — у гарнизона один правильный ответ",
+);
+
+// ── Услуги базы не бесплатны ───────────────────────────────────────────────
+// Иначе станционный ремонт нужен только когда некогда лететь
+const { BASE_SERVICE_VALUES: SV } = await import(
+  "../src/game/constants/baseModules.ts"
+);
+for (const cost of [SV.repairCost, SV.healCost]) {
+  assert.ok(cost?.quantity > 0, "услуга базы ничего не стоит");
+  assert.ok(getHaulKind(cost.item) === "good", `${cost.item}: платить нечем`);
+}
+assert.match(
+  source("game/slices/outposts/helpers/useBaseServices.ts"),
+  /takeSupplies\(/,
+  "ремонт и лечение на базе снова даровые",
+);
+
+// ── События на базе ────────────────────────────────────────────────────────
+const { BASE_EVENTS, BASE_EVENT_CHANCE } = await import(
+  "../src/game/constants/baseEvents.ts"
+);
+assert.ok(BASE_EVENTS.length >= 3, "событий слишком мало, чтобы они не приелись");
+assert.ok(
+  BASE_EVENT_CHANCE > 0 && BASE_EVENT_CHANCE <= 0.05,
+  `шанс события ${BASE_EVENT_CHANCE} — база превращается во второй источник дохода`,
+);
+for (const event of BASE_EVENTS) {
+  assert.ok(event.weight > 0, `${event.id}: нулевой вес`);
+  assert.ok(
+    event.bunker || event.credits || event.morale,
+    `${event.id}: событие ничего не делает`,
+  );
+  for (const resource of Object.keys(event.bunker ?? {})) {
+    assert.ok(getHaulKind(resource), `${event.id}: даёт невывозимое «${resource}»`);
+  }
+}
+assert.ok(
+  BASE_EVENTS.some((e) => (e.morale ?? 0) < 0),
+  "все события приятные — на базе нечему идти не так",
+);
+assert.match(
+  source("game/slices/outposts/helpers/processBaseEvents.ts"),
+  /capturedAtTurn === undefined/,
+  "захваченная база продолжает присылать новости",
+);
+
 // ── Локали и подключение к экрану ──────────────────────────────────────────
 assert.match(
   source("game/components/EmptyPlanetPanel.tsx"),

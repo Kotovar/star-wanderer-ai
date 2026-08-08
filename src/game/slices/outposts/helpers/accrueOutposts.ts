@@ -1,4 +1,9 @@
-import { BASE_BUNKER_CAP, BASE_MODULES } from "@/game/constants/baseModules";
+import {
+    BASE_BUNKER_CAP,
+    BASE_MODULES,
+    getModuleOutput,
+} from "@/game/constants/baseModules";
+import type { PlanetType } from "@/game/types/planets";
 import { planetHasFeature } from "@/game/planets";
 import type { OutpostResource } from "@/game/types/outposts";
 import {
@@ -27,16 +32,20 @@ export function accrueOutposts(
     if (outposts.length === 0) return [...outposts];
 
     const atmosphereOf = new Map<string, string | undefined>();
+    const typeOf = new Map<string, PlanetType | undefined>();
     for (const sector of sectors) {
         for (const location of sector.locations) {
             atmosphereOf.set(location.id, location.gasGiantAtmosphere);
+            typeOf.set(location.id, location.planetType);
         }
     }
 
     return outposts.map((outpost) => {
         // Захваченная постройка стоит: бункер остался, но работает на рейдеров
         if (outpost.capturedAtTurn !== undefined) return outpost;
-        if (outpost.kind === "base") return accrueBase(outpost, crew);
+        if (outpost.kind === "base") {
+            return accrueBase(outpost, crew, typeOf.get(outpost.locationId));
+        }
         if (outpost.kind !== "gas_collector") return outpost;
 
         const atmosphere = atmosphereOf.get(outpost.locationId);
@@ -75,6 +84,7 @@ export function accrueOutposts(
 function accrueBase(
     outpost: Outpost,
     crew: readonly CrewMember[],
+    planetType: PlanetType | undefined,
 ): Outpost {
     const modules = outpost.modules ?? [];
     if (modules.length === 0) return outpost;
@@ -90,10 +100,9 @@ function accrueBase(
                 ? 2
                 : 1;
 
-        for (const [resource, amount] of Object.entries(def.output) as [
-            OutpostResource,
-            number,
-        ][]) {
+        for (const [resource, amount] of Object.entries(
+            getModuleOutput(moduleId, planetType),
+        ) as [OutpostResource, number][]) {
             const stored = bunker[resource] ?? 0;
             if (stored >= BASE_BUNKER_CAP) continue;
 
