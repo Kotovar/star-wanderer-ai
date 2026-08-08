@@ -153,15 +153,19 @@ export function buildStartingState(
   const crewConfigs =
     crewLimit !== null ? template.crew.slice(0, crewLimit) : template.crew;
 
-  const crew: CrewMember[] = crewConfigs.map((opts, index) =>
-    buildCrewMember({
+  // «Одиночка»: единственный член экипажа не устаёт и не теряет настроение
+  const isHermitCrew = activeModifiers.some((mod) => mod.hermitCrew);
+
+  const crew: CrewMember[] = crewConfigs.map((opts, index) => {
+    const member = buildCrewMember({
       ...opts,
       level:
         crewLevel ??
         (typeof opts.level === "number" ? opts.level : 1),
       id: opts.id ?? Date.now() + index,
-    }),
-  );
+    });
+    return isHermitCrew ? { ...member, hermit: true } : member;
+  });
 
   // ── Исследовательские ресурсы ─────────────────────────────────────────────
   const researchResources: Partial<Record<ResearchResourceType, number>> = {

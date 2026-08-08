@@ -15,6 +15,7 @@ import {
 import { isModuleActive } from "@/game/modules/utils";
 import { getEffectiveScanRange } from "@/game/slices/scanner/helpers/getEffectiveScanRange";
 import { getStarTypeEffect } from "@/game/constants/starEffects";
+import { getRunModifierValue } from "@/game/constants/launchModifiers";
 import {
     addTradeGood,
     getCargoCapacity,
@@ -102,9 +103,11 @@ export function salvageWreckField(
     }
 
     // — Лут: базовые значения —
-    const starSalvageMult = 1 + (state.currentSector
+    // «Вынужденная посадка» умножается сюда же: далеко не улетишь — выжимай больше
+    const starSalvageMult = (1 + (state.currentSector
         ? getStarTypeEffect(state.currentSector.star.type).salvageYieldBonus ?? 0
-        : 0);
+        : 0))
+        * (1 + getRunModifierValue(state.startModifierIds, "salvageLootBonus"));
     const sparesRaw        = Math.round(rng(config.spares[0], config.spares[1]) * approachConfig.rewardMult * starSalvageMult);
     const electronicsRaw   = Math.round(rng(config.electronics[0], config.electronics[1]) * approachConfig.rewardMult * starSalvageMult);
     const rareMineralsRaw  = Math.round(rng(config.rare_minerals[0], config.rare_minerals[1]) * approachConfig.rewardMult * starSalvageMult);

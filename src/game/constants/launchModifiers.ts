@@ -1,6 +1,7 @@
 import type { ModuleType } from "@/game/types/modules";
 import type { ResearchResourceType } from "@/game/types/research";
 import type { RaceId } from "@/game/types/races";
+import type { LocationWeightKey } from "@/game/galaxy/runProfiles";
 
 // ─── Launch Modifier ──────────────────────────────────────────────────────────
 
@@ -45,6 +46,69 @@ export interface LaunchModifier {
   targetedModuleTypes?: ModuleType[];
   /** Стартовая репутация с расами (override поверх нейтральных 0) */
   startRaceReputation?: Partial<Record<RaceId, number>>;
+
+  // ── Эффекты на весь забег (читаются из state.startModifierIds) ─────────────
+  /** Снижение потребления энергии каждым модулем, минимум 1 */
+  moduleConsumptionReduction?: number;
+  /** Экипаж не устаёт от назначений и не теряет настроение */
+  hermitCrew?: boolean;
+  /** Ремонт даёт двойной опыт и технолом */
+  repairSalvage?: boolean;
+  /** Множители весов локаций при генерации галактики */
+  locationWeightMultipliers?: Partial<Record<LocationWeightKey, number>>;
+  /** Доля прибавки к кредитам за победу в бою */
+  combatLootBonus?: number;
+  /** Доля прибавки к добыче с обломков и покинутых кораблей */
+  salvageLootBonus?: number;
+}
+
+/** Числовые эффекты забега — суммируются по всем активным модификаторам */
+type NumericRunEffect =
+  | "moduleConsumptionReduction"
+  | "combatLootBonus"
+  | "salvageLootBonus";
+
+/** Булевы эффекты забега — активны, если их даёт хотя бы один модификатор */
+type FlagRunEffect = "hermitCrew" | "repairSalvage";
+
+const getActiveModifiers = (modifierIds: readonly string[] | undefined) =>
+  modifierIds?.length
+    ? LAUNCH_MODIFIERS.filter((mod) => modifierIds.includes(mod.id))
+    : [];
+
+/** Суммарное значение числового эффекта активных модификаторов забега. */
+export function getRunModifierValue(
+  modifierIds: readonly string[] | undefined,
+  effect: NumericRunEffect,
+): number {
+  return getActiveModifiers(modifierIds).reduce(
+    (sum, mod) => sum + (mod[effect] ?? 0),
+    0,
+  );
+}
+
+/** Активен ли булев эффект забега. */
+export function hasRunModifierFlag(
+  modifierIds: readonly string[] | undefined,
+  effect: FlagRunEffect,
+): boolean {
+  return getActiveModifiers(modifierIds).some((mod) => mod[effect] === true);
+}
+
+/** Перемноженные множители весов локаций от активных модификаторов. */
+export function getRunModifierLocationWeights(
+  modifierIds: readonly string[] | undefined,
+): Partial<Record<LocationWeightKey, number>> {
+  const weights: Partial<Record<LocationWeightKey, number>> = {};
+  for (const mod of getActiveModifiers(modifierIds)) {
+    for (const [key, value] of Object.entries(
+      mod.locationWeightMultipliers ?? {},
+    )) {
+      const weightKey = key as LocationWeightKey;
+      weights[weightKey] = (weights[weightKey] ?? 1) * value;
+    }
+  }
+  return weights;
 }
 
 export function getLaunchCredits(
@@ -179,24 +243,31 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     startWithRandomTech: true,
   },
 
-  // ── Испытания (дают трудности, но добавляют кредиты) ─────────────────────
+  // ── Испытания под билд (штраф платит структурой, а не кредитами) ─────────
+  // Кредиты обесцениваются к сотому ходу, а штраф остаётся навсегда, поэтому
+  // «продать штраф за деньги» — всегда проигрышная сделка. Вместо этого каждый
+  // из них открывает сборку, которая иначе невозможна.
   {
     id: "solo_mission",
     nameKey: "launch_modifiers.solo_mission.name",
     descriptionKey: "launch_modifiers.solo_mission.description",
     icon: "👤",
-    type: "challenge",
-    creditDelta: +600,
+    type: "mixed",
+    creditDelta: 0,
     crewLimit: 1,
+    crewLevel: 3,
+    hermitCrew: true,
   },
   {
     id: "weakened_reactor",
     nameKey: "launch_modifiers.weakened_reactor.name",
     descriptionKey: "launch_modifiers.weakened_reactor.description",
     icon: "⚡",
-    type: "challenge",
-    creditDelta: +300,
-    reactorPowerPenalty: 2,
+    type: "mixed",
+    creditDelta: 0,
+    // Ставка на широкий дешёвый корабль: на старте минус, на десятке модулей плюс
+    reactorPowerPenalty: 4,
+    moduleConsumptionReduction: 1,
   },
   {
     id: "crisis_start",
@@ -219,18 +290,19 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     startWithCursedArtifact: true,
   },
 
-  // ── Новые испытания ───────────────────────────────────────────────────────
   {
     id: "stranded",
     nameKey: "launch_modifiers.stranded.name",
     descriptionKey: "launch_modifiers.stranded.description",
     icon: "🏚️",
-    type: "challenge",
-    creditDelta: +210,
+    type: "mixed",
+    creditDelta: 0,
     fuelDelta: -60,
     targetedModuleDamagePercent: 35,
     targetedModuleTypes: ["engine", "fueltank"],
     researchResources: { tech_salvage: 1 },
+    // Далеко не улетишь — значит выжимай больше из каждой находки
+    salvageLootBonus: 0.5,
     conflictsWith: ["damaged_ship"],
   },
   {
@@ -238,9 +310,11 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     nameKey: "launch_modifiers.damaged_ship.name",
     descriptionKey: "launch_modifiers.damaged_ship.description",
     icon: "💥",
-    type: "challenge",
-    creditDelta: +210,
+    type: "mixed",
+    creditDelta: 0,
     moduleDamagePercent: 40,
+    // Разбитый корабль становится источником прогресса, а не налогом
+    repairSalvage: true,
     conflictsWith: ["stranded"],
   },
   {
@@ -248,9 +322,12 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     nameKey: "launch_modifiers.wanted.name",
     descriptionKey: "launch_modifiers.wanted.description",
     icon: "🎯",
-    type: "challenge",
-    creditDelta: +400,
+    type: "mixed",
+    creditDelta: 0,
     startRaceReputation: { krylorian: -70 },
+    // Охотники за головами — стабильный ранний источник боевого дохода
+    locationWeightMultipliers: { enemyShip: 1.6 },
+    combatLootBonus: 0.5,
     conflictsWith: ["doctrine_exile"],
   },
 

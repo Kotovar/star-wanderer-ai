@@ -7,6 +7,7 @@ import { clearLocalStorage, saveToLocalStorage } from "@/game/saves/utils";
 import { playSound, setAudioVolumes, setSoundPlaybackEnabled } from "@/sounds";
 import { loadPlayerSettings } from "../../settings/playerSettings";
 import { buildStartingState } from "./buildStartingState";
+import { getRunModifierLocationWeights } from "@/game/constants/launchModifiers";
 import { applyResearchedTechs } from "@/game/research/applyResearchedTechs";
 import { DEFAULT_TEMPLATE_ID } from "@/game/constants/shipTemplates";
 import { getVictoryObjectives } from "@/game/constants/victoryObjectives";
@@ -51,7 +52,22 @@ export const restartGame = (
   const patch = buildStartingState(templateId, modifierIds);
   clearLocalStorage();
 
-  const newSectors = generateGalaxy(profile);
+  // Модификаторы запуска могут смещать состав галактики («В розыске» — охотники)
+  const modifierWeights = getRunModifierLocationWeights(modifierIds);
+  const runProfile = Object.keys(modifierWeights).length
+    ? {
+        ...profile,
+        locationWeights: Object.entries(modifierWeights).reduce(
+          (weights, [key, multiplier]) => ({
+            ...weights,
+            [key]: (profile.locationWeights[key as keyof typeof modifierWeights] ?? 1) * multiplier,
+          }),
+          { ...profile.locationWeights },
+        ),
+      }
+    : profile;
+
+  const newSectors = generateGalaxy(runProfile);
   const nebulae = generateNebulae(newSectors);
   newSectors[STARTING_SECTOR_INDEX].visited = true;
 

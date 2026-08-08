@@ -1,6 +1,7 @@
 import { getRaceCrewBonus } from "@/game/races";
 import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
 import { getStrongestRaceTechPerkValue } from "@/game/constants/techTree";
+import { getRunModifierValue } from "@/game/constants/launchModifiers";
 import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import { isModuleFunctional } from "../utils";
 import type { GameState } from "@/game/types";
@@ -47,6 +48,14 @@ export function getTotalConsumption(state: GameState): number {
           )
         : 0;
 
+    // === Снижение потребления от модификатора запуска ===
+    // «Ослабленный реактор»: низковольтная переделка — каждый модуль дешевле,
+    // но сам реактор слабее. Выгодно только на широком корабле.
+    const consumptionReduction = getRunModifierValue(
+        state.startModifierIds,
+        "moduleConsumptionReduction",
+    );
+
     // === Базовое потребление модулей ===
     let baseConsumption = 0;
 
@@ -56,6 +65,14 @@ export function getTotalConsumption(state: GameState): number {
         }
 
         let moduleConsumption = shipModule.consumption ?? 0;
+
+        // Потребляющие модули не могут стать бесплатными
+        if (consumptionReduction > 0 && moduleConsumption > 0) {
+            moduleConsumption = Math.max(
+                1,
+                moduleConsumption - consumptionReduction,
+            );
+        }
 
         // === Применяем расовые бонусы экипажа ===
         // Некоторые расы имеют бонус к энергии (отрицательное значение = снижение потребления)

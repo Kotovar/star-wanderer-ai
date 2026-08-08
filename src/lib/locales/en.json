@@ -4222,6 +4222,12 @@
         "effect_starting_crisis": "crisis from turn one",
         "effect_random_tech": "random starting technology",
         "effect_reputation": "reputation changed",
+        "effect_consumption": "module draw",
+        "effect_hermit": "no fatigue, no morale loss",
+        "effect_repair_salvage": "repairs yield salvage and double XP",
+        "effect_combat_loot": "combat loot",
+        "effect_salvage_loot": "wreck yield",
+        "effect_bounty_hunters": "bounty hunters across the galaxy",
         "ship_label": "Ship",
         "start_credits": "Starting credits",
         "insufficient_credits": "Not enough starting credits",
@@ -4296,11 +4302,11 @@
         },
         "solo_mission": {
             "name": "Solo Mission",
-            "description": "Start with only the pilot. No support, but extra credits."
+            "description": "Only the pilot aboard — but at level 3, immune to assignment fatigue and morale loss. A fast, fragile one-specialist run."
         },
         "weakened_reactor": {
             "name": "Weakened Reactor",
-            "description": "Reactor generates 2 less energy, leaving less reserve for upgrades and power-hungry systems."
+            "description": "The reactor puts out 4 less power, but the low-voltage refit cuts every module's draw by 1 (minimum 1). A bet on a wide ship built from many cheap modules."
         },
         "crisis_start": {
             "name": "Emergency Start",
@@ -4312,15 +4318,15 @@
         },
         "stranded": {
             "name": "Stranded",
-            "description": "Start with a nearly empty standard tank: 20 fuel. The engine or fuel tank is damaged by 35%, but you salvage a bit of tech from the wreck."
+            "description": "A nearly empty tank and a damaged engine or fuel tank. In exchange wrecks and derelicts yield 50% more: you cannot travel far, so wring every find dry."
         },
         "damaged_ship": {
             "name": "Damaged Ship",
-            "description": "All ship modules are damaged by 40% at the start. Urgent repairs needed."
+            "description": "Every module starts at 40% damage. In exchange each repair grants the engineer double experience and a unit of tech salvage — the broken hull becomes the run's engine of progress."
         },
         "wanted": {
             "name": "Wanted",
-            "description": "Krylorians are known from turn one and already hostile (-70 reputation). Extra credits compensate the risk."
+            "description": "The Krylorians are hostile from turn one (-70 reputation) and bounty hunters are far more common. Combat victories pay 50% more credits — the feud becomes your income."
         },
         "salvaged_parts": {
             "name": "Salvaged Parts",
@@ -5378,6 +5384,7 @@
         "processAssignments_4": "⚠️ {{crewMember_name}}: AI glitch! Action not performed",
         "processAssignments_5": "{{crewMember_name}}: Module \"{{currentModule_name}}\" is fully intact",
         "processAssignments_6": "{{crewMember_name}}: Repairing \"{{currentModule_name}}\" +{{repairAmount}}%",
+        "processAssignments_repair_salvage": "{{crewMember_name}}: salvaged tech scrap ×1 from the repair debris",
         "processAssignments_7": "⚠️ {{crewMember_name}}: module \"{{currentModule_name}}\" is already occupied by another xenomorph",
         "processAssignments_8": "🧬 {{crewMember_name}}: Merging with \"{{currentModule_name}}\"",
         "processAssignments_9": "{{crewMember_name}}: Reactor overclock is only possible in the reactor",

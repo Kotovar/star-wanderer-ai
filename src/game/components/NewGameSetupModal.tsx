@@ -174,6 +174,25 @@ function getModifierDetails(mod: LaunchModifier, t: TFn) {
       `${t("new_game_setup.effect_key_module")} -${mod.targetedModuleDamagePercent}% HP`,
     );
   }
+  if (mod.moduleConsumptionReduction) {
+    details.push(
+      `${t("new_game_setup.effect_consumption")} -${mod.moduleConsumptionReduction}`,
+    );
+  }
+  if (mod.hermitCrew) details.push(t("new_game_setup.effect_hermit"));
+  if (mod.repairSalvage) details.push(t("new_game_setup.effect_repair_salvage"));
+  if (mod.combatLootBonus) {
+    details.push(
+      `${t("new_game_setup.effect_combat_loot")} +${Math.round(mod.combatLootBonus * 100)}%`,
+    );
+  }
+  if (mod.salvageLootBonus) {
+    details.push(
+      `${t("new_game_setup.effect_salvage_loot")} +${Math.round(mod.salvageLootBonus * 100)}%`,
+    );
+  }
+  if (mod.locationWeightMultipliers?.enemyShip)
+    details.push(t("new_game_setup.effect_bounty_hunters"));
   if (mod.startWithCursedArtifact)
     details.push(t("new_game_setup.effect_cursed_artifact"));
   if (mod.startWithCrisis)

@@ -172,6 +172,8 @@ export interface CrewMember {
     assignmentRestTurns?: number;
     // Выбранные ветки прокачки профессии на уровнях 3/6/9 (см. constants/techTree.ts)
     techPerks?: Partial<Record<TechPerkTier, TechPerkBranch>>;
+    // «Одиночка»: не устаёт от назначений и не теряет настроение
+    hermit?: boolean;
 }
 
 export type CrewTraitEffect = {

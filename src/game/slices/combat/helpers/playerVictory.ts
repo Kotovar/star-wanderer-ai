@@ -4,6 +4,7 @@ import {
     maybeRevealRunProfileArcTarget,
 } from "@/game/galaxy/runProfileArcs";
 import { getRunProfile } from "@/game/galaxy/runProfiles";
+import { getRunModifierValue } from "@/game/constants/launchModifiers";
 import {
     ARTIFACT_TYPES,
     RESEARCH_RESOURCES,
@@ -280,7 +281,8 @@ function calculateVictoryCredits(
         creditsAmount = Math.floor(creditsAmount * (1 + boostValue));
     }
 
-    let lootBonus = 0;
+    // «В розыске»: охота на игрока оплачивается трофеями с охотников
+    let lootBonus = getRunModifierValue(state.startModifierIds, "combatLootBonus");
     get().crew.forEach((c) => {
         c.traits?.forEach((trait) => {
             if (trait.effect.lootBonus) lootBonus += trait.effect.lootBonus;

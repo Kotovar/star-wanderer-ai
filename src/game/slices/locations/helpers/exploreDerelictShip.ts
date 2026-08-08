@@ -21,6 +21,7 @@ import {
     DERELICT_RISK_CHANCE,
 } from "@/game/slices/locations/constants";
 import { isModuleActive } from "@/game/modules/utils";
+import { getRunModifierValue } from "@/game/constants/launchModifiers";
 
 // Шанс найти рецепт модуля при исследовании обломков (10%)
 const DERELICT_RECIPE_CHANCE = 0.99;
@@ -118,6 +119,9 @@ export const exploreDerelictShip = (
 
     const config = DERELICT_APPROACH_CONFIG[approach];
     const cargoApproach = approach !== "archive";
+    // «Вынужденная посадка»: падальщик выжимает из каждой находки больше
+    const salvageMult =
+        1 + getRunModifierValue(state.startModifierIds, "salvageLootBonus");
     const sparesQty = cargoApproach
         ? Math.floor(
               (DERELICT_LOOT.spares.min +
@@ -127,7 +131,8 @@ export const exploreDerelictShip = (
                               DERELICT_LOOT.spares.min +
                               1),
                   )) *
-                  (config.sparesMultiplier ?? 1),
+                  (config.sparesMultiplier ?? 1) *
+                  salvageMult,
           )
         : 0;
     const electronicsQty = cargoApproach
@@ -139,17 +144,21 @@ export const exploreDerelictShip = (
                               DERELICT_LOOT.electronics.min +
                               1),
                   )) *
-                  (config.electronicsMultiplier ?? 1),
+                  (config.electronicsMultiplier ?? 1) *
+                  salvageMult,
           )
         : 0;
     const rareMineralsQty =
         cargoApproach && Math.random() < 0.5
-            ? DERELICT_LOOT.rare_minerals.min +
-              Math.floor(
-                  Math.random() *
-                      (DERELICT_LOOT.rare_minerals.max -
-                          DERELICT_LOOT.rare_minerals.min +
-                          1),
+            ? Math.floor(
+                  (DERELICT_LOOT.rare_minerals.min +
+                      Math.floor(
+                          Math.random() *
+                              (DERELICT_LOOT.rare_minerals.max -
+                                  DERELICT_LOOT.rare_minerals.min +
+                                  1),
+                      )) *
+                      salvageMult,
               )
             : 0;
     let cargoSpace = getFreeCargoSpace(state);

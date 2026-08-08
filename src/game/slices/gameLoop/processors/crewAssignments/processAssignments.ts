@@ -3,6 +3,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getStrongestRaceTechPerkValue } from "@/game/constants/techTree";
+import { hasRunModifierFlag } from "@/game/constants/launchModifiers";
 import { LAB_MODULE_TYPES } from "@/game/constants/modules";
 import {
     getMergeEffectsBonus,
@@ -57,7 +58,7 @@ export const processCrewAssignments = (
             fatigue: crewMember.assignmentFatigue,
             restTurns: crewMember.assignmentRestTurns,
             assigned: Boolean(crewMember.assignment),
-            canFatigue: crewRace.hasFatigue,
+            canFatigue: crewRace.hasFatigue && !crewMember.hermit,
             turn: get().turn,
         });
         const currentModule = get().ship.modules.find(
@@ -114,7 +115,7 @@ export const processCrewAssignments = (
                 fatigue: crewMember.assignmentFatigue,
                 restTurns: crewMember.assignmentRestTurns,
                 assigned: Boolean(crewMember.assignment),
-                canFatigue: crewRace.hasFatigue,
+                canFatigue: crewRace.hasFatigue && !crewMember.hermit,
                 turn: get().turn,
             });
 
@@ -139,7 +140,7 @@ export const processCrewAssignments = (
                     fatigue: crewMember.assignmentFatigue,
                     restTurns: crewMember.assignmentRestTurns,
                     assigned: Boolean(crewMember.assignment),
-                    canFatigue: RACES[crewMember.race].hasFatigue,
+                    canFatigue: RACES[crewMember.race].hasFatigue && !crewMember.hermit,
                     turn: state.turn,
                 });
                 return {
@@ -333,7 +334,31 @@ const processRepairAssignment = (
     get().addLog( i18nStore.t("game_logs.processAssignments_6", { crewMember_name: crewMember.name, currentModule_name: currentModule.name, repairAmount }),
         "info",
     );
-    get().gainExp(crewMember, BASE_EXP_REWARDS.REPAIR);
+
+    // «Повреждённый корабль»: разбитый корпус сам становится источником прогресса
+    const salvagesRepairs = hasRunModifierFlag(
+        get().startModifierIds,
+        "repairSalvage",
+    );
+    if (salvagesRepairs) {
+        set((s) => ({
+            research: {
+                ...s.research,
+                resources: {
+                    ...s.research.resources,
+                    tech_salvage: (s.research.resources.tech_salvage ?? 0) + 1,
+                },
+            },
+        }));
+        get().addLog( i18nStore.t("game_logs.processAssignments_repair_salvage", { crewMember_name: crewMember.name }),
+            "info",
+        );
+    }
+
+    get().gainExp(
+        crewMember,
+        salvagesRepairs ? BASE_EXP_REWARDS.REPAIR * 2 : BASE_EXP_REWARDS.REPAIR,
+    );
 };
 
 /**
