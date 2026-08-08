@@ -5688,6 +5688,7 @@
         "planetaryDrill_3": "Залежи этой планеты истощены.",
         "planetaryDrill_4": "Бур остывает: следующий проход через {{value}} ход(ов).",
         "planetaryDrill_5": "⛏️ Буровые работы: добыто {{goodName}} x{{qty}}",
+        "outpost_isolation": "😔 Одиночество на аванпосте сказывается: {{names}}",
         "outpost_crew_stationed": "👤 {{name}} остаётся на аванпосте",
         "outpost_crew_recalled": "👤 {{name}} вернулся на корабль",
         "outpost_crew_remote": "Менять гарнизон можно только на месте",

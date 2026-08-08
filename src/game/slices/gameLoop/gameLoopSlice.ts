@@ -1,5 +1,9 @@
 import { store as i18nStore } from "@/lib/useTranslation";
-import { accrueOutposts, burnCryogen } from "@/game/slices/outposts/helpers";
+import {
+    accrueOutposts,
+    burnCryogen,
+    processOutpostCrew,
+} from "@/game/slices/outposts/helpers";
 import type { GameState, GameStore, SetState } from "@/game/types";
 import type { CrisisResponse } from "@/game/types/crisis";
 import type { RandomEventChoiceId } from "@/game/types/randomEvents";
@@ -167,6 +171,9 @@ export const createGameLoopSlice = (
         set((s) => ({
             outposts: accrueOutposts(s.outposts ?? [], s.galaxy.sectors, s.crew),
         }));
+
+        // Приписанный экипаж: работа даёт опыт, одиночество бьёт по морали
+        processOutpostCrew(set, get);
 
         // Криоген горит сам, пока есть запас
         set((s) => {

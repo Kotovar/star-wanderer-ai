@@ -95,5 +95,15 @@ export const OUTPOST_CREW_SLOTS: Record<string, number> = {
     gas_collector: 1,
 };
 
+/** Опыт приписанного за ход: работа на аванпосте — тоже работа */
+export const OUTPOST_CREW_EXP = { onRole: 4, offRole: 2 } as const;
+
+/**
+ * Изоляция: раз в столько ходов приписанный теряет мораль. Это цена того,
+ * что человек уходит с корабля надолго, и повод его иногда сменять.
+ */
+export const OUTPOST_ISOLATION_INTERVAL = 5;
+export const OUTPOST_ISOLATION_MORALE = 3;
+
 /** Наценка станции при скупке газа: продаём дешевле базовой цены */
 export const GAS_SELL_RATE = 0.85;

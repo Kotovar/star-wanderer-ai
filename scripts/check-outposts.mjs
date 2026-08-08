@@ -564,6 +564,85 @@ assert.match(
   "в списке кандидатов не видно профессии и уровня",
 );
 
+// ── Работа на аванпосте даёт опыт, одиночество бьёт по морали ─────────────
+const { processOutpostCrew } = await import(
+  "../src/game/slices/outposts/helpers/processOutpostCrew.ts"
+);
+const {
+  OUTPOST_CREW_EXP,
+  OUTPOST_ISOLATION_INTERVAL,
+  OUTPOST_ISOLATION_MORALE,
+} = await import("../src/game/constants/outposts.ts");
+
+const crewFixture = () => [
+  { id: 1, name: "Инж", profession: "engineer", race: "human", level: 1,
+    happiness: 80, maxHappiness: 100, outpostId: "oc" },
+  { id: 2, name: "Стрелок", profession: "gunner", race: "human", level: 1,
+    happiness: 80, maxHappiness: 100, outpostId: "oc" },
+  { id: 3, name: "Синт", profession: "engineer", race: "synthetic", level: 1,
+    happiness: 80, maxHappiness: 100, outpostId: "oc" },
+  { id: 4, name: "Отшельник", profession: "engineer", race: "human", level: 1,
+    happiness: 80, maxHappiness: 100, outpostId: "oc", hermit: true },
+  { id: 5, name: "На борту", profession: "pilot", race: "human", level: 1,
+    happiness: 80, maxHappiness: 100 },
+];
+
+const runTurn = (turn) => {
+  const state = { turn, crew: crewFixture(), outposts: [collector], logs: [] };
+  const granted = [];
+  const store = {
+    ...state,
+    gainExp: (member, amount) => granted.push([member.id, amount]),
+    addLog: (text) => state.logs.push(text),
+  };
+  Object.defineProperty(store, "crew", { get: () => state.crew, configurable: true });
+  const set = (fn) => Object.assign(state, typeof fn === "function" ? fn(state) : fn);
+  processOutpostCrew(set, () => store);
+  return { state, granted };
+};
+
+// Опыт: профильному больше, на борту — ничего от аванпоста
+const { granted } = runTurn(1);
+assert.deepEqual(
+  granted.find(([id]) => id === 1),
+  [1, OUTPOST_CREW_EXP.onRole],
+  "профильный не получает опыт за работу на аванпосте",
+);
+assert.deepEqual(granted.find(([id]) => id === 2), [2, OUTPOST_CREW_EXP.offRole]);
+assert.ok(
+  !granted.some(([id]) => id === 5),
+  "член экипажа на борту получил опыт аванпоста",
+);
+assert.ok(
+  OUTPOST_CREW_EXP.onRole > OUTPOST_CREW_EXP.offRole,
+  "профильная работа обязана учить быстрее",
+);
+
+// Изоляция бьёт только по срокам и только по тем, кого она касается
+const between = runTurn(OUTPOST_ISOLATION_INTERVAL + 1);
+assert.ok(
+  between.state.crew.every((c) => c.happiness === 80),
+  "мораль падает каждый ход вместо интервала",
+);
+
+const lonely = runTurn(OUTPOST_ISOLATION_INTERVAL);
+const by = (id) => lonely.state.crew.find((c) => c.id === id);
+assert.equal(by(1).happiness, 80 - OUTPOST_ISOLATION_MORALE, "изоляция не бьёт по морали");
+assert.equal(by(3).happiness, 80, "синтетику посчитали мораль, которой у него нет");
+assert.equal(
+  by(4).happiness,
+  80,
+  "отшельник страдает от одиночества — на аванпосте эта черта обязана работать в плюс",
+);
+assert.equal(by(5).happiness, 80, "изоляция задела экипаж на борту");
+assert.equal(lonely.state.logs.length, 1, "падение морали должно быть видно в журнале");
+
+assert.match(
+  source("game/slices/gameLoop/gameLoopSlice.ts"),
+  /processOutpostCrew\(set, get\)/,
+  "ход приписанного экипажа не подключён к игровому циклу",
+);
+
 // ── Локали: ворота, газы и логи переведены на оба языка ────────────────────
 const BLOCKERS = [
   "tech_missing",
@@ -593,7 +672,7 @@ for (const lang of ["ru", "en"]) {
     assert.ok(catalog.gases?.[gas]?.use, `${lang}: не сказано, зачем нужен ${gas}`);
     assert.ok(catalog.gases?.[gas]?.desc, `${lang}: нет описания газа ${gas} для модалки`);
   }
-  for (const key of ["outpost_built_gas_collector", "outpost_collected", "outpost_collect_empty", "outpost_collect_remote", "outpost_collect_no_room", "outpost_collect_partial", "outpost_crew_stationed", "outpost_crew_recalled", "outpost_crew_remote", "outpost_crew_no_slot", "gas_sold", "gas_not_sellable"]) {
+  for (const key of ["outpost_built_gas_collector", "outpost_collected", "outpost_collect_empty", "outpost_collect_remote", "outpost_collect_no_room", "outpost_collect_partial", "outpost_crew_stationed", "outpost_crew_recalled", "outpost_crew_remote", "outpost_crew_no_slot", "outpost_isolation", "gas_sold", "gas_not_sellable"]) {
     assert.ok(catalog.game_logs?.[key], `${lang}: нет лога ${key}`);
   }
 }

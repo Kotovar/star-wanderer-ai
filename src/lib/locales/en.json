@@ -5688,6 +5688,7 @@
         "planetaryDrill_3": "This planet's deposits are depleted.",
         "planetaryDrill_4": "The drill is cooling down: next pass in {{value}} turn(s).",
         "planetaryDrill_5": "⛏️ Drilling: extracted {{goodName}} x{{qty}}",
+        "outpost_isolation": "😔 Isolation at the outpost is telling on {{names}}",
         "outpost_crew_stationed": "👤 {{name}} stays at the outpost",
         "outpost_crew_recalled": "👤 {{name}} is back aboard",
         "outpost_crew_remote": "The garrison can only be changed on site",
