@@ -19,7 +19,19 @@ import {
     EXPEDITION_MEDIC_MORALE_REDUCTION,
     EXPEDITION_PROFESSION_CAP,
     getExpeditionEnvironment,
+    EXPEDITION_CACHE_GOODS,
+    EXPEDITION_CACHE_QTY_MIN,
+    EXPEDITION_CACHE_QTY_MAX,
+    EXPEDITION_CORE_SAMPLE_MIN,
+    EXPEDITION_CORE_SAMPLE_MAX,
+    EXPEDITION_HAZARD_DAMAGE_MIN,
+    EXPEDITION_HAZARD_DAMAGE_MAX,
+    EXPEDITION_HAZARD_MORALE_LOSS,
+    EXPEDITION_HAZARD_SCIENTIST_REDUCTION,
+    EXPEDITION_SIGNAL_PEEKS,
+    getCoreSampleResource,
 } from "./constants";
+import { applyPrepPeeks } from "./prepPeeks";
 import { RACES } from "@/game/constants/races";
 import type { ResearchResourceType } from "@/game/types/research";
 import type { RaceId } from "@/game/types";
@@ -304,6 +316,143 @@ export function revealExpeditionTile(
                     "error",
                 );
             }
+            break;
+        }
+
+        // ── Клетки необитаемых планет ──────────────────────────────────────
+
+        case "cache": {
+            // Схрон платит трюмом, а не кредитами: место в трюме — ресурс,
+            // которого рынку населённой планеты не жалко, а здесь он решает
+            const goodId =
+                EXPEDITION_CACHE_GOODS[
+                    Math.floor(Math.random() * EXPEDITION_CACHE_GOODS.length)
+                ];
+            const qty = r(EXPEDITION_CACHE_QTY_MIN, EXPEDITION_CACHE_QTY_MAX);
+            set((s) => ({
+                activeExpedition: s.activeExpedition
+                    ? {
+                          ...s.activeExpedition,
+                          rewards: applyTradeGoodToExpedition(
+                              s.activeExpedition.rewards,
+                              goodId,
+                              qty,
+                          ),
+                      }
+                    : null,
+            }));
+            boostExpeditionMorale(EXPEDITION_GOOD_FIND_MORALE_BOOST);
+            get().addLog(
+                i18nStore.t("game_logs.expedition_tile_cache", {
+                    good: i18nStore.t(`trade.goods.${goodId}`),
+                    qty,
+                }),
+                "info",
+            );
+            break;
+        }
+
+        case "core_sample": {
+            const resType = getCoreSampleResource(planet?.planetType);
+            const qty =
+                r(EXPEDITION_CORE_SAMPLE_MIN, EXPEDITION_CORE_SAMPLE_MAX) +
+                scientistCount * EXPEDITION_SCIENTIST_LAB_BONUS;
+            set((s) => ({
+                activeExpedition: s.activeExpedition
+                    ? {
+                          ...s.activeExpedition,
+                          rewards: applyResearchToExpedition(
+                              s.activeExpedition.rewards,
+                              resType,
+                              qty,
+                          ),
+                      }
+                    : null,
+            }));
+            const coreRes = RESEARCH_RESOURCES[resType];
+            boostExpeditionMorale(EXPEDITION_GOOD_FIND_MORALE_BOOST);
+            get().addLog(
+                i18nStore.t("game_logs.expedition_tile_core_sample", {
+                    icon: coreRes?.icon ?? "",
+                    resType: coreRes?.name ?? resType,
+                    qty,
+                }),
+                "info",
+            );
+            break;
+        }
+
+        case "hazard": {
+            // Зеркало инцидента: там врагов гасят стрелки, здесь среду гасят
+            // учёные — они знают, куда не наступать
+            const baseDamage = r(
+                EXPEDITION_HAZARD_DAMAGE_MIN,
+                EXPEDITION_HAZARD_DAMAGE_MAX,
+            );
+            const damageReduction = Math.min(
+                EXPEDITION_PROFESSION_CAP,
+                scientistCount * EXPEDITION_HAZARD_SCIENTIST_REDUCTION,
+            );
+            const damage = Math.max(
+                1,
+                Math.round(baseDamage * (1 - damageReduction)),
+            );
+            const moraleReduction = Math.min(
+                EXPEDITION_PROFESSION_CAP,
+                medicCount * EXPEDITION_MEDIC_MORALE_REDUCTION,
+            );
+            const moraleLoss = Math.round(
+                EXPEDITION_HAZARD_MORALE_LOSS * (1 - moraleReduction),
+            );
+            if (expCrew.length > 0) {
+                const target =
+                    expCrew[Math.floor(Math.random() * expCrew.length)];
+                set((s) => ({
+                    crew: s.crew.map((c) => {
+                        if (c.id !== target.id) return c;
+                        const race = RACES[c.race];
+                        return {
+                            ...c,
+                            health: Math.max(0, c.health - damage),
+                            happiness:
+                                race?.hasHappiness === false
+                                    ? c.happiness
+                                    : Math.max(0, c.happiness - moraleLoss),
+                        };
+                    }),
+                }));
+                get().addLog(
+                    i18nStore.t("game_logs.expedition_tile_hazard", {
+                        target_name: target.name,
+                        damage,
+                        moraleLoss,
+                    }),
+                    "error",
+                );
+            }
+            break;
+        }
+
+        case "signal": {
+            // Единственная клетка, которая платит знанием, а не грузом
+            let lit = 0;
+            set((s) => {
+                if (!s.activeExpedition) return {};
+                const grid = applyPrepPeeks(
+                    s.activeExpedition.grid,
+                    EXPEDITION_SIGNAL_PEEKS,
+                );
+                lit =
+                    grid.filter((t) => t.peeked).length -
+                    s.activeExpedition.grid.filter((t) => t.peeked).length;
+                return { activeExpedition: { ...s.activeExpedition, grid } };
+            });
+            get().addLog(
+                lit > 0
+                    ? i18nStore.t("game_logs.expedition_tile_signal", { count: lit })
+                    : i18nStore.t("game_logs.expedition_tile_signal_empty"),
+                "info",
+            );
             break;
         }
 

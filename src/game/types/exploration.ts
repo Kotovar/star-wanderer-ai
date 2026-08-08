@@ -34,12 +34,22 @@ export interface DiveState {
     finished: boolean;
 }
 
+/**
+ * Клетки экспедиции. Первые пять — населённые планеты: там есть у кого
+ * торговать и чьи лаборатории обыскивать. Последние четыре — необитаемые:
+ * рынок на планете без жителей и был главной причиной, по которой обе
+ * высадки читались одинаково.
+ */
 export type ExploreTileType =
     | "market"
     | "lab"
     | "ruins"
     | "incident"
-    | "artifact";
+    | "artifact"
+    | "cache"
+    | "core_sample"
+    | "hazard"
+    | "signal";
 
 export interface ExploreTile {
     type: ExploreTileType;

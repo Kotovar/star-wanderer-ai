@@ -1,5 +1,5 @@
 import type { ExploreTile } from "@/game/types/exploration";
-import { getDrillsDone } from "../planetaryDrill";
+import { getDrillsDone } from "@/game/planets";
 import {
     EXPEDITION_PREP_PEEK_CAP,
     EXPEDITION_PREP_PEEKS,
@@ -30,8 +30,9 @@ export function countPrepPeeks(planet: PreparedPlanet): number {
 }
 
 /**
- * Помечает `count` случайных клеток как подсмотренные. `random` вынесен
- * параметром, чтобы проверка могла раздавать клетки детерминированно.
+ * Помечает `count` ещё закрытых клеток как подсмотренные. Уже открытые и уже
+ * подсмотренные пропускаются, иначе клетка-сигнал тратила бы находку впустую.
+ * `random` вынесен параметром, чтобы проверка раздавала клетки детерминированно.
  */
 export function applyPrepPeeks(
     grid: ExploreTile[],
@@ -40,7 +41,9 @@ export function applyPrepPeeks(
 ): ExploreTile[] {
     if (count <= 0) return grid;
 
-    const remaining = grid.map((_, index) => index);
+    const remaining = grid.flatMap((tile, index) =>
+        tile.revealed || tile.peeked ? [] : [index],
+    );
     const picked = new Set<number>();
     while (picked.size < count && remaining.length > 0) {
         const at = Math.floor(random() * remaining.length);

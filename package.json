@@ -71,7 +71,8 @@
     "check:navigator": "node --no-warnings --experimental-strip-types scripts/check-known-object-navigator.mjs",
     "check:crew-hire": "node --no-warnings scripts/check-crew-hire-confirmation.mjs",
     "check:planet-features": "node --no-warnings scripts/check-planet-features.mjs",
-    "check:expedition-setup-ui": "node --no-warnings scripts/check-expedition-setup-ui.mjs"
+    "check:expedition-setup-ui": "node --no-warnings scripts/check-expedition-setup-ui.mjs",
+    "check:expedition-tiles": "node --no-warnings scripts/check-expedition-tiles.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.20",

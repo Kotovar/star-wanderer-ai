@@ -3,7 +3,12 @@ import type { ExploreTileType } from "@/game/types/exploration";
 import type { PlanetType } from "@/game/types/planets";
 import { getExpeditionEnvironment } from "./constants";
 
-type TileWeightMap = Record<ExploreTileType, number>;
+/**
+ * Незаданный тип просто не встречается: `pickWeightedTile` отбрасывает нули.
+ * Благодаря этому у населённых и необитаемых планет разные словари клеток,
+ * а не один общий с нулями в половине полей.
+ */
+type TileWeightMap = Partial<Record<ExploreTileType, number>>;
 
 // Base weights for tile types (exit removed - player can end expedition manually)
 const DEFAULT_WEIGHTS: TileWeightMap = {
@@ -59,44 +64,55 @@ const RACE_WEIGHTS: Record<RaceId, TileWeightMap> = {
     },
 };
 
+/**
+ * Словарь необитаемых планет. Ни рынка, ни лаборатории: торговать не с кем,
+ * а «лаборатория» на планете без жителей всё равно отдавала один и тот же
+ * tech_salvage, потому что расы у неё нет. Вместо них — схрон (чей-то
+ * оставленный груз), керн (порода под ногами), природная опасность и сигнал.
+ */
 const POINT_OF_INTEREST_WEIGHTS: Record<
     PlanetPointOfInterest,
     TileWeightMap
 > = {
     ancient_ruins: {
-        market: 1,
-        lab: 3,
+        cache: 2,
+        core_sample: 2,
         ruins: 8,
-        incident: 3,
+        hazard: 3,
         artifact: 4,
+        signal: 2,
     },
     research_site: {
-        market: 1,
-        lab: 8,
+        cache: 2,
+        core_sample: 7,
         ruins: 3,
-        incident: 2,
+        hazard: 2,
         artifact: 3,
+        signal: 4,
     },
     resource_vein: {
-        market: 6,
-        lab: 3,
+        cache: 4,
+        core_sample: 8,
         ruins: 2,
-        incident: 4,
+        hazard: 4,
         artifact: 1,
+        signal: 1,
     },
     crash_site: {
-        market: 7,
-        lab: 2,
+        cache: 8,
+        core_sample: 2,
         ruins: 3,
-        incident: 4,
+        hazard: 4,
         artifact: 2,
+        signal: 4,
     },
     alien_biosphere: {
-        market: 2,
-        lab: 6,
+        cache: 2,
+        core_sample: 5,
         ruins: 2,
-        incident: 6,
+        hazard: 7,
         artifact: 2,
+        signal: 2,
     },
 };
 
@@ -115,11 +131,17 @@ export function getWeightsForRace(
         getExpeditionEnvironment(planetType)?.artifactWeightBonus ?? 0;
 
     const weights = { ...base };
-    weights.artifact += artifactWeightBonus;
+    if (artifactWeightBonus > 0) {
+        weights.artifact = (weights.artifact ?? 0) + artifactWeightBonus;
+    }
     for (const [type, bonus] of Object.entries(featureWeights ?? {}) as [
         ExploreTileType,
         number,
     ][]) {
+        // Черта усиливает то, что на планете уже есть, а не подсаживает
+        // чужой тип клетки: заброшенное поселение не насыпает руин туда,
+        // где их и так не бывает.
+        if (weights[type] === undefined) continue;
         weights[type] += bonus;
     }
     return weights;

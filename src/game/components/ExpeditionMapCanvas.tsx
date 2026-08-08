@@ -48,12 +48,38 @@ const TILE_COLORS: Record<
     bg: "rgba(153,51,255,0.15)",
     glow: "rgba(153,51,255,0.4)",
   },
+  // Клетки необитаемых планет: схрон и керн — родня рынку и лаборатории,
+  // опасность — родня инциденту, поэтому цвета намеренно перекликаются
+  cache: {
+    border: "#00ff41",
+    bg: "rgba(0,255,65,0.15)",
+    glow: "rgba(0,255,65,0.4)",
+  },
+  core_sample: {
+    border: "#c9a227",
+    bg: "rgba(201,162,39,0.15)",
+    glow: "rgba(201,162,39,0.4)",
+  },
+  hazard: {
+    border: "#ff0040",
+    bg: "rgba(255,0,64,0.15)",
+    glow: "rgba(255,0,64,0.4)",
+  },
+  signal: {
+    border: "#00d4ff",
+    bg: "rgba(0,212,255,0.15)",
+    glow: "rgba(0,212,255,0.4)",
+  },
 };
 
 const EXPEDITION_LOCATION_SPRITE = "/assets/expedition_locations.webp";
 const EXPEDITION_LOCATION_SPRITE_COUNT = 5;
 
-const TILE_SPRITE_INDEX: Record<ExploreTileType, number> = {
+/**
+ * В спрайт-листе ровно пять картинок — у клеток необитаемых планет их нет,
+ * поэтому такие типы отсутствуют в карте и рисуются на canvas.
+ */
+const TILE_SPRITE_INDEX: Partial<Record<ExploreTileType, number>> = {
   market: 0,
   lab: 1,
   ruins: 2,
@@ -447,6 +473,138 @@ function drawArtifactIcon(
   ctx.restore();
 }
 
+/** Схрон: брошенный контейнер с ремнём */
+function drawCacheIcon(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  size: number,
+) {
+  const scale = size / 50;
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  ctx.scale(scale, scale);
+
+  ctx.strokeStyle = "#00ff41";
+  ctx.fillStyle = "rgba(0,255,65,0.18)";
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.roundRect(-16, -11, 32, 24, 3);
+  ctx.fill();
+  ctx.stroke();
+
+  // Ремень поперёк
+  ctx.beginPath();
+  ctx.moveTo(-16, -1);
+  ctx.lineTo(16, -1);
+  ctx.stroke();
+
+  // Замок
+  ctx.beginPath();
+  ctx.roundRect(-4, -5, 8, 8, 1.5);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/** Керн: столбик породы с прослойками */
+function drawCoreSampleIcon(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  size: number,
+) {
+  const scale = size / 50;
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  ctx.scale(scale, scale);
+
+  ctx.strokeStyle = "#c9a227";
+  ctx.fillStyle = "rgba(201,162,39,0.18)";
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.roundRect(-9, -18, 18, 36, 3);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.lineWidth = 1.5;
+  for (const y of [-8, 0, 8]) {
+    ctx.beginPath();
+    ctx.moveTo(-9, y);
+    ctx.lineTo(9, y);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+/** Природная опасность: треугольник с трещиной */
+function drawHazardIcon(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  size: number,
+) {
+  const scale = size / 50;
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  ctx.scale(scale, scale);
+
+  ctx.strokeStyle = "#ff0040";
+  ctx.fillStyle = "rgba(255,0,64,0.18)";
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.moveTo(0, -18);
+  ctx.lineTo(18, 15);
+  ctx.lineTo(-18, 15);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Трещина внутри
+  ctx.beginPath();
+  ctx.moveTo(2, -8);
+  ctx.lineTo(-3, 2);
+  ctx.lineTo(3, 2);
+  ctx.lineTo(-2, 11);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/** Сигнал: источник и расходящиеся волны */
+function drawSignalIcon(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  size: number,
+) {
+  const scale = size / 50;
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  ctx.scale(scale, scale);
+
+  ctx.fillStyle = "#00d4ff";
+  ctx.beginPath();
+  ctx.arc(0, 8, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#00d4ff";
+  ctx.lineWidth = 2;
+  for (const radius of [10, 16, 22]) {
+    ctx.globalAlpha = 1 - (radius - 10) / 30;
+    ctx.beginPath();
+    ctx.arc(0, 8, radius, Math.PI * 1.15, Math.PI * 1.85);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.restore();
+}
+
 function drawTileIcon(
   ctx: CanvasRenderingContext2D,
   type: ExploreTileType,
@@ -470,6 +628,18 @@ function drawTileIcon(
     case "artifact":
       drawArtifactIcon(ctx, centerX, centerY, size);
       break;
+    case "cache":
+      drawCacheIcon(ctx, centerX, centerY, size);
+      break;
+    case "core_sample":
+      drawCoreSampleIcon(ctx, centerX, centerY, size);
+      break;
+    case "hazard":
+      drawHazardIcon(ctx, centerX, centerY, size);
+      break;
+    case "signal":
+      drawSignalIcon(ctx, centerX, centerY, size);
+      break;
   }
 }
 
@@ -484,6 +654,7 @@ function drawTileSprite(
   const spriteWidth = image.naturalWidth / EXPEDITION_LOCATION_SPRITE_COUNT;
   const spriteHeight = image.naturalHeight;
   const spriteIndex = TILE_SPRITE_INDEX[type];
+  if (spriteIndex === undefined) return;
   const drawSize = size * 0.95;
   const offset = TILE_SPRITE_OFFSET[type];
   const drawCenterX = centerX + (offset?.x ?? 0) * drawSize;
@@ -500,6 +671,26 @@ function drawTileSprite(
     drawSize,
     drawSize,
   );
+}
+
+/**
+ * Спрайт, если он для этого типа есть, иначе рисованная иконка. Клетки
+ * необитаемых планет в спрайт-лист не входят, поэтому проверять надо не
+ * только загрузку картинки, но и наличие индекса.
+ */
+function drawTile(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement | null,
+  type: ExploreTileType,
+  centerX: number,
+  centerY: number,
+  size: number,
+) {
+  if (image?.complete && TILE_SPRITE_INDEX[type] !== undefined) {
+    drawTileSprite(ctx, image, type, centerX, centerY, size * 0.72);
+  } else {
+    drawTileIcon(ctx, type, centerX, centerY, size * 0.7);
+  }
 }
 
 export function ExpeditionMapCanvas({
@@ -592,24 +783,14 @@ export function ExpeditionMapCanvas({
                 // Сканированная клетка: тип виден приглушённо, эффект не применён
                 ctx.save();
                 ctx.globalAlpha = 0.45;
-                if (locationSprite?.complete) {
-                    drawTileSprite(
-                        ctx,
-                        locationSprite,
-                        tile.type,
-                        x + cellSize / 2,
-                        y + cellSize / 2,
-                        cellSize * 0.72,
-                    );
-                } else {
-                    drawTileIcon(
-                        ctx,
-                        tile.type,
-                        x + cellSize / 2,
-                        y + cellSize / 2,
-                        cellSize * 0.7,
-                    );
-                }
+                drawTile(
+                    ctx,
+                    locationSprite,
+                    tile.type,
+                    x + cellSize / 2,
+                    y + cellSize / 2,
+                    cellSize,
+                );
                 ctx.restore();
                 // Пунктирная голубая рамка — признак сканирования
                 ctx.beginPath();
@@ -683,24 +864,14 @@ export function ExpeditionMapCanvas({
           ctx.shadowBlur = 0;
 
           // Draw sprite icon for tile type, with canvas fallback
-          if (locationSprite?.complete) {
-            drawTileSprite(
-              ctx,
-              locationSprite,
-              tile.type,
-              x + cellSize / 2,
-              y + cellSize / 2,
-              cellSize * 0.72,
-            );
-          } else {
-            drawTileIcon(
-              ctx,
-              tile.type,
-              x + cellSize / 2,
-              y + cellSize / 2,
-              cellSize * 0.7,
-            );
-          }
+          drawTile(
+            ctx,
+            locationSprite,
+            tile.type,
+            x + cellSize / 2,
+            y + cellSize / 2,
+            cellSize,
+          );
         }
 
         ctx.shadowBlur = 0;

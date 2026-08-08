@@ -10,6 +10,7 @@ import {
 import { ENGINEER_DRILL_EXP } from "@/game/constants/experience";
 import { appendSurfaceLog } from "./sendScoutingMission";
 import {
+    getDrillsDone,
     ICE_CAPS_FUEL,
     planetHasFeature,
     SEISMIC_DRILL_DAMAGE,
@@ -28,10 +29,7 @@ const PASS_YIELD_MULTIPLIERS = [1, 0.6, 0.4];
 export const getDrillMaxPasses = (planetId: string): number =>
     DRILL_MAX_PASSES + (planetHasFeature(planetId, "rich_deposits") ? 1 : 0);
 
-export const getDrillsDone = (planet: {
-    drillsDone?: number;
-    planetaryDrilled?: boolean;
-}): number => planet.drillsDone ?? (planet.planetaryDrilled ? 1 : 0);
+export { getDrillsDone } from "@/game/planets";
 
 interface DrillYield {
     tradeGood?: { id: Goods; qty: number };

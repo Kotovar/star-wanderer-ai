@@ -1,4 +1,6 @@
 import type { PlanetType } from "@/game/types/planets";
+import type { ResearchResourceType } from "@/game/types/research";
+import type { ExploreTileType } from "@/game/types/exploration";
 
 type ExpeditionEnvironment = {
     icon: string;
@@ -87,3 +89,89 @@ export const EXPEDITION_PREP_PEEKS = {
 
 /** Потолок подсветки: сетка из 25 клеток не должна вскрываться заранее */
 export const EXPEDITION_PREP_PEEK_CAP = 6;
+
+// ─── Словари клеток ───────────────────────────────────────────────────────
+
+/**
+ * Какие клетки бывают на планете каждого рода. Легенда обязана брать список
+ * отсюда же, откуда его берёт генерация: пока она рисовала весь союз типов,
+ * игрок на необитаемой планете видел в подсказках рынок и лабораторию,
+ * которых там не бывает.
+ */
+export const POPULATED_TILE_TYPES: readonly ExploreTileType[] = [
+    "market",
+    "lab",
+    "ruins",
+    "incident",
+    "artifact",
+];
+
+export const EMPTY_PLANET_TILE_TYPES: readonly ExploreTileType[] = [
+    "cache",
+    "core_sample",
+    "ruins",
+    "hazard",
+    "artifact",
+    "signal",
+];
+
+export const getTileTypesFor = (isEmptyPlanet: boolean) =>
+    isEmptyPlanet ? EMPTY_PLANET_TILE_TYPES : POPULATED_TILE_TYPES;
+
+// ─── Клетки необитаемых планет ────────────────────────────────────────────
+
+/** Схрон: чей-то брошенный груз. Платит трюмом, а не кредитами */
+export const EXPEDITION_CACHE_GOODS = [
+    "water",
+    "food",
+    "medicine",
+    "spares",
+] as const;
+export const EXPEDITION_CACHE_QTY_MIN = 4;
+export const EXPEDITION_CACHE_QTY_MAX = 9;
+
+/** Керн: порода под ногами. В отличие от лаборатории зависит от типа планеты */
+export const EXPEDITION_CORE_SAMPLE_MIN = 2;
+export const EXPEDITION_CORE_SAMPLE_MAX = 4;
+
+const CORE_SAMPLE_DEFAULT: ResearchResourceType = "rare_minerals";
+
+/**
+ * Что даёт керн на каждом типе планеты. Ради этого клетка и заменила
+ * лабораторию: на планете без расы лаборатория всегда отдавала tech_salvage,
+ * то есть тип планеты не значил ничего.
+ */
+const CORE_SAMPLE_RESOURCES: Partial<Record<PlanetType, ResearchResourceType>> = {
+    Вулканическая: "energy_samples",
+    Приливная: "energy_samples",
+    Радиоактивная: "energy_samples",
+    Кристаллическая: "quantum_crystals",
+    "Планета-кольцо": "quantum_crystals",
+    Лесная: "alien_biology",
+    Тропическая: "alien_biology",
+    Океаническая: "alien_biology",
+    "Разрушенная войной": "ancient_data",
+    Ледяная: "void_membrane",
+    Арктическая: "void_membrane",
+};
+
+export function getCoreSampleResource(
+    planetType?: PlanetType,
+): ResearchResourceType {
+    return (
+        (planetType && CORE_SAMPLE_RESOURCES[planetType]) ?? CORE_SAMPLE_DEFAULT
+    );
+}
+
+/**
+ * Природная опасность. Зеркало инцидента: инцидент — это местные, и его
+ * гасят стрелки; опасность — это среда, и её гасят учёные, которые знают,
+ * куда не наступать. Бьёт сильнее, потому что уклониться от неё труднее.
+ */
+export const EXPEDITION_HAZARD_DAMAGE_MIN = 25;
+export const EXPEDITION_HAZARD_DAMAGE_MAX = 42;
+export const EXPEDITION_HAZARD_MORALE_LOSS = 10;
+export const EXPEDITION_HAZARD_SCIENTIST_REDUCTION = 0.3;
+
+/** Сигнал: платит не ресурсом, а знанием — подсвечивает клетки вокруг */
+export const EXPEDITION_SIGNAL_PEEKS = 3;

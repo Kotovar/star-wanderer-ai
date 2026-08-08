@@ -21,6 +21,7 @@ import {
   getExpeditionEnvironment,
   getRuinsDepthDamage,
   getRuinsDepthRewardMultiplier,
+  getTileTypesFor,
 } from "@/game/slices/locations/helpers/expedition/constants";
 import { ExpeditionMapCanvas } from "./ExpeditionMapCanvas";
 import { EventIllustration } from "./EventIllustration";
@@ -32,6 +33,10 @@ const TILE_COLORS: Record<ExploreTileType, { border: string; bg: string; glow: s
   ruins: { border: "#ffb000", bg: "rgba(255,176,0,0.08)", glow: "rgba(255,176,0,0.25)" },
   incident: { border: "#ff0040", bg: "rgba(255,0,64,0.08)", glow: "rgba(255,0,64,0.25)" },
   artifact: { border: "#9933ff", bg: "rgba(153,51,255,0.08)", glow: "rgba(153,51,255,0.25)" },
+  cache: { border: "#00ff41", bg: "rgba(0,255,65,0.08)", glow: "rgba(0,255,65,0.25)" },
+  core_sample: { border: "#c9a227", bg: "rgba(201,162,39,0.08)", glow: "rgba(201,162,39,0.25)" },
+  hazard: { border: "#ff0040", bg: "rgba(255,0,64,0.08)", glow: "rgba(255,0,64,0.25)" },
+  signal: { border: "#00d4ff", bg: "rgba(0,212,255,0.08)", glow: "rgba(0,212,255,0.25)" },
 };
 
 const TILE_ICONS: Record<ExploreTileType, string> = {
@@ -40,6 +45,10 @@ const TILE_ICONS: Record<ExploreTileType, string> = {
   ruins: "🏚️",
   incident: "⚠️",
   artifact: "✨",
+  cache: "🎒",
+  core_sample: "🪨",
+  hazard: "☣️",
+  signal: "📡",
 };
 
 export function PlanetExplorationPanel() {
@@ -481,31 +490,22 @@ export function PlanetExplorationPanel() {
         </div>
 
         <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 xl:w-36 xl:flex-col xl:items-start xl:justify-start">
-        {(
-          Object.entries(TILE_COLORS) as [
-            ExploreTileType,
-            (typeof TILE_COLORS)[ExploreTileType],
-          ][]
-        ).map(([type, style]) => (
-          <span
-            key={type}
-            className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-sm border"
-            style={{
-              color: style.border,
-              borderColor: `${style.border}44`,
-              background: style.bg,
-            }}
-          >
-            {type === "market" && isEmptyPlanet
-              ? "📦"
-              : TILE_ICONS[type]}{" "}
-            {t(
-              type === "market" && isEmptyPlanet
-                ? "planet_panel.tile_supply_cache"
-                : `planet_panel.tile_${type}`,
-            )}
-          </span>
-        ))}
+        {getTileTypesFor(isEmptyPlanet).map((type) => {
+          const style = TILE_COLORS[type];
+          return (
+            <span
+              key={type}
+              className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-sm border"
+              style={{
+                color: style.border,
+                borderColor: `${style.border}44`,
+                background: style.bg,
+              }}
+            >
+              {TILE_ICONS[type]} {t(`planet_panel.tile_${type}`)}
+            </span>
+          );
+        })}
         </div>
       </div>
 
