@@ -14,6 +14,7 @@ import {
     planetHasFeature,
     RUINED_SETTLEMENT_RUINS_WEIGHT,
 } from "@/game/planets";
+import { applyPrepPeeks, countPrepPeeks } from "./prepPeeks";
 
 /**
  * Начинает экспедицию на поверхность планеты.
@@ -118,11 +119,15 @@ export function startExpedition(
     const featureWeights = planetHasFeature(planetId, "ruined_settlement")
         ? { ruins: RUINED_SETTLEMENT_RUINS_WEIGHT }
         : undefined;
-    const grid = generateExpeditionGrid(
-        planet.dominantRace,
-        pointOfInterest,
-        planet.planetType,
-        featureWeights,
+    const prepPeeks = countPrepPeeks(planet);
+    const grid = applyPrepPeeks(
+        generateExpeditionGrid(
+            planet.dominantRace,
+            pointOfInterest,
+            planet.planetType,
+            featureWeights,
+        ),
+        prepPeeks,
     );
 
     const expedition: ExpeditionState = {
@@ -156,6 +161,16 @@ export function startExpedition(
         bonusInfo.push(i18nStore.t("game_logs.expedition_bonus_scouts", { count: scoutCount }));
     if (techBonus > 0)
         bonusInfo.push(i18nStore.t("game_logs.expedition_bonus_kits", { count: techBonus }));
+    if (planetHasFeature(planetId, "low_gravity"))
+        bonusInfo.push(
+            i18nStore.t("game_logs.expedition_bonus_low_gravity", {
+                count: LOW_GRAVITY_EXPEDITION_AP,
+            }),
+        );
+    if (prepPeeks > 0)
+        bonusInfo.push(
+            i18nStore.t("game_logs.expedition_bonus_prep", { count: prepPeeks }),
+        );
     const bonusStr = bonusInfo.length > 0 ? ` [${bonusInfo.join(", ")}]` : "";
 
     set(() => ({ activeExpedition: expedition }));

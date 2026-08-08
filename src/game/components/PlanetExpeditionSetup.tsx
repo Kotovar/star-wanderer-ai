@@ -10,6 +10,8 @@ import {
     EXPEDITION_SCANS_PER_SCIENTIST,
     getExpeditionEnvironment,
 } from "@/game/slices/locations/helpers/expedition/constants";
+import { countPrepPeeks } from "@/game/slices/locations/helpers/expedition/prepPeeks";
+import { LOW_GRAVITY_EXPEDITION_AP, planetHasFeature } from "@/game/planets";
 import {
     Tooltip,
     TooltipContent,
@@ -48,7 +50,16 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
     }).length;
     const scansTotal = scientistCount * EXPEDITION_SCANS_PER_SCIENTIST;
     const techBonus = getTechBonusSum(research, "expedition_ap");
-    const totalAP = selectedIds.length + syntheticBonus + scoutBonus + techBonus;
+    const gravityBonus = planetHasFeature(planetId, "low_gravity")
+        ? LOW_GRAVITY_EXPEDITION_AP
+        : 0;
+    const totalAP =
+        selectedIds.length +
+        syntheticBonus +
+        scoutBonus +
+        techBonus +
+        gravityBonus;
+    const prepPeeks = planet ? countPrepPeeks(planet) : 0;
     const environment = getExpeditionEnvironment(planet?.planetType);
 
     function toggleCrew(id: number) {
@@ -198,9 +209,27 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                         {t("planet_panel.expedition_kit_bonus", { count: techBonus })}
                     </span>
                 )}
+                {gravityBonus > 0 && (
+                    <span className="text-[#ffb000]">
+                        {t("planet_panel.expedition_gravity_bonus", { count: gravityBonus })}
+                    </span>
+                )}
                 {scansTotal > 0 && (
                     <span className="text-[#00d4ffaa]">
                         {t("planet_panel.expedition_scans_bonus", { count: scansTotal })}
+                    </span>
+                )}
+            </div>
+
+            {/* Подготовка к высадке: что дали орбитальный скан, анализ и бурение */}
+            <div className="text-[10px] sm:text-xs">
+                {prepPeeks > 0 ? (
+                    <span className="text-[#00d4ffaa]">
+                        {t("planet_panel.expedition_prep_peeks", { count: prepPeeks })}
+                    </span>
+                ) : (
+                    <span className="text-[#888]">
+                        {t("planet_panel.expedition_prep_none")}
                     </span>
                 )}
             </div>

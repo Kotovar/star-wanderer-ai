@@ -133,6 +133,112 @@ assert.equal(
 );
 assert.equal(plain.market, ruined.market, "прочие веса трогать не должны");
 
+// ── Подготовка к высадке подсвечивает клетки экспедиции ────────────────────
+const { countPrepPeeks, applyPrepPeeks } = await import(
+  "../src/game/slices/locations/helpers/expedition/prepPeeks.ts"
+);
+const { EXPEDITION_PREP_PEEK_CAP, EXPEDITION_TILE_COUNT } = await import(
+  "../src/game/slices/locations/helpers/expedition/constants.ts"
+);
+
+// Населённые планеты не получают подсветки: именно этим их экспедиция и
+// должна отличаться от высадки на необитаемую.
+assert.equal(
+  countPrepPeeks({ orbitalScanned: true, atmosphereAnalyzed: true, drillsDone: 2 }),
+  0,
+  "на населённой планете подготовки поверхности нет",
+);
+
+assert.equal(countPrepPeeks({ isEmpty: true }), 0, "без подготовки — вслепую");
+assert.equal(countPrepPeeks({ isEmpty: true, orbitalScanned: true }), 2);
+assert.equal(countPrepPeeks({ isEmpty: true, atmosphereAnalyzed: true }), 1);
+assert.equal(countPrepPeeks({ isEmpty: true, drillsDone: 2 }), 2);
+assert.equal(
+  countPrepPeeks({ isEmpty: true, planetaryDrilled: true }),
+  1,
+  "старый флаг бурения обязан считаться одним проходом",
+);
+assert.equal(
+  countPrepPeeks({
+    isEmpty: true,
+    orbitalScanned: true,
+    atmosphereAnalyzed: true,
+    drillsDone: 3,
+  }),
+  EXPEDITION_PREP_PEEK_CAP,
+  "потолок подсветки не соблюдён",
+);
+assert.ok(
+  EXPEDITION_PREP_PEEK_CAP < EXPEDITION_TILE_COUNT / 3,
+  "подсветка не должна вскрывать сетку заранее",
+);
+
+// Ровно count клеток, без повторов, остальные нетронуты
+const blankGrid = Array.from({ length: EXPEDITION_TILE_COUNT }, (_, i) => ({
+  type: "lab",
+  revealed: false,
+  x: i % 5,
+  y: Math.floor(i / 5),
+}));
+let cursor = 0;
+const scripted = () => [0.99, 0.01, 0.5, 0.2, 0.7, 0.4][cursor++ % 6];
+const peeked = applyPrepPeeks(blankGrid, 4, scripted);
+assert.equal(
+  peeked.filter((t) => t.peeked).length,
+  4,
+  "подсвечено не столько клеток, сколько запрошено",
+);
+assert.equal(
+  peeked.filter((t) => t.revealed).length,
+  0,
+  "подсветка не должна раскрывать клетку, только показывать тип",
+);
+assert.equal(blankGrid.filter((t) => t.peeked).length, 0, "исходная сетка мутирована");
+assert.deepEqual(
+  applyPrepPeeks(blankGrid, 0),
+  blankGrid,
+  "нулевая подготовка обязана вернуть сетку как есть",
+);
+assert.equal(
+  applyPrepPeeks(blankGrid, EXPEDITION_TILE_COUNT + 10).filter((t) => t.peeked).length,
+  EXPEDITION_TILE_COUNT,
+  "запрос больше сетки не должен зацикливаться",
+);
+
+const startSource = source(
+  "game/slices/locations/helpers/expedition/startExpedition.ts",
+);
+assert.match(
+  startSource,
+  /applyPrepPeeks\(/,
+  "подсветка не подключена к запуску экспедиции",
+);
+
+// Скан обязан пережить полную разведку. Иначе игрок, идущий естественным
+// порядком (разведать → высадиться), молча теряет два предоткрытия: экспедиция
+// требует `explored`, а кнопка к тому моменту уже исчезла.
+const panelSource = source("game/components/EmptyPlanetPanel.tsx");
+const canScanLine = panelSource
+  .slice(panelSource.indexOf("const canOrbitalScan"))
+  .split(";")[0];
+assert.doesNotMatch(
+  canScanLine,
+  /\.explored/,
+  "орбитальный скан снова прячется после полной разведки — вместе с двумя предоткрытиями",
+);
+
+const setupSource = source("game/components/PlanetExpeditionSetup.tsx");
+assert.match(
+  setupSource,
+  /countPrepPeeks/,
+  "экран сбора обязан показывать, что дала подготовка — иначе связь не читается",
+);
+assert.match(
+  setupSource,
+  /LOW_GRAVITY_EXPEDITION_AP/,
+  "экран сбора обязан учитывать низкую гравитацию, иначе покажет не тот AP",
+);
+
 // ── planetHasFeature согласован с getPlanetFeatures ────────────────────────
 const probe = "planet-7-x";
 for (const feature of ALL) {

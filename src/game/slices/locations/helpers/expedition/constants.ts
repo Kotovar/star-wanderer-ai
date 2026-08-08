@@ -71,3 +71,19 @@ export const EXPEDITION_GOOD_FIND_MORALE_BOOST = 4;
 
 export const EXPEDITION_CREW_SCOUT_EXP = 20;
 export const EXPEDITION_CREW_OTHER_EXP = 8;
+
+/**
+ * Подготовка к высадке подсвечивает клетки будущей сетки. Разведка сюда не
+ * входит намеренно: экспедиция на пустую планету и так требует полного
+ * исследования, поэтому по числу разведмиссий выбора нет. А вот орбитальный
+ * скан, анализ атмосферы и проходы бура — дело добровольное, и каждый стоит
+ * хода. Кто спешит высадиться, идёт вслепую.
+ */
+export const EXPEDITION_PREP_PEEKS = {
+    orbitalScan: 2,
+    atmosphereAnalysis: 1,
+    drillPass: 1,
+} as const;
+
+/** Потолок подсветки: сетка из 25 клеток не должна вскрываться заранее */
+export const EXPEDITION_PREP_PEEK_CAP = 6;

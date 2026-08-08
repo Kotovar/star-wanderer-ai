@@ -258,8 +258,10 @@ export function EmptyPlanetPanel() {
             !m.disabled &&
             !m.manualDisabled,
     );
-    const canOrbitalScan =
-        !currentLocation.orbitalScanned && !currentLocation.explored;
+    // Скан остаётся доступен и после полной разведки: черты к тому моменту уже
+    // вскрыты, но скан подсвечивает клетки будущей экспедиции — а экспедиция
+    // как раз требует полной разведки, так что иначе эти клетки не получить.
+    const canOrbitalScan = !currentLocation.orbitalScanned;
     const poiRevealed = featuresRevealed;
 
     // Ожидающее событие разведки этой планеты
@@ -457,7 +459,7 @@ export function EmptyPlanetPanel() {
                                         >
                                             {t("planet_panel.orbital_scan")}
                                         </Button>
-                                        {!hasWorkingScanner && (
+                                        {!hasWorkingScanner ? (
                                             <span
                                                 aria-live="polite"
                                                 className="text-[10px] text-[#ffb000]"
@@ -466,6 +468,14 @@ export function EmptyPlanetPanel() {
                                                     "planet_panel.orbital_scan_requires_scanner",
                                                 )}
                                             </span>
+                                        ) : (
+                                            featuresRevealed && (
+                                                <span className="text-[10px] text-[#00d4ffaa]">
+                                                    {t(
+                                                        "planet_panel.orbital_scan_prep_hint",
+                                                    )}
+                                                </span>
+                                            )
                                         )}
                                     </div>
                                 )}
