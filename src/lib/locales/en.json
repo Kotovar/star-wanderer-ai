@@ -884,6 +884,8 @@
         "type_cleanse_curse": "Curse Cleansing",
         "type_crisis_response": "Crisis Relief",
         "type_fabrication": "Fabrication Order",
+        "name_crisis_response": "Crisis relief: {{cargo}}",
+        "name_fabrication": "Order: {{weapon}}",
         "task_what": "What to do",
         "task_where": "Where to complete",
         "task_destination": "Destination",
@@ -1030,6 +1032,8 @@
         "desc_cleanse_curse": "✨ Bring a cursed artifact to the Crystal Hydra in {{sector}}",
         "desc_crisis_response": "🚨 {{crisis}}: deliver {{cargo}} ({{quantity}}t)",
         "desc_fabrication": "🔧 Craft and hand over: {{weapon}}",
+        "desc_fabrication_offer": "Craft and hand over: {{weapon}} ({{progress}}/1) · return to the client",
+        "desc_crisis_response_offer": "{{crisis}}: deliver {{cargo}} ({{progress}}/{{quantity}}t) to the client",
         "desc_cleanse_curse_offer": "✨ Bring a cursed artifact to the Crystal Hydra ({{sector}}) — it will lift the curse"
     },
     "locations": {

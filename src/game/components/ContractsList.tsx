@@ -344,6 +344,17 @@ export function ContractsList() {
                 return t("contracts.name_derelict_recovery");
             case "cleanse_curse":
                 return t("contracts.name_cleanse_curse");
+            case "crisis_response":
+                return t("contracts.name_crisis_response", {
+                    cargo: contract.cargo
+                        ? TRADE_GOODS[contract.cargo as Goods]?.name ??
+                          contract.cargo
+                        : t("contracts.cargo"),
+                });
+            case "fabrication":
+                return t("contracts.name_fabrication", {
+                    weapon: contract.requiredWeaponName ?? "",
+                });
             default:
                 return contract.desc;
         }
@@ -839,6 +850,7 @@ export function ContractsList() {
                 const reliefCargo = TRADE_GOODS[
                     contract.cargo as keyof typeof TRADE_GOODS
                 ]?.name;
+                const reliefProgress = getProgress(contract);
                 return {
                     type: t("contracts.type_crisis_response"),
                     tasks: [
@@ -847,6 +859,10 @@ export function ContractsList() {
                             value: t("contracts.crisis_response_task")
                                 .replace("{{cargo}}", reliefCargo ?? contract.cargo ?? "")
                                 .replace("{{quantity}}", String(contract.quantity ?? 0)),
+                        },
+                        {
+                            label: t("contracts.task_progress"),
+                            value: `${reliefProgress?.current ?? 0} / ${reliefProgress?.total ?? contract.quantity ?? 0}`,
                         },
                         {
                             label: t("contracts.task_requirements"),
@@ -867,7 +883,8 @@ export function ContractsList() {
                     ],
                 };
             }
-            case "fabrication":
+            case "fabrication": {
+                const fabProgress = getProgress(contract);
                 return {
                     type: t("contracts.type_fabrication"),
                     tasks: [
@@ -877,6 +894,13 @@ export function ContractsList() {
                                 "{{weapon}}",
                                 contract.requiredWeaponName ?? "",
                             ),
+                        },
+                        {
+                            label: t("contracts.task_progress"),
+                            value:
+                                fabProgress && fabProgress.current >= fabProgress.total
+                                    ? t("contracts.completed")
+                                    : `${fabProgress?.current ?? 0} / ${fabProgress?.total ?? 1}`,
                         },
                         {
                             label: t("contracts.task_requirements"),
@@ -894,6 +918,7 @@ export function ContractsList() {
                         },
                     ],
                 };
+            }
             case "diplomacy":
                 return {
                     type: t("contracts.type_diplomacy"),

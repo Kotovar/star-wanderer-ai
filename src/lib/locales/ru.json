@@ -884,6 +884,8 @@
         "type_cleanse_curse": "Снятие проклятия",
         "type_crisis_response": "Отклик на кризис",
         "type_fabrication": "Заказ на изготовление",
+        "name_crisis_response": "Помощь при кризисе: {{cargo}}",
+        "name_fabrication": "Заказ: {{weapon}}",
         "task_what": "Что сделать",
         "task_where": "Где сдать",
         "task_destination": "Куда доставить",
@@ -1030,6 +1032,8 @@
         "desc_cleanse_curse": "✨ Отнести проклятый артефакт Кристальной Гидре в секторе {{sector}}",
         "desc_crisis_response": "🚨 {{crisis}}: доставить {{cargo}} ({{quantity}}т)",
         "desc_fabrication": "🔧 Изготовить и сдать: {{weapon}}",
+        "desc_fabrication_offer": "Изготовить и сдать: {{weapon}} ({{progress}}/1) · вернуться к заказчику",
+        "desc_crisis_response_offer": "{{crisis}}: доставить {{cargo}} ({{progress}}/{{quantity}}т) заказчику",
         "desc_cleanse_curse_offer": "✨ Отнести проклятый артефакт Кристальной Гидре (сектор {{sector}}) — она снимет проклятие"
     },
     "locations": {

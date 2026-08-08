@@ -194,6 +194,28 @@ function ContractDescription({
                 t("contracts.desc_cleanse_curse_offer", {
                     sector: getLocationName(c.targetSectorName || "", t),
                 })}
+            {c.type === "fabrication" && (() => {
+                const crafted = get().ship.cargo.some(
+                    (item) =>
+                        item.isCraftedWeapon &&
+                        item.weaponType === c.requiredWeaponType &&
+                        item.quantity > 0,
+                );
+                return t("contracts.desc_fabrication_offer", {
+                    weapon: c.requiredWeaponName ?? "",
+                    progress: crafted ? 1 : 0,
+                });
+            })()}
+            {c.type === "crisis_response" && c.cargo && (() => {
+                const cargoOwned =
+                    get().ship.tradeGoods.find((g) => g.item === c.cargo)?.quantity ?? 0;
+                return t("contracts.desc_crisis_response_offer", {
+                    crisis: c.crisisName ? t(c.crisisName) : "",
+                    cargo: TRADE_GOODS[c.cargo as Goods]?.name || "",
+                    quantity: c.quantity || 0,
+                    progress: cargoOwned,
+                });
+            })()}
         </>
     );
 }
@@ -223,6 +245,10 @@ function AvailableContractCard({
         ? t(c.desc, {
               planetType: c.planetType ? getPlanetTypeName(c.planetType, t) : "",
               sector: getLocationName(c.targetSectorName ?? "", t),
+              weapon: c.requiredWeaponName ?? "",
+              crisis: c.crisisName ? t(c.crisisName) : "",
+              cargo: c.cargo ? TRADE_GOODS[c.cargo as Goods]?.name ?? c.cargo : "",
+              quantity: c.quantity ?? 0,
           })
         : c.desc;
     const title = c.isRaceQuest ? stripLeadingEmoji(rawTitle) : rawTitle;
