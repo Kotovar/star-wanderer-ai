@@ -50,4 +50,8 @@ export interface RunSummary {
   discoveredCrisisIds: string[];
   /** Кол-во рас с репутацией ≤ -50 на момент конца забега */
   hostileReputationRaceCount: number;
+  /** Построек, доживших до конца забега */
+  outpostsBuilt: number;
+  /** Дошла ли база до максимального уровня */
+  baseMaxedOut: boolean;
 }

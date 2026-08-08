@@ -76,6 +76,7 @@
     "check:outposts": "node --no-warnings scripts/check-outposts.mjs",
     "check:base": "node --no-warnings scripts/check-base.mjs",
     "check:outpost-raids": "node --no-warnings scripts/check-outpost-raids.mjs",
+    "check:outpost-economy": "node --no-warnings scripts/check-outpost-economy.mjs",
     "check:jettison": "node --no-warnings scripts/check-jettison.mjs",
     "check:research-panel": "node --no-warnings scripts/check-research-panel.mjs"
   },

@@ -35,6 +35,12 @@ export type BaseService =
     | "defense";
 
 /**
+ * Выработка задана от потолка, а не от «сколько не жалко»: шесть модулей на
+ * максимальном уровне обязаны давать меньше, чем игрок зарабатывает руками,
+ * иначе оптимальной стратегией станет «построил и забыл». Числа держит
+ * check:outpost-economy, он же и поймал первую версию, где одна буровая
+ * давала 700₢ за ход против 1230 за целый бой третьего тира.
+ *
  * Модули базы. Пока только добывающие — они дают базе смысл сами по себе.
  * Служебные (склад, ретранслятор, ремдок, медблок, верстак, казарма, турели)
  * приходят в следующей фазе и встают в те же слоты, поэтому выбор «что
@@ -49,7 +55,9 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
             credits: 1200,
             resources: { tech_salvage: 8, rare_minerals: 6 },
         },
-        output: { minerals: 2, rare_minerals: 1 },
+        // 80₢/ход до удвоения чертой. Числа дробные намеренно: остаток
+        // копится в сотых, и редкий минерал выходит примерно раз в 17 ходов
+        output: { minerals: 0.5, rare_minerals: 0.06 },
         boostedBy: "rich_deposits",
     },
     cryo_cracker: {
@@ -60,7 +68,7 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
             credits: 1000,
             resources: { tech_salvage: 6, energy_samples: 5 },
         },
-        output: { water: 3 },
+        output: { water: 0.8 },
         // Крекеру нужен лёд: на планете без шапок ему нечего перерабатывать
         requiresFeature: "ice_caps",
     },
@@ -72,7 +80,7 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
             credits: 1400,
             resources: { tech_salvage: 6, ancient_data: 6 },
         },
-        output: { ancient_data: 1, alien_biology: 1 },
+        output: { ancient_data: 0.4, alien_biology: 0.4 },
         boostedBy: "ancient_traces",
     },
     relay: {

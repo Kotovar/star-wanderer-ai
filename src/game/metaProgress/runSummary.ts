@@ -1,4 +1,5 @@
 import type { GameState } from "@/game/types";
+import { BASE_MAX_LEVEL } from "@/game/constants/baseModules";
 import type { RunSummary } from "./types";
 
 const HOSTILE_REPUTATION_THRESHOLD = -50;
@@ -24,6 +25,7 @@ export function buildRunSummary(
     (max, sector) => (sector.visited ? Math.max(max, sector.tier) : max),
     0,
   );
+  const outposts = state.outposts ?? [];
   const hostileReputationRaceCount = Object.values(
     state.raceReputation,
   ).filter((rep) => rep <= HOSTILE_REPUTATION_THRESHOLD).length;
@@ -50,5 +52,11 @@ export function buildRunSummary(
     maxEnemyThreatDefeatedThisRun: state.maxEnemyThreatDefeatedThisRun,
     discoveredCrisisIds: state.discoveredCrisisIds,
     hostileReputationRaceCount,
+    outpostsBuilt: outposts.length,
+    // Захваченная база максимального уровня всё равно ваша: её отбивают,
+    // а не теряют навсегда
+    baseMaxedOut: outposts.some(
+      (outpost) => outpost.kind === "base" && (outpost.level ?? 1) >= BASE_MAX_LEVEL,
+    ),
   };
 }

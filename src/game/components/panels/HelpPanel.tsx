@@ -441,6 +441,22 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
 
               <section>
                 <h3 className="text-[#00d4ff] font-bold text-lg mb-2">
+                  {t("help.outposts_title")}
+                </h3>
+                <p className="text-[#aaa] text-xs mb-2">
+                  {t("help.outposts_text")}
+                </p>
+                <ul className="text-[#888] text-xs space-y-1">
+                  <li>{t("help.outposts_gate")}</li>
+                  <li>{t("help.outposts_bunker")}</li>
+                  <li>{t("help.outposts_crew")}</li>
+                  <li>{t("help.outposts_base")}</li>
+                  <li>{t("help.outposts_raids")}</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-[#00d4ff] font-bold text-lg mb-2">
                   {t("help.derelict_title")}
                 </h3>
                 <p className="text-[#aaa] text-xs mb-2">
