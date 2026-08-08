@@ -4,10 +4,26 @@
  * копит добычу в бункер и требует, чтобы за ней прилетели.
  */
 
+import type { Goods } from "./goods";
+import type { ResearchResourceType } from "./research";
+
 /** Газ добывается по атмосфере гиганта — четыре атмосферы, четыре газа */
 export type GasType = "deuterium" | "polymers" | "biosynth" | "cryogen";
 
 export type OutpostKind = "gas_collector" | "base";
+
+/** Модули, которые ставятся в слоты базы */
+export type BaseModuleId =
+    | "drill_shaft"
+    | "cryo_cracker"
+    | "field_lab";
+
+/**
+ * Что вообще может лежать в бункере. Газ, торговый товар и научный ресурс
+ * копятся одинаково, а расходятся только при вывозе — иначе каждый новый
+ * модуль базы требовал бы своей ветки и в накоплении, и в сборе.
+ */
+export type OutpostResource = GasType | Goods | ResearchResourceType;
 
 export interface Outpost {
     id: string;
@@ -18,9 +34,15 @@ export interface Outpost {
     sectorId: number;
     builtAtTurn: number;
     /** Что накоплено и ждёт вывоза. Полный бункер простаивает */
-    bunker: Partial<Record<GasType, number>>;
+    bunker: Partial<Record<OutpostResource, number>>;
     /** Недобранная доля единицы в сотых: на дробях терялась каждая десятая единица */
     progress?: number;
+    /** То же самое для базы, где модулей несколько и ресурсы разные */
+    moduleProgress?: Partial<Record<OutpostResource, number>>;
+    /** Уровень базы: определяет число слотов. У сборщика всегда 1 */
+    level?: number;
+    /** Что стоит в слотах базы */
+    modules?: BaseModuleId[];
     /** Ход последнего вывоза — для логов и подсказок */
     lastCollectedAtTurn?: number;
 }
@@ -31,6 +53,7 @@ export type OutpostBuildBlocker =
     | "limit_reached"
     | "already_built"
     | "no_deep_dive"
+    | "not_explored"
     | "wrong_location"
     | "not_enough_credits"
     | "not_enough_resources";

@@ -74,6 +74,7 @@
     "check:expedition-setup-ui": "node --no-warnings scripts/check-expedition-setup-ui.mjs",
     "check:expedition-tiles": "node --no-warnings scripts/check-expedition-tiles.mjs",
     "check:outposts": "node --no-warnings scripts/check-outposts.mjs",
+    "check:base": "node --no-warnings scripts/check-base.mjs",
     "check:jettison": "node --no-warnings scripts/check-jettison.mjs",
     "check:research-panel": "node --no-warnings scripts/check-research-panel.mjs"
   },

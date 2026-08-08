@@ -5204,6 +5204,20 @@
         "no_candidates": "Nobody aboard to send",
         "recall": "Recall",
         "station_hint": "Station at the outpost: they leave the ship",
+        "base": "Base",
+        "build_base": "Found the main base",
+        "base_level": "level {{level}}",
+        "base_hint": "One base per run. There are fewer slots than modules, so what goes in is a choice. Planet features decide which modules are possible here and which work twice as well.",
+        "bunker": "Bunker",
+        "bunker_empty": "Empty",
+        "dismantle": "Dismantle",
+        "upgrade": "Level {{level}} · {{slots}} slots · {{credits}}₢",
+        "blocked_not_explored": "The planet is not fully surveyed: all scouting missions are needed",
+        "module_no_slot": "No free slots",
+        "module_already_built": "That module is already installed",
+        "module_feature_missing": "This planet does not suit the module",
+        "module_not_enough_credits": "Not enough credits",
+        "module_not_enough_resources": "Not enough materials",
         "gas_collector": "Gas collector",
         "build_gas_collector": "Build a gas collector",
         "build": "Build",
@@ -5239,6 +5253,20 @@
             "desc": "Pressurised inert nitrogen. Never sold: it burns on its own and cools the power systems while supplies last.",
             "name": "Cryogen",
             "use": "never sold: cuts power draw"
+        }
+    },
+    "base_modules": {
+        "drill_shaft": {
+            "name": "Drill shaft",
+            "desc": "Minerals and rare minerals into the bunker. Rich deposits double the yield."
+        },
+        "cryo_cracker": {
+            "name": "Cryo cracker",
+            "desc": "Turns ice into water. Requires ice caps."
+        },
+        "field_lab": {
+            "name": "Field laboratory",
+            "desc": "Ancient data and biosamples. Ancient traces double the yield."
         }
     },
     "planet_features": {
@@ -5694,6 +5722,18 @@
         "outpost_crew_remote": "The garrison can only be changed on site",
         "outpost_crew_no_slot": "No garrison slots left",
         "outpost_crew_no_module": "No module left aboard to put them in",
+        "outpost_built_base": "🏗 Main base founded: {{location}}",
+        "outpost_build_remote": "Building and rebuilding only works on site",
+        "outpost_blocked_not_explored": "The planet is not fully surveyed",
+        "base_upgraded": "🏗 Base expanded to level {{level}}: {{slots}} slots",
+        "base_max_level": "The base is already at maximum level",
+        "base_module_installed": "🔧 Installed: {{module}}",
+        "base_module_removed": "🗑 Dismantled: {{module}}, {{refund}}₢ refunded",
+        "base_module_no_slot": "No free slots",
+        "base_module_already_built": "That module is already installed",
+        "base_module_feature_missing": "This planet does not suit the module",
+        "base_module_not_enough_credits": "Not enough credits",
+        "base_module_not_enough_resources": "Not enough materials",
         "outpost_built_gas_collector": "🛰️ Gas collector deployed: {{location}}, extracting {{gas}}",
         "outpost_collected": "📦 Hauled from the outpost: {{haul}}",
         "outpost_collect_empty": "The outpost bunker is empty",

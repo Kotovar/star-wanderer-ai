@@ -1,0 +1,45 @@
+import { BASE_COST } from "@/game/constants/baseModules";
+import { OUTPOST_LIMITS, OUTPOST_TECH_ID } from "@/game/constants/outposts";
+import type { GameState, Location } from "@/game/types";
+import type { OutpostBuildBlocker } from "@/game/types/outposts";
+
+type BuildState = Pick<GameState, "credits" | "outposts" | "research">;
+
+/**
+ * Почему базу нельзя заложить здесь и сейчас — или `null`, если можно.
+ *
+ * Право даёт полное исследование планеты: `explored` перестаёт быть
+ * надгробием и становится разрешением строить, а четыре операции на
+ * поверхности — изысканиями, а не чек-листом.
+ */
+export function getBaseBlocker(
+    state: BuildState,
+    location: Location | null | undefined,
+): OutpostBuildBlocker | null {
+    if (!location || location.type !== "planet" || !location.isEmpty) {
+        return "wrong_location";
+    }
+    if (!state.research.researchedTechs.includes(OUTPOST_TECH_ID)) {
+        return "tech_missing";
+    }
+    if (!location.explored) return "not_explored";
+    if (state.outposts.some((outpost) => outpost.locationId === location.id)) {
+        return "already_built";
+    }
+    if (state.outposts.some((outpost) => outpost.kind === "base")) {
+        return "limit_reached";
+    }
+    if (state.credits < BASE_COST.credits) return "not_enough_credits";
+
+    for (const [resource, amount] of Object.entries(BASE_COST.resources)) {
+        const held =
+            state.research.resources[
+                resource as keyof typeof state.research.resources
+            ] ?? 0;
+        if (held < amount) return "not_enough_resources";
+    }
+
+    return null;
+}
+
+export const getBaseLimit = () => OUTPOST_LIMITS.base;

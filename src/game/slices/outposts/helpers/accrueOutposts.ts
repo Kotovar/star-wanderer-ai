@@ -1,3 +1,6 @@
+import { BASE_BUNKER_CAP, BASE_MODULES } from "@/game/constants/baseModules";
+import { planetHasFeature } from "@/game/planets";
+import type { OutpostResource } from "@/game/types/outposts";
 import {
     CRYOGEN_BURN_PER_TURN,
     GAS_BY_ATMOSPHERE,
@@ -31,6 +34,7 @@ export function accrueOutposts(
     }
 
     return outposts.map((outpost) => {
+        if (outpost.kind === "base") return accrueBase(outpost, crew);
         if (outpost.kind !== "gas_collector") return outpost;
 
         const atmosphere = atmosphereOf.get(outpost.locationId);
@@ -59,6 +63,51 @@ export function accrueOutposts(
             },
         };
     });
+}
+
+/**
+ * Ход базы: каждый установленный модуль добывает своё в общий бункер.
+ * Черта планеты, под которую модуль заточен, удваивает его выход — ради
+ * этого «где строить» и остаётся решением после того, как база построена.
+ */
+function accrueBase(
+    outpost: Outpost,
+    crew: readonly CrewMember[],
+): Outpost {
+    const modules = outpost.modules ?? [];
+    if (modules.length === 0) return outpost;
+
+    const multiplier = getOutpostOutputMultiplier(outpost, crew);
+    const bunker = { ...outpost.bunker };
+    const progress = { ...(outpost.moduleProgress ?? {}) };
+
+    for (const moduleId of modules) {
+        const def = BASE_MODULES[moduleId];
+        const boosted =
+            def.boostedBy && planetHasFeature(outpost.locationId, def.boostedBy)
+                ? 2
+                : 1;
+
+        for (const [resource, amount] of Object.entries(def.output) as [
+            OutpostResource,
+            number,
+        ][]) {
+            const stored = bunker[resource] ?? 0;
+            if (stored >= BASE_BUNKER_CAP) continue;
+
+            // Тот же приём, что у сборщика: остаток в целых сотых, иначе на
+            // дробных множителях молча теряется каждая десятая единица
+            const rate = Math.round(amount * boosted * multiplier * 100);
+            const carried = (progress[resource] ?? 0) + rate;
+            const gained = Math.floor(carried / 100);
+            progress[resource] = carried - gained * 100;
+            if (gained > 0) {
+                bunker[resource] = Math.min(BASE_BUNKER_CAP, stored + gained);
+            }
+        }
+    }
+
+    return { ...outpost, bunker, moduleProgress: progress };
 }
 
 /**

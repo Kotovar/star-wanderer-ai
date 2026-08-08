@@ -3,6 +3,7 @@ import {
     OUTPOST_CREW_SLOTS,
     OUTPOST_ROLE,
 } from "@/game/constants/outposts";
+import { getBaseCrewSlots } from "@/game/constants/baseModules";
 import { getOutpostCrew } from "@/game/crew/stationed";
 import type { CrewMember } from "@/game/types";
 import type { Outpost } from "@/game/types/outposts";
@@ -30,13 +31,17 @@ export function getOutpostOutputMultiplier(
     }, MULT.empty);
 }
 
+/** Сколько мест гарнизона у постройки: у базы их даёт уровень */
+export function getCrewSlots(outpost: Outpost): number {
+    return outpost.kind === "base"
+        ? getBaseCrewSlots(outpost.level ?? 1)
+        : (OUTPOST_CREW_SLOTS[outpost.kind] ?? 0);
+}
+
 /** Свободны ли ещё места гарнизона */
 export function hasFreeCrewSlot(
     outpost: Outpost,
     crew: readonly CrewMember[],
 ): boolean {
-    return (
-        getOutpostCrew(crew, outpost.id).length <
-        (OUTPOST_CREW_SLOTS[outpost.kind] ?? 0)
-    );
+    return getOutpostCrew(crew, outpost.id).length < getCrewSlots(outpost);
 }

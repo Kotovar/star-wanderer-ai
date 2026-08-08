@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BaseSection } from "./BaseSection";
 import Image from "next/image";
 import { useGameStore } from "@/game/store";
 import { PLANET_POINT_OF_INTERESTS } from "@/game/constants/planets";
@@ -487,6 +488,8 @@ export function EmptyPlanetPanel() {
                 <div className="p-2.5 sm:p-4 space-y-3">
                     {/* Консоль операций на поверхности */}
                     <div>
+                        <BaseSection location={currentLocation} />
+
                         <div className="font-['Orbitron'] font-bold text-sm text-accent mb-2">
                             ⚙ {t("planet_panel.surface_ops")}
                         </div>

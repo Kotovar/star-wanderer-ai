@@ -88,6 +88,7 @@ export const OUTPOST_CREW_MULTIPLIERS = {
 /** Профессия, которую просит каждая постройка */
 export const OUTPOST_ROLE: Record<string, string> = {
     gas_collector: "engineer",
+    base: "engineer",
 };
 
 /** Мест гарнизона у постройки */
