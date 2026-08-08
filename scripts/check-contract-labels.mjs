@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, statSync } from "node:fs";
-import { registerHooks } from "node:module";
-import { dirname, extname, resolve } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
-import ts from "typescript";
+import { readFileSync } from "node:fs";
+import { setUiState, patchUiState } from "./register-ui-loader.mjs";
 
 /**
  * Рендерит списки заданий и убеждается, что ни один тип контракта не протекает
@@ -11,68 +8,6 @@ import ts from "typescript";
  * Именно так ломались crisis_response и fabrication: `contracts.desc_fabrication`
  * в заголовке и `{{weapon}}` в тексте предложения.
  */
-
-const sourceFile = (base) =>
-  [base, `${base}.ts`, `${base}.tsx`, resolve(base, "index.ts")].find(
-    (candidate) => existsSync(candidate) && statSync(candidate).isFile(),
-  );
-
-const storeFixture = `
-export const useGameStore = Object.assign(
-  (selector) => selector(globalThis.__contractLabelState),
-  {
-    getState: () => globalThis.__contractLabelState,
-    setState: () => {},
-    subscribe: () => () => {},
-  },
-);`;
-
-registerHooks({
-  resolve(specifier, context, nextResolve) {
-    if (specifier === "@/game/store" || specifier === "../store") {
-      return {
-        url: `data:text/javascript,${encodeURIComponent(storeFixture)}`,
-        shortCircuit: true,
-      };
-    }
-    const parent = context.parentURL
-      ? dirname(fileURLToPath(context.parentURL))
-      : process.cwd();
-    const base = specifier.startsWith("@/")
-      ? resolve(process.cwd(), "src", specifier.slice(2))
-      : specifier.startsWith(".") && !extname(specifier)
-        ? resolve(parent, specifier)
-        : null;
-    const file = base ? sourceFile(base) : null;
-    return file
-      ? { url: pathToFileURL(file).href, shortCircuit: true }
-      : nextResolve(specifier, context);
-  },
-  load(url, context, nextLoad) {
-    if (url.endsWith(".json")) {
-      return {
-        format: "module",
-        source: `export default ${readFileSync(fileURLToPath(url), "utf8")};`,
-        shortCircuit: true,
-      };
-    }
-    if (url.endsWith(".ts") || url.endsWith(".tsx")) {
-      return {
-        format: "module",
-        source: ts.transpileModule(readFileSync(fileURLToPath(url), "utf8"), {
-          compilerOptions: {
-            module: ts.ModuleKind.ESNext,
-            target: ts.ScriptTarget.ES2022,
-            jsx: ts.JsxEmit.ReactJSX,
-          },
-          fileName: fileURLToPath(url),
-        }).outputText,
-        shortCircuit: true,
-      };
-    }
-    return nextLoad(url, context);
-  },
-});
 
 const { createElement } = await import("react");
 const { renderToStaticMarkup } = await import("react-dom/server");
@@ -107,7 +42,7 @@ const CRISIS_RESPONSE = {
   sourceDominantRace: "human",
 };
 
-globalThis.__contractLabelState = {
+setUiState({
   activeContracts: [FABRICATION, CRISIS_RESPONSE],
   completedContractIds: [],
   cancelContract: () => {},
@@ -120,7 +55,7 @@ globalThis.__contractLabelState = {
   galaxy: { sectors: [] },
   activeCrisis: { id: "epidemic", turnsRemaining: 20 },
   completedLocations: [],
-};
+});
 
 const markup = renderToStaticMarkup(createElement(ContractsList));
 
@@ -148,7 +83,6 @@ assert.ok(
 );
 
 // ── И то же самое на английском: имена не должны застревать по-русски ───────
-globalThis.localStorage ??= { getItem: () => null, setItem: () => {} };
 const { store: i18nStore } = await import("../src/lib/useTranslation.ts");
 i18nStore.changeLanguage("en");
 // Английский каталог грузится отдельным чанком — дождёмся его
@@ -183,17 +117,19 @@ assert.deepEqual(
 );
 
 // ── С готовым предметом в трюме прогресс закрывается, появляется метка ──────
-globalThis.__contractLabelState.ship = {
-  cargo: [
-    {
-      item: "crafted_weapon_drones",
-      quantity: 1,
-      isCraftedWeapon: true,
-      weaponType: "drones",
-    },
-  ],
-  tradeGoods: [{ item: "medicine", quantity: 16 }],
-};
+patchUiState({
+  ship: {
+    cargo: [
+      {
+        item: "crafted_weapon_drones",
+        quantity: 1,
+        isCraftedWeapon: true,
+        weaponType: "drones",
+      },
+    ],
+    tradeGoods: [{ item: "medicine", quantity: 16 }],
+  },
+});
 const readyMarkup = renderToStaticMarkup(createElement(ContractsList));
 assert.deepEqual(
   bars(readyMarkup),
@@ -210,8 +146,7 @@ assert.equal(
 const { BlueprintsTab } = await import(
   "../src/game/components/BlueprintsTab.tsx"
 );
-globalThis.__contractLabelState = {
-  ...globalThis.__contractLabelState,
+patchUiState({
   research: {
     researchedTechs: [],
     unlockedRecipes: [
@@ -228,7 +163,7 @@ globalThis.__contractLabelState = {
     "habitat_module",
     "deep_survey_array",
   ],
-};
+});
 i18nStore.changeLanguage("en");
 const blueprintsMarkup = renderToStaticMarkup(createElement(BlueprintsTab));
 assert.doesNotMatch(
