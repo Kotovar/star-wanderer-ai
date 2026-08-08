@@ -5535,7 +5535,7 @@
         "mineAsteroid_4": "Этот пояс уже разработан!",
         "mineAsteroid_5": "Нужен бур уровня {{asteroidTier}}! У вас: уровень {{drillLevel}}",
         "mineAsteroid_6": "Для разработки астероидов нужен инженер на борту!",
-        "mineAsteroid_7": "💎 Получены исследовательские ресурсы: {{label}}",
+        "mineAsteroid_7": "Получены исследовательские ресурсы: {{label}}",
         "mineAsteroid_8": "Кредиты: +{{creditsGained}}₢",
         "mineAsteroid_9": "Редкие минералы: +{{rareGained}}",
         "mineAsteroid_10": "Минералы: +{{mineralsGained}}",

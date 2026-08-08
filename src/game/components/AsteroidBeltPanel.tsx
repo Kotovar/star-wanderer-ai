@@ -364,14 +364,13 @@ export function AsteroidBeltPanel() {
                     key={i}
                     className="flex items-center gap-1.5 text-ring col-span-2"
                   >
-                    <span>💎</span>
                     <span>{label}</span>
                   </div>
                 ))}
               </div>
               {miningResult.cargoWarning && (
                 <div className="mt-2 text-accent text-xs">
-                  ⚠ {miningResult.cargoWarning}
+                  {miningResult.cargoWarning}
                 </div>
               )}
             </div>

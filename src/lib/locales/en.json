@@ -5535,7 +5535,7 @@
         "mineAsteroid_4": "This belt has already been mined out!",
         "mineAsteroid_5": "A level {{asteroidTier}} drill is required! Yours: level {{drillLevel}}",
         "mineAsteroid_6": "An engineer on board is required to mine asteroids!",
-        "mineAsteroid_7": "💎 Research resources received: {{label}}",
+        "mineAsteroid_7": "Research resources received: {{label}}",
         "mineAsteroid_8": "Credits: +{{creditsGained}}₢",
         "mineAsteroid_9": "Rare minerals: +{{rareGained}}",
         "mineAsteroid_10": "Minerals: +{{mineralsGained}}",
