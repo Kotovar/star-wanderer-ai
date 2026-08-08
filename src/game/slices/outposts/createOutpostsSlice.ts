@@ -6,6 +6,8 @@ import {
     healAtBase,
     repairAtBase,
     storeAtBase,
+    storeCargoAtBase,
+    withdrawCargoFromBase,
     installBaseModule,
     removeBaseModule,
     upgradeBase,
@@ -31,7 +33,11 @@ export interface OutpostsSlice {
     repairAtBase: (outpostId: string) => void;
     /** Лечит экипаж и снимает усталость в медблоке базы. Стоит ход */
     healAtBase: (outpostId: string) => void;
-    /** Кладёт груз с корабля на склад базы */
+    /** Кладёт предмет трюма на склад базы: груз задания, модуль, орудие */
+    storeCargoAtBase: (outpostId: string, cargoIndex: number, quantity: number) => void;
+    /** Забирает предмет со склада обратно в трюм */
+    withdrawCargoFromBase: (outpostId: string, storedIndex: number, quantity: number) => void;
+    /** Кладёт товар или газ на склад базы */
     storeAtBase: (outpostId: string, resource: OutpostResource, quantity: number) => void;
     /** Ставит модуль в свободный слот базы */
     installBaseModule: (outpostId: string, moduleId: BaseModuleId) => void;
@@ -60,6 +66,10 @@ export const createOutpostsSlice = (
     healAtBase: (outpostId) => healAtBase(outpostId, set, get),
     storeAtBase: (outpostId, resource, quantity) =>
         storeAtBase(outpostId, resource, quantity, set, get),
+    storeCargoAtBase: (outpostId, cargoIndex, quantity) =>
+        storeCargoAtBase(outpostId, cargoIndex, quantity, set, get),
+    withdrawCargoFromBase: (outpostId, storedIndex, quantity) =>
+        withdrawCargoFromBase(outpostId, storedIndex, quantity, set, get),
     installBaseModule: (outpostId, moduleId) =>
         installBaseModule(outpostId, moduleId, set, get),
     removeBaseModule: (outpostId, moduleId) =>

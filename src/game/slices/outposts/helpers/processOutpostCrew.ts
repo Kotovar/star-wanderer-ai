@@ -23,7 +23,10 @@ export function processOutpostCrew(set: SetState, get: () => GameStore): void {
 
     for (const member of stationed) {
         const outpost = state.outposts.find((o) => o.id === member.outpostId);
-        const onRole = outpost && member.profession === OUTPOST_ROLE[outpost.kind];
+        // Под рейдерами человек не работает, а сидит: опыта за это нет.
+        // Одиночество при этом никуда не девается — скорее наоборот
+        if (!outpost || outpost.capturedAtTurn !== undefined) continue;
+        const onRole = member.profession === OUTPOST_ROLE[outpost.kind];
         get().gainExp(member, onRole ? OUTPOST_CREW_EXP.onRole : OUTPOST_CREW_EXP.offRole);
     }
 

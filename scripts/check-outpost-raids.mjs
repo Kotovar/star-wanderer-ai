@@ -234,6 +234,47 @@ assert.deepEqual(
   "турели что-то добывают — модуль обязан делать одно дело",
 );
 
+// ── Захваченная база не обслуживает игрока ─────────────────────────────────
+// Иначе терять её почти не больно: добыча встаёт, а ремдок, медблок, склад и
+// ретранслятор продолжают работать, будто ничего не случилось
+const { hasBaseService, getRelayScanBonus } = await import(
+  "../src/game/slices/outposts/helpers/baseServices.ts"
+);
+const equipped = {
+  id: "b",
+  kind: "base",
+  locationId: "loc-1",
+  sectorId: 1,
+  builtAtTurn: 0,
+  bunker: {},
+  level: 3,
+  modules: ["relay", "warehouse", "repair_dock", "med_bay", "barracks"],
+};
+for (const service of ["relay", "storage", "repair", "heal", "garrison"]) {
+  assert.equal(
+    hasBaseService(equipped, service),
+    true,
+    `целая база не оказывает услугу ${service}`,
+  );
+  assert.equal(
+    hasBaseService({ ...equipped, capturedAtTurn: 10 }, service),
+    false,
+    `захваченная база продолжает оказывать услугу ${service}`,
+  );
+}
+assert.equal(
+  getRelayScanBonus([{ ...equipped, capturedAtTurn: 10 }]),
+  0,
+  "ретранслятор захваченной базы всё ещё расширяет обзор игроку",
+);
+
+// Приписанный под рейдерами не работает, а сидит: опыта за это нет
+assert.match(
+  source("game/slices/outposts/helpers/processOutpostCrew.ts"),
+  /capturedAtTurn !== undefined/,
+  "экипаж захваченной постройки копит опыт, работая на рейдеров",
+);
+
 // ── Обе панели показывают захват вместо обычного содержимого ───────────────
 for (const path of [
   "game/components/BaseSection.tsx",

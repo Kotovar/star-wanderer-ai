@@ -335,6 +335,53 @@ assert.ok(
   `модулей ${moduleIds.length} при ${maxSlots} слотах — на максимуме влезает всё, выбор исчез`,
 );
 
+// ── Склад принимает то, ради чего он и нужен ──────────────────────────────
+// Груз задания и запасной модуль продать нельзя, а трюм они занимают. Пока
+// склад брал только товары и газ, он принимал ровно то, что и так продаётся.
+const { getStorageFree, getStorageUsed } = await import(
+  "../src/game/slices/outposts/helpers/baseStorage.ts"
+);
+
+const stocked = baseAt(withIce, {
+  modules: ["warehouse"],
+  bunker: { minerals: 10 },
+  storedCargo: [{ item: "relic_case", quantity: 4, contractId: "c1" }],
+});
+assert.equal(
+  getStorageUsed(stocked),
+  14,
+  "объём склада считается не по всему, что на нём лежит",
+);
+assert.equal(
+  getStorageFree(stocked),
+  BASE_SERVICE_VALUES.storageCapacity - 14,
+);
+
+const storage = source("game/slices/outposts/helpers/baseStorage.ts");
+assert.match(
+  storage,
+  /state\.ship\.cargo\[cargoIndex\]/,
+  "склад не принимает предметы трюма — только то, что и так можно продать",
+);
+assert.match(
+  storage,
+  /getFreeCargoSpace/,
+  "забирая со склада, игрок может превысить вместимость трюма",
+);
+for (const fn of ["storeCargoAtBase", "withdrawCargoFromBase"]) {
+  assert.ok(storage.includes(fn), `нет ${fn}: склад работает в одну сторону`);
+}
+assert.match(
+  storage,
+  /a\.contractId === b\.contractId/,
+  "ящики разных заданий слипнутся на складе в одну кучу",
+);
+assert.match(
+  source("game/components/BaseSection.tsx"),
+  /withdrawCargoFromBase\(/,
+  "со склада нечем забрать положенное",
+);
+
 // ── Локали и подключение к экрану ──────────────────────────────────────────
 assert.match(
   source("game/components/EmptyPlanetPanel.tsx"),
@@ -388,7 +435,7 @@ for (const lang of ["ru", "en"]) {
   for (const key of ["base", "build_base", "base_hint", "bunker", "dismantle", "upgrade", "blocked_not_explored", "services", "service_repair", "service_heal", "service_store"]) {
     assert.ok(catalog.outposts?.[key], `${lang}: нет outposts.${key}`);
   }
-  for (const key of ["outpost_built_base", "base_upgraded", "base_module_installed", "base_module_removed", "outpost_build_remote", "base_repaired", "base_healed", "base_stored", "base_service_remote"]) {
+  for (const key of ["base_withdrawn", "outpost_built_base", "base_upgraded", "base_module_installed", "base_module_removed", "outpost_build_remote", "base_repaired", "base_healed", "base_stored", "base_service_remote"]) {
     assert.ok(catalog.game_logs?.[key], `${lang}: нет лога ${key}`);
   }
 }

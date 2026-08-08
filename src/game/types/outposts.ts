@@ -4,6 +4,7 @@
  * копит добычу в бункер и требует, чтобы за ней прилетели.
  */
 
+import type { CargoItem } from "./cargo";
 import type { Goods } from "./goods";
 import type { ResearchResourceType } from "./research";
 
@@ -45,6 +46,12 @@ export interface Outpost {
     progress?: number;
     /** То же самое для базы, где модулей несколько и ресурсы разные */
     moduleProgress?: Partial<Record<OutpostResource, number>>;
+    /**
+     * Груз, оставленный игроком на складе. Отдельно от бункера: у предметов
+     * трюма есть привязка к заданию и данные модуля, и счётчиком их не
+     * сохранить.
+     */
+    storedCargo?: CargoItem[];
     /** Уровень базы: определяет число слотов. У сборщика всегда 1 */
     level?: number;
     /** Что стоит в слотах базы */

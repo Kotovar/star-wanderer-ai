@@ -19,8 +19,10 @@ import {
     getBasePotential,
     getModuleBlocker,
     getOutpostOutputMultiplier,
+    getStorageFree,
     hasBaseService,
 } from "@/game/slices/outposts/helpers";
+import { describeCargoItem } from "@/game/cargo/describeCargoItem";
 import { getOutpostCrew } from "@/game/crew/stationed";
 import { planetHasFeature, PLANET_FEATURES } from "@/game/planets";
 import type { Location } from "@/game/types";
@@ -51,6 +53,8 @@ export function BaseSection({ location }: Props) {
     const repairAtBase = useGameStore((s) => s.repairAtBase);
     const healAtBase = useGameStore((s) => s.healAtBase);
     const storeAtBase = useGameStore((s) => s.storeAtBase);
+    const storeCargoAtBase = useGameStore((s) => s.storeCargoAtBase);
+    const withdrawCargoFromBase = useGameStore((s) => s.withdrawCargoFromBase);
     const assaultOutpost = useGameStore((s) => s.assaultOutpost);
     const ship = useGameStore((s) => s.ship);
     const gases = useGameStore((s) => s.gases);
@@ -185,6 +189,7 @@ export function BaseSection({ location }: Props) {
     const canRepair = hasBaseService(base, "repair");
     const canHeal = hasBaseService(base, "heal");
     const canStore = hasBaseService(base, "storage");
+    const storageFree = getStorageFree(base);
     // На склад кладём только то, что реально занимает трюм
     const storable: [OutpostResource, number][] = canStore
         ? [
@@ -325,25 +330,69 @@ export function BaseSection({ location }: Props) {
                             </Button>
                         )}
                     </div>
-                    {canStore && storable.length > 0 && (
+                    {canStore && (
                         <div className="mt-1.5">
                             <div className="text-[10px] text-[#8a9ba3]">
-                                {t("outposts.service_store")}
+                                {t("outposts.service_store")} · {storageFree}{" "}
+                                {t("outposts.storage_free")}
                             </div>
-                            <div className="mt-1 flex flex-wrap gap-1">
-                                {storable.map(([resource, amount]) => (
-                                    <Button
-                                        key={resource}
-                                        onClick={() =>
-                                            storeAtBase(base.id, resource, amount)
-                                        }
-                                        className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000]"
-                                    >
-                                        {describeHaulResource(resource, t)} ×
-                                        {amount}
-                                    </Button>
-                                ))}
-                            </div>
+
+                            {(storable.length > 0 || ship.cargo.length > 0) && (
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                    {storable.map(([resource, amount]) => (
+                                        <Button
+                                            key={resource}
+                                            onClick={() =>
+                                                storeAtBase(base.id, resource, amount)
+                                            }
+                                            className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000]"
+                                        >
+                                            ↓ {describeHaulResource(resource, t)} ×
+                                            {amount}
+                                        </Button>
+                                    ))}
+                                    {/* Ради этого склад и нужен: груз задания и
+                                        запасной модуль продать нельзя, а трюм
+                                        они занимают */}
+                                    {ship.cargo.map((item, index) => (
+                                        <Button
+                                            key={`${item.item}-${index}`}
+                                            onClick={() =>
+                                                storeCargoAtBase(
+                                                    base.id,
+                                                    index,
+                                                    item.quantity,
+                                                )
+                                            }
+                                            className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000]"
+                                        >
+                                            ↓ {describeCargoItem(item, t)} ×
+                                            {item.quantity}
+                                        </Button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {(base.storedCargo ?? []).length > 0 && (
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                    {(base.storedCargo ?? []).map((item, index) => (
+                                        <Button
+                                            key={`stored-${item.item}-${index}`}
+                                            onClick={() =>
+                                                withdrawCargoFromBase(
+                                                    base.id,
+                                                    index,
+                                                    item.quantity,
+                                                )
+                                            }
+                                            className="min-h-7 cursor-pointer border border-[#00d4ff55] bg-transparent px-2 text-[10px] text-[#00d4ff] hover:border-[#00d4ff]"
+                                        >
+                                            ↑ {describeCargoItem(item, t)} ×
+                                            {item.quantity}
+                                        </Button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

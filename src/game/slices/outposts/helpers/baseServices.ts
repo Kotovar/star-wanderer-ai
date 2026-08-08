@@ -13,8 +13,13 @@ export function hasBaseService(
     outpost: Outpost | undefined,
     service: BaseService,
 ): boolean {
+    // Захваченная постройка не обслуживает никого: модули на месте, но
+    // распоряжаются ими рейдеры. Проверка стоит здесь, в одной точке, —
+    // иначе каждую услугу пришлось бы вспоминать отдельно, а забытая
+    // означала бы, что потеря базы почти ничего не стоит
+    if (!outpost || outpost.capturedAtTurn !== undefined) return false;
     return Boolean(
-        outpost?.modules?.some((id) => BASE_MODULES[id].service === service),
+        outpost.modules?.some((id) => BASE_MODULES[id].service === service),
     );
 }
 

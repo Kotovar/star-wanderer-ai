@@ -1,14 +1,10 @@
 import { store as i18nStore } from "@/lib/useTranslation";
-import { BASE_SERVICE_VALUES } from "@/game/constants/baseModules";
 import type { GameStore, Goods, SetState } from "@/game/types";
 import type { GasType, OutpostResource } from "@/game/types/outposts";
 import { hasBaseService } from "./baseServices";
+import { getStorageFree } from "./baseStorage";
 import { describeHaulResource } from "./describeHaul";
 import { getHaulKind } from "./routeHaul";
-
-/** Сколько всего лежит в бункере — склад считает общий объём, а не по видам */
-const bunkerVolume = (bunker: Partial<Record<OutpostResource, number>>) =>
-    Object.values(bunker).reduce<number>((sum, n) => sum + (n ?? 0), 0);
 
 /**
  * Разгрузка трюма на базу.
@@ -40,8 +36,7 @@ export function storeAtBase(
             : (state.ship.tradeGoods.find((g) => g.item === resource)?.quantity ??
               0);
 
-    const room =
-        BASE_SERVICE_VALUES.storageCapacity - bunkerVolume(outpost.bunker);
+    const room = getStorageFree(outpost);
     const amount = Math.min(held, Math.max(0, Math.floor(quantity)), room);
     if (amount <= 0) {
         get().addLog(i18nStore.t("game_logs.base_store_full"), "warning");

@@ -1,5 +1,6 @@
 export * from "./accrueOutposts";
 export * from "./baseServices";
+export * from "./baseStorage";
 export * from "./buildBase";
 export * from "./canBuildBase";
 export * from "./buildGasCollector";
