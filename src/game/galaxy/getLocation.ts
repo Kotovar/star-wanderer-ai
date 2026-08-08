@@ -34,16 +34,19 @@ const getLocationType = (
     profile?: RunProfile,
 ): LocationType => {
     if (isBlackHole) {
-        // ЧД: шторма, аномалии, враги, руины — но не планеты/станции/мирные корабли.
+        // ЧД: аномалии, руины, мёртвые миры и их осколки — но не станции,
+        // не мирные корабли и не газовые гиганты.
         // Боссы добавляются отдельно в постобработке generateGalaxy.
         const bh = BLACK_HOLE_LOCATION_CHANCES;
         let c = 0;
         if (roll < (c += bh.anomaly)) return "anomaly";
         if (roll < (c += bh.enemy)) return "enemy";
+        if (roll < (c += bh.planet)) return "planet";
         if (roll < (c += bh.storm)) return "storm";
+        if (roll < (c += bh.asteroidBelt)) return "asteroid_belt";
         if (roll < (c += bh.derelictShip)) return "derelict_ship";
-        if (roll < (c += bh.distressSignal)) return "distress_signal";
         if (roll < (c += bh.wreckField)) return "wreck_field";
+        if (roll < (c += bh.distressSignal)) return "distress_signal";
         return "anomaly"; // запас
     }
 
@@ -125,7 +128,7 @@ export const generateLocation = (
                 id: `${sectorIdx}-${locIdx}`,
             };
         case "asteroid_belt":
-            return generateAsteroidBelt(sectorIdx, locIdx, tier);
+            return generateAsteroidBelt(sectorIdx, locIdx, tier, isBlackHole);
         case "storm":
             return generateStorm(sectorIdx, locIdx, tier);
         case "distress_signal":

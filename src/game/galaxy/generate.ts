@@ -314,11 +314,15 @@ export const generateAsteroidBelt = (
     sectorIdx: number,
     locIdx: number,
     tier: GalaxyTierAll,
+    isBlackHole = false,
 ): Location => {
     let asteroidTier: AsteroidTier = tier;
-    const TIER4_CHANCE = 0.15;
+    // Приливные силы вскрыли ядра разорванных планет, поэтому осколки у
+    // сингулярности чаще оказываются древними — это и есть плата за риск
+    const TIER4_CHANCE = isBlackHole ? 0.45 : 0.15;
+    const TIER4_FROM_TIER = isBlackHole ? 2 : 3;
 
-    if (tier === 3 && Math.random() < TIER4_CHANCE) {
+    if (tier >= TIER4_FROM_TIER && Math.random() < TIER4_CHANCE) {
         asteroidTier = 4;
     }
 
