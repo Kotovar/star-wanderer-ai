@@ -1,5 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 /**
  * Результат обработки погибшего экипажа
@@ -33,7 +34,7 @@ export const handleDeadCrew = (
     }
 
     // Логируем погибших
-    get().addLog( i18nStore.t("game_logs.crewUtils_1", { value: deadCrew.map((c) => c.name).join(", ") }),
+    get().addLog( i18nStore.t("game_logs.crewUtils_1", { value: deadCrew.map(getCrewDisplayName).join(", ") }),
         "error",
     );
 
@@ -74,7 +75,7 @@ export const removeDeadCrew = (set: SetState, get: () => GameStore): number => {
         crew: s.crew.filter((c) => c.health > 0),
     }));
 
-    get().addLog( i18nStore.t("game_logs.crewUtils_3", { value: deadCrew.map((c) => c.name).join(", ") }),
+    get().addLog( i18nStore.t("game_logs.crewUtils_3", { value: deadCrew.map(getCrewDisplayName).join(", ") }),
         "error",
     );
 

@@ -33,6 +33,7 @@ import {
 } from "./constants";
 import { applyPrepPeeks } from "./prepPeeks";
 import { RACES } from "@/game/constants/races";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { ResearchResourceType } from "@/game/types/research";
 import type { RaceId } from "@/game/types";
 
@@ -312,7 +313,7 @@ export function revealExpeditionTile(
                     damageReduction > 0 || moraleReduction > 0
                         ? ` (смягчено отрядом: −${Math.round(damageReduction * 100)}% урона, −${Math.round(moraleReduction * 100)}% морали)`
                         : "";
-                get().addLog( i18nStore.t("game_logs.revealExpeditionTile_4", { target_name: target.name, damage, moraleLoss, mitigation }),
+                get().addLog( i18nStore.t("game_logs.revealExpeditionTile_4", { target_name: getCrewDisplayName(target), damage, moraleLoss, mitigation }),
                     "error",
                 );
             }
@@ -423,7 +424,7 @@ export function revealExpeditionTile(
                 }));
                 get().addLog(
                     i18nStore.t("game_logs.expedition_tile_hazard", {
-                        target_name: target.name,
+                        target_name: getCrewDisplayName(target),
                         damage,
                         moraleLoss,
                     }),

@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { getOutpostCrew } from "@/game/crew/stationed";
 import type { GameStore, SetState } from "@/game/types";
 import { hasFreeCrewSlot } from "./outpostCrew";
@@ -50,7 +51,7 @@ export function stationCrew(
     }));
 
     get().addLog(
-        i18nStore.t("game_logs.outpost_crew_stationed", { name: member.name }),
+        i18nStore.t("game_logs.outpost_crew_stationed", { name: getCrewDisplayName(member) }),
         "info",
     );
     get().updateShipStats();
@@ -97,7 +98,7 @@ export function recallCrew(
     }));
 
     get().addLog(
-        i18nStore.t("game_logs.outpost_crew_recalled", { name: member.name }),
+        i18nStore.t("game_logs.outpost_crew_recalled", { name: getCrewDisplayName(member) }),
         "info",
     );
     get().updateShipStats();

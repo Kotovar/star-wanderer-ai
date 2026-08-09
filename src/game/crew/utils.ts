@@ -1,4 +1,5 @@
 import { useGameStore } from "@/game/store";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { getTraitById } from "@/game/crew/generation";
 import {
     DEFAULT_MAX_HEALTH,
@@ -57,7 +58,7 @@ export const giveCrewExperience = (expAmount: number, logMessage?: string) => {
     const experience = state.crew.flatMap((crewMember) => {
         const result = useGameStore.getState().gainExp(crewMember, expAmount);
         return result
-            ? [{ crewMemberId: crewMember.id, name: crewMember.name, amount: result.finalAmount }]
+            ? [{ crewMemberId: crewMember.id, name: getCrewDisplayName(crewMember), amount: result.finalAmount }]
             : [];
     });
 

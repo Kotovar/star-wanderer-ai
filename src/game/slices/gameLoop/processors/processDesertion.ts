@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { showHintOnce } from "@/game/hints/showHint";
 import type { CrewMember, GameStore, SetState } from "@/game/types";
 
@@ -75,7 +76,7 @@ export const processDesertion = (set: SetState, get: () => GameStore): void => {
         // Фильтруем экипаж, оставляем только тех, кто не дезертировал
         const crewToKeep = s.crew.filter((crewMember) => {
             if (shouldDesert(crewMember)) {
-                get().addLog( i18nStore.t("game_logs.processDesertion_1", { crewMember_name: crewMember.name }),
+                get().addLog( i18nStore.t("game_logs.processDesertion_1", { crewMember_name: getCrewDisplayName(crewMember) }),
                     "warning",
                 );
                 return false;

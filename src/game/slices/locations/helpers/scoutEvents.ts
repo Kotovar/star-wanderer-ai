@@ -16,6 +16,7 @@ import { giveRandomMutation, getBestByProfession } from "@/game/crew";
 import { showHintOnce } from "@/game/hints/showHint";
 import { appendSurfaceLog } from "./sendScoutingMission";
 import { patchLocation } from "@/game/utils/patchLocation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 /** Шанс, что разведка обернётся событием вместо обычного результата */
 export const SCOUT_EVENT_CHANCE = 0.12;
@@ -213,7 +214,7 @@ export const resolveScoutEvent = (
             const mutationName = giveRandomMutation(scout, set);
             if (mutationName) {
                 logEntry.mutationName = mutationName;
-                get().addLog( i18nStore.t("game_logs.scoutEvents_4", { scout_name: scout.name, mutationName }),
+                get().addLog( i18nStore.t("game_logs.scoutEvents_4", { scout_name: getCrewDisplayName(scout), mutationName }),
                     "error",
                 );
                 showHintOnce(get().addLog, "first_mutation", "hints.first_mutation");

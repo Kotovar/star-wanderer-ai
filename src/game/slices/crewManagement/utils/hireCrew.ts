@@ -12,6 +12,7 @@ import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import { canHireRace } from "@/game/reputation/utils";
 import { RACES } from "@/game/constants/races";
 import { unlockSyntheticDroneIfEligible } from "@/game/metaProgress/store";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 /**
  * Результат проверки возможности найма
@@ -158,7 +159,7 @@ export const hireCrew = (
         );
     }
 
-    get().addLog( i18nStore.t("game_logs.hireCrew_2", { newCrew_name: newCrew.name, price: crewData.price }), "info");
+    get().addLog( i18nStore.t("game_logs.hireCrew_2", { newCrew_name: getCrewDisplayName(newCrew), price: crewData.price }), "info");
     playSound("world_crew_milestone");
     return "hired";
 };

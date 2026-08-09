@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { GameStore, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 
@@ -66,7 +67,7 @@ export const fireCrewMember = (
     }));
 
     if (crewMember) {
-        get().addLog( i18nStore.t("game_logs.fireCrewMember_1", { crewMember_name: crewMember.name }), "warning");
+        get().addLog( i18nStore.t("game_logs.fireCrewMember_1", { crewMember_name: getCrewDisplayName(crewMember) }), "warning");
         playSound("ui_cancel");
     }
 };

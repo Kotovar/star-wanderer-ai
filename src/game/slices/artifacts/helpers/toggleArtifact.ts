@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, CrewMember, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 import { getTechBonusSum } from "@/game/research";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import {
     CURSE_REMOVAL_MIN_SCIENTIST_LEVEL,
     CURSE_REMOVAL_DAMAGE,
@@ -125,7 +126,7 @@ const damageScientist = (
 
     const scientist = get().crew.find((c) => c.id === scientistId);
     if (scientist) {
-        get().addLog( i18nStore.t("game_logs.toggleArtifact_4", { scientist_name: scientist.name, CURSE_REMOVAL_DAMAGE }),
+        get().addLog( i18nStore.t("game_logs.toggleArtifact_4", { scientist_name: getCrewDisplayName(scientist), CURSE_REMOVAL_DAMAGE }),
             "warning",
         );
     }

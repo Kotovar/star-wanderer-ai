@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { resolveOutpostAssault } from "@/game/slices/outposts/helpers/assaultOutpost";
 import type { SetState } from "@/game/types";
 import {
@@ -96,7 +97,10 @@ export function handleVictory(
         .map((m) => m.name);
     const woundedCrew = get()
         .crew.filter((c) => c.health < 100)
-        .map((c) => ({ name: c.name, damage: 100 - c.health }));
+        .map((c) => ({
+            name: getCrewDisplayName(c),
+            damage: 100 - c.health,
+        }));
 
     calculateVictoryCredits(state, loot, set, get);
 
@@ -196,7 +200,7 @@ export function handleVictory(
             gunner,
             BASE_GUNNER_COMBAT_EXP + enemyTier * GUNNER_COMBAT_EXP_PER_TIER,
         );
-        get().addLog( i18nStore.t("game_logs.playerVictory_9", { gunner_name: gunner.name }), "info");
+        get().addLog( i18nStore.t("game_logs.playerVictory_9", { gunner_name: getCrewDisplayName(gunner) }), "info");
     }
 
     const weaponBayCrew = state.crew.filter(
@@ -216,7 +220,7 @@ export function handleVictory(
             if (Math.random() < mutationChance) {
                 const mutationName = giveRandomMutation(crewMember, set);
                 if (mutationName) {
-                    get().addLog( i18nStore.t("game_logs.playerVictory_10", { crewMember_name: crewMember.name, mutationName }),
+                    get().addLog( i18nStore.t("game_logs.playerVictory_10", { crewMember_name: getCrewDisplayName(crewMember), mutationName }),
                         "error",
                     );
                     showHintOnce(get().addLog, "first_mutation", "hints.first_mutation");

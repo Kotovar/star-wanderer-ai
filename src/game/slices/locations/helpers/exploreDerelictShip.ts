@@ -14,6 +14,7 @@ import {
 } from "@/game/slices/ship/helpers";
 import { patchLocation } from "@/game/utils/patchLocation";
 import { SCOUT_BASE_EXP } from "@/game/constants/experience";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { ModuleRecipeId } from "@/game/types/crafting";
 import { handleDerelictRecoveryContracts } from "@/game/slices/contracts/helpers/handleDerelictRecoveryContracts";
 import {
@@ -322,11 +323,11 @@ export const exploreDerelictShip = (
         );
 
     if (lootParts.length > 0) {
-        get().addLog( i18nStore.t("game_logs.exploreDerelictShip_4", { scout_name: scout.name, value: lootParts.join(", ") }),
+        get().addLog( i18nStore.t("game_logs.exploreDerelictShip_4", { scout_name: getCrewDisplayName(scout), value: lootParts.join(", ") }),
             "info",
         );
     } else {
-        get().addLog( i18nStore.t("game_logs.exploreDerelictShip_5", { scout_name: scout.name }),
+        get().addLog( i18nStore.t("game_logs.exploreDerelictShip_5", { scout_name: getCrewDisplayName(scout) }),
             "info",
         );
     }
@@ -349,7 +350,7 @@ export const exploreDerelictShip = (
     if (scoutDamage > 0) {
         get().addLog(
             i18nStore.t("game_logs.exploreDerelictShip_scout_damage", {
-                scout_name: scout.name,
+                scout_name: getCrewDisplayName(scout),
                 damage: scoutDamage,
             }),
             "warning",

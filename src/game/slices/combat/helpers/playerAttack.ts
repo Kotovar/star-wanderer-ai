@@ -9,6 +9,7 @@ import type {
 import { playSound, type SoundId } from "@/sounds";
 import { playCombatSound } from "./combatSound";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { ARTIFACT_TYPES, WEAPON_TYPES } from "@/game/constants";
 import { isModuleActive } from "@/game/modules/utils";
 import {
@@ -206,7 +207,10 @@ function applyXenoLifesteal(
       }
     });
     get().addLog(
-      i18nStore.t("game_logs.playerAttack_13", { c_name: c.name, healAmount }),
+      i18nStore.t("game_logs.playerAttack_13", {
+        c_name: getCrewDisplayName(c),
+        healAmount,
+      }),
       "info",
     );
   });

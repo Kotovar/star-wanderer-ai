@@ -1,4 +1,5 @@
 import { getRaceCrewBonus } from "@/game/races";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getStrongestRaceTechPerkValue } from "@/game/constants/techTree";
 import { isValidCrewAssignment } from "@/game/slices/crew/helpers/validateAssignment";
@@ -68,33 +69,33 @@ export const processCombatAssignment = (
             processCombatEvasion(crewMember, set, get);
             break;
         case "targeting":
-            get().addLog( i18nStore.t("game_logs.processCombatAssignments_1", { crewMember_name: crewMember.name }), "combat");
+            get().addLog( i18nStore.t("game_logs.processCombatAssignments_1", { crewMember_name: getCrewDisplayName(crewMember) }), "combat");
             get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
             break;
         case "overclock":
-            get().addLog( i18nStore.t("game_logs.processCombatAssignments_2", { crewMember_name: crewMember.name }),
+            get().addLog( i18nStore.t("game_logs.processCombatAssignments_2", { crewMember_name: getCrewDisplayName(crewMember) }),
                 "combat",
             );
             get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
             break;
         case "rapidfire":
-            get().addLog( i18nStore.t("game_logs.processCombatAssignments_3", { crewMember_name: crewMember.name }),
+            get().addLog( i18nStore.t("game_logs.processCombatAssignments_3", { crewMember_name: getCrewDisplayName(crewMember) }),
                 "combat",
             );
             get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
             break;
         case "calibration":
-            get().addLog( i18nStore.t("game_logs.processCombatAssignments_4", { crewMember_name: crewMember.name }), "combat");
+            get().addLog( i18nStore.t("game_logs.processCombatAssignments_4", { crewMember_name: getCrewDisplayName(crewMember) }), "combat");
             get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
             break;
         case "analysis":
-            get().addLog( i18nStore.t("game_logs.processCombatAssignments_5", { crewMember_name: crewMember.name }),
+            get().addLog( i18nStore.t("game_logs.processCombatAssignments_5", { crewMember_name: getCrewDisplayName(crewMember) }),
                 "combat",
             );
             get().gainExp(crewMember, BASE_EXP_REWARDS.ANALYSIS_SABOTAGE);
             break;
         case "sabotage":
-            get().addLog( i18nStore.t("game_logs.processCombatAssignments_6", { crewMember_name: crewMember.name }),
+            get().addLog( i18nStore.t("game_logs.processCombatAssignments_6", { crewMember_name: getCrewDisplayName(crewMember) }),
                 "combat",
             );
             get().gainExp(crewMember, BASE_EXP_REWARDS.ANALYSIS_SABOTAGE);
@@ -123,7 +124,7 @@ const processVentFuel = (
             shields: s.ship.shields + restored,
         },
     }));
-    get().addLog( i18nStore.t("game_logs.processCombatAssignments_7", { crewMember_name: crewMember.name, restored }),
+    get().addLog( i18nStore.t("game_logs.processCombatAssignments_7", { crewMember_name: getCrewDisplayName(crewMember), restored }),
         "combat",
     );
     get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
@@ -163,7 +164,7 @@ const processCombatRepair = (
         currentModule.maxHealth || ASSIGNMENT_MULTIPLIERS.MAX_HEALTH;
 
     if (currentModule.health >= maxHealth) {
-        get().addLog( i18nStore.t("game_logs.processCombatAssignments_8", { crewMember_name: crewMember.name, currentModule_name: currentModule.name }),
+        get().addLog( i18nStore.t("game_logs.processCombatAssignments_8", { crewMember_name: getCrewDisplayName(crewMember), currentModule_name: currentModule.name }),
             "combat",
         );
         return;
@@ -182,7 +183,7 @@ const processCombatRepair = (
             ),
         },
     }));
-    get().addLog( i18nStore.t("game_logs.processCombatAssignments_9", { crewMember_name: crewMember.name, currentModule_name: currentModule.name, repairAmount }),
+    get().addLog( i18nStore.t("game_logs.processCombatAssignments_9", { crewMember_name: getCrewDisplayName(crewMember), currentModule_name: currentModule.name, repairAmount }),
         "combat",
     );
     get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_REPAIR);
@@ -250,7 +251,7 @@ const processCombatHeal = (
         ),
     }));
 
-    get().addLog( i18nStore.t("game_logs.processCombatAssignments_10", { crewMember_name: crewMember.name, healAmount }),
+    get().addLog( i18nStore.t("game_logs.processCombatAssignments_10", { crewMember_name: getCrewDisplayName(crewMember), healAmount }),
         "combat",
     );
     get().gainExp(crewMember, BASE_EXP_REWARDS.HEAL);
@@ -279,7 +280,7 @@ const processCombatFirstAid = (
         ),
     }));
 
-    get().addLog( i18nStore.t("game_logs.processCombatAssignments_11", { crewMember_name: crewMember.name }),
+    get().addLog( i18nStore.t("game_logs.processCombatAssignments_11", { crewMember_name: getCrewDisplayName(crewMember) }),
         "combat",
     );
 };

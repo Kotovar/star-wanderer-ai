@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import {
     ARTIFACT_TYPES,
@@ -240,7 +241,7 @@ function damageCrewInModule(
     phaseStepDodgers.forEach((id) => {
         const member = get().crew.find((c) => c.id === id);
         if (member) {
-            get().addLog( i18nStore.t("game_logs.moduleDamage_9", { member_name: member.name }), "info");
+            get().addLog( i18nStore.t("game_logs.moduleDamage_9", { member_name: getCrewDisplayName(member) }), "info");
         }
     });
 

@@ -1,4 +1,5 @@
 import type { ActiveCrisisState, GlobalCrisis } from "@/game/types/crisis";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { GameState } from "@/game/types";
 import { RACES } from "@/game/constants/races";
 import { TRADE_GOODS } from "@/game/constants/goods";
@@ -489,7 +490,7 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       );
       if (infected.length > 0) {
         get().addLog(
-          `🦠 Вспышка болезни на борту: заражены ${formatNames(infected.map((crewMember) => crewMember.name))}`,
+          `🦠 Вспышка болезни на борту: заражены ${formatNames(infected.map((crewMember) => getCrewDisplayName(crewMember)))}`,
           "error",
         );
       }
@@ -556,7 +557,7 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       }));
       if (newlyInfected.length > 0) {
         get().addLog(
-          `🦠 Карантин прорван: заражён ${formatNames(newlyInfected.map((crewMember) => crewMember.name))}`,
+          `🦠 Карантин прорван: заражён ${formatNames(newlyInfected.map((crewMember) => getCrewDisplayName(crewMember)))}`,
           "error",
         );
       }

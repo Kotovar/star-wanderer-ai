@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import { RACES } from "@/game/constants/races";
 import { isAffectedByAlienPresence } from "@/game/slices/crew";
 import type { CrewMember, GameState, GameStore } from "@/game/types";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 /**
  * Применяет штраф за моральный дух, связанный с присутствием инопланетян.
@@ -45,7 +46,7 @@ export function applyAlienPresencePenalty(
 
             penalties.set(target.id, (penalties.get(target.id) ?? 0) + penalty);
 
-            store.addLog( i18nStore.t("game_logs.alienPresence_1", { target_name: target.name, race_name: i18nStore.t(`races.${c.race}.name`), penalty }),
+            store.addLog( i18nStore.t("game_logs.alienPresence_1", { target_name: getCrewDisplayName(target), race_name: i18nStore.t(`races.${c.race}.name`), penalty }),
                 "warning",
             );
         });

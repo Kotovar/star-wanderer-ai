@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { getCurrentCargo } from "@/game/slices/ship/helpers/getCurrentCargo";
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getSectorName } from "@/lib/translationHelpers";
@@ -678,7 +679,7 @@ export const applyNeutronRadiation = (
         if (Math.random() < chance) {
             const mutationName = giveRandomMutation(crewMember, set);
             if (mutationName) {
-                get().addLog( i18nStore.t("game_logs.processTravel_26", { crewMember_name: crewMember.name, mutationName }),
+                get().addLog( i18nStore.t("game_logs.processTravel_26", { crewMember_name: getCrewDisplayName(crewMember), mutationName }),
                     "error",
                 );
                 showHintOnce(get().addLog, "first_mutation", "hints.first_mutation");

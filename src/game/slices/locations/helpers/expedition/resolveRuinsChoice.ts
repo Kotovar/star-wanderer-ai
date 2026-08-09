@@ -13,6 +13,7 @@ import {
     applyResearchToExpedition,
 } from "./revealExpeditionTile";
 import { pickRuinsEvent } from "./ruinsEvents";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 const r = (min: number, max: number) =>
     Math.floor(Math.random() * (max - min + 1)) + min;
@@ -69,9 +70,9 @@ export function resolveRuinsChoice(
                         : c,
                 ),
             }));
-            parts.push(`⚠️ ${target.name}: −${damage} HP`);
+            parts.push(`⚠️ ${getCrewDisplayName(target)}: −${damage} HP`);
             riskApplied = true;
-            get().addLog( i18nStore.t("game_logs.resolveRuinsChoice_1", { target_name: target.name, damage }), "error");
+            get().addLog( i18nStore.t("game_logs.resolveRuinsChoice_1", { target_name: getCrewDisplayName(target), damage }), "error");
         }
     }
 

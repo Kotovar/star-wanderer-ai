@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { getShipCrew } from "@/game/crew/stationed";
 import type { CrewTrait, GameStore, SetState } from "@/game/types";
 import { RACES } from "@/game/constants/races";
@@ -50,7 +51,7 @@ export const processMoraleTraits = (
                     c.id === crewMember.id ? shiftHappiness(c, -drain) : c,
                 ),
             }));
-            get().addLog( i18nStore.t("game_logs.processOthers_1", { crewMember_name: crewMember.name, drain }),
+            get().addLog( i18nStore.t("game_logs.processOthers_1", { crewMember_name: getCrewDisplayName(crewMember), drain }),
                 "warning",
             );
         });
@@ -80,7 +81,7 @@ export const processMoraleTraits = (
                 ),
             }));
 
-            get().addLog( i18nStore.t("game_logs.processOthers_2", { crewMember_name: crewMember.name, trait_name: trait.name, moraleBonus }),
+            get().addLog( i18nStore.t("game_logs.processOthers_2", { crewMember_name: getCrewDisplayName(crewMember), trait_name: trait.name, moraleBonus }),
                 "info",
             );
         });
@@ -111,7 +112,7 @@ export const processMoraleTraits = (
                 ),
             }));
 
-            get().addLog( i18nStore.t("game_logs.processOthers_3", { crewMember_name: crewMember.name, trait_name: trait.name, adjacentBonus }),
+            get().addLog( i18nStore.t("game_logs.processOthers_3", { crewMember_name: getCrewDisplayName(crewMember), trait_name: trait.name, adjacentBonus }),
                 "info",
             );
         });

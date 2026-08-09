@@ -1,6 +1,7 @@
 import { calculateGainExpResult } from "./calculateGainExpResult";
 import { playSound } from "@/sounds/utils";
 import type { GameState, GameStore, CrewMember } from "@/game/types";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 /**
  * Выполняет начисление опыта члену экипажа с обновлением состояния
@@ -50,7 +51,7 @@ export const gainExp = (
                 }
                 s.pendingCrewLevelUps.push({
                     crewMemberId: crew.id,
-                    crewMemberName: crew.name,
+                    crewMemberName: getCrewDisplayName(crew),
                     oldLevel,
                     newLevel: result.newLevel,
                     previousMaxHealth,

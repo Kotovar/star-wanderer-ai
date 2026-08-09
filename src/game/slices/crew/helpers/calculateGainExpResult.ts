@@ -1,4 +1,5 @@
 import type { GameState } from "@/game/types/game";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { CrewMember } from "@/game/types";
 import { calculateExpMultiplier } from "./calculateExpMultiplier";
 import { applyLevelUp } from "./applyLevelUp";
@@ -64,7 +65,7 @@ export const calculateGainExpResult = (
             : undefined,
         logMessage:
             levelUp !== null
-                ? `${crewMember.name} повысил уровень до ${levelUp.level}!`
+                ? `${getCrewDisplayName(crewMember)} повысил уровень до ${levelUp.level}!`
                 : undefined,
     };
 };

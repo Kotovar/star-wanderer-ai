@@ -13,6 +13,7 @@ import { getCrewByProfession, giveRandomMutation } from "@/game/crew";
 import { showHintOnce } from "@/game/hints/showHint";
 import { MUTATION_CHANCES } from "@/game/constants";
 import { getRandomUndiscoveredArtifact } from "@/game/artifacts";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { grantTimedEffect } from "@/game/effects/timedEffects";
 
 /**
@@ -59,7 +60,7 @@ export const applyAnomalyEffect = (
                 if (Math.random() < mutationChance) {
                     const mutationName = giveRandomMutation(scientist, set);
                     if (mutationName) {
-                        get().addLog( i18nStore.t("game_logs.applyAnomalyEffect_1", { scientist_name: scientist.name, mutationName }),
+                        get().addLog( i18nStore.t("game_logs.applyAnomalyEffect_1", { scientist_name: getCrewDisplayName(scientist), mutationName }),
                             "error",
                         );
                         showHintOnce(get().addLog, "first_mutation", "hints.first_mutation");

@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type {
     GameState,
     GameStore,
@@ -101,7 +102,7 @@ function applyCrewDesertion(
             set((s) => ({
                 crew: s.crew.filter((c) => c.id !== crewMember.id),
             }));
-            get().addLog( i18nStore.t("game_logs.processCursedArtifacts_3", { artifact_name: artifact.name, crewMember_name: crewMember.name }),
+            get().addLog( i18nStore.t("game_logs.processCursedArtifacts_3", { artifact_name: artifact.name, crewMember_name: getCrewDisplayName(crewMember) }),
                 "warning",
             );
         }
@@ -122,7 +123,7 @@ function applyCrewMutation(
         if (Math.random() * 100 < value) {
             const mutationName = giveRandomMutation(crewMember, set);
             if (mutationName) {
-                get().addLog( i18nStore.t("game_logs.processCursedArtifacts_4", { artifact_name: artifact.name, crewMember_name: crewMember.name, mutationName }),
+                get().addLog( i18nStore.t("game_logs.processCursedArtifacts_4", { artifact_name: artifact.name, crewMember_name: getCrewDisplayName(crewMember), mutationName }),
                     "warning",
                 );
                 showHintOnce(get().addLog, "first_mutation", "hints.first_mutation");

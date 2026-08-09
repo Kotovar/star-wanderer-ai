@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { GameStore, SetState } from "@/game/types";
 import { GENETIC_THERAPY_PRICE } from "../constants";
 
@@ -32,7 +33,7 @@ export const treatNegativeTrait = (
     if (crewMember.geneticTherapyUsed) {
         get().addLog(
             i18nStore.t("game_logs.geneticTherapy_4", {
-                crewMember_name: crewMember.name,
+                crewMember_name: getCrewDisplayName(crewMember),
             }),
             "error",
         );
@@ -70,7 +71,7 @@ export const treatNegativeTrait = (
 
     get().addLog(
         i18nStore.t("game_logs.geneticTherapy_6", {
-            crewMember_name: crewMember.name,
+            crewMember_name: getCrewDisplayName(crewMember),
             trait_name: trait.name,
         }),
         "info",

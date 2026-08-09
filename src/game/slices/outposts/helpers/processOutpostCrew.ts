@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import {
     OUTPOST_CREW_EXP,
     OUTPOST_ISOLATION_INTERVAL,
@@ -44,7 +45,7 @@ function processHazardHarm(set: SetState, get: () => GameStore): void {
                 ? harmed.get(member.outpostId)
                 : undefined;
             if (!damage) return member;
-            hurt.push(member.name);
+            hurt.push(getCrewDisplayName(member));
             return { ...member, health: Math.max(1, member.health - damage) };
         }),
     }));
@@ -103,7 +104,7 @@ export function processOutpostCrew(set: SetState, get: () => GameStore): void {
                 return shiftHappiness(member, OUTPOST_ISOLATION_MORALE);
             }
             const shifted = shiftHappiness(member, -OUTPOST_ISOLATION_MORALE);
-            if (shifted.happiness < member.happiness) lonely.push(member.name);
+            if (shifted.happiness < member.happiness) lonely.push(getCrewDisplayName(member));
             return shifted;
         }),
     }));

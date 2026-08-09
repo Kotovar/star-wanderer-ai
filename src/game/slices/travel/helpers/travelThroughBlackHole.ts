@@ -4,6 +4,7 @@ import type { GameStore, SetState } from "@/game/types";
 import { removeDeadCrew } from "@/game/slices/gameLoop/helpers/crewUtils";
 import { SCIENTIST_BLACK_HOLE_EXP } from "@/game/constants";
 import { getBestByProfession } from "@/game/crew";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 // ============================================================================
 // Константы
@@ -153,7 +154,7 @@ export const travelThroughBlackHole = (
     // Опыт учёному
     if (scientist) {
         get().gainExp(scientist, SCIENTIST_BLACK_HOLE_EXP);
-        get().addLog( i18nStore.t("game_logs.travelThroughBlackHole_7", { scientist_name: scientist.name, SCIENTIST_BLACK_HOLE_EXP }),
+        get().addLog( i18nStore.t("game_logs.travelThroughBlackHole_7", { scientist_name: getCrewDisplayName(scientist), SCIENTIST_BLACK_HOLE_EXP }),
             "info",
         );
     }

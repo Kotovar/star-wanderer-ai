@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { GameStore, Profession, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 
@@ -64,7 +65,7 @@ export const retrainCrewMember = (
 
     get().addLog(
         i18nStore.t("game_logs.retrainCrew_8", {
-            crewMember_name: crewMember.name,
+            crewMember_name: getCrewDisplayName(crewMember),
             profession: i18nStore.t(`professions.${profession}`),
         }),
         "info",

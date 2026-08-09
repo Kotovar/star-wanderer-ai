@@ -35,6 +35,7 @@ import { getBestByProfession } from "@/game/crew";
 import { planetHasFeature } from "@/game/planets";
 import { patchLocation } from "@/game/utils/patchLocation";
 import { SCOUT_EVENTS, SCOUT_EVENT_CHANCE } from "./scoutEvents";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 /**
  * Отправляет разведчика на исследование планеты
@@ -172,7 +173,7 @@ const resolveScoutingInfectionRisk = (
     const mutationName = giveRandomMutation(scout, set);
     if (mutationName) {
         result.mutationName = mutationName;
-        get().addLog( i18nStore.t("game_logs.sendScoutingMission_2", { scout_name: scout.name, mutationName }),
+        get().addLog( i18nStore.t("game_logs.sendScoutingMission_2", { scout_name: getCrewDisplayName(scout), mutationName }),
             "error",
         );
         showHintOnce(get().addLog, "first_mutation", "hints.first_mutation");
@@ -218,7 +219,9 @@ const applyScoutingResult = (
     get: () => GameStore,
 ): void => {
     const scout = getBestByProfession(get().crew, "scout");
-    const scoutName = scout?.name || "Разведчик";
+    const scoutName = scout
+        ? getCrewDisplayName(scout)
+        : i18nStore.t("professions.scout");
 
     switch (result.type) {
         case "credits":

@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { GameStore, SetState } from "@/game/types";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import { getMedicalAugmentationCatalog } from "@/game/stations/medicalAugmentations";
@@ -91,11 +92,11 @@ export const createAugmentationsSlice = (
         if (hasExisting) {
             const existingId = crewMember.augmentation ?? augmentationId;
             const old = AUGMENTATIONS[existingId];
-            get().addLog( i18nStore.t("game_logs.augmentationsSlice_7", { crewMember_name: crewMember.name, augmentation: old ? i18nStore.t(`augmentations.${old.id}.name`) : existingId, augmentation_name: augmentationName }),
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_7", { crewMember_name: getCrewDisplayName(crewMember), augmentation: old ? i18nStore.t(`augmentations.${old.id}.name`) : existingId, augmentation_name: augmentationName }),
                 "info",
             );
         } else {
-            get().addLog( i18nStore.t("game_logs.augmentationsSlice_8", { crewMember_name: crewMember.name, augmentation_name: augmentationName }),
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_8", { crewMember_name: getCrewDisplayName(crewMember), augmentation_name: augmentationName }),
                 "info",
             );
         }
@@ -125,6 +126,6 @@ export const createAugmentationsSlice = (
             ),
         }));
 
-        get().addLog( i18nStore.t("game_logs.augmentationsSlice_11", { crewMember_name: crewMember.name, augName }), "info");
+        get().addLog( i18nStore.t("game_logs.augmentationsSlice_11", { crewMember_name: getCrewDisplayName(crewMember), augName }), "info");
     },
 });

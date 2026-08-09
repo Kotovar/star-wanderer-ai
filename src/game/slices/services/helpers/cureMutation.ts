@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { GameStore, SetState } from "@/game/types";
 import { MUTATION_CURE_PRICE } from "../constants";
 
@@ -57,7 +58,7 @@ export const cureMutation = (
         }),
     }));
 
-    get().addLog( i18nStore.t("game_logs.cureMutation_3", { mutation_name: mutation.name, crewMember_name: crewMember.name, MUTATION_CURE_PRICE }),
+    get().addLog( i18nStore.t("game_logs.cureMutation_3", { mutation_name: mutation.name, crewMember_name: getCrewDisplayName(crewMember), MUTATION_CURE_PRICE }),
         "info",
     );
 };

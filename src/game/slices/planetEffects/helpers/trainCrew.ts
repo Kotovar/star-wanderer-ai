@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { GameStore, SetState } from "@/game/types";
 import {
     BASE_CREW_HEALTH_PER_LEVEL,
@@ -101,7 +102,7 @@ export const trainCrewMember = (
         ),
     }));
 
-    get().addLog( i18nStore.t("game_logs.trainCrew_4", { crewMember_name: crewMember.name, value: crewMember.level + 1 }),
+    get().addLog( i18nStore.t("game_logs.trainCrew_4", { crewMember_name: getCrewDisplayName(crewMember), value: crewMember.level + 1 }),
         "info",
     );
     playSound("world_crew_milestone");

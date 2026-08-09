@@ -11,6 +11,7 @@ import {
   hasMergedXenosymbiont,
 } from "./SymbiosisModuleOverlay";
 import { setupHiDPICanvas } from "./canvas-utils";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 const BIOLOGICAL_MODULE_TYPES: Record<
   string,
@@ -243,7 +244,7 @@ export function CombatShipVisual({
           ctx.font = "bold 12px Share Tech Mono";
           ctx.textAlign = "center";
           ctx.fillText(
-            c.name.charAt(0).toUpperCase(),
+            getCrewDisplayName(c).charAt(0).toUpperCase(),
             crewX + iconSize / 2,
             crewY + iconSize / 2 + 3,
           );

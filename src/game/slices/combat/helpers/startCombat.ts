@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { RACES } from "@/game/constants";
 import { addEnemyCodexEntry, getEnemyCodexId } from "@/game/constants/enemyCodex";
 import { SPACE_MONSTERS } from "@/game/constants/spaceMonsters";
@@ -96,7 +97,7 @@ export function applyRebelTrait(
             set((s) => {
                 s.crew = s.crew.filter((c) => c.id !== crewMember.id);
             });
-            get().addLog( i18nStore.t("game_logs.startCombat_4", { crewMember_name: crewMember.name }),
+            get().addLog( i18nStore.t("game_logs.startCombat_4", { crewMember_name: getCrewDisplayName(crewMember) }),
                 "error",
             );
         }
@@ -122,7 +123,7 @@ export function applyPessimistTrait(
             const c = s.crew.find((x) => x.id === crewMember.id);
             if (c) c.happiness = Math.max(0, c.happiness - moraleDrain);
         });
-        get().addLog( i18nStore.t("game_logs.startCombat_5", { crewMember_name: crewMember.name, moraleDrain }),
+        get().addLog( i18nStore.t("game_logs.startCombat_5", { crewMember_name: getCrewDisplayName(crewMember), moraleDrain }),
             "warning",
         );
     });

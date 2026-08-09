@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { GameStore } from "@/game/types/game";
 import type {
     CrewMember,
@@ -168,7 +169,7 @@ export const createCrewSlice = (
             (crewMember.assignmentRestTurns ?? 0) > 0 &&
             task !== crewMember.assignment
         ) {
-            get().addLog( i18nStore.t("game_logs.crewSlice_1", { crewMember_name: crewMember.name }),
+            get().addLog( i18nStore.t("game_logs.crewSlice_1", { crewMember_name: getCrewDisplayName(crewMember) }),
                 "warning",
             );
             return;
@@ -268,7 +269,7 @@ export const createCrewSlice = (
 
         // Check if crew member already moved this turn
         if (crewMember.movedThisTurn) {
-            get().addLog( i18nStore.t("game_logs.crewSlice_2", { crewMember_name: crewMember.name }),
+            get().addLog( i18nStore.t("game_logs.crewSlice_2", { crewMember_name: getCrewDisplayName(crewMember) }),
                 "error",
             );
             return;
@@ -315,7 +316,7 @@ export const createCrewSlice = (
             ),
         }));
 
-        get().addLog( i18nStore.t("game_logs.crewSlice_6", { crewMember_name: crewMember.name, targetModule_name: targetModule.name }),
+        get().addLog( i18nStore.t("game_logs.crewSlice_6", { crewMember_name: getCrewDisplayName(crewMember), targetModule_name: targetModule.name }),
             "info",
         );
         playSound("ui_confirm");

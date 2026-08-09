@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { getCurrentCargo } from "@/game/slices/ship/helpers/getCurrentCargo";
 import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants/races";
 import type { GameState, GameStore, CrewMember, Module } from "@/game/types";
@@ -83,7 +84,7 @@ export const mergeWithModule = (
         ),
     }));
 
-    get().addLog( i18nStore.t("game_logs.merge_2", { crewMember_name: crewMember.name, moduleShip_name: moduleShip.name, mergeEffect_name: mergeEffect.name }),
+    get().addLog( i18nStore.t("game_logs.merge_2", { crewMember_name: getCrewDisplayName(crewMember), moduleShip_name: moduleShip.name, mergeEffect_name: mergeEffect.name }),
         "info",
     );
 
@@ -140,7 +141,7 @@ export const unmergeFromModule = (
     }));
 
     if (moduleShip) {
-        get().addLog( i18nStore.t("game_logs.merge_4", { crewMember_name: crewMember.name, moduleShip_name: moduleShip.name }),
+        get().addLog( i18nStore.t("game_logs.merge_4", { crewMember_name: getCrewDisplayName(crewMember), moduleShip_name: moduleShip.name }),
             "info",
         );
     }

@@ -4,6 +4,7 @@ import type { CombatProjectileEvent } from "@/game/types/combatCinematics";
 import { playCombatSound } from "./combatSound";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import { getPilotInCockpit } from "@/game/crew";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { COMBAT_ACCURACY_MODIFIERS } from "@/game/constants/combat";
 import { PILOT_EVASION_COMBAT_EXP } from "@/game/constants/experience";
@@ -247,7 +248,7 @@ export function performEnemyAttack(
         );
         get().addLog(
             pilot
-                ? i18nStore.t("game_logs.evade_pilot", { name: pilot.name, source: evasionSource })
+                ? i18nStore.t("game_logs.evade_pilot", { name: getCrewDisplayName(pilot), source: evasionSource })
                 : i18nStore.t("game_logs.evade_ship", { source: evasionSource }),
             "info",
         );
@@ -532,7 +533,7 @@ function cleanupAfterEnemyAttack(
     const deadCrew = get().crew.filter((c) => c.health <= 0);
     if (deadCrew.length > 0) {
         set((s) => ({ crew: s.crew.filter((c) => c.health > 0) }));
-        get().addLog( i18nStore.t("game_logs.enemyCounterAttack_8", { value: deadCrew.map((c) => c.name).join(", ") }),
+        get().addLog( i18nStore.t("game_logs.enemyCounterAttack_8", { value: deadCrew.map(getCrewDisplayName).join(", ") }),
             "error",
         );
     }

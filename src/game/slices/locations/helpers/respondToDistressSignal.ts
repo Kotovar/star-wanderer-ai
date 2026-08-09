@@ -13,6 +13,7 @@ import {
 import { playSound } from "@/sounds";
 import { patchLocation } from "@/game/utils/patchLocation";
 import { typedKeys } from "@/lib/utils";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type {
     SetState,
     GameStore,
@@ -546,7 +547,7 @@ const addSurvivorToCrew = (set: SetState, get: () => GameStore): string => {
     });
 
     set(() => ({ pendingSurvivor: newCrew }));
-    get().addLog( i18nStore.t("game_logs.respondToDistressSignal_3", { newCrew_name: newCrew.name, value: getRaceName(newCrew.race) }),
+    get().addLog( i18nStore.t("game_logs.respondToDistressSignal_3", { newCrew_name: getCrewDisplayName(newCrew), value: getRaceName(newCrew.race) }),
         "info",
     );
     return newCrew.name;
