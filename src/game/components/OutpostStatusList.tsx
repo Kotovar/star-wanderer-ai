@@ -95,7 +95,12 @@ export function OutpostStatusList() {
                                 </div>
                                 {full && (
                                     <div className="mt-0.5 text-[10px] text-[#ffb000]">
-                                        ⚠ {t("outposts.bunker_full")}
+                                        ⚠{" "}
+                                        {t(
+                                            isBase
+                                                ? "outposts.bunker_full_base"
+                                                : "outposts.bunker_full",
+                                        )}
                                     </div>
                                 )}
                                 <div className="mt-0.5 text-[10px] text-[#8a9ba3]">

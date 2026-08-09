@@ -11,6 +11,7 @@ import {
 import { GameDialogContent } from "./GameDialog";
 import { CraftingTab } from "./station/CraftingTab";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslation } from "@/lib/useTranslation";
 import {
     BASE_BUILD_TURNS,
@@ -18,9 +19,11 @@ import {
     BASE_COST,
     BASE_MAX_LEVEL,
     BASE_MODULES,
+    BASE_MODULE_BUILD_TURNS,
     BASE_SLOTS_BY_LEVEL,
     BASE_SERVICE_VALUES,
     BASE_UPGRADE_COST,
+    BASE_UPGRADE_TURNS,
     BASE_CAPTURED_IMAGE,
     getBaseImage,
     getBaseModuleImage,
@@ -31,19 +34,29 @@ import {
     describeHaulResource,
     getBaseBlocker,
     getBasePotential,
+    getBunkerTotal,
+    getCrewSlots,
     getHireBlocker,
     getModuleBlocker,
     getOutpostOutputMultiplier,
+    getUpgradeBlocker,
     getSettlerOffer,
     getStorageFree,
     hasBaseService,
+    isBunkerFull,
     isUnderConstruction,
+    scheduleWork,
     turnsUntilReady,
 } from "@/game/slices/outposts/helpers";
+import { getOutpostCrew } from "@/game/crew/stationed";
 import { describeCargoItem } from "@/game/cargo/describeCargoItem";
 import { planetHasFeature, PLANET_FEATURES } from "@/game/planets";
-import type { Location } from "@/game/types";
-import type { BaseModuleId, OutpostResource } from "@/game/types/outposts";
+import type { GameStore, Location } from "@/game/types";
+import type {
+    BaseModuleId,
+    Outpost,
+    OutpostResource,
+} from "@/game/types/outposts";
 import { OutpostGarrison } from "./OutpostGarrison";
 
 /** Кого можно вырастить на базе: профессии, которых станции дают неохотно */
@@ -93,7 +106,7 @@ function ServiceButton({
                 style={{ borderColor: color, color }}
             >
                 {icon} {label} · {cost.quantity}×{" "}
-                {t(`trade.goods.${cost.item}`)}
+                {t(`trade.goods.${cost.item}`)} · {t("outposts.turn_cost")}
             </Button>
             {blocker && (
                 <span className="text-[9px] leading-tight text-[#8a9ba3]">
@@ -105,6 +118,64 @@ function ServiceButton({
                         : nothingLabel}
                 </span>
             )}
+        </div>
+    );
+}
+
+/**
+ * Цена работ: кредиты, материалы и срок до готовности.
+ *
+ * Один блок на закладку и на расширение намеренно. Апгрейд раньше показывал
+ * одни кредиты — ни материалов, ни того, что их не хватает, ни шести ходов
+ * работ, — и отказ прилетал уже после нажатия, в бортжурнал.
+ *
+ * `turns` — сколько ходов пройдёт от нажатия до работающей постройки, вместе
+ * с тем ходом, который забирает само нажатие. Два числа («+1 ход» отдельно,
+ * «работы 4» отдельно) игрок складывать не обязан, а очередь работ делает их
+ * ещё и неверными: модуль поверх недостроенной базы ждёт дольше номинала.
+ */
+function CostRow({
+    credits,
+    resources,
+    heldCredits,
+    heldResources,
+    turns,
+}: {
+    credits: number;
+    resources: Partial<Record<string, number>>;
+    heldCredits: number;
+    heldResources: Partial<Record<string, number>>;
+    turns: number;
+}) {
+    const { t } = useTranslation();
+    return (
+        <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] sm:text-xs">
+            <span
+                className={
+                    heldCredits >= credits ? "text-[#b9c6cc]" : "text-[#ff667f]"
+                }
+            >
+                {credits}₢
+            </span>
+            {Object.entries(resources).map(([resource, amount = 0]) => (
+                <span
+                    key={resource}
+                    className={
+                        (heldResources[resource] ?? 0) >= amount
+                            ? "text-[#b9c6cc]"
+                            : "text-[#ff667f]"
+                    }
+                >
+                    {RESEARCH_RESOURCES[
+                        resource as keyof typeof RESEARCH_RESOURCES
+                    ]?.icon ?? ""}{" "}
+                    {amount}
+                </span>
+            ))}
+            {/* Срок — часть цены, и знать его надо до оплаты */}
+            <span className="text-[#8a9ba3]">
+                🏗 {t("outposts.cost_turns", { turns })}
+            </span>
         </div>
     );
 }
@@ -168,6 +239,113 @@ function TransferRow({
 }
 
 /**
+ * Каталог модулей: открывается кликом по свободному слоту.
+ *
+ * Раньше десять кнопок с картинкой и описанием висели прямо под слотами всё
+ * время, пока оставалось место, — панель базы состояла в основном из того,
+ * чего на ней ещё нет. Порядок тоже смысловой: сперва те, что планета
+ * удвоит, потом просто доступные, недоступные — в конце.
+ */
+function ModuleCatalog({
+    base,
+    credits,
+    research,
+    readyIn,
+    onInstall,
+}: {
+    base: Outpost;
+    credits: number;
+    research: GameStore["research"];
+    readyIn: number;
+    onInstall: (moduleId: BaseModuleId) => void;
+}) {
+    const { t } = useTranslation();
+    const installed = base.modules ?? [];
+
+    const options = (Object.keys(BASE_MODULES) as BaseModuleId[])
+        .filter((moduleId) => !installed.includes(moduleId))
+        .map((moduleId) => {
+            const def = BASE_MODULES[moduleId];
+            const blocker = getModuleBlocker({ credits, research }, base, moduleId);
+            const boostFeature =
+                def.boostedBy && planetHasFeature(base.locationId, def.boostedBy)
+                    ? def.boostedBy
+                    : null;
+            // Чего именно не хватает — надо показать, а не прятать в подсказку:
+            // заблокированная кнопка без причины читается как поломка
+            const missing =
+                blocker === "not_enough_resources"
+                    ? Object.entries(def.cost.resources)
+                          .filter(
+                              ([resource, amount]) =>
+                                  (research.resources[
+                                      resource as keyof typeof research.resources
+                                  ] ?? 0) < amount,
+                          )
+                          .map(
+                              ([resource]) =>
+                                  RESEARCH_RESOURCES[
+                                      resource as keyof typeof RESEARCH_RESOURCES
+                                  ]?.name ?? resource,
+                          )
+                    : [];
+            return { moduleId, def, blocker, boostFeature, missing };
+        })
+        .sort(
+            (a, b) =>
+                (a.blocker ? 2 : a.boostFeature ? 0 : 1) -
+                (b.blocker ? 2 : b.boostFeature ? 0 : 1),
+        );
+
+    return (
+        <div className="space-y-1">
+            {options.map(({ moduleId, def, blocker, boostFeature, missing }) => (
+                <Button
+                    key={moduleId}
+                    onClick={() => onInstall(moduleId)}
+                    disabled={blocker !== null}
+                    className="h-auto w-full cursor-pointer items-start justify-start gap-1.5 whitespace-normal border border-[#555] bg-transparent px-2 py-1 text-left text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000] disabled:cursor-default disabled:opacity-40"
+                >
+                    <GameImage
+                        src={getBaseModuleImage(moduleId)}
+                        alt=""
+                        className="h-6 w-6 shrink-0 object-contain"
+                    />
+                    <span className="min-w-0 flex-1">
+                        <span className="block">
+                            {t(`base_modules.${moduleId}.name`)} ·{" "}
+                            {def.cost.credits}₢ ·{" "}
+                            <span className="text-[#8a9ba3]">
+                                🏗 {t("outposts.cost_turns", { turns: readyIn })}
+                            </span>
+                            {boostFeature && (
+                                <span className="ml-1 text-[#00ff41]">
+                                    {PLANET_FEATURES[boostFeature].icon} ×2
+                                </span>
+                            )}
+                            {blocker && (
+                                <span className="ml-1 text-[#ff667f]">
+                                    {missing.length > 0
+                                        ? `— ${missing.join(", ")}`
+                                        : `— ${t(`outposts.module_${blocker}`)}`}
+                                </span>
+                            )}
+                        </span>
+                        <span className="block text-[9px] leading-tight text-[#8a9ba3]">
+                            {t(`base_modules.${moduleId}.desc`)}
+                        </span>
+                    </span>
+                </Button>
+            ))}
+        </div>
+    );
+}
+
+/** Вкладка панели базы: тот же янтарный язык, что и у станции */
+const TAB_CLASS =
+    "cursor-pointer shrink-0 whitespace-nowrap px-3 py-1.5 text-[10px] uppercase text-[#ffb000] data-[state=active]:bg-[#ffb000] data-[state=active]:text-[#050810] sm:text-xs";
+
+/**
  * Главная база на пустой планете: закладка, уровни, слоты под модули.
  *
  * Слотов меньше, чем модулей, намеренно — на третьем уровне их шесть при
@@ -176,6 +354,7 @@ function TransferRow({
  */
 export function BaseSection({ location }: Props) {
     const [craftOpen, setCraftOpen] = useState(false);
+    const [catalogOpen, setCatalogOpen] = useState(false);
     const { t } = useTranslation();
     const outposts = useGameStore((s) => s.outposts);
     const credits = useGameStore((s) => s.credits);
@@ -220,41 +399,15 @@ export function BaseSection({ location }: Props) {
                     {t("outposts.base_hint")}
                 </div>
 
-                <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] sm:text-xs">
-                    <span
-                        className={
-                            credits >= BASE_COST.credits
-                                ? "text-[#b9c6cc]"
-                                : "text-[#ff667f]"
-                        }
-                    >
-                        {BASE_COST.credits}₢
-                    </span>
-                    {Object.entries(BASE_COST.resources).map(([resource, amount]) => {
-                        const held =
-                            research.resources[
-                                resource as keyof typeof research.resources
-                            ] ?? 0;
-                        return (
-                            <span
-                                key={resource}
-                                className={
-                                    held >= amount
-                                        ? "text-[#b9c6cc]"
-                                        : "text-[#ff667f]"
-                                }
-                            >
-                                {RESEARCH_RESOURCES[
-                                    resource as keyof typeof RESEARCH_RESOURCES
-                                ]?.icon ?? ""}{" "}
-                                {amount}
-                            </span>
-                        );
-                    })}
-                    {/* Срок работ — часть цены, и знать её надо до оплаты */}
-                    <span className="text-[#8a9ba3]">
-                        🏗 {t("outposts.build_turns", { turns: BASE_BUILD_TURNS })}
-                    </span>
+                <div className="mt-1.5">
+                    <CostRow
+                        credits={BASE_COST.credits}
+                        resources={BASE_COST.resources}
+                        heldCredits={credits}
+                        heldResources={research.resources}
+                        // Ход уходит на саму закладку, работы идут после него
+                        turns={BASE_BUILD_TURNS + 1}
+                    />
                 </div>
 
                 {/* Что даст эта планета: 6000₢ слишком дорого, чтобы
@@ -336,39 +489,36 @@ export function BaseSection({ location }: Props) {
         );
     }
 
-    // ── Идут работы: база не добывает и не обслуживает, пока их не закончат ─
-    if (isUnderConstruction(base)) {
-        return (
-            <div className="mt-2 border border-[#ffb00033] bg-[rgba(255,176,0,0.04)] p-2 sm:p-3">
-                <GameImage
-                    src={getBaseImage(base.level ?? 1)}
-                    alt={t("outposts.base")}
-                    className="mb-2 w-full object-contain opacity-50"
-                />
-                <div className="text-[11px] uppercase tracking-wider text-[#ffb000] sm:text-xs">
-                    🏗 {t("outposts.under_construction")}
-                </div>
-                <div className="mt-1 text-[10px] text-[#b9c6cc] sm:text-xs">
-                    {t("outposts.work_left", {
-                        turns: turnsUntilReady(base, turn),
-                    })}
-                </div>
-            </div>
-        );
-    }
-
     // ── База стоит: слоты, бункер, гарнизон ────────────────────────────────
+    // Работы больше не подменяют собой всю панель. Раньше заказ модуля на
+    // четыре хода прятал бункер, гарнизон и склад — вместе с оставленным на
+    // нём грузом задания, который забрать было уже нечем, хотя сами
+    // `collectOutpost` и `withdrawFromBase` этого никогда не запрещали
+    const underWork = isUnderConstruction(base);
+    const workTurns = turnsUntilReady(base, turn);
     const level = base.level ?? 1;
     const slots = BASE_SLOTS_BY_LEVEL[level] ?? 0;
     const installed = base.modules ?? [];
     const multiplier = getOutpostOutputMultiplier(base, crew);
     const haul = Object.entries(base.bunker).filter(([, amount]) => amount > 0);
     const upgrade = BASE_UPGRADE_COST[level];
+    const upgradeBlocker = getUpgradeBlocker({ credits, research }, base);
+    // Через сколько ходов заработает заказанное сейчас. Не номинал из
+    // констант: ход забирает само нажатие, а работы встают в общую очередь —
+    // модуль поверх недостроенной базы ждёт дольше своих четырёх ходов
+    const readyIn = (turns: number) =>
+        scheduleWork(base, turn + 1, turns) - turn;
+    const moduleReadyIn = readyIn(BASE_MODULE_BUILD_TURNS);
+    const upgradeReadyIn = readyIn(BASE_UPGRADE_TURNS);
+    const bunkerTotal = getBunkerTotal(base);
+    const stationed = getOutpostCrew(crew, base.id);
+    const crewSlots = getCrewSlots(base);
     const canRepair = hasBaseService(base, "repair");
     const canHeal = hasBaseService(base, "heal");
     const canStore = hasBaseService(base, "storage");
     const canCraft = hasBaseService(base, "craft");
     const canHire = hasBaseService(base, "garrison");
+    const hasServices = canRepair || canHeal || canCraft || canHire;
     const storageFree = getStorageFree(base);
     // Те же условия, что и в самих услугах: иначе кнопка обещает одно, а
     // helper отказывает по другому поводу
@@ -406,6 +556,7 @@ export function BaseSection({ location }: Props) {
     const stored = (
         Object.entries(base.storedGoods ?? {}) as [OutpostResource, number][]
     ).filter(([, amount]) => amount > 0);
+    const hasStored = stored.length > 0 || (base.storedCargo ?? []).length > 0;
 
     return (
         <div className="mt-2 border border-[#ffb00033] bg-[rgba(255,176,0,0.04)] p-2 sm:p-3">
@@ -414,339 +565,374 @@ export function BaseSection({ location }: Props) {
             <GameImage
                 src={getBaseImage(level)}
                 alt={t("outposts.base")}
-                className="mb-2 w-full object-contain"
+                className={`mb-2 w-full object-contain${underWork ? " opacity-50" : ""}`}
             />
 
-            <div className="flex items-center justify-between">
+            {/* Сводка в шапке: вкладки прячут содержимое, и то, ради чего сюда
+                прилетели — полный бункер, пустой слот, пустой гарнизон, —
+                обязано читаться, не открывая ни одной из них */}
+            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
                 <span className="text-[11px] uppercase tracking-wider text-[#ffb000] sm:text-xs">
                     🏗 {t("outposts.base")} · {t("outposts.base_level", { level })}
                 </span>
                 <span className="text-[10px] text-[#8a9ba3]">
-                    {installed.length}/{slots} · ×{multiplier.toFixed(2)}
+                    {t("outposts.summary_slots", {
+                        filled: installed.length,
+                        total: slots,
+                    })}{" "}
+                    · ×{multiplier.toFixed(2)} ·{" "}
+                    {t("outposts.summary_bunker", { amount: bunkerTotal })} ·{" "}
+                    {t("outposts.summary_garrison", {
+                        filled: stationed.length,
+                        total: crewSlots,
+                    })}
                 </span>
             </div>
 
-            {/* Слоты */}
-            <div className="mt-2 space-y-1">
-                {installed.map((moduleId) => {
-                    const def = BASE_MODULES[moduleId];
-                    const boostFeature =
-                        def.boostedBy &&
-                        planetHasFeature(base.locationId, def.boostedBy)
-                            ? def.boostedBy
-                            : null;
-                    return (
-                        <div
-                            key={moduleId}
-                            className="flex items-center justify-between gap-2 border border-[#ffb00033] px-2 py-1"
-                        >
-                            {/* Описание прямо в строке: раньше оно жило только
-                                в title-подсказке кнопки установки — то есть у
-                                поставленного модуля не было нигде, а на тач-
-                                экране не было вовсе */}
-                            <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-white sm:text-xs">
-                                <GameImage
-                                    src={getBaseModuleImage(moduleId)}
-                                    alt=""
-                                    className="h-6 w-6 shrink-0 object-contain"
-                                />
-                                <span className="min-w-0">
-                                    <span className="block truncate">
-                                        {t(`base_modules.${moduleId}.name`)}
-                                        {boostFeature && (
-                                            <span className="ml-1 text-[#00ff41]">
-                                                {PLANET_FEATURES[boostFeature].icon} ×2
-                                            </span>
-                                        )}
-                                    </span>
-                                    <span className="block text-[9px] leading-tight text-[#8a9ba3]">
-                                        {t(`base_modules.${moduleId}.desc`)}
-                                    </span>
-                                </span>
-                            </span>
-                            <Button
-                                onClick={() => removeBaseModule(base.id, moduleId)}
-                                className="min-h-7 cursor-pointer border border-[#552028] bg-transparent px-2 text-[10px] uppercase text-[#8a6a70] hover:border-[#ff0040] hover:text-[#ff667f]"
-                            >
-                                {t("outposts.dismantle")}
-                            </Button>
-                        </div>
-                    );
-                })}
-
-                {installed.length < slots && (
-                    // Список, а не россыпь чипов: у слота цена в тысячи
-                    // кредитов, и «что это делает» должно читаться до нажатия
-                    <div className="space-y-1">
-                        {(Object.keys(BASE_MODULES) as BaseModuleId[])
-                            .filter((moduleId) => !installed.includes(moduleId))
-                            .map((moduleId) => {
-                                const def = BASE_MODULES[moduleId];
-                                const blocker = getModuleBlocker(
-                                    { credits, research },
-                                    base,
-                                    moduleId,
-                                );
-                                // Чего именно не хватает — надо показать, а не
-                                // прятать в подсказку: заблокированная кнопка
-                                // без причины читается как поломка
-                                const missing =
-                                    blocker === "not_enough_resources"
-                                        ? Object.entries(def.cost.resources)
-                                              .filter(
-                                                  ([resource, amount]) =>
-                                                      (research.resources[
-                                                          resource as keyof typeof research.resources
-                                                      ] ?? 0) < amount,
-                                              )
-                                              .map(
-                                                  ([resource]) =>
-                                                      RESEARCH_RESOURCES[
-                                                          resource as keyof typeof RESEARCH_RESOURCES
-                                                      ]?.name ?? resource,
-                                              )
-                                        : [];
-                                return (
-                                    <Button
-                                        key={moduleId}
-                                        onClick={() =>
-                                            installBaseModule(base.id, moduleId)
-                                        }
-                                        disabled={blocker !== null}
-                                        title={
-                                            blocker
-                                                ? missing.length > 0
-                                                    ? `${t("outposts.module_not_enough_resources")}: ${missing.join(", ")}`
-                                                    : t(`outposts.module_${blocker}`)
-                                                : t(
-                                                      `base_modules.${moduleId}.desc`,
-                                                  )
-                                        }
-                                        className="h-auto w-full cursor-pointer items-start justify-start gap-1.5 whitespace-normal border border-[#555] bg-transparent px-2 py-1 text-left text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000] disabled:cursor-default disabled:opacity-40"
-                                    >
-                                        <GameImage
-                                            src={getBaseModuleImage(moduleId)}
-                                            alt=""
-                                            className="h-6 w-6 shrink-0 object-contain"
-                                        />
-                                        <span className="min-w-0 flex-1">
-                                            <span className="block">
-                                                {t(`base_modules.${moduleId}.name`)} ·{" "}
-                                                {def.cost.credits}₢
-                                                {blocker && (
-                                                    <span className="ml-1 text-[#ff667f]">
-                                                        {missing.length > 0
-                                                            ? `— ${missing.join(", ")}`
-                                                            : `— ${t(`outposts.module_${blocker}`)}`}
-                                                    </span>
-                                                )}
-                                            </span>
-                                            <span className="block text-[9px] leading-tight text-[#8a9ba3]">
-                                                {t(`base_modules.${moduleId}.desc`)}
-                                            </span>
-                                        </span>
-                                    </Button>
-                                );
-                            })}
-                    </div>
-                )}
-            </div>
-
-            {/* Бункер */}
-            <div className="mt-2 border-t border-[#ffb00022] pt-2 text-[10px] sm:text-xs">
-                <div className="text-[#8a9ba3]">
-                    {t("outposts.bunker")} ({BASE_BUNKER_CAP})
-                </div>
-                {haul.length === 0 ? (
-                    <div className="text-[#666]">{t("outposts.bunker_empty")}</div>
-                ) : (
-                    <div className="text-[#b9c6cc]">
-                        {haul
-                            .map(
-                                ([resource, amount]) =>
-                                    `${describeHaulResource(resource as never, t)} ×${amount}`,
-                            )
-                            .join(", ")}
-                    </div>
-                )}
-                <Button
-                    onClick={() => collectOutpost(base.id)}
-                    disabled={haul.length === 0}
-                    className="mt-1.5 min-h-9 w-full cursor-pointer border-2 border-[#ffb000] bg-transparent px-2 text-[10px] uppercase tracking-wider text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] disabled:cursor-default disabled:opacity-40 sm:text-xs"
-                >
-                    📦 {t("outposts.collect")}
-                </Button>
-            </div>
-
-            {/* Услуги базы: то, ради чего её строят в глубоком космосе */}
-            {(canRepair || canHeal || canStore) && (
-                <div className="mt-2 border-t border-[#ffb00022] pt-2">
-                    <div className="text-[10px] text-[#8a9ba3] sm:text-xs">
-                        {t("outposts.services")}
-                    </div>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                        {canRepair && (
-                            <ServiceButton
-                                icon="🔧"
-                                label={t("outposts.service_repair")}
-                                color="#00d4ff"
-                                cost={BASE_SERVICE_VALUES.repairCost}
-                                blocker={repairBlocker}
-                                nothingLabel={t("outposts.service_repair_nothing")}
-                                onClick={() => repairAtBase(base.id)}
-                            />
-                        )}
-                        {canHeal && (
-                            <ServiceButton
-                                icon="⚕️"
-                                label={t("outposts.service_heal")}
-                                color="#00ff41"
-                                cost={BASE_SERVICE_VALUES.healCost}
-                                blocker={healBlocker}
-                                nothingLabel={t("outposts.service_heal_nothing")}
-                                onClick={() => healAtBase(base.id)}
-                            />
-                        )}
-                        {canCraft && (
-                            <Button
-                                onClick={() => setCraftOpen(true)}
-                                className="min-h-8 cursor-pointer border border-[#ffb000] bg-transparent px-2 text-[10px] uppercase text-[#ffb000] hover:bg-[rgba(255,176,0,0.12)]"
-                            >
-                                🛠 {t("outposts.service_craft")}
-                            </Button>
-                        )}
-                    </div>
-                    {/* Казарма вербует на ближайшей населённой планете:
-                        профессию выбирает игрок, а цену и срок — то, насколько
-                        глухое место выбрано под базу */}
-                    {canHire && (
-                        <div className="mt-1.5">
-                            {base.pendingSettler ? (
-                                <div className="text-[10px] text-[#00d4ff]">
-                                    🚶{" "}
-                                    {t("outposts.settler_in_transit", {
-                                        profession: t(
-                                            `professions.${base.pendingSettler.profession}`,
-                                        ),
-                                        turns: Math.max(
-                                            0,
-                                            base.pendingSettler.arrivesAtTurn - turn,
-                                        ),
-                                    })}
-                                </div>
-                            ) : settlerOffer ? (
-                                <>
-                                    <div className="text-[10px] text-[#8a9ba3]">
-                                        {t("outposts.service_hire_from", {
-                                            planet: t(settlerOffer.planetName),
-                                            cost: settlerOffer.cost,
-                                            turns: settlerOffer.turns,
-                                        })}
-                                    </div>
-                                    <div className="mt-1 flex flex-wrap gap-1">
-                                        {HIREABLE_PROFESSIONS.map((profession) => (
-                                            <Button
-                                                key={profession}
-                                                onClick={() =>
-                                                    hireAtBase(base.id, profession)
-                                                }
-                                                disabled={hireBlocker !== null}
-                                                className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000] disabled:cursor-default disabled:opacity-40"
-                                            >
-                                                {t(`professions.${profession}`)}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                    {hireBlocker && (
-                                        <div className="mt-0.5 text-[9px] text-[#8a9ba3]">
-                                            {t(`outposts.hire_${hireBlocker}`)}
-                                        </div>
-                                    )}
-                                </>
-                            ) : (
-                                <div className="text-[10px] text-[#8a9ba3]">
-                                    {t("outposts.hire_no_source")}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {canStore && (
-                        <div className="mt-1.5">
-                            <div className="text-[10px] text-[#8a9ba3]">
-                                {t("outposts.service_store")} · {storageFree}{" "}
-                                {t("outposts.storage_free")}
-                            </div>
-
-                            {(storable.length > 0 || ship.cargo.length > 0) && (
-                                <div className="mt-1 space-y-1">
-                                    {storable.map(([resource, amount]) => (
-                                        <TransferRow
-                                            key={resource}
-                                            label={describeHaulResource(resource, t)}
-                                            max={amount}
-                                            accent="#ffb000"
-                                            arrow="↓"
-                                            onTransfer={(qty) =>
-                                                storeAtBase(base.id, resource, qty)
-                                            }
-                                        />
-                                    ))}
-                                    {/* Ради этого склад и нужен: груз задания и
-                                        запасной модуль продать нельзя, а трюм
-                                        они занимают */}
-                                    {ship.cargo.map((item, index) => (
-                                        <TransferRow
-                                            key={`${item.item}-${index}`}
-                                            label={describeCargoItem(item, t)}
-                                            max={item.quantity}
-                                            accent="#ffb000"
-                                            arrow="↓"
-                                            onTransfer={(qty) =>
-                                                storeCargoAtBase(base.id, index, qty)
-                                            }
-                                        />
-                                    ))}
-                                </div>
-                            )}
-
-                            {(stored.length > 0 ||
-                                (base.storedCargo ?? []).length > 0) && (
-                                <div className="mt-1 space-y-1 border-t border-[#00d4ff22] pt-1">
-                                    {stored.map(([resource, amount]) => (
-                                        <TransferRow
-                                            key={`stored-${resource}`}
-                                            label={describeHaulResource(resource, t)}
-                                            max={amount}
-                                            accent="#00d4ff"
-                                            arrow="↑"
-                                            onTransfer={(qty) =>
-                                                withdrawFromBase(base.id, resource, qty)
-                                            }
-                                        />
-                                    ))}
-                                    {(base.storedCargo ?? []).map((item, index) => (
-                                        <TransferRow
-                                            key={`stored-${item.item}-${index}`}
-                                            label={describeCargoItem(item, t)}
-                                            max={item.quantity}
-                                            accent="#00d4ff"
-                                            arrow="↑"
-                                            onTransfer={(qty) =>
-                                                withdrawCargoFromBase(
-                                                    base.id,
-                                                    index,
-                                                    qty,
-                                                )
-                                            }
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
+            {/* Работы: полосой поверх живой панели, а не вместо неё */}
+            {underWork && (
+                <div className="mt-1.5 border border-[#ffb00055] bg-[rgba(255,176,0,0.08)] px-2 py-1 text-[10px] leading-snug text-[#ffb000] sm:text-xs">
+                    🏗 {t("outposts.work_banner", { turns: workTurns })}
                 </div>
             )}
+
+            <Tabs defaultValue="overview" className="mt-2">
+                <TabsList className="flex h-auto w-full justify-start overflow-x-auto rounded-none border border-[#ffb00055] bg-[rgba(5,8,16,0.9)] p-0">
+                    <TabsTrigger value="overview" className={TAB_CLASS}>
+                        🏗 {t("outposts.tab_overview")}
+                    </TabsTrigger>
+                    {hasServices && (
+                        <TabsTrigger value="services" className={TAB_CLASS}>
+                            🔧 {t("outposts.tab_services")}
+                        </TabsTrigger>
+                    )}
+                    {(canStore || hasStored) && (
+                        <TabsTrigger value="storage" className={TAB_CLASS}>
+                            📦 {t("outposts.tab_storage")}
+                        </TabsTrigger>
+                    )}
+                    <TabsTrigger value="garrison" className={TAB_CLASS}>
+                        👥 {t("outposts.tab_garrison")}
+                    </TabsTrigger>
+                </TabsList>
+
+                {/* Высота вкладок фиксирована со своей прокруткой: у них разное
+                    содержимое, и без этого переключение двигало по вертикали всю
+                    планетарную панель под базой — кнопка, на которую игрок целился,
+                    уезжала из-под курсора. ponytail: 20rem подобраны под обзор
+                    базы второго уровня; если слотов станет больше, поднять здесь */}
+                <div className="h-[20rem] overflow-y-auto sm:h-[22rem]">
+                    <TabsContent value="overview">
+                        {/* Слоты */}
+                        <div className="mt-2 space-y-1">
+                            {installed.map((moduleId) => {
+                                const def = BASE_MODULES[moduleId];
+                                const boostFeature =
+                                    def.boostedBy &&
+                                    planetHasFeature(base.locationId, def.boostedBy)
+                                        ? def.boostedBy
+                                        : null;
+                                return (
+                                    <div
+                                        key={moduleId}
+                                        className="flex items-center justify-between gap-2 border border-[#ffb00033] px-2 py-1"
+                                    >
+                                        {/* Описание прямо в строке: раньше оно жило только
+                                            в title-подсказке кнопки установки — то есть у
+                                            поставленного модуля не было нигде, а на тач-
+                                            экране не было вовсе */}
+                                        <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-white sm:text-xs">
+                                            <GameImage
+                                                src={getBaseModuleImage(moduleId)}
+                                                alt=""
+                                                className="h-6 w-6 shrink-0 object-contain"
+                                            />
+                                            <span className="min-w-0">
+                                                <span className="block truncate">
+                                                    {t(`base_modules.${moduleId}.name`)}
+                                                    {boostFeature && (
+                                                        <span className="ml-1 text-[#00ff41]">
+                                                            {PLANET_FEATURES[boostFeature].icon} ×2
+                                                        </span>
+                                                    )}
+                                                </span>
+                                                <span className="block text-[9px] leading-tight text-[#8a9ba3]">
+                                                    {t(`base_modules.${moduleId}.desc`)}
+                                                </span>
+                                            </span>
+                                        </span>
+                                        <Button
+                                            onClick={() => removeBaseModule(base.id, moduleId)}
+                                            className="min-h-7 cursor-pointer border border-[#552028] bg-transparent px-2 text-[10px] uppercase text-[#8a6a70] hover:border-[#ff0040] hover:text-[#ff667f]"
+                                        >
+                                            {t("outposts.dismantle")}
+                                        </Button>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Свободный слот — строка, а не пустота: слотов меньше, чем
+                                модулей, и видеть, сколько их осталось, важнее каталога */}
+                            {Array.from({ length: Math.max(0, slots - installed.length) }).map(
+                                (_, index) => (
+                                    <Button
+                                        key={`slot-${index}`}
+                                        onClick={() => setCatalogOpen(true)}
+                                        className="min-h-9 w-full cursor-pointer justify-start border border-dashed border-[#ffb00055] bg-transparent px-2 text-left text-[10px] text-[#8a9ba3] hover:border-[#ffb000] hover:text-[#ffb000] sm:text-xs"
+                                    >
+                                        + {t("outposts.slot_empty")}
+                                    </Button>
+                                ),
+                            )}
+                        </div>
+
+                        {/* Бункер */}
+                        <div className="mt-2 border-t border-[#ffb00022] pt-2 text-[10px] sm:text-xs">
+                            <div className="text-[#8a9ba3]">{t("outposts.bunker")}</div>
+                            {haul.length === 0 ? (
+                                <div className="text-[#666]">{t("outposts.bunker_empty")}</div>
+                            ) : (
+                                // Потолок у каждого ресурса свой, и упёршийся больше не
+                                // копится: без «34/60» база выглядит работающей, когда
+                                // половина её модулей уже стоит впустую
+                                <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+                                    {haul.map(([resource, amount]) => (
+                                        <span
+                                            key={resource}
+                                            className={
+                                                amount >= BASE_BUNKER_CAP
+                                                    ? "text-[#ffb000]"
+                                                    : "text-[#b9c6cc]"
+                                            }
+                                        >
+                                            {describeHaulResource(resource as never, t)}{" "}
+                                            {amount}/{BASE_BUNKER_CAP}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                            {isBunkerFull(base) && (
+                                <div className="mt-0.5 text-[#ffb000]">
+                                    ⚠ {t("outposts.bunker_full_base")}
+                                </div>
+                            )}
+                            <Button
+                                onClick={() => collectOutpost(base.id)}
+                                disabled={haul.length === 0}
+                                className="mt-1.5 min-h-9 w-full cursor-pointer border-2 border-[#ffb000] bg-transparent px-2 text-[10px] uppercase tracking-wider text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] disabled:cursor-default disabled:opacity-40 sm:text-xs"
+                            >
+                                📦 {t("outposts.collect")}
+                            </Button>
+                        </div>
+
+                        {/* Расширение базы: цена целиком и отказ до нажатия, как у модулей */}
+                        {level < BASE_MAX_LEVEL && upgrade && (
+                            <div className="mt-2 border-t border-[#ffb00022] pt-2 text-[10px] sm:text-xs">
+                                <CostRow
+                                    credits={upgrade.credits}
+                                    resources={upgrade.resources}
+                                    heldCredits={credits}
+                                    heldResources={research.resources}
+                                    turns={upgradeReadyIn}
+                                />
+                                <Button
+                                    onClick={() => upgradeBase(base.id)}
+                                    disabled={upgradeBlocker !== null}
+                                    className="mt-1.5 min-h-8 w-full cursor-pointer border border-[#ffb000] bg-transparent px-2 text-[10px] uppercase tracking-wider text-[#ffb000] hover:bg-[rgba(255,176,0,0.12)] disabled:cursor-default disabled:opacity-40"
+                                >
+                                    ⬆ {t("outposts.upgrade", {
+                                        level: level + 1,
+                                        slots: BASE_SLOTS_BY_LEVEL[level + 1],
+                                        credits: upgrade.credits,
+                                    })}
+                                </Button>
+                                {upgradeBlocker && (
+                                    <div className="mt-0.5 text-[#ff667f]">
+                                        {t(`outposts.module_${upgradeBlocker}`)}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="services">
+                        {/* Услуги базы: то, ради чего её строят в глубоком космосе */}
+                        {hasServices && (
+                            <div className="mt-2">
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                    {canRepair && (
+                                        <ServiceButton
+                                            icon="🔧"
+                                            label={t("outposts.service_repair")}
+                                            color="#00d4ff"
+                                            cost={BASE_SERVICE_VALUES.repairCost}
+                                            blocker={repairBlocker}
+                                            nothingLabel={t("outposts.service_repair_nothing")}
+                                            onClick={() => repairAtBase(base.id)}
+                                        />
+                                    )}
+                                    {canHeal && (
+                                        <ServiceButton
+                                            icon="⚕️"
+                                            label={t("outposts.service_heal")}
+                                            color="#00ff41"
+                                            cost={BASE_SERVICE_VALUES.healCost}
+                                            blocker={healBlocker}
+                                            nothingLabel={t("outposts.service_heal_nothing")}
+                                            onClick={() => healAtBase(base.id)}
+                                        />
+                                    )}
+                                    {canCraft && (
+                                        <Button
+                                            onClick={() => setCraftOpen(true)}
+                                            className="min-h-8 cursor-pointer border border-[#ffb000] bg-transparent px-2 text-[10px] uppercase text-[#ffb000] hover:bg-[rgba(255,176,0,0.12)]"
+                                        >
+                                            🛠 {t("outposts.service_craft")}
+                                        </Button>
+                                    )}
+                                </div>
+                                {/* Казарма вербует на ближайшей населённой планете:
+                                    профессию выбирает игрок, а цену и срок — то, насколько
+                                    глухое место выбрано под базу */}
+                                {canHire && (
+                                    <div className="mt-1.5">
+                                        {base.pendingSettler ? (
+                                            <div className="text-[10px] text-[#00d4ff]">
+                                                🚶{" "}
+                                                {t("outposts.settler_in_transit", {
+                                                    profession: t(
+                                                        `professions.${base.pendingSettler.profession}`,
+                                                    ),
+                                                    turns: Math.max(
+                                                        0,
+                                                        base.pendingSettler.arrivesAtTurn - turn,
+                                                    ),
+                                                })}
+                                            </div>
+                                        ) : settlerOffer ? (
+                                            <>
+                                                <div className="text-[10px] text-[#8a9ba3]">
+                                                    {t("outposts.service_hire_from", {
+                                                        planet: t(settlerOffer.planetName),
+                                                        cost: settlerOffer.cost,
+                                                        turns: settlerOffer.turns,
+                                                    })}
+                                                </div>
+                                                <div className="mt-1 flex flex-wrap gap-1">
+                                                    {HIREABLE_PROFESSIONS.map((profession) => (
+                                                        <Button
+                                                            key={profession}
+                                                            onClick={() =>
+                                                                hireAtBase(base.id, profession)
+                                                            }
+                                                            disabled={hireBlocker !== null}
+                                                            className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000] disabled:cursor-default disabled:opacity-40"
+                                                        >
+                                                            {t(`professions.${profession}`)}
+                                                        </Button>
+                                                    ))}
+                                                </div>
+                                                {hireBlocker && (
+                                                    <div className="mt-0.5 text-[9px] text-[#8a9ba3]">
+                                                        {t(`outposts.hire_${hireBlocker}`)}
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <div className="text-[10px] text-[#8a9ba3]">
+                                                {t("outposts.hire_no_source")}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="storage">
+                        {canStore && (
+                            <div className="mt-2">
+                                <div className="text-[10px] text-[#8a9ba3]">
+                                    {t("outposts.service_store")} · {storageFree}{" "}
+                                    {t("outposts.storage_free")}
+                                </div>
+
+                                {(storable.length > 0 || ship.cargo.length > 0) && (
+                                    <div className="mt-1 space-y-1">
+                                        {storable.map(([resource, amount]) => (
+                                            <TransferRow
+                                                key={resource}
+                                                label={describeHaulResource(resource, t)}
+                                                max={amount}
+                                                accent="#ffb000"
+                                                arrow="↓"
+                                                onTransfer={(qty) =>
+                                                    storeAtBase(base.id, resource, qty)
+                                                }
+                                            />
+                                        ))}
+                                        {/* Ради этого склад и нужен: груз задания и
+                                            запасной модуль продать нельзя, а трюм
+                                            они занимают */}
+                                        {ship.cargo.map((item, index) => (
+                                            <TransferRow
+                                                key={`${item.item}-${index}`}
+                                                label={describeCargoItem(item, t)}
+                                                max={item.quantity}
+                                                accent="#ffb000"
+                                                arrow="↓"
+                                                onTransfer={(qty) =>
+                                                    storeCargoAtBase(base.id, index, qty)
+                                                }
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Забрать своё со склада можно всегда: и пока идут работы,
+                            и если склад снесли. Лежащее здесь не «услуга», а вещи
+                            игрока — `withdrawFromBase` их и не запрещал, прятала
+                            только панель */}
+                        {hasStored && (
+                            <div className="mt-2 space-y-1 border-t border-[#00d4ff22] pt-2">
+                                <div className="text-[10px] text-[#8a9ba3]">
+                                    {t("outposts.stored_here")}
+                                </div>
+                                {stored.map(([resource, amount]) => (
+                                    <TransferRow
+                                        key={`stored-${resource}`}
+                                        label={describeHaulResource(resource, t)}
+                                        max={amount}
+                                        accent="#00d4ff"
+                                        arrow="↑"
+                                        onTransfer={(qty) =>
+                                            withdrawFromBase(base.id, resource, qty)
+                                        }
+                                    />
+                                ))}
+                                {(base.storedCargo ?? []).map((item, index) => (
+                                    <TransferRow
+                                        key={`stored-${item.item}-${index}`}
+                                        label={describeCargoItem(item, t)}
+                                        max={item.quantity}
+                                        accent="#00d4ff"
+                                        arrow="↑"
+                                        onTransfer={(qty) =>
+                                            withdrawCargoFromBase(base.id, index, qty)
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="garrison">
+                        <OutpostGarrison outpost={base} accent="#ffb000" />
+                    </TabsContent>
+                </div>
+            </Tabs>
 
             {/* Верстак переиспользует вкладку станции, а не заводит второй
                 интерфейс крафта — экраны обязаны совпадать */}
@@ -768,23 +954,36 @@ export function BaseSection({ location }: Props) {
                 </Dialog>
             )}
 
-            <OutpostGarrison outpost={base} accent="#ffb000" />
-
-            {/* Расширение базы */}
-            <div className="mt-2 border-t border-[#ffb00022] pt-2 text-[10px] sm:text-xs">
-                {level < BASE_MAX_LEVEL && upgrade && (
-                    <Button
-                        onClick={() => upgradeBase(base.id)}
-                        className="mt-1.5 min-h-8 w-full cursor-pointer border border-[#ffb000] bg-transparent px-2 text-[10px] uppercase tracking-wider text-[#ffb000] hover:bg-[rgba(255,176,0,0.12)]"
-                    >
-                        ⬆ {t("outposts.upgrade", {
-                            level: level + 1,
-                            slots: BASE_SLOTS_BY_LEVEL[level + 1],
-                            credits: upgrade.credits,
-                        })}
-                    </Button>
-                )}
-            </div>
+            {/* Каталог по клику на свободный слот, а не простынёй под ним */}
+            {catalogOpen && (
+                <Dialog open onOpenChange={() => setCatalogOpen(false)}>
+                    <GameDialogContent variant="warning" className="max-w-lg">
+                        <DialogHeader>
+                            <DialogTitle className="font-['Orbitron'] text-[#ffb000]">
+                                🏗 {t("outposts.module_catalog")}
+                            </DialogTitle>
+                            <DialogDescription className="text-[10px] text-[#8a9ba3]">
+                                {t("outposts.summary_slots", {
+                                    filled: installed.length,
+                                    total: slots,
+                                })}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="max-h-[60vh] overflow-y-auto">
+                            <ModuleCatalog
+                                base={base}
+                                credits={credits}
+                                research={research}
+                                readyIn={moduleReadyIn}
+                                onInstall={(moduleId) => {
+                                    installBaseModule(base.id, moduleId);
+                                    setCatalogOpen(false);
+                                }}
+                            />
+                        </div>
+                    </GameDialogContent>
+                </Dialog>
+            )}
         </div>
     );
 }

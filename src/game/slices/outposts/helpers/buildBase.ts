@@ -78,6 +78,32 @@ export function buildBase(
     get().updateShipStats();
 }
 
+/**
+ * Почему базу нельзя расширить — или `null`.
+ *
+ * Отдельной функцией по той же причине, что и `getModuleBlocker`: кнопка
+ * обязана гаснуть до нажатия и называть причину на месте. Раньше расширение
+ * проверялось только внутри действия, и отказ прилетал в бортжурнал уже
+ * после клика — на планетарном экране его не видно вовсе.
+ */
+export function getUpgradeBlocker(
+    state: Pick<GameStore, "credits" | "research">,
+    outpost: Outpost,
+): "max_level" | "not_enough_credits" | "not_enough_resources" | null {
+    const level = outpost.level ?? 1;
+    const cost = level < BASE_MAX_LEVEL ? BASE_UPGRADE_COST[level] : null;
+    if (!cost) return "max_level";
+    if (state.credits < cost.credits) return "not_enough_credits";
+    for (const [resource, amount] of Object.entries(cost.resources)) {
+        const held =
+            state.research.resources[
+                resource as keyof typeof state.research.resources
+            ] ?? 0;
+        if (held < amount) return "not_enough_resources";
+    }
+    return null;
+}
+
 /** Расширение базы: следующий уровень открывает ещё два слота */
 export function upgradeBase(
     outpostId: string,
@@ -94,30 +120,17 @@ export function upgradeBase(
     }
 
     const level = outpost.level ?? 1;
-    if (level >= BASE_MAX_LEVEL) {
+    const blocker = getUpgradeBlocker(state, outpost);
+    if (blocker === "max_level") {
         get().addLog(i18nStore.t("game_logs.base_max_level"), "warning");
         return;
     }
-
-    const cost = BASE_UPGRADE_COST[level];
-    if (!cost) return;
-    if (state.credits < cost.credits) {
-        get().addLog(i18nStore.t("game_logs.outpost_blocked_not_enough_credits"), "error");
+    if (blocker) {
+        get().addLog(i18nStore.t(`game_logs.outpost_blocked_${blocker}`), "error");
         return;
     }
-    for (const [resource, amount] of Object.entries(cost.resources)) {
-        const held =
-            state.research.resources[
-                resource as keyof typeof state.research.resources
-            ] ?? 0;
-        if (held < amount) {
-            get().addLog(
-                i18nStore.t("game_logs.outpost_blocked_not_enough_resources"),
-                "error",
-            );
-            return;
-        }
-    }
+    const cost = BASE_UPGRADE_COST[level];
+    if (!cost) return;
 
     set((s) => ({
         turn: s.turn + 1,

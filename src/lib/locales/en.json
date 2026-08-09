@@ -5239,7 +5239,21 @@
         "bunker_empty": "Empty",
         "under_construction": "Under construction",
         "work_left": "Work left: {{turns}} turn(s). The site is not operating yet.",
+        "work_banner": "Work in progress: {{turns}} turn(s) left. The base neither mines nor serves — the bunker and storage stay open.",
         "build_turns": "Construction: {{turns}} turn(s)",
+        "turn_cost": "takes 1 turn",
+        "cost_turns": "ready in {{turns}} turn(s)",
+        "slot_empty": "Free slot — install a module",
+        "module_catalog": "What goes in the slot",
+        "tab_overview": "Overview",
+        "tab_services": "Services",
+        "tab_storage": "Storage",
+        "tab_garrison": "Garrison",
+        "summary_slots": "{{filled}}/{{total}} slots",
+        "summary_bunker": "bunker {{amount}}",
+        "summary_garrison": "garrison {{filled}}/{{total}}",
+        "bunker_full_base": "Bunker full — these resources stop accruing until you haul them out",
+        "stored_here": "Left in storage",
         "dismantle": "Dismantle",
         "upgrade": "Level {{level}} · {{slots}} slots · {{credits}}₢",
         "blocked_not_explored": "The planet is not fully surveyed: all scouting missions are needed",
@@ -5328,11 +5342,11 @@
         },
         "repair_dock": {
             "name": "Repair dock",
-            "desc": "Repairs ship modules right at the base. Costs a turn."
+            "desc": "Repairs ship modules right at the base. A visit spends spares and advances the turn."
         },
         "med_bay": {
             "name": "Medical bay",
-            "desc": "Heals the crew and clears assignment fatigue. Costs a turn."
+            "desc": "Heals the crew and clears assignment fatigue. A visit spends medicine and advances the turn."
         },
         "barracks": {
             "name": "Barracks",

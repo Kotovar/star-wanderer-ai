@@ -1008,6 +1008,151 @@ for (const turns of [BASE_BUILD_TURNS, BASE_UPGRADE_TURNS, BASE_MODULE_BUILD_TUR
   );
 }
 
+// ── Цена в ходах видна до нажатия ─────────────────────────────────────────
+// Закладка, модуль, расширение и любая услуга двигают ход. Пока об этом не
+// написано на самой кнопке, самый дорогой ресурс игры тратится втёмную
+const panel = source("game/components/BaseSection.tsx");
+for (const key of ["outposts.turn_cost", "outposts.cost_turns"]) {
+  assert.ok(panel.includes(key), `панель базы не показывает ${key}`);
+}
+assert.ok(
+  panel.includes("BASE_MODULE_BUILD_TURNS") &&
+    panel.includes("BASE_UPGRADE_TURNS"),
+  "срок работ по модулю и расширению не показан — он известен только после оплаты",
+);
+
+// ── Работы не подменяют собой панель ──────────────────────────────────────
+// Заказ модуля прятал бункер, гарнизон и склад вместе с оставленным грузом,
+// хотя ни collectOutpost, ни withdrawFromBase этого не запрещают
+assert.ok(
+  !/if \(isUnderConstruction\(base\)\) \{\s*return/.test(panel),
+  "панель базы снова схлопывается на время работ — со склада не забрать своё",
+);
+assert.ok(
+  panel.includes("outposts.work_banner"),
+  "идущие работы не отмечены на живой панели",
+);
+assert.ok(
+  panel.includes("hasStored") && panel.includes("outposts.stored_here"),
+  "склад показывается только вместе с услугой — во время работ своё не забрать",
+);
+
+// ── Срок считается от очереди работ, а не от номинала ─────────────────────
+// Модуль поверх недостроенной базы ждёт дольше своих четырёх ходов, и ход
+// забирает само нажатие: «работы 4» на кнопке были бы просто неправдой
+assert.ok(
+  panel.includes("scheduleWork(base, turn + 1"),
+  "срок на кнопке взят из констант — очередь работ и потраченный ход в него не входят",
+);
+
+// ── Панель разложена по вкладкам, каталог модулей не висит простынёй ──────
+// Десять кнопок с описаниями под слотами занимали больше места, чем сама
+// база; свободный слот при этом было не сосчитать
+for (const key of [
+  "tab_overview",
+  "tab_services",
+  "tab_storage",
+  "tab_garrison",
+  "slot_empty",
+  "module_catalog",
+]) {
+  assert.ok(panel.includes(key), `панель базы не использует ${key}`);
+}
+assert.ok(
+  panel.includes("<ModuleCatalog") && panel.includes("setCatalogOpen(true)"),
+  "каталог модулей снова раскрыт прямо в панели",
+);
+assert.ok(
+  /summary_slots[\s\S]{0,400}summary_bunker[\s\S]{0,400}summary_garrison/.test(panel),
+  "шапка не показывает сводку — вкладки прячут и полный бункер, и пустой гарнизон",
+);
+// У вкладок разное содержимое: если область тянется по нему, переключение
+// двигает по вертикали всю планетарную панель под базой
+assert.match(
+  panel,
+  /<div className="h-\[[^"]+\] overflow-y-auto/,
+  "область вкладок снова тянется по содержимому — кнопки под базой прыгают",
+);
+
+// ── Полный бункер базы виден ──────────────────────────────────────────────
+const { isBunkerFull: bunkerFull } = await import(
+  "../src/game/slices/outposts/helpers/accrueOutposts.ts"
+);
+assert.equal(
+  bunkerFull(baseAt(withIce, { bunker: { minerals: BASE_BUNKER_CAP } })),
+  true,
+  "база с полным бункером не считается полной — добыча встала, а сказать некому",
+);
+assert.equal(
+  bunkerFull(baseAt(withIce, { bunker: { minerals: BASE_BUNKER_CAP - 1 } })),
+  false,
+  "бункер считается полным раньше потолка",
+);
+assert.ok(
+  panel.includes("BASE_BUNKER_CAP") && panel.includes("bunker_full_base"),
+  "панель не показывает, сколько влезло в бункер и что он полон",
+);
+assert.match(
+  source("game/components/OutpostStatusList.tsx"),
+  /bunker_full_base/,
+  "сводка объясняет полный бункер базы текстом про газосборник",
+);
+
+// ── Расширение отказывает до нажатия, а не в бортжурнал ───────────────────
+const { getUpgradeBlocker } = await import(
+  "../src/game/slices/outposts/helpers/buildBase.ts"
+);
+const upgradeCost = BASE_UPGRADE_COST[1];
+const affordUpgrade = {
+  credits: upgradeCost.credits,
+  research: { resources: { ...upgradeCost.resources } },
+};
+assert.equal(getUpgradeBlocker(affordUpgrade, baseAt(withIce)), null);
+assert.equal(
+  getUpgradeBlocker({ ...affordUpgrade, credits: 0 }, baseAt(withIce)),
+  "not_enough_credits",
+);
+assert.equal(
+  getUpgradeBlocker(
+    { credits: upgradeCost.credits, research: { resources: {} } },
+    baseAt(withIce),
+  ),
+  "not_enough_resources",
+);
+assert.equal(
+  getUpgradeBlocker(affordUpgrade, baseAt(withIce, { level: BASE_MAX_LEVEL })),
+  "max_level",
+  "максимальный уровень предлагает расшириться ещё раз",
+);
+assert.ok(
+  panel.includes("getUpgradeBlocker"),
+  "кнопка расширения не гаснет: цена и отказ известны только после клика",
+);
+
+for (const lang of ["ru", "en"]) {
+  const catalog = JSON.parse(
+    readFileSync(new URL(`../src/lib/locales/${lang}.json`, import.meta.url), "utf8"),
+  );
+  for (const key of [
+    "turn_cost",
+    "cost_turns",
+    "work_banner",
+    "bunker_full_base",
+    "stored_here",
+    "slot_empty",
+    "module_catalog",
+    "tab_overview",
+    "tab_services",
+    "tab_storage",
+    "tab_garrison",
+    "summary_slots",
+    "summary_bunker",
+    "summary_garrison",
+  ]) {
+    assert.ok(catalog.outposts?.[key], `${lang}: нет outposts.${key}`);
+  }
+}
+
 console.log("Base checks passed");
 console.log(
   `  ${moduleIds.length} модулей, слотов по уровням ${BASE_SLOTS_BY_LEVEL.slice(1).join("/")}, база ${BASE_COST.credits}₢`,

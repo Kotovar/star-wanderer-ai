@@ -135,11 +135,20 @@ export function burnCryogen(
     return { ...gases, cryogen: Math.max(0, stock - CRYOGEN_BURN_PER_TURN) };
 }
 
-/** Заполнен ли бункер целиком — постройка простаивает и ждёт вывоза */
+/** Потолок бункера постройки. У базы он свой и считается по каждому ресурсу */
+export const getBunkerCap = (outpost: Outpost): number =>
+    outpost.kind === "base" ? BASE_BUNKER_CAP : GAS_COLLECTOR_BUNKER_CAP;
+
+/**
+ * Заполнен ли бункер хотя бы по одному ресурсу — по нему добыча встала.
+ *
+ * Раньше проверка знала только про сборщик, и база упиралась в потолок молча:
+ * `accrueBase` перестаёт копить ресурс на 60, а ни панель, ни сводка, ни карта
+ * об этом не говорили — брошенная на десяток ходов база выглядела работающей.
+ */
 export const isBunkerFull = (outpost: Outpost): boolean =>
-    outpost.kind === "gas_collector" &&
     Object.values(outpost.bunker).some(
-        (amount) => (amount ?? 0) >= GAS_COLLECTOR_BUNKER_CAP,
+        (amount) => (amount ?? 0) >= getBunkerCap(outpost),
     );
 
 /** Сколько всего лежит в бункере */
