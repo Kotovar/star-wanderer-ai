@@ -936,11 +936,29 @@ assert.match(
   /getBasePotential\(/,
   "игрок не видит, что даст планета, пока не потратит 6000₢",
 );
+// Черты говорят, что здесь возможно, но не что из этого выйдет: буровая
+// следует за типом планеты, и на разрушенной войной даёт одну науку
+const buildScreen = source("game/components/BaseSection.tsx");
+assert.ok(
+  buildScreen.includes("potential_drill") &&
+    buildScreen.includes('getModuleOutput("drill_shaft", location.planetType)'),
+  "прогноз молчит о том, что буровая будет добывать на этом типе планеты",
+);
+assert.notDeepEqual(
+  Object.keys(getModuleOutput("drill_shaft", "Кристаллическая")),
+  Object.keys(getModuleOutput("drill_shaft", "Вулканическая")),
+  "прогноз буровой одинаков на разных типах — показывать его незачем",
+);
 for (const lang of ["ru", "en"]) {
   const catalog = JSON.parse(
     readFileSync(new URL(`../src/lib/locales/${lang}.json`, import.meta.url), "utf8"),
   );
-  for (const key of ["potential_available", "potential_boosted", "potential_plain"]) {
+  for (const key of [
+    "potential_available",
+    "potential_boosted",
+    "potential_plain",
+    "potential_drill",
+  ]) {
     assert.ok(catalog.outposts?.[key], `${lang}: нет outposts.${key}`);
   }
 }

@@ -5281,6 +5281,7 @@
         "potential_available": "Possible here: {{list}}",
         "potential_boosted": "Planet features will double: {{list}}",
         "potential_plain": "No features boost modules here — the base will run at ordinary output",
+        "potential_drill": "A drill shaft here would yield per turn: {{list}}",
         "storage_free": "free",
         "status_title": "Your outposts",
         "service_craft": "Workbench",

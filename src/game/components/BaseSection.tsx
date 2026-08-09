@@ -396,6 +396,16 @@ export function BaseSection({ location }: Props) {
         if (blocker === "wrong_location" || blocker === "tech_missing") return null;
 
         const potential = getBasePotential(location.id);
+        // Прогноз буровой: ×2 от богатых залежей уже внутри, гарнизона ещё нет
+        const drillBoost = planetHasFeature(location.id, "rich_deposits") ? 2 : 1;
+        const drillYield = (
+            Object.entries(
+                getModuleOutput("drill_shaft", location.planetType),
+            ) as [OutpostResource, number][]
+        ).map(
+            ([resource, amount]) =>
+                `${describeHaulResource(resource, t)} ${(amount * drillBoost).toFixed(2)}`,
+        );
 
         return (
             <div className="mt-2 border border-[#3c4b52] bg-[rgba(255,255,255,0.02)] p-2 sm:p-3">
@@ -441,6 +451,15 @@ export function BaseSection({ location }: Props) {
                                       .join(", "),
                               })
                             : t("outposts.potential_plain")}
+                    </div>
+                    {/* Черты говорят, что здесь возможно, но не что из этого
+                        выйдет: буровая следует за типом планеты и на ледяной
+                        качает воду, а на разрушенной войной — одни древние
+                        данные. Узнавать это после 6000₢ поздно */}
+                    <div className="text-[#8a9ba3]">
+                        {t("outposts.potential_drill", {
+                            list: drillYield.join(", "),
+                        })}
                     </div>
                 </div>
 

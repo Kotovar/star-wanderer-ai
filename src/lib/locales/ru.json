@@ -5281,6 +5281,7 @@
         "potential_available": "Здесь возможны: {{list}}",
         "potential_boosted": "Черты планеты удвоят: {{list}}",
         "potential_plain": "Черт, усиливающих модули, здесь нет — база будет работать в обычную силу",
+        "potential_drill": "Буровая шахта здесь будет давать за ход: {{list}}",
         "storage_free": "свободно",
         "status_title": "Ваши постройки",
         "service_craft": "Верстак",
