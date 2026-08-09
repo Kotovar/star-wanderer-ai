@@ -2803,12 +2803,12 @@
         "weaponShed": "Shed"
     },
     "weapon_types": {
-        "kinetic": "Kinetic",
-        "laser": "Laser",
-        "missile": "Missile",
-        "plasma": "Plasma",
+        "kinetic": "Kinetic Weapon",
+        "laser": "Laser Weapon",
+        "missile": "Missile Weapon",
+        "plasma": "Plasma Weapon",
         "drones": "Combat Drones",
-        "antimatter": "Antimatter",
+        "antimatter": "Antimatter Weapon",
         "siege_torpedo": "Siege Torpedo",
         "quantum_torpedo": "Quantum Torpedo",
         "ion_cannon": "Ion Cannon"

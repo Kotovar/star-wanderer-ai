@@ -12,15 +12,22 @@ import { RACES } from "@/game/constants/races";
 import { useGameStore } from "@/game/store";
 import { useTranslation } from "@/lib/useTranslation";
 import { GameDialogContent } from "./GameDialog";
+import { useCombatCinematicUiStore } from "./combatCinematicUiStore";
 
 export function ContractCompletionModal() {
     const completion = useGameStore((s) => s.pendingContractCompletions[0]);
     const dismissContractCompletion = useGameStore(
         (s) => s.dismissContractCompletion,
     );
+    // Бой резолвится синхронно, кинематика играет его позже: боевые/охотничьи
+    // контракты закрываются «в середине залпа». Ждём конца сцены — очередь никуда
+    // не денется (та же логика, что в CrewLevelUpModal)
+    const cinematicPlaying = useCombatCinematicUiStore((s) =>
+        Boolean(s.timeline),
+    );
     const { t } = useTranslation();
 
-    if (!completion) return null;
+    if (!completion || cinematicPlaying) return null;
 
     const { contract } = completion;
 
