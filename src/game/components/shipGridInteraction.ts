@@ -1,0 +1,26 @@
+import type { Module } from "@/game/types";
+
+export type ModulePointerUpAction =
+    | { type: "open"; moduleId: number }
+    | { type: "move"; moduleId: number; x: number; y: number }
+    | null;
+
+export const resolveModulePointerUp = (
+    module: Pick<Module, "id" | "x" | "y"> | null,
+    tempPos: { x: number; y: number } | null,
+    canMove: boolean,
+    canPlace: boolean,
+): ModulePointerUpAction => {
+    if (!module || !tempPos) return null;
+
+    const moved = module.x !== tempPos.x || module.y !== tempPos.y;
+    if (!moved) return { type: "open", moduleId: module.id };
+    if (!canMove || !canPlace) return null;
+
+    return {
+        type: "move",
+        moduleId: module.id,
+        x: tempPos.x,
+        y: tempPos.y,
+    };
+};

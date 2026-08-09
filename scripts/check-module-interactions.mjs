@@ -59,4 +59,30 @@ assert.equal(
   "reactor upgrade must preview the whole-ship energy reserve",
 );
 
+const { resolveModulePointerUp } = jiti(
+  "../src/game/components/shipGridInteraction.ts",
+);
+const shipModule = { id: 7, x: 1, y: 1 };
+
+assert.deepEqual(
+  resolveModulePointerUp(shipModule, { x: 1, y: 1 }, true, true),
+  { type: "open", moduleId: 7 },
+  "pointer release without movement must open module details",
+);
+assert.deepEqual(
+  resolveModulePointerUp(shipModule, { x: 2, y: 1 }, true, true),
+  { type: "move", moduleId: 7, x: 2, y: 1 },
+  "valid drag must move the module",
+);
+assert.equal(
+  resolveModulePointerUp(shipModule, { x: 2, y: 1 }, true, false),
+  null,
+  "invalid drag must not turn into a click",
+);
+assert.equal(
+  resolveModulePointerUp(shipModule, { x: 2, y: 1 }, false, true),
+  null,
+  "movement locked after a drag must not open module details",
+);
+
 console.log("Module interaction checks passed");

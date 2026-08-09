@@ -29,6 +29,8 @@ import {
   DisabledOverlay,
   LevelBadge,
 } from "./shipGrid/ModuleCellParts";
+import { ModuleDetailDialog } from "./ModuleList";
+import { resolveModulePointerUp } from "./shipGridInteraction";
 
 const CELL_SIZE = 100;
 
@@ -72,6 +74,7 @@ export function ShipGrid() {
   const { t, currentLanguage } = useTranslation();
 
   const [draggedModule, setDraggedModule] = useState<Module | null>(null);
+  const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
   const [showLegend, setShowLegend] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [tempPos, setTempPos] = useState<{ x: number; y: number } | null>(
@@ -83,6 +86,8 @@ export function ShipGrid() {
   const crewDropModuleRef = useRef<number | null>(null);
 
   const isCombatMode = !!currentCombat;
+  const selectedModule =
+    modules.find((module) => module.id === selectedModuleId) ?? null;
   const idleCrewCount = crew.filter(
     (member) => !getActiveAssignment(member, isCombatMode),
   ).length;
@@ -136,7 +141,7 @@ export function ShipGrid() {
       return;
     }
 
-    if (isCombatMode || !draggedModule) return;
+    if (isCombatMode || ship.moduleMovedThisTurn || !draggedModule) return;
 
     const svg = e.currentTarget; // всегда сам SVG
     const rect = svg.getBoundingClientRect();
@@ -183,22 +188,30 @@ export function ShipGrid() {
       return;
     }
 
-    if (isCombatMode) return;
+    const canMove = !isCombatMode && !ship.moduleMovedThisTurn;
+    const action = resolveModulePointerUp(
+      draggedModule,
+      tempPos,
+      canMove,
+      Boolean(
+        canMove &&
+        draggedModule &&
+        tempPos &&
+        canPlaceModule(draggedModule, tempPos.x, tempPos.y),
+      ),
+    );
 
-    if (!draggedModule || !tempPos) {
-      setDraggedModule(null);
-      setTempPos(null);
-      return;
+    if (action?.type === "move") {
+      moveModule(action.moduleId, action.x, action.y);
+    } else if (action?.type === "open") {
+      setSelectedModuleId(action.moduleId);
     }
 
-    // Only move if position actually changed
-    const moved =
-      draggedModule.x !== tempPos.x || draggedModule.y !== tempPos.y;
+    setDraggedModule(null);
+    setTempPos(null);
+  };
 
-    if (moved && canPlaceModule(draggedModule, tempPos.x, tempPos.y)) {
-      moveModule(draggedModule.id, tempPos.x, tempPos.y);
-    }
-
+  const cancelModuleDrag = () => {
     setDraggedModule(null);
     setTempPos(null);
   };
@@ -316,7 +329,7 @@ export function ShipGrid() {
           onPointerUp={handlePointerUp}
           onPointerCancel={() => {
             if (draggedCrew) cancelCrewDrag();
-            else handlePointerUp();
+            else cancelModuleDrag();
           }}
         >
         <Grid gridSize={gridSize} cellSize={CELL_SIZE} />
@@ -325,14 +338,12 @@ export function ShipGrid() {
             key={mod.id}
             onPointerDown={(e) => {
               e.stopPropagation();
-              if (!ship.moduleMovedThisTurn) {
-                handlePointerDown(e, mod);
-              }
+              handlePointerDown(e, mod);
             }}
             style={{
               cursor:
                 isCombatMode || ship.moduleMovedThisTurn
-                  ? "not-allowed"
+                  ? "pointer"
                   : "grab",
             }}
           >
@@ -394,6 +405,11 @@ export function ShipGrid() {
           {t("ship.cannot_move_combat")}
         </div>
       )}
+
+      <ModuleDetailDialog
+        module={selectedModule}
+        onClose={() => setSelectedModuleId(null)}
+      />
     </div>
   );
 }
