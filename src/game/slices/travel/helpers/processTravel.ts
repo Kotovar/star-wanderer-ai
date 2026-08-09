@@ -821,6 +821,10 @@ export const processTravel = (
         set((s) => ({
             currentSector: { ...destinationSector, visited: true },
             traveling: null,
+            crewAutomation: {
+                ...s.crewAutomation,
+                emergencyFuelTarget: null,
+            },
             galaxy: {
                 ...s.galaxy,
                 sectors: s.galaxy.sectors.map((sector) =>

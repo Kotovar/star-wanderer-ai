@@ -10,12 +10,13 @@ export const resolveModulePointerUp = (
     tempPos: { x: number; y: number } | null,
     canMove: boolean,
     canPlace: boolean,
+    pointerMoved: boolean,
 ): ModulePointerUpAction => {
     if (!module || !tempPos) return null;
+    if (!pointerMoved) return { type: "open", moduleId: module.id };
 
     const moved = module.x !== tempPos.x || module.y !== tempPos.y;
-    if (!moved) return { type: "open", moduleId: module.id };
-    if (!canMove || !canPlace) return null;
+    if (!moved || !canMove || !canPlace) return null;
 
     return {
         type: "move",

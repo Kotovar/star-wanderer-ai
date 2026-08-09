@@ -55,4 +55,18 @@ assert.match(
   "fuel warning must expose the automation action",
 );
 
+for (const [relativePath, label] of [
+  ["../src/game/slices/travel/helpers/selectSector.ts", "instant travel"],
+  ["../src/game/slices/travel/helpers/processTravel.ts", "normal travel"],
+  ["../src/game/slices/travel/helpers/travelThroughBlackHole.ts", "black-hole travel"],
+  ["../src/game/slices/travel/helpers/emergencyJump.ts", "emergency travel"],
+]) {
+  const source = readFileSync(new URL(relativePath, import.meta.url), "utf8");
+  assert.match(
+    source,
+    /emergencyFuelTarget:\s*null/,
+    `${label} must clear the emergency fuel target atomically`,
+  );
+}
+
 console.log("Fuel trap warning checks passed");

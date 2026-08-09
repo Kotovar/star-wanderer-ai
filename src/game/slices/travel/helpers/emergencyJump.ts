@@ -93,6 +93,10 @@ export const emergencyJump = (set: SetState, get: () => GameStore): void => {
 
     set({
         currentSector: destination,
+        crewAutomation: {
+            ...state.crewAutomation,
+            emergencyFuelTarget: null,
+        },
         ship: { ...state.ship, modules: damagedModules },
         gameMode: "sector_map",
     });

@@ -34,6 +34,7 @@ import { resolveModulePointerUp } from "./shipGridInteraction";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 const CELL_SIZE = 100;
+const MODULE_DRAG_THRESHOLD = 5;
 
 const MODULE_ART_URLS = Object.values(MODULE_ART).flatMap((art) =>
   Object.values(art).filter((url): url is string => url !== undefined),
@@ -85,6 +86,7 @@ export function ShipGrid() {
   const [crewDragPos, setCrewDragPos] = useState({ x: 0, y: 0 });
   const [crewDropModuleId, setCrewDropModuleId] = useState<number | null>(null);
   const crewDropModuleRef = useRef<number | null>(null);
+  const modulePointerStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const isCombatMode = !!currentCombat;
   const selectedModule =
@@ -115,6 +117,7 @@ export function ShipGrid() {
     const offsetX = mouseX - moduleX;
     const offsetY = mouseY - moduleY;
     setDragOffset({ x: offsetX, y: offsetY });
+    modulePointerStartRef.current = { x: e.clientX, y: e.clientY };
     setDraggedModule(module);
     setTempPos({ x: module.x, y: module.y });
   };
@@ -178,7 +181,7 @@ export function ShipGrid() {
     setTempPos({ x: clampedX, y: clampedY });
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
     if (draggedCrew) {
       if (!crewAutomationEnabled && crewDropModuleRef.current !== null) {
         moveCrewMember(draggedCrew.id, crewDropModuleRef.current);
@@ -186,10 +189,12 @@ export function ShipGrid() {
       setDraggedCrew(null);
       crewDropModuleRef.current = null;
       setCrewDropModuleId(null);
+      modulePointerStartRef.current = null;
       return;
     }
 
     const canMove = !isCombatMode && !ship.moduleMovedThisTurn;
+    const pointerStart = modulePointerStartRef.current;
     const action = resolveModulePointerUp(
       draggedModule,
       tempPos,
@@ -199,6 +204,11 @@ export function ShipGrid() {
         draggedModule &&
         tempPos &&
         canPlaceModule(draggedModule, tempPos.x, tempPos.y),
+      ),
+      Boolean(
+        pointerStart &&
+        Math.hypot(e.clientX - pointerStart.x, e.clientY - pointerStart.y) >=
+        MODULE_DRAG_THRESHOLD,
       ),
     );
 
@@ -210,11 +220,13 @@ export function ShipGrid() {
 
     setDraggedModule(null);
     setTempPos(null);
+    modulePointerStartRef.current = null;
   };
 
   const cancelModuleDrag = () => {
     setDraggedModule(null);
     setTempPos(null);
+    modulePointerStartRef.current = null;
   };
 
   const handleCrewPointerDown = (

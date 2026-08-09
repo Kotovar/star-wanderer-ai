@@ -403,6 +403,21 @@ const decide = (crew, modules, overrides = {}) => {
 }
 
 {
+  const modules = [
+    shipModule(1, "cockpit", 0, 0),
+    shipModule(2, "fueltank", 1, 0),
+    shipModule(3, "medical", 0, 1, { healing: 8 }),
+  ];
+  const decision = decide(
+    [crewMember(1, "engineer", 1, { health: 10 })],
+    modules,
+    { emergencyFuelRequested: true },
+  ).get(1);
+  assert.equal(decision?.targetModuleId, 3, "critical engineer seeks treatment before emergency fuel");
+  assert.equal(decision?.task, null, "critical engineer interrupts fuel synthesis for treatment");
+}
+
+{
   const request = { sectorId: 7, targetFuel: 5 };
   assert.deepEqual(
     resolveEmergencyFuelTarget(request, 7, 4),

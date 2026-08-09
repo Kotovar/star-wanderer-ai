@@ -65,22 +65,27 @@ const { resolveModulePointerUp } = jiti(
 const shipModule = { id: 7, x: 1, y: 1 };
 
 assert.deepEqual(
-  resolveModulePointerUp(shipModule, { x: 1, y: 1 }, true, true),
+  resolveModulePointerUp(shipModule, { x: 1, y: 1 }, true, true, false),
   { type: "open", moduleId: 7 },
   "pointer release without movement must open module details",
 );
+assert.equal(
+  resolveModulePointerUp(shipModule, { x: 1, y: 1 }, true, true, true),
+  null,
+  "dragging inside the original grid cell must remain a no-op",
+);
 assert.deepEqual(
-  resolveModulePointerUp(shipModule, { x: 2, y: 1 }, true, true),
+  resolveModulePointerUp(shipModule, { x: 2, y: 1 }, true, true, true),
   { type: "move", moduleId: 7, x: 2, y: 1 },
   "valid drag must move the module",
 );
 assert.equal(
-  resolveModulePointerUp(shipModule, { x: 2, y: 1 }, true, false),
+  resolveModulePointerUp(shipModule, { x: 2, y: 1 }, true, false, true),
   null,
   "invalid drag must not turn into a click",
 );
 assert.equal(
-  resolveModulePointerUp(shipModule, { x: 2, y: 1 }, false, true),
+  resolveModulePointerUp(shipModule, { x: 2, y: 1 }, false, true, true),
   null,
   "movement locked after a drag must not open module details",
 );

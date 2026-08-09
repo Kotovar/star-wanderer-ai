@@ -318,6 +318,10 @@ const markSectorVisited = (
 
     set((s) => ({
         currentSector: { ...sector, visited: true },
+        crewAutomation: {
+            ...s.crewAutomation,
+            emergencyFuelTarget: null,
+        },
         galaxy: {
             ...s.galaxy,
             sectors: s.galaxy.sectors.map((sec) =>

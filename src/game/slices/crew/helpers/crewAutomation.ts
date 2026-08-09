@@ -349,7 +349,9 @@ export const planCrewAutomation = ({
   if (mode === "civilian" && emergencyFuelRequested) {
     const fuelCandidate = candidatesFor(
       unassigned("engineer").filter(
-        (member) => member.health > 0 && !member.outpostId,
+        (member) =>
+          member.health / Math.max(member.maxHealth, 1) > CRITICAL_CREW_HEALTH_RATIO &&
+          !member.outpostId,
       ),
       activeModules.filter((module) => module.type === "fueltank"),
       "fuel_synthesis",

@@ -138,6 +138,10 @@ export const travelThroughBlackHole = (
     // Телепортация - применяем повреждения
     set({
         currentSector: destination,
+        crewAutomation: {
+            ...state.crewAutomation,
+            emergencyFuelTarget: null,
+        },
         ship: { ...state.ship, modules: damagedModules },
         crew: damagedCrew,
         gameMode: "sector_map",
