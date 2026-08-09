@@ -35,6 +35,18 @@ type Translate = (
   params?: Record<string, string | number>,
 ) => string;
 
+export const formatResearchTechRequirement = (
+  requiredTier: number,
+  t: Translate,
+): string =>
+  t(
+    requiredTier >= 3
+      ? "contracts.research_tech_elite"
+      : requiredTier >= 2
+        ? "contracts.research_tech_advanced"
+        : "contracts.research_tech_basic",
+  );
+
 export const formatContractDescription = (
   contract: ContractDescription,
   t: Translate,

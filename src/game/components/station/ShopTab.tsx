@@ -9,6 +9,10 @@ import { WeaponDetailDialog } from "../WeaponDetailDialog";
 import { getModuleImageUrl } from "../moduleArt";
 import { GameImage } from "../GameImage";
 import { useTranslation } from "@/lib/useTranslation";
+import { useGameStore } from "@/game/store";
+import {
+    getProjectedModulePurchaseEnergyBalance,
+} from "@/game/slices/shop/helpers/getProjectedModuleEnergyBalance";
 
 // Helper to get translated module name
 function getTranslatedModuleName(
@@ -91,6 +95,7 @@ export function ShopTab({
     const inv = stationId ? stationInventory[stationId] || {} : {};
     const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
     const [selectedWeapon, setSelectedWeapon] = useState<ShopItem | null>(null);
+    const gameState = useGameStore.getState();
 
     // Get owned module types for filtering upgrades
     const ownedModuleTypes = useMemo(() => {
@@ -202,6 +207,16 @@ export function ShopTab({
                         item.id.includes("ancient") ||
                         item.id.includes("fusion") ||
                         item.id.includes("quantum");
+                    const energyDeficit =
+                        item.type === "module"
+                            ? Math.max(
+                                  0,
+                                  -getProjectedModulePurchaseEnergyBalance(
+                                      gameState,
+                                      item,
+                                  ),
+                              )
+                            : 0;
 
                     return (
                         <ShopItemCard
@@ -215,6 +230,7 @@ export function ShopTab({
                             alreadyOwned={alreadyOwned}
                             isUnique={isUnique}
                             isUpgrade={isUpgrade}
+                            energyDeficit={energyDeficit}
                             onViewDetails={() =>
                                 item.type === "upgrade"
                                     ? onUpgradeClick(item)
@@ -289,6 +305,7 @@ interface ShopItemCardProps {
     alreadyOwned: boolean;
     isUnique: boolean;
     isUpgrade: boolean;
+    energyDeficit: number;
     onViewDetails: () => void;
     onBuy: () => void;
 }
@@ -302,6 +319,7 @@ function ShopItemCard({
     alreadyOwned,
     isUnique,
     isUpgrade,
+    energyDeficit,
     onViewDetails,
     onBuy,
 }: ShopItemCardProps) {
@@ -386,6 +404,15 @@ function ShopItemCard({
                     isUpgrade={isUpgrade}
                 />
                 <ItemDescription item={item} />
+                {energyDeficit > 0 && (
+                    <div className="mt-2 border border-[#ff0040] bg-[rgba(255,0,64,0.08)] px-2 py-1 text-[11px] font-bold text-[#ff6688]">
+                        ⚠{" "}
+                        {t(
+                            "station_upgrades.energy_deficit_after_installation",
+                            { value: energyDeficit },
+                        )}
+                    </div>
+                )}
             </div>
             <BuyButton
                 disabled={disabled}

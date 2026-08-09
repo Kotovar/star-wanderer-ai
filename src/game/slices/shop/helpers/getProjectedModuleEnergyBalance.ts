@@ -1,8 +1,21 @@
 import { getTotalConsumption } from "@/game/slices/ship/helpers/getTotalConsumption";
 import { getTotalPower } from "@/game/slices/ship/helpers/getTotalPower";
-import type { GameState, Module } from "@/game/types";
+import { createModuleFromShopItem } from "@/game/modules/createModuleFromShopItem";
+import type { GameState, Module, ShopItem } from "@/game/types";
 
 type ModuleEnergyChanges = Partial<Pick<Module, "power" | "consumption">>;
+
+const getEnergyBalanceWithModules = (
+    state: GameState,
+    modules: Module[],
+): number => {
+    const projectedState = {
+        ...state,
+        ship: { ...state.ship, modules },
+    };
+
+    return getTotalPower(projectedState) - getTotalConsumption(projectedState);
+};
 
 export const getProjectedModuleEnergyBalance = (
     state: GameState,
@@ -19,10 +32,18 @@ export const getProjectedModuleEnergyBalance = (
         }
         return projectedModule;
     });
-    const projectedState = {
-        ...state,
-        ship: { ...state.ship, modules },
-    };
+    return getEnergyBalanceWithModules(state, modules);
+};
 
-    return getTotalPower(projectedState) - getTotalConsumption(projectedState);
+export const getProjectedModulePurchaseEnergyBalance = (
+    state: GameState,
+    item: ShopItem,
+): number => {
+    const module = createModuleFromShopItem(item, {
+        x: 0,
+        y: 0,
+        generateId: () => -1,
+    });
+
+    return getEnergyBalanceWithModules(state, [...state.ship.modules, module]);
 };

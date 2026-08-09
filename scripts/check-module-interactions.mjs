@@ -10,7 +10,10 @@ const jiti = require("jiti")(scriptPath, {
   alias: { "@": path.join(root, "src") },
 });
 
-const { getProjectedModuleEnergyBalance } = jiti(
+const {
+  getProjectedModuleEnergyBalance,
+  getProjectedModulePurchaseEnergyBalance,
+} = jiti(
   "../src/game/slices/shop/helpers/getProjectedModuleEnergyBalance.ts",
 );
 
@@ -57,6 +60,39 @@ assert.equal(
   getProjectedModuleEnergyBalance(state, 1, { power: 15 }),
   6,
   "reactor upgrade must preview the whole-ship energy reserve",
+);
+assert.equal(
+  typeof getProjectedModulePurchaseEnergyBalance,
+  "function",
+  "module purchases must expose a projected energy calculation",
+);
+assert.equal(
+  getProjectedModulePurchaseEnergyBalance(state, {
+    id: "medical-1-test",
+    name: "Medical bay",
+    description: "",
+    type: "module",
+    moduleType: "medical",
+    price: 100,
+    stock: 1,
+    consumption: 2,
+  }),
+  -1,
+  "a purchased consumer module must preview the resulting deficit",
+);
+assert.equal(
+  getProjectedModulePurchaseEnergyBalance(state, {
+    id: "reactor-1-test",
+    name: "Reactor",
+    description: "",
+    type: "module",
+    moduleType: "reactor",
+    price: 100,
+    stock: 1,
+    power: 5,
+  }),
+  6,
+  "a purchased reactor must preview the resulting reserve",
 );
 
 const { hasModulePointerDragged, resolveModulePointerUp } = jiti(

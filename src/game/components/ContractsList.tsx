@@ -21,6 +21,9 @@ import { ContractReputationImpact } from "./ContractReputationImpact";
 import { getContractReputationImpact } from "@/game/reputation/utils";
 import { getContractTurnsRemaining } from "@/game/contracts/contractDeadline";
 import {
+    formatResearchTechRequirement,
+} from "@/game/contracts/formatContractDescription";
+import {
     getLocationName,
     getSectorNames,
     getTradeGoodName,
@@ -243,7 +246,10 @@ export function ContractsList() {
                 );
             case "research":
                 if (contract.requiresTechResearch) {
-                    return t("contracts.research_tech");
+                    return formatResearchTechRequirement(
+                        contract.requiredTechTier ?? 1,
+                        t,
+                    );
                 }
                 return t("contracts.research_count")
                     .replace("{{count}}", String(contract.requiresAnomalies))
@@ -540,18 +546,15 @@ export function ContractsList() {
                 };
             case "research":
                 if (contract.requiresTechResearch) {
-                    const minTier = contract.requiredTechTier ?? 1;
                     return {
                         type: t("contracts.type_research"),
                         tasks: [
                             {
                                 label: t("contracts.task_what"),
-                                value:
-                                    minTier > 1
-                                        ? t(
-                                              "contracts.research_tech_tier",
-                                          ).replace("{{tier}}", String(minTier))
-                                        : t("contracts.research_tech"),
+                                value: formatResearchTechRequirement(
+                                    contract.requiredTechTier ?? 1,
+                                    t,
+                                ),
                             },
                             {
                                 label: t("contracts.task_where"),

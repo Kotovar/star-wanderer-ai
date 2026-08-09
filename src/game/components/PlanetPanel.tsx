@@ -34,6 +34,9 @@ import {
 } from "@/game/reputation/utils";
 import { isContractTargetAvailable } from "@/game/contracts/targetAvailability";
 import {
+    formatResearchTechRequirement,
+} from "@/game/contracts/formatContractDescription";
+import {
     REPUTATION_COLORS,
     REPUTATION_ICONS,
     getReputationLevel,
@@ -120,11 +123,7 @@ function ContractDescription({
                 )}
             {c.type === "research" &&
                 (c.requiresTechResearch
-                    ? c.requiredTechTier
-                        ? t("contracts.research_tech_tier", {
-                              tier: c.requiredTechTier,
-                          })
-                        : t("contracts.research_tech")
+                    ? formatResearchTechRequirement(c.requiredTechTier ?? 1, t)
                     : t("contracts.desc_research", { count: c.requiresAnomalies || 0 }))}
             {c.type === "bounty" &&
                 t("contracts.desc_bounty", {
