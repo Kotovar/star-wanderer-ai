@@ -26,6 +26,7 @@ import {
     ASSIGNMENT_EXHAUSTED_AT,
     ASSIGNMENT_TIRED_AT,
 } from "@/game/crew/assignmentFatigue";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 type CivilianAction = {
     value: NonNullable<CrewMemberAssignment>;
@@ -368,7 +369,7 @@ function CrewAssignmentCard({
                     <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-[#00d4ff] font-bold">
-                                {crewMember.name}
+                                {getCrewDisplayName(crewMember)}
                             </span>
                             <span className="text-[10px] text-[#ffb000] border border-[#ffb00055] px-1.5 py-0.5 rounded">
                                 {t(`professions.${crewMember.profession}`)}{" "}

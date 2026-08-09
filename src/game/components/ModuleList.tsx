@@ -35,6 +35,7 @@ import {
     getModuleTechBonuses,
     type ModuleTechBonus,
 } from "@/game/modules/techBonuses";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 // Helper to get translated module name
 function getTranslatedModuleName(
@@ -468,7 +469,7 @@ export function ModuleDetailDialog({
                             <div className="text-[#aa55ff] font-bold text-[11px] flex items-center gap-1.5">
                                 🧬 {t("module_list.xenosymbiont_merged")}
                                 <span className="text-[#c9a0ff] font-normal">
-                                    ({mergedCrewMember.name})
+                                    ({getCrewDisplayName(mergedCrewMember)})
                                 </span>
                             </div>
                             {mergeEntries.length > 0 && (

@@ -13,6 +13,7 @@ import {
 } from "@/game/constants/crew";
 import { RACES } from "@/game/constants/races";
 import { ALL_PROFESSIONS } from "@/game/types/crew";
+import { findCrewNameId } from "@/game/crew/crewNames";
 import type {
     CrewMember,
     CrewTrait,
@@ -29,6 +30,8 @@ export interface CrewBuildOptions {
     id?: number;
     /** Имя персонажа. Генерируется из профессии+расы, если не указано. */
     name?: string;
+    /** Стабильный ключ локализации имени. Для известных имён определяется автоматически. */
+    nameId?: string;
     /** Раса или "random". По умолчанию: "human". */
     race?: RaceId | "random";
     /** Расы, исключённые из случайного выбора. */
@@ -139,6 +142,7 @@ export function buildCrewMember(options: CrewBuildOptions = {}): CrewMember {
     const {
         id,
         name: nameOpt,
+        nameId: nameIdOpt,
         race: raceOpt = "human",
         excludeRaces = [],
         profession: profOpt = "pilot",
@@ -212,6 +216,7 @@ export function buildCrewMember(options: CrewBuildOptions = {}): CrewMember {
 
     // Name
     const name = nameOpt ?? getRandomName(profession, race, seed);
+    const nameId = nameIdOpt ?? findCrewNameId(race, name);
 
     // Stats (health, happiness)
     const stats = calculateCrewStats({ race, traits, level });
@@ -219,6 +224,7 @@ export function buildCrewMember(options: CrewBuildOptions = {}): CrewMember {
     return {
         id: id ?? Date.now(),
         name,
+        ...(nameId ? { nameId } : {}),
         race,
         profession,
         level,

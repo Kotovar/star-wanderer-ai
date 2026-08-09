@@ -31,6 +31,7 @@ import {
 } from "./shipGrid/ModuleCellParts";
 import { ModuleDetailDialog } from "./ModuleList";
 import { resolveModulePointerUp } from "./shipGridInteraction";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 const CELL_SIZE = 100;
 
@@ -394,7 +395,7 @@ export function ShipGrid() {
             x={crewDragPos.x - CREW_ICON_SIZE / 2}
             y={crewDragPos.y - CREW_ICON_SIZE / 2}
             size={CREW_ICON_SIZE}
-            title={draggedCrew.name}
+            title={getCrewDisplayName(draggedCrew)}
           />
         )}
         </svg>
@@ -763,7 +764,7 @@ function CrewIcon({
         x={x}
         y={y}
         size={size}
-        title={crewMember.name}
+        title={getCrewDisplayName(crewMember)}
       />
 
       <g className={hasActiveTask ? undefined : "animate-pulse"}>

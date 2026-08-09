@@ -22,6 +22,7 @@ import { getAvailableTasksForModule } from "@/game/slices/crew/helpers";
 import { useTranslation } from "@/lib/useTranslation";
 import { CrewStatusIcon } from "./CrewStatusIcon";
 import { getModuleName } from "./CrewListHelpers";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 interface CrewMemberCardProps {
   crewMember: CrewMember;
@@ -91,7 +92,7 @@ export function CrewMemberCard({
     >
       <div className="flex items-center gap-2 cursor-pointer">
         <span className="text-[#00d4ff] font-bold min-w-20">
-          {crewMember.name}
+          {getCrewDisplayName(crewMember)}
         </span>
         <TooltipProvider>
           <Tooltip>

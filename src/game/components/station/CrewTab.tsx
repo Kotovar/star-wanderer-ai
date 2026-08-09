@@ -30,6 +30,7 @@ import type {
 } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
 import { ProfessionSprite } from "../ProfessionSprite";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 type HireCrewHandler = (
     member: unknown,
@@ -136,7 +137,9 @@ export function CrewTab({
                 <GameDialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-[#ffb000] font-['Orbitron']">
-                            ▸ {selectedCrew?.member.name}
+                            ▸ {selectedCrew
+                                ? getCrewDisplayName(selectedCrew.member)
+                                : ""}
                         </DialogTitle>
                         <DialogDescription className="sr-only">
                             {t("crew_member.info_title")}
@@ -283,7 +286,7 @@ function CrewHeader({
                     />
                 )}
                 <span className="text-[#00d4ff] font-bold">
-                    {crew.member.name}
+                    {getCrewDisplayName(crew.member)}
                     {crew.member.level ? ` LV${crew.member.level}` : ""}
                 </span>
                 {race && (

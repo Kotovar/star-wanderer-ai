@@ -26,6 +26,7 @@ import {
 import { ExpeditionMapCanvas } from "./ExpeditionMapCanvas";
 import { EventIllustration } from "./EventIllustration";
 import { ProfessionSprite } from "./ProfessionSprite";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 const TILE_COLORS: Record<ExploreTileType, { border: string; bg: string; glow: string }> = {
   market: { border: "#00ff41", bg: "rgba(0,255,65,0.08)", glow: "rgba(0,255,65,0.25)" },
@@ -276,7 +277,7 @@ export function PlanetExplorationPanel() {
               <div
                 key={member.id}
                 className="flex items-center gap-1.5 px-2 py-1 border border-[#1a2a3a] bg-[rgba(0,212,255,0.04)] rounded-sm"
-                title={`${member.name} · ${Math.round(member.health)}/${Math.round(member.maxHealth)} HP`}
+                title={`${getCrewDisplayName(member)} · ${Math.round(member.health)}/${Math.round(member.maxHealth)} HP`}
               >
                 <ProfessionSprite
                   race={member.race}
@@ -284,7 +285,7 @@ export function PlanetExplorationPanel() {
                   size={20}
                 />
                 <span className="text-[10px] text-[#aaa] truncate max-w-15">
-                  {member.name}
+                  {getCrewDisplayName(member)}
                 </span>
                 <div className="w-8 h-1 rounded-full bg-[#1a1a1a] overflow-hidden">
                   <div

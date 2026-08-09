@@ -12,6 +12,7 @@ import { useGameStore } from "../store";
 import { useTranslation } from "@/lib/useTranslation";
 import { ProfessionSprite } from "./ProfessionSprite";
 import { TraitRow, useTraitTranslation } from "./CrewListHelpers";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 export function SurvivorModal() {
     const { t } = useTranslation();
@@ -45,7 +46,7 @@ export function SurvivorModal() {
                             title={`${t(`professions.${pendingSurvivor.profession}`)}: ${t(`races.${pendingSurvivor.race}.name`)}`}
                         />
                         <div className="font-bold text-lg">
-                            {pendingSurvivor.name}
+                            {getCrewDisplayName(pendingSurvivor)}
                         </div>
                     </div>
 

@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ASSIGNMENT_EXHAUSTED_AT } from "@/game/crew/assignmentFatigue";
 import { getExpNeededForNextLevel } from "@/game/slices/crew/helpers/getExpNeededForNextLevel";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 import {
     RACE_TECH_TREE,
     TECH_TREE,
@@ -177,7 +178,7 @@ export function CrewList() {
                                     />
                                 )}
                                 <span className="text-[#00d4ff] font-bold truncate leading-tight">
-                                    {member.name}
+                                    {getCrewDisplayName(member)}
                                 </span>
                                 <span className="text-[#555] shrink-0">—</span>
                                 <span className="shrink-0 text-[#00d4ff] tabular-nums">
@@ -381,7 +382,9 @@ export function CrewList() {
                 <GameDialogContent className="md:w-[28rem] overflow-hidden">
                     <DialogHeader>
                         <DialogTitle className="text-[#ffb000] font-['Orbitron']">
-                            ▸ {selectedCrew?.name}
+                            ▸ {selectedCrew
+                                ? getCrewDisplayName(selectedCrew)
+                                : ""}
                         </DialogTitle>
                         <DialogDescription className="sr-only">
                             {t("crew_member.info_title")}

@@ -1,7 +1,7 @@
 import {
     CREW_TRAITS,
     MUTATION_CHANCES,
-    RACE_LAST_NAMES,
+    RACE_CREW_NAMES,
 } from "@/game/constants";
 import type {
     CrewTrait,
@@ -158,9 +158,9 @@ export const getRandomName = (
     race: RaceId = "human",
     seed?: number,
 ): string => {
-    const raceLastNames = RACE_LAST_NAMES[race];
+    const raceNames = RACE_CREW_NAMES[race];
     if (seed === undefined) {
-        return raceLastNames[Math.floor(Math.random() * raceLastNames.length)];
+        return raceNames[Math.floor(Math.random() * raceNames.length)].legacy;
     }
 
     let combinedSeed = seed;
@@ -170,9 +170,9 @@ export const getRandomName = (
                 (combinedSeed << 5) - combinedSeed + value.charCodeAt(index);
         }
     }
-    return raceLastNames[
-        Math.floor(Math.abs(Math.sin(combinedSeed) * 10000) % raceLastNames.length)
-    ];
+    return raceNames[
+        Math.floor(Math.abs(Math.sin(combinedSeed) * 10000) % raceNames.length)
+    ].legacy;
 };
 
 const traitRegistry = new Map<TraitId, CrewTrait>(

@@ -362,6 +362,8 @@ export function StationPanel() {
                 .map((c) => ({
                     id: c.id,
                     name: c.name,
+                    nameId: c.nameId,
+                    race: c.race,
                     mutations: (c.traits ?? [])
                         .filter(
                             (trait: CrewTrait) =>
@@ -382,6 +384,8 @@ export function StationPanel() {
                 .map((c) => ({
                     id: c.id,
                     name: c.name,
+                    nameId: c.nameId,
+                    race: c.race,
                     geneticTherapyUsed: c.geneticTherapyUsed ?? false,
                     negativeTraits: (c.traits ?? [])
                         .filter(

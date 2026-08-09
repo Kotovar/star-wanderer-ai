@@ -11,6 +11,7 @@ import {
 } from "@/game/slices/outposts/helpers";
 import type { CrewMember } from "@/game/types";
 import type { Outpost } from "@/game/types/outposts";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 interface Props {
     outpost: Outpost;
@@ -82,7 +83,8 @@ export function OutpostGarrison({ outpost, accent }: Props) {
                     className="mt-1 flex items-center justify-between gap-2"
                 >
                     <span className="truncate text-[11px] text-white sm:text-xs">
-                        {member.name} · {t(`professions.${member.profession}`)}{" "}
+                        {getCrewDisplayName(member)} ·{" "}
+                        {t(`professions.${member.profession}`)}{" "}
                         {t("effects.level_short")}
                         {member.level}
                     </span>
@@ -123,7 +125,7 @@ export function OutpostGarrison({ outpost, accent }: Props) {
                                             : { borderColor: "#555", color: "#b9c6cc" }
                                     }
                                 >
-                                    {member.name} ·{" "}
+                                    {getCrewDisplayName(member)} ·{" "}
                                     {t(`professions.${member.profession}`)}{" "}
                                     {t("effects.level_short")}
                                     {member.level} → ×

@@ -138,6 +138,7 @@ export interface CrewAutomationState {
 export interface CrewMember {
     id: number;
     name: string;
+    nameId?: string;
     race: RaceId; // Race of the crew member
     profession: Profession;
     level: number;

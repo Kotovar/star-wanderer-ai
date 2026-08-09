@@ -18,6 +18,7 @@ import { isModuleActive } from "@/game/modules/utils";
 import { useTranslation } from "@/lib/useTranslation";
 import { useShallow } from "zustand/react/shallow";
 import type { PendingCrewPerkChoice } from "@/game/crew/techPerks";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 interface CrewPerkChoiceContentProps {
     pending: PendingCrewPerkChoice;
@@ -79,7 +80,9 @@ export function CrewPerkChoiceContent({
                     {t("crew_perk_choice.signal")}
                 </div>
                 <h2 className="mt-1 font-['Orbitron'] text-base font-bold uppercase tracking-wider text-[#00d4ff]">
-                    {t("crew_perk_choice.title", { name: crewMember.name })}
+                    {t("crew_perk_choice.title", {
+                        name: getCrewDisplayName(crewMember),
+                    })}
                 </h2>
                 <div className="mt-1 text-xs uppercase tracking-[0.16em] text-[#889988]">
                     {t("crew_perk_choice.subtitle", {

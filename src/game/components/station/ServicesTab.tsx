@@ -25,6 +25,7 @@ import {
     RESEARCH_BOOST_DURATION,
 } from "@/game/slices/research/methods/activateResearchBoost";
 import { RESEARCH_STATION_BUY_PRICES } from "@/game/stations/researchMaterials";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 const AUGMENTATION_RARITY_COLORS: Record<AugmentationRarity, string> = {
     common: "text-[#8a8a8a]",
@@ -71,12 +72,16 @@ const getScrapValue = (moduleType: ModuleType, moduleLevel: number): number => {
 interface MutationCrewMember {
     id: number;
     name: string;
+    nameId?: string;
+    race: RaceId;
     mutations: Array<{ id: string; name: string }>;
 }
 
 interface NegativeTraitCrewMember {
     id: number;
     name: string;
+    nameId?: string;
+    race: RaceId;
     negativeTraits: Array<{ id: string; name: string }>;
     geneticTherapyUsed: boolean;
 }
@@ -119,9 +124,10 @@ interface ServicesTabProps {
     crew: Array<{
         id: number;
         name: string;
+        nameId?: string;
         moduleId: number;
         profession?: Profession;
-        race?: RaceId;
+        race: RaceId;
         level?: number;
         augmentation?: AugmentationId | null;
     }>;
@@ -562,7 +568,7 @@ function MutationCureSection({
                 {crewWithMutations.map((member) => (
                     <div key={member.id}>
                         <div className="text-xs text-[#00d4ff] font-bold mb-1">
-                            {member.name}
+                            {getCrewDisplayName(member)}
                         </div>
                         <div className="space-y-1">
                             {member.mutations.map((mutation) => (
@@ -625,7 +631,7 @@ function GeneticTherapySection({
                     {availableMembers.map((member) => (
                         <div key={member.id}>
                             <div className="text-xs text-[#00d4ff] font-bold mb-1">
-                                {member.name}
+                                {getCrewDisplayName(member)}
                             </div>
                             <div className="space-y-1">
                                 {member.negativeTraits.map((trait) => (
@@ -1100,7 +1106,7 @@ function AugmentationSection({
                             >
                                 <div className="flex items-center gap-2">
                                     <span className="text-[#00d4ff] font-bold">
-                                        {member.name}
+                                        {getCrewDisplayName(member)}
                                     </span>
                                     {currentAug ? (
                                         <span className="text-[#ffb000]">

@@ -19,6 +19,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ProfessionSprite } from "./ProfessionSprite";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 interface Props {
     planetId: string;
@@ -125,7 +126,7 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5 mb-0.5">
                                     <span className="text-sm font-bold truncate">
-                                        {member.name}
+                                        {getCrewDisplayName(member)}
                                     </span>
                                     {isSynthetic && (
                                         <span

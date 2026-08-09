@@ -15,6 +15,7 @@ import {
 } from "@/game/slices/planetEffects/helpers/retrainCrew";
 import type { Profession } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 interface PlanetSpecializationPanelProps {
     onClose: () => void;
@@ -309,7 +310,7 @@ export function PlanetSpecializationPanel({
                                     />
                                     <div className="flex-1 text-xs">
                                         <div className="text-[#00ff41]">
-                                            {member.name}
+                                            {getCrewDisplayName(member)}
                                         </div>
                                         <div className="text-[#888]">
                                             {t(

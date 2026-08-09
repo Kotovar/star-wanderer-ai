@@ -7,6 +7,7 @@ import { NewGameSetupModal } from "@/game/components/NewGameSetupModal";
 import { useTranslation } from "@/lib/useTranslation";
 import { getSectorName } from "@/lib/translationHelpers";
 import { SectionPanel } from "../SectionPanel";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 interface GameEndPanelProps {
     type: "victory" | "gameover";
@@ -169,7 +170,7 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                                         className="flex justify-between"
                                     >
                                         <span className="text-[#888]">
-                                            {member.name} (
+                                            {getCrewDisplayName(member)} (
                                             {t(
                                                 `professions.${member.profession}`,
                                             )}
