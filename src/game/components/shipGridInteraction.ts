@@ -5,6 +5,20 @@ export type ModulePointerUpAction =
     | { type: "move"; moduleId: number; x: number; y: number }
     | null;
 
+const MODULE_DRAG_THRESHOLD = 5;
+
+export const hasModulePointerDragged = (
+    start: { x: number; y: number } | null,
+    current: { x: number; y: number },
+    alreadyDragged: boolean,
+): boolean =>
+    alreadyDragged ||
+    Boolean(
+        start &&
+        Math.hypot(current.x - start.x, current.y - start.y) >=
+            MODULE_DRAG_THRESHOLD,
+    );
+
 export const resolveModulePointerUp = (
     module: Pick<Module, "id" | "x" | "y"> | null,
     tempPos: { x: number; y: number } | null,

@@ -59,10 +59,16 @@ assert.equal(
   "reactor upgrade must preview the whole-ship energy reserve",
 );
 
-const { resolveModulePointerUp } = jiti(
+const { hasModulePointerDragged, resolveModulePointerUp } = jiti(
   "../src/game/components/shipGridInteraction.ts",
 );
 const shipModule = { id: 7, x: 1, y: 1 };
+const pointerStart = { x: 10, y: 10 };
+const draggedOut = hasModulePointerDragged(pointerStart, { x: 20, y: 10 }, false);
+const draggedBack = hasModulePointerDragged(pointerStart, { x: 11, y: 10 }, draggedOut);
+
+assert.equal(draggedOut, true, "pointer movement beyond the threshold starts a drag");
+assert.equal(draggedBack, true, "returning near the start keeps the drag latched");
 
 assert.deepEqual(
   resolveModulePointerUp(shipModule, { x: 1, y: 1 }, true, true, false),
@@ -70,9 +76,9 @@ assert.deepEqual(
   "pointer release without movement must open module details",
 );
 assert.equal(
-  resolveModulePointerUp(shipModule, { x: 1, y: 1 }, true, true, true),
+  resolveModulePointerUp(shipModule, { x: 1, y: 1 }, true, true, draggedBack),
   null,
-  "dragging inside the original grid cell must remain a no-op",
+  "dragging out and back into the original grid cell must remain a no-op",
 );
 assert.deepEqual(
   resolveModulePointerUp(shipModule, { x: 2, y: 1 }, true, true, true),

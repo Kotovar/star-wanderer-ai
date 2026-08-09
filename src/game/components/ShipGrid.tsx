@@ -30,11 +30,13 @@ import {
   LevelBadge,
 } from "./shipGrid/ModuleCellParts";
 import { ModuleDetailDialog } from "./ModuleList";
-import { resolveModulePointerUp } from "./shipGridInteraction";
+import {
+  hasModulePointerDragged,
+  resolveModulePointerUp,
+} from "./shipGridInteraction";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 const CELL_SIZE = 100;
-const MODULE_DRAG_THRESHOLD = 5;
 
 const MODULE_ART_URLS = Object.values(MODULE_ART).flatMap((art) =>
   Object.values(art).filter((url): url is string => url !== undefined),
@@ -87,6 +89,7 @@ export function ShipGrid() {
   const [crewDropModuleId, setCrewDropModuleId] = useState<number | null>(null);
   const crewDropModuleRef = useRef<number | null>(null);
   const modulePointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  const modulePointerMovedRef = useRef(false);
 
   const isCombatMode = !!currentCombat;
   const selectedModule =
@@ -118,6 +121,7 @@ export function ShipGrid() {
     const offsetY = mouseY - moduleY;
     setDragOffset({ x: offsetX, y: offsetY });
     modulePointerStartRef.current = { x: e.clientX, y: e.clientY };
+    modulePointerMovedRef.current = false;
     setDraggedModule(module);
     setTempPos({ x: module.x, y: module.y });
   };
@@ -144,6 +148,12 @@ export function ShipGrid() {
       setCrewDropModuleId(target?.id ?? null);
       return;
     }
+
+    modulePointerMovedRef.current = hasModulePointerDragged(
+      modulePointerStartRef.current,
+      { x: e.clientX, y: e.clientY },
+      modulePointerMovedRef.current,
+    );
 
     if (isCombatMode || ship.moduleMovedThisTurn || !draggedModule) return;
 
@@ -181,7 +191,7 @@ export function ShipGrid() {
     setTempPos({ x: clampedX, y: clampedY });
   };
 
-  const handlePointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+  const handlePointerUp = () => {
     if (draggedCrew) {
       if (!crewAutomationEnabled && crewDropModuleRef.current !== null) {
         moveCrewMember(draggedCrew.id, crewDropModuleRef.current);
@@ -190,11 +200,11 @@ export function ShipGrid() {
       crewDropModuleRef.current = null;
       setCrewDropModuleId(null);
       modulePointerStartRef.current = null;
+      modulePointerMovedRef.current = false;
       return;
     }
 
     const canMove = !isCombatMode && !ship.moduleMovedThisTurn;
-    const pointerStart = modulePointerStartRef.current;
     const action = resolveModulePointerUp(
       draggedModule,
       tempPos,
@@ -205,11 +215,7 @@ export function ShipGrid() {
         tempPos &&
         canPlaceModule(draggedModule, tempPos.x, tempPos.y),
       ),
-      Boolean(
-        pointerStart &&
-        Math.hypot(e.clientX - pointerStart.x, e.clientY - pointerStart.y) >=
-        MODULE_DRAG_THRESHOLD,
-      ),
+      modulePointerMovedRef.current,
     );
 
     if (action?.type === "move") {
@@ -221,12 +227,14 @@ export function ShipGrid() {
     setDraggedModule(null);
     setTempPos(null);
     modulePointerStartRef.current = null;
+    modulePointerMovedRef.current = false;
   };
 
   const cancelModuleDrag = () => {
     setDraggedModule(null);
     setTempPos(null);
     modulePointerStartRef.current = null;
+    modulePointerMovedRef.current = false;
   };
 
   const handleCrewPointerDown = (
