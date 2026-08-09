@@ -14,6 +14,7 @@ import "./register-ts-loader.mjs";
 const {
   GAS_BY_ATMOSPHERE,
   GAS_BASE_PRICE,
+  GAS_BUY_RATE,
   GAS_COLLECTOR_BUNKER_CAP,
   GAS_COLLECTOR_COST,
   GAS_COLLECTOR_FILL_TURNS,
@@ -342,6 +343,9 @@ for (const [resource, amount] of Object.entries(GAS_COLLECTOR_COST.resources)) {
 const { getCurrentCargo, getGasVolume } = await import(
   "../src/game/slices/ship/helpers/getCurrentCargo.ts"
 );
+const { buyGas } = await import(
+  "../src/game/slices/outposts/helpers/sellGas.ts"
+);
 assert.equal(getGasVolume(undefined), 0, "сейв до миграции не должен падать");
 assert.equal(getGasVolume({ deuterium: 4, cryogen: 2 }), 6);
 
@@ -357,6 +361,58 @@ assert.equal(
   "газ не занимает трюм — тогда бункер и вместимость корабля ни на что не влияют",
 );
 
+const gasBuyer = (polymers) => {
+  let state = {
+    credits: 1_000,
+    gases: { polymers },
+    probes: 0,
+    crew: [],
+    research: { researchedTechs: [] },
+    ship: {
+      cargo: [],
+      tradeGoods: [],
+      modules: [
+        {
+          id: 1,
+          type: "cargo",
+          capacity: 40,
+          health: 100,
+          maxHealth: 100,
+          disabled: false,
+          manualDisabled: false,
+        },
+      ],
+    },
+    addLog: () => {},
+  };
+  const set = (update) => {
+    state = { ...state, ...update(state) };
+  };
+  const get = () => state;
+  return {
+    buy: (quantity) => buyGas("polymers", quantity, set, get),
+    getState: () => state,
+  };
+};
+
+const nearlyFullBuyer = gasBuyer(38);
+nearlyFullBuyer.buy(5);
+assert.equal(
+  nearlyFullBuyer.getState().gases.polymers,
+  40,
+  "покупка газа переполняет трюм вместо частичной покупки свободного объёма",
+);
+assert.equal(
+  nearlyFullBuyer.getState().credits,
+  1_000 - Math.round(GAS_BASE_PRICE.polymers * GAS_BUY_RATE) * 2,
+  "кредиты списаны за газ, который не поместился в трюм",
+);
+
+const fullBuyer = gasBuyer(40);
+fullBuyer.buy(5);
+assert.equal(fullBuyer.getState().gases.polymers, 40, "газ покупается в полный трюм");
+assert.equal(fullBuyer.getState().credits, 1_000, "за не поместившийся газ списаны кредиты");
+
 // Ни одно место больше не считает занятый трюм в обход помощника: иначе газ
 // остался бы бесплатным в восьми проверках вместимости из девяти
 for (const path of [
@@ -365,6 +421,7 @@ for (const path of [
   "game/slices/locations/createLocationsSlice.ts",
   "game/slices/crew/helpers/merge.ts",
   "game/slices/contracts/helpers/acceptContract.ts",
+  "game/components/ShipStats.tsx",
 ]) {
   assert.doesNotMatch(
     source(path),
@@ -372,6 +429,11 @@ for (const path of [
     `${path}: занятый трюм снова считается вручную, мимо getCurrentCargo`,
   );
 }
+assert.match(
+  source("game/components/ShipStats.tsx"),
+  /useGameStore\(getCurrentCargo\)/,
+  "телеметрия корабля не использует общий расчёт груза с газом",
+);
 for (const path of [
   "game/hooks/useCargoStatus.ts",
   "game/components/CargoDisplay.tsx",
@@ -707,7 +769,7 @@ assert.equal(GAS_COLLECTOR_REQUIRED_DIVE_DEPTH, 4, "право на постро
 // ── У каждого газа есть применение, а не только цена ──────────────────────
 // Три газа из четырёх были чистым товаром, хотя описания обещали топливо и
 // сборку модулей. Проверка следит, что обещание подкреплено кодом.
-const { DEUTERIUM_FUEL_PER_UNIT, GAS_BUY_RATE, GAS_SELL_RATE: sellRate } =
+const { DEUTERIUM_FUEL_PER_UNIT, GAS_SELL_RATE: sellRate } =
   await import("../src/game/constants/outposts.ts");
 const { getDeuteriumBurnUnits } = await import(
   "../src/game/slices/ship/helpers/fuel/burnDeuterium.ts"

@@ -24,6 +24,7 @@ import {
 } from "@/game/slices/combat/helpers/playerDamage";
 import type { GameState, WeaponType } from "@/game/types";
 import { getDeuteriumBurnUnits } from "@/game/slices/ship/helpers/fuel";
+import { getCurrentCargo } from "@/game/slices/ship/helpers/getCurrentCargo";
 import { DEUTERIUM_FUEL_PER_UNIT } from "@/game/constants/outposts";
 import { getTechBonusSum } from "@/game/research";
 import { getActiveModules } from "../modules";
@@ -164,15 +165,7 @@ export function ShipStats() {
   const oxygenCapacity = getOxygenCapacity();
   const crewCapacity = getCrewCapacity();
 
-  const probes = useGameStore((s) => s.probes);
-
-  const currentCargo = useMemo(
-    () =>
-      ship.cargo.reduce((sum, c) => sum + c.quantity, 0) +
-      ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0) +
-      probes,
-    [ship.cargo, ship.tradeGoods, probes],
-  );
+  const currentCargo = useGameStore(getCurrentCargo);
 
   const shieldRegenerator = findActiveArtifact(
     artifacts,

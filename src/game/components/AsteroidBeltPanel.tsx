@@ -622,7 +622,7 @@ export function AsteroidBeltPanel() {
         )}
         {drillLevel === 0 && (
           <p className="text-[#ff4444] text-sm text-center">
-            ⚠ {t("asteroid_belt.drill_destroyed")}
+            ⚠ {t("game_logs.mineAsteroid_no_drill")}
           </p>
         )}
         {!hasEngineer && (

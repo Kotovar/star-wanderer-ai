@@ -4,6 +4,7 @@ import {
     GAS_BUY_RATE,
     GAS_SELL_RATE,
 } from "@/game/constants/outposts";
+import { getFreeCargoSpace } from "@/game/slices/ship/helpers/getCargoCapacity";
 import type { GameStore, SetState } from "@/game/types";
 import type { GasType } from "@/game/types/outposts";
 
@@ -61,9 +62,19 @@ export function buyGas(
     const price = Math.round(GAS_BASE_PRICE[gas] * GAS_BUY_RATE);
     if (price <= 0) return;
 
+    const requested = Math.max(0, Math.floor(quantity));
+    if (requested <= 0) return;
+
+    const room = getFreeCargoSpace(state);
+    if (room <= 0) {
+        get().addLog(i18nStore.t("game_logs.err_no_space"), "error");
+        return;
+    }
+
     const bought = Math.min(
-        Math.max(0, Math.floor(quantity)),
+        requested,
         Math.floor(state.credits / price),
+        room,
     );
     if (bought <= 0) {
         get().addLog(

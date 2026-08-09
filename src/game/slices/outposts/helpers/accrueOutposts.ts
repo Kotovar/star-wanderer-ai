@@ -170,8 +170,8 @@ export const getBunkerTotal = (outpost: Outpost): number =>
         0,
     );
 
-/** Виды газа в бункере с ненулевым количеством */
-export const getBunkerEntries = (outpost: Outpost): [GasType, number][] =>
-    (Object.entries(outpost.bunker) as [GasType, number][]).filter(
+/** Ресурсы в бункере с ненулевым количеством */
+export const getBunkerEntries = (outpost: Outpost): [OutpostResource, number][] =>
+    (Object.entries(outpost.bunker) as [OutpostResource, number][]).filter(
         ([, amount]) => amount > 0,
     );

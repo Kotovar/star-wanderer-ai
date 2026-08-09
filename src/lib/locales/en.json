@@ -5301,7 +5301,7 @@
         "collect": "Collect the haul",
         "bunker_full": "Bunker is full — the collector idles until you haul the gas away",
         "limit": "Built: {{built}} of {{limit}}",
-        "gas_collector_hint": "Extracts {{gas}}: {{rate}} per turn, bunker holds {{cap}}. A full bunker takes {{turns}} turns and then idles — you have to come back for the gas.",
+        "gas_collector_hint": "With a level 1 engineer, extracts {{gas}}: {{rate}} per turn, bunker holds {{cap}}. A full bunker takes {{turns}} turns and then idles — you have to come back for the gas.",
         "blocked_tech_missing": "Requires the Unattended Complexes technology",
         "blocked_limit_reached": "No more gas collectors can be built this run",
         "blocked_already_built": "An outpost already stands here",
@@ -5322,9 +5322,9 @@
             "use": "hybrid module assembly"
         },
         "biosynth": {
-            "desc": "Ammonia biomass — feedstock for medicine and provisions. Pricier than the other gases and badly needed during epidemics.",
+            "desc": "Ammonia biomass — feedstock for medicine and provisions. Stations pay more for it than for other gases.",
             "name": "Biosynth",
-            "use": "medicine and provisions"
+            "use": "high-value trade commodity"
         },
         "cryogen": {
             "desc": "Pressurised inert nitrogen. Never sold: it burns on its own and cools the power systems while supplies last.",

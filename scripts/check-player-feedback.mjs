@@ -80,6 +80,9 @@ const { AsteroidBeltPanel } = await import(
 const { FriendlyShipPanel } = await import(
   "../src/game/components/FriendlyShipPanel.tsx"
 );
+const ru = JSON.parse(
+  readFileSync(new URL("../src/lib/locales/ru.json", import.meta.url), "utf8"),
+);
 
 globalThis.__playerFeedbackState = {
   currentLocation: {
@@ -116,6 +119,25 @@ assert.equal(
   occurrences(asteroidMarkup, "⚠"),
   1,
   "предупреждение о заполненном трюме должно показывать одну иконку",
+);
+
+globalThis.__playerFeedbackState.currentLocation = {
+  id: "asteroid-test",
+  type: "asteroid_belt",
+  name: "Тестовый астероид",
+  mined: false,
+  asteroidTier: 1,
+};
+globalThis.__playerFeedbackState.getDrillLevel = () => 0;
+const noDrillMarkup = renderToStaticMarkup(createElement(AsteroidBeltPanel));
+assert.ok(
+  noDrillMarkup.includes(ru.game_logs.mineAsteroid_no_drill),
+  "без бура пояс должен предлагать установить буровой модуль",
+);
+assert.equal(
+  noDrillMarkup.includes(ru.asteroid_belt.drill_destroyed),
+  false,
+  "отсутствующий бур не должен называться сломанным",
 );
 
 for (const [locale, expected] of [
@@ -193,9 +215,6 @@ const deliveryState = {
 };
 globalThis.__playerFeedbackState = deliveryState;
 
-const ru = JSON.parse(
-  readFileSync(new URL("../src/lib/locales/ru.json", import.meta.url), "utf8"),
-);
 const deliveryMarkup = renderToStaticMarkup(createElement(FriendlyShipPanel));
 assert.ok(
   deliveryMarkup.includes(ru.delivery_goods.construction_materials),
