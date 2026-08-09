@@ -27,6 +27,7 @@ import {
     BASE_CAPTURED_IMAGE,
     getBaseImage,
     getBaseModuleImage,
+    getModuleOutput,
 } from "@/game/constants/baseModules";
 import { GameImage } from "./GameImage";
 import { RESEARCH_RESOURCES } from "@/game/constants";
@@ -40,6 +41,7 @@ import {
     getModuleBlocker,
     getOutpostOutputMultiplier,
     getUpgradeBlocker,
+    getWantedRoles,
     getSettlerOffer,
     getStorageFree,
     hasBaseService,
@@ -58,6 +60,7 @@ import type {
     OutpostResource,
 } from "@/game/types/outposts";
 import { OutpostGarrison } from "./OutpostGarrison";
+import { ShipStatsPanel } from "./ShipStatsPanel";
 
 /** Кого можно вырастить на базе: профессии, которых станции дают неохотно */
 const HIREABLE_PROFESSIONS = [
@@ -84,6 +87,7 @@ function ServiceButton({
     label,
     color,
     cost,
+    effect,
     blocker,
     nothingLabel,
     onClick,
@@ -92,6 +96,8 @@ function ServiceButton({
     label: string;
     color: string;
     cost: { item: string; quantity: number };
+    /** Что визит сделает в числах: «починить» и «+40 прочности» — разные обещания */
+    effect: string;
     blocker: "nothing" | "supplies" | null;
     nothingLabel: string;
     onClick: () => void;
@@ -108,16 +114,16 @@ function ServiceButton({
                 {icon} {label} · {cost.quantity}×{" "}
                 {t(`trade.goods.${cost.item}`)} · {t("outposts.turn_cost")}
             </Button>
-            {blocker && (
-                <span className="text-[9px] leading-tight text-[#8a9ba3]">
-                    {blocker === "supplies"
-                        ? t("outposts.service_no_supplies", {
-                              qty: cost.quantity,
-                              item: t(`trade.goods.${cost.item}`),
-                          })
-                        : nothingLabel}
-                </span>
-            )}
+            <span className="text-[9px] leading-tight text-[#8a9ba3]">
+                {blocker === "supplies"
+                    ? t("outposts.service_no_supplies", {
+                          qty: cost.quantity,
+                          item: t(`trade.goods.${cost.item}`),
+                      })
+                    : blocker === "nothing"
+                      ? nothingLabel
+                      : effect}
+            </span>
         </div>
     );
 }
@@ -355,6 +361,7 @@ const TAB_CLASS =
 export function BaseSection({ location }: Props) {
     const [craftOpen, setCraftOpen] = useState(false);
     const [catalogOpen, setCatalogOpen] = useState(false);
+    const [confirmRemove, setConfirmRemove] = useState<BaseModuleId | null>(null);
     const { t } = useTranslation();
     const outposts = useGameStore((s) => s.outposts);
     const credits = useGameStore((s) => s.credits);
@@ -462,6 +469,22 @@ export function BaseSection({ location }: Props) {
 
     // ── База захвачена: ничего, кроме штурма ───────────────────────────────
     if (base.capturedAtTurn !== undefined) {
+        // Рейдеры держат добычу, а не проедают её: бункер и модули вернутся
+        const capturedStake = [
+            ...(Object.entries(base.bunker) as [OutpostResource, number][])
+                .filter(([, amount]) => amount > 0)
+                .map(
+                    ([resource, amount]) =>
+                        `${describeHaulResource(resource, t)} ${amount}`,
+                ),
+            ...((base.modules ?? []).length > 0
+                ? [
+                      t("outposts.captured_modules", {
+                          count: (base.modules ?? []).length,
+                      }),
+                  ]
+                : []),
+        ];
         return (
             <div className="mt-2 border border-[#ff004455] bg-[rgba(255,0,64,0.06)] p-2 sm:p-3">
                 {/* Та же база, но под рейдерами: конструкции целы — её
@@ -479,6 +502,21 @@ export function BaseSection({ location }: Props) {
                         threat: base.raiderThreat ?? 1,
                     })}
                 </div>
+
+                {/* Что именно вернёт победа и с чем вы в неё идёте. Раньше здесь
+                    была одна кнопка «отбить» и число угрозы: решение принималось
+                    вслепую, при том что бой обычный и корабль виден везде */}
+                {capturedStake.length > 0 && (
+                    <div className="mt-1 text-[10px] leading-snug text-[#b9c6cc] sm:text-xs">
+                        {t("outposts.captured_stake", {
+                            list: capturedStake.join(", "),
+                        })}
+                    </div>
+                )}
+                <div className="mt-2">
+                    <ShipStatsPanel title={t("outposts.captured_your_ship")} />
+                </div>
+
                 <Button
                     onClick={() => assaultOutpost(base.id)}
                     className="mt-2 min-h-9 w-full cursor-pointer border-2 border-[#ff0040] bg-transparent px-2 text-[10px] uppercase tracking-wider text-[#ff667f] hover:bg-[rgba(255,0,64,0.15)] sm:text-xs"
@@ -513,6 +551,7 @@ export function BaseSection({ location }: Props) {
     const bunkerTotal = getBunkerTotal(base);
     const stationed = getOutpostCrew(crew, base.id);
     const crewSlots = getCrewSlots(base);
+    const wantedRoles = getWantedRoles(base);
     const canRepair = hasBaseService(base, "repair");
     const canHeal = hasBaseService(base, "heal");
     const canStore = hasBaseService(base, "storage");
@@ -580,7 +619,11 @@ export function BaseSection({ location }: Props) {
                         filled: installed.length,
                         total: slots,
                     })}{" "}
-                    · ×{multiplier.toFixed(2)} ·{" "}
+                    ·{" "}
+                    {t("outposts.summary_output", {
+                        value: multiplier.toFixed(2),
+                    })}{" "}
+                    ·{" "}
                     {t("outposts.summary_bunker", { amount: bunkerTotal })} ·{" "}
                     {t("outposts.summary_garrison", {
                         filled: stationed.length,
@@ -632,6 +675,21 @@ export function BaseSection({ location }: Props) {
                                     planetHasFeature(base.locationId, def.boostedBy)
                                         ? def.boostedBy
                                         : null;
+                                // Выработка дробная (0.5/ход), и без неё «когда
+                                // прилетать за добычей» посчитать нечем. Считаем
+                                // ровно как accrueBase: черта планеты и гарнизон
+                                const output = Object.entries(
+                                    getModuleOutput(moduleId, location.planetType),
+                                ) as [OutpostResource, number][];
+                                const rates = output.map(
+                                    ([resource, amount]) =>
+                                        `${describeHaulResource(resource, t)} ${(
+                                            amount *
+                                            (boostFeature ? 2 : 1) *
+                                            multiplier
+                                        ).toFixed(2)}`,
+                                );
+                                const refund = Math.floor(def.cost.credits / 2);
                                 return (
                                     <div
                                         key={moduleId}
@@ -657,15 +715,33 @@ export function BaseSection({ location }: Props) {
                                                     )}
                                                 </span>
                                                 <span className="block text-[9px] leading-tight text-[#8a9ba3]">
-                                                    {t(`base_modules.${moduleId}.desc`)}
+                                                    {rates.length > 0
+                                                        ? t("outposts.module_output", {
+                                                              list: rates.join(", "),
+                                                          })
+                                                        : t(`base_modules.${moduleId}.desc`)}
                                                 </span>
                                             </span>
                                         </span>
+                                        {/* Снос в два нажатия: кнопка стоит вплотную
+                                            к модулю, а промах по ней стоит половины
+                                            цены и всех материалов */}
                                         <Button
-                                            onClick={() => removeBaseModule(base.id, moduleId)}
-                                            className="min-h-7 cursor-pointer border border-[#552028] bg-transparent px-2 text-[10px] uppercase text-[#8a6a70] hover:border-[#ff0040] hover:text-[#ff667f]"
+                                            onClick={() =>
+                                                confirmRemove === moduleId
+                                                    ? (removeBaseModule(base.id, moduleId),
+                                                      setConfirmRemove(null))
+                                                    : setConfirmRemove(moduleId)
+                                            }
+                                            className={
+                                                confirmRemove === moduleId
+                                                    ? "min-h-7 shrink-0 cursor-pointer whitespace-normal border border-[#ff0040] bg-transparent px-2 text-left text-[10px] text-[#ff667f]"
+                                                    : "min-h-7 shrink-0 cursor-pointer border border-[#552028] bg-transparent px-2 text-[10px] uppercase text-[#8a6a70] hover:border-[#ff0040] hover:text-[#ff667f]"
+                                            }
                                         >
-                                            {t("outposts.dismantle")}
+                                            {confirmRemove === moduleId
+                                                ? t("outposts.dismantle_confirm", { refund })
+                                                : t("outposts.dismantle")}
                                         </Button>
                                     </div>
                                 );
@@ -766,6 +842,12 @@ export function BaseSection({ location }: Props) {
                                             label={t("outposts.service_repair")}
                                             color="#00d4ff"
                                             cost={BASE_SERVICE_VALUES.repairCost}
+                                            effect={t(
+                                                "outposts.service_repair_effect",
+                                                {
+                                                    amount: BASE_SERVICE_VALUES.repairAmount,
+                                                },
+                                            )}
                                             blocker={repairBlocker}
                                             nothingLabel={t("outposts.service_repair_nothing")}
                                             onClick={() => repairAtBase(base.id)}
@@ -777,6 +859,12 @@ export function BaseSection({ location }: Props) {
                                             label={t("outposts.service_heal")}
                                             color="#00ff41"
                                             cost={BASE_SERVICE_VALUES.healCost}
+                                            effect={t(
+                                                "outposts.service_heal_effect",
+                                                {
+                                                    amount: BASE_SERVICE_VALUES.healAmount,
+                                                },
+                                            )}
                                             blocker={healBlocker}
                                             nothingLabel={t("outposts.service_heal_nothing")}
                                             onClick={() => healAtBase(base.id)}
@@ -818,6 +906,20 @@ export function BaseSection({ location }: Props) {
                                                         turns: settlerOffer.turns,
                                                     })}
                                                 </div>
+                                                {/* Кого именно везти — не безразлично:
+                                                    множитель добычи даёт только тот, чья
+                                                    профессия нужна стоящим модулям */}
+                                                {wantedRoles.size > 0 && (
+                                                    <div className="mt-0.5 text-[9px] text-[#00ff41]">
+                                                        {t("outposts.hire_wanted", {
+                                                            roles: [...wantedRoles]
+                                                                .map((role) =>
+                                                                    t(`professions.${role}`),
+                                                                )
+                                                                .join(", "),
+                                                        })}
+                                                    </div>
+                                                )}
                                                 <div className="mt-1 flex flex-wrap gap-1">
                                                     {HIREABLE_PROFESSIONS.map((profession) => (
                                                         <Button
@@ -826,7 +928,11 @@ export function BaseSection({ location }: Props) {
                                                                 hireAtBase(base.id, profession)
                                                             }
                                                             disabled={hireBlocker !== null}
-                                                            className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000] disabled:cursor-default disabled:opacity-40"
+                                                            className={`min-h-7 cursor-pointer border bg-transparent px-2 text-[10px] hover:border-[#ffb000] hover:text-[#ffb000] disabled:cursor-default disabled:opacity-40 ${
+                                                                wantedRoles.has(profession)
+                                                                    ? "border-[#00ff41] text-[#00ff41]"
+                                                                    : "border-[#555] text-[#b9c6cc]"
+                                                            }`}
                                                         >
                                                             {t(`professions.${profession}`)}
                                                         </Button>

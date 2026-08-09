@@ -9,6 +9,7 @@ import {
     getCrewSlots,
     getOutpostOutputMultiplier,
 } from "@/game/slices/outposts/helpers";
+import type { CrewMember } from "@/game/types";
 import type { Outpost } from "@/game/types/outposts";
 
 interface Props {
@@ -41,6 +42,20 @@ export function OutpostGarrison({ outpost, accent }: Props) {
         .sort((a, b) =>
             a.profession === role ? -1 : b.profession === role ? 1 : 0,
         );
+    /**
+     * Каким станет множитель, если отправить этого человека.
+     *
+     * Считаем настоящей функцией на подменённом экипаже, а не своей формулой:
+     * иначе кнопка обещала бы одно, а накопление за ход давало другое. Разница
+     * между «инженер» и «медик» в цифрах — это и есть весь выбор кого отдать.
+     */
+    const previewMultiplier = (member: CrewMember) =>
+        getOutpostOutputMultiplier(
+            outpost,
+            crew.map((c) =>
+                c.id === member.id ? { ...c, outpostId: outpost.id } : c,
+            ),
+        );
 
     return (
         <div
@@ -48,8 +63,13 @@ export function OutpostGarrison({ outpost, accent }: Props) {
             style={{ borderColor: `${accent}22` }}
         >
             <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                {/* «×0.70» само по себе не говорит, что именно умножается и
+                    откуда взялось: число видно, а причина — только в коде */}
                 <span className="text-[#8a9ba3]">
-                    {t("outposts.garrison")} · ×{multiplier.toFixed(2)}
+                    {t("outposts.garrison")} ·{" "}
+                    {t("outposts.summary_output", {
+                        value: multiplier.toFixed(2),
+                    })}
                 </span>
                 <span className="text-[#8a9ba3]">
                     {stationed.length}/{slots}
@@ -106,7 +126,8 @@ export function OutpostGarrison({ outpost, accent }: Props) {
                                     {member.name} ·{" "}
                                     {t(`professions.${member.profession}`)}{" "}
                                     {t("effects.level_short")}
-                                    {member.level}
+                                    {member.level} → ×
+                                    {previewMultiplier(member).toFixed(2)}
                                 </Button>
                             ))}
                         </div>

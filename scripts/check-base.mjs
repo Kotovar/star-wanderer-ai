@@ -1074,6 +1074,65 @@ assert.match(
   "область вкладок снова тянется по содержимому — кнопки под базой прыгают",
 );
 
+// ── Панель показывает выработку, а не только имя модуля ───────────────────
+// Добыча дробная (0.5/ход), и без строки «минералы 1.00 за ход» посчитать,
+// когда прилетать, нечем. Число обязано совпадать с тем, что копит движок
+assert.ok(
+  panel.includes("getModuleOutput(") && panel.includes("module_output"),
+  "панель не показывает выработку модуля",
+);
+
+const shownBase = baseAt(richDeposits, { modules: ["drill_shaft"] });
+const shownCrew = [
+  { id: 1, profession: "engineer", level: 1, outpostId: "b1" },
+];
+// Та же формула, что в строке модуля: выход × черта планеты × гарнизон
+const shownRate =
+  getModuleOutput("drill_shaft", undefined).minerals *
+  2 *
+  getOutpostOutputMultiplier(shownBase, shownCrew);
+let mined = [shownBase];
+const minedSectors = [{ id: 1, locations: [{ id: richDeposits }] }];
+for (let turn = 0; turn < 30; turn++) {
+  mined = accrueOutposts(mined, minedSectors, shownCrew);
+}
+assert.ok(
+  Math.abs((mined[0].bunker.minerals ?? 0) - shownRate * 30) <= 1,
+  `панель обещает ${shownRate.toFixed(2)}/ход, а движок накопил ${mined[0].bunker.minerals} за 30 ходов`,
+);
+
+// ── Снос переспрашивает, услуги называют эффект, казарма — нужную роль ────
+assert.ok(
+  panel.includes("confirmRemove") && panel.includes("dismantle_confirm"),
+  "снос модуля снова в одно нажатие — промах стоит половины цены и всех материалов",
+);
+for (const key of ["service_repair_effect", "service_heal_effect"]) {
+  assert.ok(panel.includes(key), `услуга не говорит, что сделает: ${key}`);
+}
+assert.ok(
+  panel.includes("BASE_SERVICE_VALUES.repairAmount") &&
+    panel.includes("BASE_SERVICE_VALUES.healAmount"),
+  "эффект услуги набран числом в тексте — разъедется с BASE_SERVICE_VALUES",
+);
+assert.ok(
+  panel.includes("getWantedRoles(") && panel.includes("hire_wanted"),
+  "казарма предлагает пять профессий без разницы между ними",
+);
+assert.deepEqual(
+  [...getWantedRoles(baseAt(withIce, { modules: ["field_lab", "med_bay"] }))],
+  ["scientist", "medic"],
+  "база хочет не тех, кто нужен её модулям",
+);
+
+// ── Штурм: видно, с чем идёшь и что вернётся ──────────────────────────────
+assert.ok(
+  source("game/components/OutpostGarrison.tsx").includes("previewMultiplier"),
+  "гарнизон не показывает, что даст пересадка — множитель меняется вслепую",
+);
+for (const what of ["ShipStatsPanel", "captured_stake"]) {
+  assert.ok(panel.includes(what), `штурм захваченной базы не показывает ${what}`);
+}
+
 // ── Полный бункер базы виден ──────────────────────────────────────────────
 const { isBunkerFull: bunkerFull } = await import(
   "../src/game/slices/outposts/helpers/accrueOutposts.ts"
@@ -1148,6 +1207,15 @@ for (const lang of ["ru", "en"]) {
     "summary_slots",
     "summary_bunker",
     "summary_garrison",
+    "summary_output",
+    "module_output",
+    "dismantle_confirm",
+    "service_repair_effect",
+    "service_heal_effect",
+    "hire_wanted",
+    "captured_stake",
+    "captured_modules",
+    "captured_your_ship",
   ]) {
     assert.ok(catalog.outposts?.[key], `${lang}: нет outposts.${key}`);
   }
