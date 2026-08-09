@@ -9,6 +9,7 @@ import {
     SURVIVOR_DECLINE_REPUTATION,
 } from "@/game/slices/locations/constants";
 import { unlockSyntheticDroneIfEligible } from "@/game/metaProgress/store";
+import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 /**
  * Интерфейс CrewManagementSlice
@@ -67,7 +68,7 @@ export const createCrewManagementSlice = (
             get().addLog(i18nStore.t("game_logs.synthetic_drone_unlocked"), "info");
         }
         get().changeReputation(survivor.race, SURVIVOR_ACCEPT_REPUTATION);
-        get().addLog( i18nStore.t("game_logs.createCrewManagementSlice_1", { survivor_name: survivor.name }),
+        get().addLog( i18nStore.t("game_logs.createCrewManagementSlice_1", { survivor_name: getCrewDisplayName(survivor) }),
             "info",
         );
     },
@@ -86,6 +87,6 @@ export const createCrewManagementSlice = (
             pendingSurvivor: null,
         }));
         get().changeReputation(survivor.race, SURVIVOR_DECLINE_REPUTATION);
-        get().addLog( i18nStore.t("game_logs.createCrewManagementSlice_2", { survivor_name: survivor.name }), "warning");
+        get().addLog( i18nStore.t("game_logs.createCrewManagementSlice_2", { survivor_name: getCrewDisplayName(survivor) }), "warning");
     },
 });

@@ -505,7 +505,7 @@ function resolveAccuracy(
   if (gunnerInBay) {
     const gunnerLevel = gunnerInBay.level || 1;
     const gunnerBonus = Math.min(0.2, gunnerLevel * 0.02);
-    get().addLog( i18nStore.t("game_logs.playerAttack_6", { gunnerInBay_name: gunnerInBay.name, gunnerLevel, value: Math.round(gunnerBonus * 100) }),
+    get().addLog( i18nStore.t("game_logs.playerAttack_6", { gunnerInBay_name: getCrewDisplayName(gunnerInBay), gunnerLevel, value: Math.round(gunnerBonus * 100) }),
       "info",
     );
   }
