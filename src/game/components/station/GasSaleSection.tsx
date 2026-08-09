@@ -70,14 +70,22 @@ export function GasSaleSection() {
                         </div>
 
                         {sellable && (
-                            <Button
-                                onClick={() => sellGas(gas, amount)}
-                                className="min-h-8 cursor-pointer border border-[#00d4ff] bg-transparent px-2 text-[10px] uppercase tracking-wider text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] sm:text-xs"
-                            >
-                                {t("outposts.sell_all", {
-                                    total: price * amount,
-                                })}
-                            </Button>
+                            <div className="flex flex-wrap justify-end gap-1">
+                                <Button
+                                    onClick={() => sellGas(gas, 1)}
+                                    className="min-h-8 w-48 cursor-pointer border border-[#00d4ff] bg-transparent px-2 text-[10px] uppercase tracking-wider text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] sm:text-xs"
+                                >
+                                    {t("outposts.sell_one")}
+                                </Button>
+                                <Button
+                                    onClick={() => sellGas(gas, amount)}
+                                    className="min-h-8 w-48 cursor-pointer border border-[#00d4ff] bg-transparent px-2 text-[10px] uppercase tracking-wider text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] sm:text-xs"
+                                >
+                                    {t("outposts.sell_all", {
+                                        total: price * amount,
+                                    })}
+                                </Button>
+                            </div>
                         )}
                     </div>
                 );
@@ -92,8 +100,8 @@ export function GasSaleSection() {
                         {t("outposts.gas_buy_price", { price: polymerPrice })}
                     </div>
                 </div>
-                <div className="flex gap-1">
-                    {[5, 10].map((qty) => (
+                <div className="flex flex-wrap justify-end gap-1">
+                    {[1, 5, 10].map((qty) => (
                         <Button
                             key={qty}
                             onClick={() => buyGas("polymers", qty)}

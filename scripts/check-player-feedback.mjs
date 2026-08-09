@@ -80,6 +80,9 @@ const { AsteroidBeltPanel } = await import(
 const { FriendlyShipPanel } = await import(
   "../src/game/components/FriendlyShipPanel.tsx"
 );
+const { GasSaleSection } = await import(
+  "../src/game/components/station/GasSaleSection.tsx"
+);
 const ru = JSON.parse(
   readFileSync(new URL("../src/lib/locales/ru.json", import.meta.url), "utf8"),
 );
@@ -230,5 +233,26 @@ assert.ok(
   legacyDeliveryMarkup.includes("legacy_payload"),
   "неизвестный груз должен сохранить legacy-значение",
 );
+
+globalThis.__playerFeedbackState = {
+  gases: { polymers: 2 },
+  credits: 1_000,
+  sellGas: () => {},
+  buyGas: () => {},
+};
+
+const gasTradeMarkup = renderToStaticMarkup(createElement(GasSaleSection));
+for (const label of [
+  "Продать 1",
+  "Продать всё",
+  "+1 · 70₢",
+  "+5 · 350₢",
+  "+10 · 700₢",
+]) {
+  assert.ok(
+    gasTradeMarkup.includes(label),
+    `торговля газом не показывает действие «${label}»`,
+  );
+}
 
 console.log("Player feedback checks passed");

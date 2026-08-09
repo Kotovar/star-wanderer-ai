@@ -5224,6 +5224,7 @@
         "gas_from_outposts": "Gas from outposts",
         "gas_price": "{{price}}₢ per unit",
         "gas_buy_price": "Buy from the station: {{price}}₢ per unit",
+        "sell_one": "Sell 1",
         "sell_all": "Sell all · {{total}}₢",
         "cryogen_burning": "Burns on its own: −{{value}} draw on every module",
         "garrison": "Garrison",

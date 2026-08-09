@@ -5224,6 +5224,7 @@
         "gas_from_outposts": "Газ с аванпостов",
         "gas_price": "{{price}}₢ за единицу",
         "gas_buy_price": "Купить у станции: {{price}}₢ за единицу",
+        "sell_one": "Продать 1",
         "sell_all": "Продать всё · {{total}}₢",
         "cryogen_burning": "Горит сам: −{{value}} к расходу каждого модуля",
         "garrison": "Гарнизон",
