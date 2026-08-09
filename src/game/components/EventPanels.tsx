@@ -40,10 +40,12 @@ import { CrewPerkChoiceModal } from "./CrewPerkChoiceModal";
 import { RiskRewardPreview } from "./RiskRewardPreview";
 import type { TravelEventType } from "@/game/types";
 import { getActiveModule } from "@/game/modules";
-import { getPilotInCockpit } from "@/game/crew";
+import { getBestByProfession, getPilotInCockpit } from "@/game/crew";
 import { getPendingCrewPerkChoice } from "@/game/crew/techPerks";
 import { RESEARCH_TREE } from "@/game/constants";
 import { getTechTranslation } from "@/lib/techTranslations";
+import { canAccessTier } from "@/game/galaxy/galaxy-map-utils";
+import { getFuelRecoveryNeed } from "@/game/galaxy/fuelTrapRisk";
 
 type PreviewItem = {
   label: string;
@@ -146,24 +148,55 @@ function MapToolbar({
 
 function FuelRecoveryHint({
   available,
+  targetFuel,
+  currentFuel,
+  automationEnabled,
+  prioritized,
   onCrewTasks,
+  onPrioritize,
   t,
 }: {
   available: boolean;
+  targetFuel: number | null;
+  currentFuel: number;
+  automationEnabled: boolean;
+  prioritized: boolean;
   onCrewTasks: () => void;
-  t: (key: string) => string;
+  onPrioritize: () => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   if (!available) return null;
 
   return (
-    <div className="mb-1 flex items-center justify-center gap-2 border border-[#ffb00077] bg-[rgba(255,176,0,0.08)] px-2 py-1 text-center text-[10px] text-[#ffb000]">
-      <span>{t("galaxy.labels.fuel_recovery")}</span>
-      <button
-        onClick={onCrewTasks}
-        className="cursor-pointer border border-[#ffb000] px-1.5 py-0.5 text-[9px] font-bold text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
-      >
-        {t("galaxy.buttons.crew_tasks")}
-      </button>
+    <div className="mb-1 flex flex-wrap items-center justify-center gap-2 border border-[#ffb00077] bg-[rgba(255,176,0,0.08)] px-2 py-1 text-center text-[10px] text-[#ffb000]">
+      <span>
+        {targetFuel !== null
+          ? t("galaxy.labels.fuel_recovery_needed", {
+              currentFuel,
+              targetFuel,
+            })
+          : t("galaxy.labels.fuel_recovery")}
+      </span>
+      {automationEnabled && targetFuel !== null ? (
+        <button
+          onClick={onPrioritize}
+          disabled={prioritized}
+          className="cursor-pointer border border-[#ffb000] px-1.5 py-0.5 text-[9px] font-bold text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] disabled:cursor-default disabled:opacity-60"
+        >
+          {t(
+            prioritized
+              ? "galaxy.buttons.fuel_synthesis_prioritized"
+              : "galaxy.buttons.prioritize_fuel_synthesis",
+          )}
+        </button>
+      ) : (
+        <button
+          onClick={onCrewTasks}
+          className="cursor-pointer border border-[#ffb000] px-1.5 py-0.5 text-[9px] font-bold text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
+        >
+          {t("galaxy.buttons.crew_tasks")}
+        </button>
+      )}
     </div>
   );
 }
@@ -208,6 +241,10 @@ export function EventDisplay() {
   const showAssignments = useGameStore((s) => s.showAssignments);
   const skipTurn = useGameStore((s) => s.skipTurn);
   const currentSector = useGameStore((s) => s.currentSector);
+  const crewAutomation = useGameStore((s) => s.crewAutomation);
+  const prioritizeFuelSynthesis = useGameStore(
+    (s) => s.prioritizeFuelSynthesis,
+  );
   const emergencyJump = useGameStore((s) => s.emergencyJump);
   const resolveTravelEvent = useGameStore((s) => s.resolveTravelEvent);
   const activeResearch = useGameStore((s) => s.research.activeResearch);
@@ -223,11 +260,13 @@ export function EventDisplay() {
     );
     return s.ship.fuel < minCost;
   });
-  const canRecoverFuel = useGameStore(
+  const canSynthesizeFuel = useGameStore(
     (s) =>
-      s.ship.fuel === 0 &&
       s.crew.some(
-        (member) => member.profession === "engineer" && member.health > 0,
+        (member) =>
+          member.profession === "engineer" &&
+          member.health > 0 &&
+          !member.outpostId,
       ) &&
       s.ship.modules.some(
         (module) =>
@@ -237,7 +276,51 @@ export function EventDisplay() {
           !module.manualDisabled,
       ),
   );
+  const fuelRecoveryTarget = useGameStore((s) => {
+    if (
+      !s.currentSector ||
+      s.currentSector.locations.some((location) => location.type === "station")
+    ) {
+      return null;
+    }
+    const captainLevel = getBestByProfession(s.crew, "pilot")?.level ?? 1;
+    const hasWarpDrive = s.research.researchedTechs.includes("warp_drive");
+    return getFuelRecoveryNeed(
+      s.ship.fuel,
+      s.ship.maxFuel,
+      s.galaxy.sectors
+        .filter((sector) => sector.id !== s.currentSector?.id)
+        .map((sector) => ({
+          hasStation: sector.locations.some(
+            (location) => location.type === "station",
+          ),
+          fuelCost: calculateFuelCostForUI(s, sector.id).fuelCost,
+          known: sector.visited === true,
+          accessible:
+            hasWarpDrive ||
+            canAccessTier(sector.tier, s.ship.modules, captainLevel),
+        })),
+    )?.targetFuel ?? null;
+  });
   const { t, currentLanguage } = useTranslation();
+  const hasLocalStation =
+    currentSector?.locations.some((location) => location.type === "station") ??
+    false;
+  const fuelRecoveryAvailable =
+    canSynthesizeFuel &&
+    !hasLocalStation &&
+    (shipFuel === 0 || fuelRecoveryTarget !== null);
+  const emergencyFuelTarget = crewAutomation.emergencyFuelTarget;
+  const fuelSynthesisPrioritized = Boolean(
+    emergencyFuelTarget &&
+      emergencyFuelTarget.sectorId === currentSector?.id &&
+      shipFuel < emergencyFuelTarget.targetFuel,
+  );
+  const handlePrioritizeFuelSynthesis = () => {
+    if (fuelRecoveryTarget !== null) {
+      prioritizeFuelSynthesis(fuelRecoveryTarget);
+    }
+  };
 
   const [isSkipping, setIsSkipping] = useState(false);
 
@@ -448,8 +531,13 @@ export function EventDisplay() {
             t={t}
           />
           <FuelRecoveryHint
-            available={canRecoverFuel}
+            available={fuelRecoveryAvailable}
+            targetFuel={fuelRecoveryTarget}
+            currentFuel={shipFuel}
+            automationEnabled={crewAutomation.enabled}
+            prioritized={fuelSynthesisPrioritized}
             onCrewTasks={showAssignments}
+            onPrioritize={handlePrioritizeFuelSynthesis}
             t={t}
           />
           <div className="flex-1 relative min-h-0">
@@ -473,8 +561,13 @@ export function EventDisplay() {
             t={t}
           />
           <FuelRecoveryHint
-            available={canRecoverFuel}
+            available={fuelRecoveryAvailable}
+            targetFuel={fuelRecoveryTarget}
+            currentFuel={shipFuel}
+            automationEnabled={crewAutomation.enabled}
+            prioritized={fuelSynthesisPrioritized}
             onCrewTasks={showAssignments}
+            onPrioritize={handlePrioritizeFuelSynthesis}
             t={t}
           />
           <div className="flex-1 relative min-h-0">

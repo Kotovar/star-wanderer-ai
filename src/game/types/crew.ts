@@ -130,9 +130,15 @@ export interface CrewAutomationMemoryEntry {
 
 export type CrewAutomationMemory = Record<number, CrewAutomationMemoryEntry>;
 
+export interface EmergencyFuelTarget {
+    sectorId: number;
+    targetFuel: number;
+}
+
 export interface CrewAutomationState {
     enabled: boolean;
     memory: CrewAutomationMemory;
+    emergencyFuelTarget?: EmergencyFuelTarget | null;
 }
 
 export interface CrewMember {

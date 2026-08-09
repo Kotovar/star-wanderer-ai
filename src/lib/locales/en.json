@@ -2434,6 +2434,8 @@
             "sector_map": "SECTOR MAP",
             "galaxy_map": "GALAXY MAP",
             "crew_tasks": "CREW TASKS",
+            "prioritize_fuel_synthesis": "SEND ENGINEER",
+            "fuel_synthesis_prioritized": "PRIORITY SET",
             "skip_turn": "SKIP TURN",
             "next_turn": "NEXT TURN"
         },
@@ -2445,7 +2447,8 @@
             "scanner_absent": "none",
             "click_sector": "Click on a sector",
             "click_object": "Click on an object",
-            "fuel_recovery": "⛽ Fuel is empty: assign an engineer to Fuel Synthesis in a fuel tank, then skip a turn."
+            "fuel_recovery": "⛽ Fuel is empty: assign an engineer to Fuel Synthesis in a fuel tank, then skip a turn.",
+            "fuel_recovery_needed": "⛽ The nearest known station needs {{targetFuel}} fuel; you have {{currentFuel}}. Synthesize fuel and skip turns."
         },
         "black_hole": {
             "title": "🕳️ BLACK HOLE",

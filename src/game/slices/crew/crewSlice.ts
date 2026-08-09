@@ -67,6 +67,9 @@ export interface CrewSlice {
     /** Включает или отключает автоматическое управление экипажем */
     setCrewAutomationEnabled: (enabled: boolean) => void;
 
+    /** Временно ставит синтез топлива выше обычной работы экипажа */
+    prioritizeFuelSynthesis: (targetFuel: number) => void;
+
     /**
      * Назначает гражданскую задачу члену экипажа
      */
@@ -155,6 +158,42 @@ export const createCrewSlice = (
         set((state) => {
             state.crewAutomation.enabled = enabled;
             state.crewAutomation.memory = {};
+            state.crewAutomation.emergencyFuelTarget = null;
+        });
+    },
+
+    prioritizeFuelSynthesis: (targetFuel) => {
+        const state = get();
+        const hasEngineer = state.crew.some(
+            (member) =>
+                member.profession === "engineer" &&
+                member.health > 0 &&
+                !member.outpostId,
+        );
+        const hasFuelTank = state.ship.modules.some(
+            (module) =>
+                module.type === "fueltank" &&
+                module.health > 0 &&
+                !module.disabled &&
+                !module.manualDisabled,
+        );
+        if (
+            !state.crewAutomation.enabled ||
+            !state.currentSector ||
+            !hasEngineer ||
+            !hasFuelTank
+        ) {
+            return;
+        }
+        const clampedTarget = Math.min(Math.ceil(targetFuel), state.ship.maxFuel);
+        if (clampedTarget <= state.ship.fuel) return;
+        const sectorId = state.currentSector.id;
+
+        set((draft) => {
+            draft.crewAutomation.emergencyFuelTarget = {
+                sectorId,
+                targetFuel: clampedTarget,
+            };
         });
     },
 

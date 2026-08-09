@@ -344,6 +344,7 @@ export interface GameCrew {
     effect: string,
   ) => void;
   setCrewAutomationEnabled: (enabled: boolean) => void;
+  prioritizeFuelSynthesis: (targetFuel: number) => void;
   moveCrewMember: (crewId: number, targetModuleId: number) => void;
   isModuleAdjacent: (moduleId1: number, moduleId2: number) => boolean;
   getCrewInModule: (moduleId: number) => CrewMember[];

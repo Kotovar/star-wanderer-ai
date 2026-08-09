@@ -171,7 +171,7 @@ const baseState: GameState = {
     mergeTraits: [],
   },
   crew: initialCrew,
-  crewAutomation: { enabled: false, memory: {} },
+  crewAutomation: { enabled: false, memory: {}, emergencyFuelTarget: null },
   galaxy: { sectors, nebulae },
   activeContracts: [],
   completedContractIds: [],

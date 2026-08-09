@@ -5,6 +5,7 @@ import type {
   CrewAutomationMemoryEntry,
   CrewAutomationMode,
   CrewAutomationTask,
+  EmergencyFuelTarget,
 } from "../../../types/crew";
 import type { Module, ModuleType } from "../../../types/modules";
 
@@ -33,10 +34,12 @@ export interface CrewAutomationInput {
   passiveRegenByCrew?: Record<number, number>;
   mergeableModuleIds?: number[];
   enabled?: boolean;
+  emergencyFuelRequested?: boolean;
 }
 
 const PRIORITY = {
   safety: 600,
+  emergencyFuel: 550,
   brokenRepair: 500,
   criticalRepair: 450,
   healing: 400,
@@ -44,6 +47,15 @@ const PRIORITY = {
   work: 200,
   rest: 100,
 } as const;
+
+export const resolveEmergencyFuelTarget = (
+  target: EmergencyFuelTarget | null | undefined,
+  currentSectorId: number | undefined,
+  currentFuel: number,
+): EmergencyFuelTarget | null =>
+  target && target.sectorId === currentSectorId && currentFuel < target.targetFuel
+    ? target
+    : null;
 
 const CRITICAL_CREW_HEALTH_RATIO = 0.3;
 const ADEQUATE_LOCAL_HEALING = 15;
@@ -236,6 +248,7 @@ export const planCrewAutomation = ({
   passiveRegenByCrew = {},
   mergeableModuleIds,
   enabled = true,
+  emergencyFuelRequested = false,
 }: CrewAutomationInput): CrewAutomationPlan => {
   if (!enabled) return { decisions: [], memory };
 
@@ -263,7 +276,8 @@ export const planCrewAutomation = ({
       targetModules.forEach((target) => {
         if (
           isCritical(target) &&
-          (member.profession !== "engineer" || task !== "repair")
+          (member.profession !== "engineer" ||
+            (task !== "repair" && task !== "fuel_synthesis"))
         ) {
           return;
         }
@@ -331,7 +345,21 @@ export const planCrewAutomation = ({
     if (best) assign(best);
   });
 
-  // 2. Repairs use one engineer per module, with destroyed modules first.
+  // 2. An explicit fuel recovery request reserves one engineer and one tank.
+  if (mode === "civilian" && emergencyFuelRequested) {
+    const fuelCandidate = candidatesFor(
+      unassigned("engineer").filter(
+        (member) => member.health > 0 && !member.outpostId,
+      ),
+      activeModules.filter((module) => module.type === "fueltank"),
+      "fuel_synthesis",
+      PRIORITY.emergencyFuel,
+      true,
+    ).sort((left, right) => right.score - left.score)[0];
+    if (fuelCandidate) assign(fuelCandidate);
+  }
+
+  // 3. Repairs use one engineer per module, with destroyed modules first.
   const repairStages = [
     modules.filter((module) => !module.manualDisabled && module.health <= 0),
     modules.filter((module) => !module.manualDisabled && module.health > 0 && isCritical(module)),
@@ -344,7 +372,7 @@ export const planCrewAutomation = ({
     ).forEach(assign);
   });
 
-  // 3. Medics secure the most injured crew before any morale task.
+  // 4. Medics secure the most injured crew before any morale task.
   const injuredModules = [...new Set(
     crew
       .filter((member) => member.health < member.maxHealth)
@@ -357,7 +385,7 @@ export const planCrewAutomation = ({
     candidatesFor(unassigned("medic"), injuredModules, medicTask, PRIORITY.healing),
   ).forEach(assign);
 
-  // 4. Treatment takes precedence over any role when it saves time or a critical crew member.
+  // 5. Treatment takes precedence over any role when it saves time or a critical crew member.
   const medicalTargets = activeModules.filter((module) => getMedicalHealing(module) > 0);
   const getPlannedMedicHealing = (moduleId: number) =>
     [...decisions.values()]
@@ -408,7 +436,7 @@ export const planCrewAutomation = ({
       if (candidate) assign(candidate);
     });
 
-  // 5. Exclusive professional roles.
+  // 6. Exclusive professional roles.
   const gunnerTask =
     mode === "combat" ? "targeting" : hasWeaponsPrimed ? "training" : "clean_weapons";
   const weaponBays = activeModules.filter((module) => module.type === "weaponbay");
@@ -512,7 +540,7 @@ export const planCrewAutomation = ({
     if (candidate) assign(candidate);
   });
 
-  // 6. A free xenosymbiont merges only after its normal profession had no slot.
+  // 7. A free xenosymbiont merges only after its normal profession had no slot.
   unassigned().forEach((member) => {
     if (member.race !== "xenosymbiont") return;
     const occupiedMergeIds = new Set(
@@ -557,7 +585,7 @@ export const planCrewAutomation = ({
     if (candidate) assign(candidate);
   });
 
-  // 7. Idle crew rests in a healing or defensible active module.
+  // 8. Idle crew rests in a healing or defensible active module.
   unassigned().forEach((member) => {
     const fallbackTargets = activeModules
       .filter((module) => REST_MODULE_TYPES.has(module.type) || mode === "combat")

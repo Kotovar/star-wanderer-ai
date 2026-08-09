@@ -1,6 +1,9 @@
 import { calculateHealthRegen } from "./calculateHealthRegen";
 import { canMergeWithModule } from "./merge";
-import { planCrewAutomation } from "./crewAutomation";
+import {
+  planCrewAutomation,
+  resolveEmergencyFuelTarget,
+} from "./crewAutomation";
 import { isValidCrewAssignment } from "./validateAssignment";
 import type {
   CrewMemberAssignment,
@@ -17,6 +20,11 @@ export const runCrewAutomation = (
   if (!state.crewAutomation.enabled) return;
 
   const mode = state.currentCombat ? "combat" : "civilian";
+  const emergencyFuelTarget = resolveEmergencyFuelTarget(
+    state.crewAutomation.emergencyFuelTarget,
+    state.currentSector?.id,
+    state.ship.fuel,
+  );
   const plan = planCrewAutomation({
     crew: state.crew,
     modules: state.ship.modules,
@@ -34,6 +42,8 @@ export const runCrewAutomation = (
         state.crew.some((member) => canMergeWithModule(member, module)),
       )
       .map((module) => module.id),
+    emergencyFuelRequested:
+      mode === "civilian" && emergencyFuelTarget !== null,
   });
 
   const decisions = new Map(plan.decisions.map((decision) => [decision.crewId, decision]));
@@ -86,6 +96,10 @@ export const runCrewAutomation = (
         assignmentEffect: null,
       };
     }),
-    crewAutomation: { ...draft.crewAutomation, memory: plan.memory },
+    crewAutomation: {
+      ...draft.crewAutomation,
+      memory: plan.memory,
+      emergencyFuelTarget,
+    },
   }));
 };

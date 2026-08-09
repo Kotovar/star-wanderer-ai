@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
 
-const { planCrewAutomation } = await import(
+const { planCrewAutomation, resolveEmergencyFuelTarget } = await import(
   "../src/game/slices/crew/helpers/crewAutomation.ts"
 ).catch(() => ({}));
 
@@ -10,6 +10,11 @@ assert.equal(
   typeof planCrewAutomation,
   "function",
   "crew automation planner must be exported",
+);
+assert.equal(
+  typeof resolveEmergencyFuelTarget,
+  "function",
+  "emergency fuel lifecycle helper must be exported",
 );
 
 const assignmentsPanelSource = await readFile(
@@ -371,6 +376,49 @@ const decide = (crew, modules, overrides = {}) => {
     [shipModule(1, "fueltank", 0, 0)],
   );
   assert.equal(decisions.get(1)?.task, null, "automation clears an unsupported old resource task");
+}
+
+{
+  const modules = [
+    shipModule(1, "cockpit", 0, 0),
+    shipModule(2, "fueltank", 1, 0),
+    shipModule(3, "weaponbay", 0, 1, { health: 0 }),
+  ];
+  const decisions = decide(
+    [
+      crewMember(1, "engineer", 1, { level: 5 }),
+      crewMember(2, "engineer", 1, { level: 2 }),
+      crewMember(3, "engineer", 1, { level: 9, outpostId: "remote-base" }),
+    ],
+    modules,
+    { emergencyFuelRequested: true },
+  );
+  const fuelAssignments = [...decisions.values()].filter(
+    (decision) => decision.task === "fuel_synthesis",
+  );
+  assert.equal(fuelAssignments.length, 1, "emergency request uses exactly one engineer");
+  assert.equal(fuelAssignments[0]?.crewId, 1, "the best engineer handles emergency fuel");
+  assert.equal(fuelAssignments[0]?.targetModuleId, 2, "engineer moves to the fuel tank");
+  assert.equal(decisions.get(2)?.task, "repair", "other engineers remain available for repairs");
+}
+
+{
+  const request = { sectorId: 7, targetFuel: 5 };
+  assert.deepEqual(
+    resolveEmergencyFuelTarget(request, 7, 4),
+    request,
+    "fuel request remains active below its target",
+  );
+  assert.equal(
+    resolveEmergencyFuelTarget(request, 7, 5),
+    null,
+    "fuel request clears at its target",
+  );
+  assert.equal(
+    resolveEmergencyFuelTarget(request, 8, 2),
+    null,
+    "fuel request clears after leaving the sector",
+  );
 }
 
 {
