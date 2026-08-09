@@ -2917,6 +2917,7 @@
         "level": "Level",
         "price": "Price",
         "consumption": "Consumption",
+        "energy_deficit_after": "Energy deficit after upgrade: {{value}}",
         "max": "MAX",
         "unavailable": "UNAVAILABLE",
         "no_modules": "No modules of type",

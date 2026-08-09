@@ -1,0 +1,62 @@
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+
+const require = createRequire(import.meta.url);
+const scriptPath = fileURLToPath(import.meta.url);
+const root = path.resolve(path.dirname(scriptPath), "..");
+const jiti = require("jiti")(scriptPath, {
+  alias: { "@": path.join(root, "src") },
+});
+
+const { getProjectedModuleEnergyBalance } = jiti(
+  "../src/game/slices/shop/helpers/getProjectedModuleEnergyBalance.ts",
+);
+
+const state = {
+  ship: {
+    modules: [
+      {
+        id: 1,
+        type: "reactor",
+        power: 10,
+        health: 100,
+        maxHealth: 100,
+      },
+      {
+        id: 2,
+        type: "lab",
+        consumption: 8,
+        health: 100,
+        maxHealth: 100,
+      },
+      {
+        id: 3,
+        type: "cockpit",
+        consumption: 1,
+        health: 100,
+        maxHealth: 100,
+      },
+    ],
+  },
+  crew: [],
+  artifacts: [],
+  currentSector: null,
+  research: { researchedTechs: [] },
+  startModifierIds: [],
+  gases: {},
+};
+
+assert.equal(
+  getProjectedModuleEnergyBalance(state, 2, { consumption: 12 }),
+  -3,
+  "lab upgrade must preview the whole-ship energy deficit",
+);
+assert.equal(
+  getProjectedModuleEnergyBalance(state, 1, { power: 15 }),
+  6,
+  "reactor upgrade must preview the whole-ship energy reserve",
+);
+
+console.log("Module interaction checks passed");

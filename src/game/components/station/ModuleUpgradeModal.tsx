@@ -11,6 +11,8 @@ import type { ShopItem, Module } from "../../types";
 import { MODULES_BY_LEVEL } from "./station-data";
 import { useTranslation } from "@/lib/useTranslation";
 import { StatIcon } from "../StatIcon";
+import { useGameStore } from "@/game/store";
+import { getProjectedModuleEnergyBalance } from "@/game/slices/shop/helpers/getProjectedModuleEnergyBalance";
 
 // Helper to get translated module name
 function getTranslatedModuleName(
@@ -166,6 +168,7 @@ function ModuleSelectionList({
     onClose,
 }: ModuleSelectionListProps) {
     const { t } = useTranslation();
+    const gameState = useGameStore.getState();
 
     // targetType must be defined for this to work
     if (!targetType) return null;
@@ -254,6 +257,13 @@ function ModuleSelectionList({
                         ? nextLevel
                         : (nextModuleTemplate?.consumption ??
                           currentConsumption);
+                const energyDeficit = Math.max(
+                    0,
+                    -getProjectedModuleEnergyBalance(gameState, module.id, {
+                        power: powerAfter,
+                        consumption: consumptionAfter,
+                    }),
+                );
 
                 // Calculate upgrade price based on module's current level
                 // Find the correct upgrade item for this module's level from station items
@@ -303,6 +313,7 @@ function ModuleSelectionList({
                         repairAmountAfter={repairAmountAfter}
                         newWidth={newWidth}
                         newHeight={newHeight}
+                        energyDeficit={energyDeficit}
                     />
                 );
             })}
@@ -336,6 +347,7 @@ interface ModuleUpgradeCardProps {
     repairAmountAfter?: number;
     newWidth?: number;
     newHeight?: number;
+    energyDeficit: number;
 }
 
 function ModuleUpgradeCard({
@@ -362,6 +374,7 @@ function ModuleUpgradeCard({
     repairAmountAfter,
     newWidth,
     newHeight,
+    energyDeficit,
 }: ModuleUpgradeCardProps) {
     const { t } = useTranslation();
     const isDisabled = isMaxLevel || !isUpgradeAvailable;
@@ -590,6 +603,13 @@ function ModuleUpgradeCard({
             <div className="text-sm text-[#ffb000] mt-2 font-bold">
                 💰 {t("station_upgrades.price")}: {upgradePrice}₢
             </div>
+            {energyDeficit > 0 && (
+                <div className="mt-2 border border-[#ff0040] bg-[rgba(255,0,64,0.08)] px-2 py-1 text-[11px] font-bold text-[#ff6688]">
+                    ⚠ {t("station_upgrades.energy_deficit_after", {
+                        value: energyDeficit,
+                    })}
+                </div>
+            )}
         </div>
     );
 }
