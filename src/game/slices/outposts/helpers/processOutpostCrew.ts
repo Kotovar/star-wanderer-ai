@@ -5,9 +5,59 @@ import {
     OUTPOST_ISOLATION_MORALE,
     OUTPOST_ROLE,
 } from "@/game/constants/outposts";
+import {
+    getPlanetHazard,
+    PLANET_HAZARD_INTERVAL,
+} from "@/game/constants/planetHazards";
 import { shiftHappiness } from "@/game/crew";
 import { hasBaseService } from "./baseServices";
 import type { GameStore, SetState } from "@/game/types";
+
+/**
+ * Планета бьёт по гарнизону: радиация не разбирает, кто там дежурит.
+ *
+ * Медблок снимает урон целиком — не потому, что лечит быстрее, чем облучает,
+ * а потому что это единственное место в системе, где тип планеты заставляет
+ * потратить слот. Без гарнизона беда не наступает вовсе: страдать некому,
+ * зато база работает на 0.7, и слот всё равно уходит — только на людей.
+ */
+function processHazardHarm(set: SetState, get: () => GameStore): void {
+    const state = get();
+    if (state.turn % PLANET_HAZARD_INTERVAL !== 0) return;
+
+    const harmed = new Map<string, number>();
+    for (const outpost of state.outposts ?? []) {
+        const planetType = (state.galaxy?.sectors ?? [])
+            .find((s) => s.id === outpost.sectorId)
+            ?.locations.find((l) => l.id === outpost.locationId)?.planetType;
+        const hazard = getPlanetHazard(planetType);
+        if (!hazard?.crewDamage) continue;
+        if (hasBaseService(outpost, hazard.answeredBy ?? "heal")) continue;
+        harmed.set(outpost.id, hazard.crewDamage);
+    }
+    if (harmed.size === 0) return;
+
+    const hurt: string[] = [];
+    set((s) => ({
+        crew: s.crew.map((member) => {
+            const damage = member.outpostId
+                ? harmed.get(member.outpostId)
+                : undefined;
+            if (!damage) return member;
+            hurt.push(member.name);
+            return { ...member, health: Math.max(1, member.health - damage) };
+        }),
+    }));
+
+    if (hurt.length > 0) {
+        get().addLog(
+            i18nStore.t("game_logs.outpost_hazard_harm", {
+                names: hurt.join(", "),
+            }),
+            "warning",
+        );
+    }
+}
 
 /**
  * Ход приписанного экипажа: работа даёт опыт, одиночество бьёт по морали.
@@ -30,6 +80,8 @@ export function processOutpostCrew(set: SetState, get: () => GameStore): void {
         const onRole = member.profession === OUTPOST_ROLE[outpost.kind];
         get().gainExp(member, onRole ? OUTPOST_CREW_EXP.onRole : OUTPOST_CREW_EXP.offRole);
     }
+
+    processHazardHarm(set, get);
 
     if (state.turn % OUTPOST_ISOLATION_INTERVAL !== 0) return;
 

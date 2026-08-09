@@ -3,15 +3,28 @@ import { BASE_EVENTS, BASE_EVENT_CHANCE } from "@/game/constants/baseEvents";
 import { shiftHappiness } from "@/game/crew";
 import type { GameStore, SetState } from "@/game/types";
 import type { BaseEvent, OutpostResource } from "@/game/types/outposts";
+import type { PlanetType } from "@/game/types/planets";
 
-const pick = (): BaseEvent => {
-    const total = BASE_EVENTS.reduce((sum, e) => sum + e.weight, 0);
+/**
+ * Что вообще может случиться на этом мире: общие новости плюс местные.
+ *
+ * Местные весят больше общих намеренно — на вулканической планете чаще
+ * прорывается гейзер, чем «гарнизон нашёл что-то в породе». Ради этого весь
+ * список и разделён: иначе база стоит «где-то», а не на конкретной планете.
+ */
+const pick = (planetType?: PlanetType): BaseEvent => {
+    const pool = BASE_EVENTS.filter(
+        (event) =>
+            !event.planetTypes ||
+            (planetType !== undefined && event.planetTypes.includes(planetType)),
+    );
+    const total = pool.reduce((sum, e) => sum + e.weight, 0);
     let roll = Math.random() * total;
-    for (const event of BASE_EVENTS) {
+    for (const event of pool) {
         roll -= event.weight;
         if (roll <= 0) return event;
     }
-    return BASE_EVENTS[0];
+    return pool[0];
 };
 
 /**
@@ -32,7 +45,10 @@ export function processBaseEvents(set: SetState, get: () => GameStore): void {
     const outpost = eligible[Math.floor(Math.random() * eligible.length)];
     if (Math.random() >= BASE_EVENT_CHANCE) return;
 
-    const event = pick();
+    const planetType = state.galaxy.sectors
+        .find((s) => s.id === outpost.sectorId)
+        ?.locations.find((l) => l.id === outpost.locationId)?.planetType;
+    const event = pick(planetType);
 
     set((s) => ({
         credits: s.credits + (event.credits ?? 0),

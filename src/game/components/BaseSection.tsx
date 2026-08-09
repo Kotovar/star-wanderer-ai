@@ -28,7 +28,13 @@ import {
     getBaseImage,
     getBaseModuleImage,
     getModuleOutput,
+    getServiceModule,
 } from "@/game/constants/baseModules";
+import {
+    getPlanetHazard,
+    PLANET_HAZARD_INTERVAL,
+    type PlanetHazardDef,
+} from "@/game/constants/planetHazards";
 import { GameImage } from "./GameImage";
 import { RESEARCH_RESOURCES } from "@/game/constants";
 import {
@@ -347,6 +353,47 @@ function ModuleCatalog({
     );
 }
 
+/**
+ * Чем этот мир берёт с базы плату — и снято ли это модулем.
+ *
+ * Строка нужна на обоих экранах: до закладки, чтобы 6000₢ не ушли на планету,
+ * которая потребует ещё и слот под медблок, и после — чтобы было видно, что
+ * именно этот слот сейчас держит.
+ */
+function HazardNote({
+    hazard,
+    handled,
+}: {
+    hazard: PlanetHazardDef;
+    handled: boolean;
+}) {
+    const { t } = useTranslation();
+    const answer = hazard.answeredBy
+        ? getServiceModule(hazard.answeredBy)
+        : undefined;
+    return (
+        <div className={handled ? "text-[#00ff41]" : "text-[#ffb000]"}>
+            {handled ? "✓" : "⚠"}{" "}
+            {t(`outposts.hazard_${hazard.id}`, {
+                interval: PLANET_HAZARD_INTERVAL,
+                percent: Math.round((1 - (hazard.outputPenalty ?? 1)) * 100),
+                turns: hazard.extraWorkTurns ?? 0,
+            })}
+            {answer && (
+                <>
+                    {" · "}
+                    {t(
+                        handled
+                            ? "outposts.hazard_handled"
+                            : "outposts.hazard_answered",
+                        { module: t(`base_modules.${answer}.name`) },
+                    )}
+                </>
+            )}
+        </div>
+    );
+}
+
 /** Вкладка панели базы: тот же янтарный язык, что и у станции */
 const TAB_CLASS =
     "cursor-pointer shrink-0 whitespace-nowrap px-3 py-1.5 text-[10px] uppercase text-[#ffb000] data-[state=active]:bg-[#ffb000] data-[state=active]:text-[#050810] sm:text-xs";
@@ -396,6 +443,7 @@ export function BaseSection({ location }: Props) {
         if (blocker === "wrong_location" || blocker === "tech_missing") return null;
 
         const potential = getBasePotential(location.id);
+        const hazard = getPlanetHazard(location.planetType);
         // Прогноз буровой: ×2 от богатых залежей уже внутри, гарнизона ещё нет
         const drillBoost = planetHasFeature(location.id, "rich_deposits") ? 2 : 1;
         const drillYield = (
@@ -461,6 +509,7 @@ export function BaseSection({ location }: Props) {
                             list: drillYield.join(", "),
                         })}
                     </div>
+                    {hazard && <HazardNote hazard={hazard} handled={false} />}
                 </div>
 
                 {blocker && (
@@ -571,6 +620,7 @@ export function BaseSection({ location }: Props) {
     const stationed = getOutpostCrew(crew, base.id);
     const crewSlots = getCrewSlots(base);
     const wantedRoles = getWantedRoles(base);
+    const baseHazard = getPlanetHazard(location.planetType);
     const canRepair = hasBaseService(base, "repair");
     const canHeal = hasBaseService(base, "heal");
     const canStore = hasBaseService(base, "storage");
@@ -650,6 +700,20 @@ export function BaseSection({ location }: Props) {
                     })}
                 </span>
             </div>
+
+            {/* Чем планета берёт своё — над вкладками: это решение про слоты,
+                а не деталь одной из них */}
+            {baseHazard && (
+                <div className="mt-1 text-[10px] leading-snug sm:text-xs">
+                    <HazardNote
+                        hazard={baseHazard}
+                        handled={
+                            baseHazard.answeredBy !== undefined &&
+                            hasBaseService(base, baseHazard.answeredBy)
+                        }
+                    />
+                </div>
+            )}
 
             {/* Работы: полосой поверх живой панели, а не вместо неё */}
             {underWork && (

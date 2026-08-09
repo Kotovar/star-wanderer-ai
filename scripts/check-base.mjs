@@ -758,11 +758,208 @@ for (const type of PLANET_TYPES) {
     assert.ok(getHaulKind(resource), `${type}: буровая даёт «${resource}», который некуда вывезти`);
   }
 }
+// Лаборатория следует планете только вторым образцом: главное у неё своё.
+// Подставь мы планетный ресурс в первое значение — лаборатория на
+// кристаллическом мире закрывала бы половину потребности дерева в квантовых
+// кристаллах, а это уже не разнообразие, а обход всей добычи
+for (const type of PLANET_TYPES) {
+  const out = getModuleOutput("field_lab", type);
+  assert.ok(
+    (out.ancient_data ?? 0) >= 0.25,
+    `${type}: лаборатория перестала копать древние данные — главное у неё своё`,
+  );
+  const total = Object.values(out).reduce((s, v) => s + v, 0);
+  assert.ok(
+    Math.abs(total - 0.45) < 1e-9,
+    `${type}: суммарная скорость лаборатории ${total} вместо 0.45`,
+  );
+}
+const labYields = new Set(
+  PLANET_TYPES.map((type) =>
+    Object.keys(getModuleOutput("field_lab", type)).sort().join("+"),
+  ),
+);
+assert.ok(
+  labYields.size >= 4,
+  `лаборатория даёт всего ${labYields.size} разных набора на двенадцати типах — тип планеты ей безразличен`,
+);
 // Модули без followsPlanet отдают своё где угодно
 assert.deepEqual(
-  getModuleOutput("field_lab", "Вулканическая"),
-  getModuleOutput("field_lab", "Ледяная"),
-  "лаборатория зависит от типа планеты, хотя не должна",
+  getModuleOutput("warehouse", "Вулканическая"),
+  getModuleOutput("warehouse", "Ледяная"),
+  "служебный модуль зависит от типа планеты, хотя не должен",
+);
+
+// Никакой мир не должен закрывать научным ресурсом больше трети потребности
+// дерева: база разнообразит забег, а не заменяет собой исследования
+const researchDemand = await (async () => {
+  const demand = {};
+  for (const tier of ["tier1", "tier2", "tier3", "tier4", "tier5"]) {
+    const mod = await import(`../src/game/constants/research/${tier}.ts`);
+    for (const tech of Object.values(mod).flatMap((v) =>
+      Array.isArray(v) ? v : Object.values(v ?? {}),
+    )) {
+      for (const [resource, amount] of Object.entries(tech?.resources ?? {})) {
+        demand[resource] = (demand[resource] ?? 0) + amount;
+      }
+    }
+  }
+  return demand;
+})();
+for (const type of PLANET_TYPES) {
+  for (const [resource, rate] of Object.entries(
+    getModuleOutput("field_lab", type),
+  )) {
+    const total = researchDemand[resource];
+    if (!total) continue;
+    // 100 ходов жизни базы — щедрая оценка забега, ×2 от черты не считаем:
+    // на неё игроку ещё должно повезти
+    const share = (rate * 100) / total;
+    assert.ok(
+      share <= 0.35,
+      `${type}: лаборатория закрывает ${Math.round(share * 100)}% дерева по ${resource} — это уже не разнообразие`,
+    );
+  }
+}
+
+// ── Планета берёт своё: тип мира давит на выбор слотов ────────────────────
+// Иначе тип планеты решает только, что копают, и «куда ставить базу» —
+// вопрос про ресурсы, а не про сборку
+const { PLANET_HAZARDS, getPlanetHazard, getHazardWorkTurns, PLANET_HAZARD_INTERVAL } =
+  await import("../src/game/constants/planetHazards.ts");
+
+const hazardTypes = new Set();
+for (const hazard of PLANET_HAZARDS) {
+  assert.ok(hazard.types.length > 0, `${hazard.id}: беда без планет`);
+  for (const type of hazard.types) {
+    assert.ok(
+      PLANET_TYPES.includes(type),
+      `${hazard.id}: несуществующий тип планеты ${type}`,
+    );
+    assert.ok(
+      !hazardTypes.has(type),
+      `${type}: две беды на одном типе — игрок увидит только одну`,
+    );
+    hazardTypes.add(type);
+  }
+  // Беда без последствия — просто строчка в интерфейсе
+  assert.ok(
+    hazard.outputPenalty ?? hazard.crewDamage ?? hazard.raidMultiplier ?? hazard.extraWorkTurns,
+    `${hazard.id}: беда ничего не делает`,
+  );
+  if (hazard.answeredBy) {
+    assert.ok(
+      Object.values(BASE_MODULES).some((def) => def.service === hazard.answeredBy),
+      `${hazard.id}: отвечать нечем — нет модуля с услугой ${hazard.answeredBy}`,
+    );
+  }
+}
+assert.ok(
+  hazardTypes.size < PLANET_TYPES.length,
+  "беда есть на каждом типе планет — тогда это не выбор, а налог",
+);
+
+// Толчки сбивают выработку, ремдок возвращает её
+const shakyLocation = withoutIce;
+const shakySectors = [
+  { id: 1, locations: [{ id: shakyLocation, planetType: "Вулканическая" }] },
+];
+const mineWith = (modules) => {
+  let outposts = [baseAt(shakyLocation, { modules })];
+  for (let turn = 0; turn < 40; turn++) {
+    outposts = accrueOutposts(outposts, shakySectors, engineer);
+  }
+  return outposts[0].bunker.minerals ?? 0;
+};
+assert.ok(
+  mineWith(["drill_shaft"]) < mineWith(["drill_shaft", "repair_dock"]),
+  "толчки не сбивают выработку — беда планеты ни на что не влияет",
+);
+
+// На месте старой войны захватывают чаще, турели возвращают безопасность
+const { getRaidChance } = await import(
+  "../src/game/slices/outposts/helpers/outpostRaids.ts"
+);
+const raidCtx = (planetType, locationId) => ({
+  sectors: [{ id: 1, tier: 2, locations: [{ id: locationId, planetType }] }],
+  crew: [],
+  turn: 999,
+});
+const warBase = baseAt(withoutIce, { builtAtTurn: 0 });
+const calmChance = getRaidChance(warBase, raidCtx("Пустынная", withoutIce));
+const warChance = getRaidChance(warBase, raidCtx("Разрушенная войной", withoutIce));
+assert.ok(
+  warChance > calmChance,
+  "на разрушенной войной планете база в такой же безопасности, как в пустыне",
+);
+assert.ok(
+  getRaidChance(
+    baseAt(withoutIce, { builtAtTurn: 0, modules: ["turrets"] }),
+    raidCtx("Разрушенная войной", withoutIce),
+  ) < calmChance,
+  "турели не отбивают надбавку за известные координаты",
+);
+
+// Мороз стоит времени, и это единственная беда без ответа
+assert.ok(getHazardWorkTurns("Ледяная") > 0, "мороз ничего не стоит");
+assert.equal(getHazardWorkTurns("Пустынная"), 0);
+assert.equal(getPlanetHazard("Ледяная").answeredBy, undefined);
+assert.ok(
+  source("game/slices/outposts/helpers/buildBase.ts").includes("getHazardWorkTurns"),
+  "срок работ не учитывает планету — мороз виден только в описании",
+);
+assert.ok(
+  source("game/slices/outposts/helpers/processOutpostCrew.ts").includes(
+    "PLANET_HAZARD_INTERVAL",
+  ),
+  "радиация не бьёт по гарнизону — беда осталась текстом",
+);
+assert.ok(PLANET_HAZARD_INTERVAL > 1, "беда планеты бьёт каждый ход — это не риск, а расписание");
+
+// ── Новости базы бывают местными ──────────────────────────────────────────
+const { BASE_EVENTS } = await import("../src/game/constants/baseEvents.ts");
+const localEvents = BASE_EVENTS.filter((event) => event.planetTypes);
+assert.ok(
+  localEvents.length >= 4,
+  "местных новостей почти нет — база снова стоит «где-то»",
+);
+for (const event of localEvents) {
+  for (const type of event.planetTypes) {
+    assert.ok(
+      PLANET_TYPES.includes(type),
+      `${event.id}: несуществующий тип планеты ${type}`,
+    );
+  }
+  // Местная новость обязана перевешивать общую, иначе её просто не увидят
+  assert.ok(
+    event.weight > Math.max(...BASE_EVENTS.filter((e) => !e.planetTypes).map((e) => e.weight)),
+    `${event.id}: местная новость весит не больше общих — на своём мире её почти не будет`,
+  );
+}
+for (const lang of ["ru", "en"]) {
+  const catalog = JSON.parse(
+    readFileSync(new URL(`../src/lib/locales/${lang}.json`, import.meta.url), "utf8"),
+  );
+  for (const event of BASE_EVENTS) {
+    assert.ok(catalog.base_events?.[event.id], `${lang}: нет текста события ${event.id}`);
+  }
+  for (const hazard of PLANET_HAZARDS) {
+    assert.ok(
+      catalog.outposts?.[`hazard_${hazard.id}`],
+      `${lang}: нет описания беды ${hazard.id}`,
+    );
+  }
+  for (const key of ["hazard_answered", "hazard_handled"]) {
+    assert.ok(catalog.outposts?.[key], `${lang}: нет outposts.${key}`);
+  }
+  assert.ok(
+    catalog.game_logs?.outpost_hazard_harm,
+    `${lang}: нет лога outpost_hazard_harm`,
+  );
+}
+assert.ok(
+  source("game/components/BaseSection.tsx").includes("<HazardNote"),
+  "панель не говорит, чем этот мир берёт своё",
 );
 
 // ── Гарнизон хочет тех, кто нужен установленным модулям ────────────────────
@@ -806,7 +1003,7 @@ assert.match(
 );
 
 // ── События на базе ────────────────────────────────────────────────────────
-const { BASE_EVENTS, BASE_EVENT_CHANCE } = await import(
+const { BASE_EVENT_CHANCE } = await import(
   "../src/game/constants/baseEvents.ts"
 );
 assert.ok(BASE_EVENTS.length >= 3, "событий слишком мало, чтобы они не приелись");

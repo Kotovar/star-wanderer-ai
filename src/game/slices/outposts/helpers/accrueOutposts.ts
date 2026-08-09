@@ -15,6 +15,8 @@ import {
 import type { GasType, Outpost } from "@/game/types/outposts";
 import type { CrewMember, Sector } from "@/game/types";
 import { getOutpostOutputMultiplier } from "./outpostCrew";
+import { getPlanetHazard } from "@/game/constants/planetHazards";
+import { hasBaseService } from "./baseServices";
 
 /**
  * Накопление за один ход. Чистая функция: принимает постройки и сектора,
@@ -91,7 +93,17 @@ function accrueBase(
     const modules = outpost.modules ?? [];
     if (modules.length === 0) return outpost;
 
-    const multiplier = getOutpostOutputMultiplier(outpost, crew);
+    // Толчки сбивают выработку, пока на базе нет ремдока: тип планеты обязан
+    // влиять не только на то, что копают, но и на то, что за это платят
+    const hazard = getPlanetHazard(planetType);
+    const hazardPenalty =
+        hazard?.outputPenalty !== undefined &&
+        !hasBaseService(outpost, hazard.answeredBy ?? "repair")
+            ? hazard.outputPenalty
+            : 1;
+
+    const multiplier =
+        getOutpostOutputMultiplier(outpost, crew) * hazardPenalty;
     const bunker = { ...outpost.bunker };
     const progress = { ...(outpost.moduleProgress ?? {}) };
 

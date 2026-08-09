@@ -1,4 +1,5 @@
 import type { OutpostResource } from "@/game/types/outposts";
+import type { PlanetType } from "@/game/types/planets";
 
 /**
  * Что случается на базе между визитами.
@@ -13,6 +14,13 @@ export interface BaseEvent {
     weight: number;
     /** Нужен модуль этой услуги, иначе событие не выпадет */
     requiresService?: string;
+    /**
+     * Событие только для этих миров. Без списка выпадает где угодно.
+     *
+     * Общий список из пяти новостей звучал одинаково хоть на вулкане, хоть в
+     * лесу: база стояла «где-то», а не на конкретной планете.
+     */
+    planetTypes?: readonly PlanetType[];
     /** Подарок в бункер */
     bunker?: Partial<Record<OutpostResource, number>>;
     /** Изменение морали приписанных */
@@ -51,6 +59,47 @@ export const BASE_EVENTS: BaseEvent[] = [
         id: "long_shift",
         weight: 10,
         morale: -6,
+    },
+    // ── Местные новости: вес выше общих, но выпадают только на своих мирах ──
+    {
+        // Прорвался гейзер: на вулканическом мире беда и находка — одно и то же
+        id: "geyser_breach",
+        weight: 40,
+        planetTypes: ["Вулканическая", "Приливная"],
+        bunker: { energy_samples: 4 },
+        morale: -3,
+    },
+    {
+        id: "isotope_flare",
+        weight: 40,
+        planetTypes: ["Радиоактивная"],
+        bunker: { energy_samples: 6 },
+        morale: -4,
+    },
+    {
+        // На месте старой войны копать интереснее, чем в породе
+        id: "war_cache",
+        weight: 40,
+        planetTypes: ["Разрушенная войной"],
+        bunker: { tech_salvage: 5, ancient_data: 2 },
+    },
+    {
+        id: "ice_core",
+        weight: 40,
+        planetTypes: ["Ледяная", "Арктическая"],
+        bunker: { water: 6 },
+    },
+    {
+        id: "crystal_bloom",
+        weight: 40,
+        planetTypes: ["Кристаллическая", "Планета-кольцо"],
+        bunker: { quantum_crystals: 1 },
+    },
+    {
+        id: "fauna_sample",
+        weight: 40,
+        planetTypes: ["Лесная", "Тропическая", "Океаническая"],
+        bunker: { alien_biology: 3 },
     },
 ];
 

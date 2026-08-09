@@ -9,6 +9,7 @@ import {
     BASE_UPGRADE_TURNS,
     BASE_MAX_LEVEL,
 } from "@/game/constants/baseModules";
+import { getHazardWorkTurns } from "@/game/constants/planetHazards";
 import { scheduleWork } from "./construction";
 import { planetHasFeature } from "@/game/planets";
 import { patchLocation } from "@/game/utils/patchLocation";
@@ -54,8 +55,13 @@ export function buildBase(
         bunker: {},
         level: 1,
         modules: [],
-        // Ход уходит на закладку, остальное — работы: база оживёт не сразу
-        readyAtTurn: state.turn + 1 + BASE_BUILD_TURNS,
+        // Ход уходит на закладку, остальное — работы: база оживёт не сразу.
+        // На холодных мирах работы дольше — это их цена, отвечать нечем
+        readyAtTurn:
+            state.turn +
+            1 +
+            BASE_BUILD_TURNS +
+            getHazardWorkTurns(location.planetType),
     };
 
     set((s) => ({
@@ -147,7 +153,10 @@ export function upgradeBase(
                       readyAtTurn: scheduleWork(
                           o,
                           s.turn + 1,
-                          BASE_UPGRADE_TURNS,
+                          BASE_UPGRADE_TURNS +
+                              getHazardWorkTurns(
+                                  state.currentLocation?.planetType,
+                              ),
                       ),
                   }
                 : o,
@@ -226,7 +235,10 @@ export function installBaseModule(
                       readyAtTurn: scheduleWork(
                           o,
                           s.turn + 1,
-                          BASE_MODULE_BUILD_TURNS,
+                          BASE_MODULE_BUILD_TURNS +
+                              getHazardWorkTurns(
+                                  state.currentLocation?.planetType,
+                              ),
                       ),
                   }
                 : o,

@@ -10,6 +10,7 @@ import {
     RAID_WANTED_MULTIPLIER,
 } from "@/game/constants/outpostRaids";
 import { BASE_SERVICE_VALUES } from "@/game/constants/baseModules";
+import { getPlanetHazard } from "@/game/constants/planetHazards";
 import { getRunModifierValue } from "@/game/constants/launchModifiers";
 import { getOutpostCrew } from "@/game/crew/stationed";
 import type { CrewMember, GameStore, SetState, Sector } from "@/game/types";
@@ -43,6 +44,13 @@ export function getRaidChance(outpost: Outpost, ctx: RaidContext): number {
     const tier = sector?.tier ?? 1;
 
     let chance = RAID_BASE_CHANCE * (RAID_TIER_MULTIPLIER[tier] ?? 1);
+
+    // На месте старой войны координаты знают не только вы. Турели сбивают это
+    // обратно ниже по функции — беда планеты и ответ на неё встречаются здесь
+    const hazard = getPlanetHazard(
+        sector?.locations.find((l) => l.id === outpost.locationId)?.planetType,
+    );
+    if (hazard?.raidMultiplier) chance *= hazard.raidMultiplier;
 
     if (ctx.activeCrisisId === RAID_CRISIS_ID) chance *= RAID_CRISIS_MULTIPLIER;
     // «В розыске»: те, кто ищет вас, находят и ваши постройки. Опираемся на

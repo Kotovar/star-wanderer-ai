@@ -5282,6 +5282,12 @@
         "potential_boosted": "Planet features will double: {{list}}",
         "potential_plain": "No features boost modules here — the base will run at ordinary output",
         "potential_drill": "A drill shaft here would yield per turn: {{list}}",
+        "hazard_radiation": "Radiation: the garrison loses health every {{interval}} turn(s)",
+        "hazard_tremors": "Tremors: output is {{percent}}% lower",
+        "hazard_known_coordinates": "These coordinates are known to others: captures happen more often",
+        "hazard_deep_cold": "Deep cold: any works take {{turns}} more turn(s)",
+        "hazard_answered": "answered by {{module}}",
+        "hazard_handled": "handled: {{module}}",
         "storage_free": "free",
         "status_title": "Your outposts",
         "service_craft": "Workbench",
@@ -5331,7 +5337,13 @@
         "salvage_run": "🔧 From the base: old machinery stripped, salvage into the bunker",
         "lab_breakthrough": "🔬 From the base: the lab decoded ancient records",
         "passing_trader": "💰 A trader stopped at the base and paid for lodging",
-        "long_shift": "😔 From the base: the shift ran long, the garrison is worn out"
+        "long_shift": "😔 From the base: the shift ran long, the garrison is worn out",
+        "geyser_breach": "🌋 From the base: a geyser broke through — energy samples in the bunker, nerves frayed",
+        "isotope_flare": "☢️ From the base: an isotope flare — samples collected, the shift took a dose",
+        "war_cache": "🏚️ From the base: a war cache cracked open — salvage and ancient data in the bunker",
+        "ice_core": "🧊 From the base: an ice core pulled up — water in the bunker",
+        "crystal_bloom": "💎 From the base: crystals grew overnight — a quantum crystal in the bunker",
+        "fauna_sample": "🐾 From the base: local wildlife came to the perimeter — biosamples in the bunker"
     },
     "base_modules": {
         "workbench": {
@@ -5826,6 +5838,7 @@
         "planetaryDrill_4": "The drill is cooling down: next pass in {{value}} turn(s).",
         "planetaryDrill_5": "⛏️ Drilling: extracted {{goodName}} x{{qty}}",
         "outpost_isolation": "😔 Isolation at the outpost is telling on {{names}}",
+        "outpost_hazard_harm": "☢️ The planet takes its due: {{names}} were hurt at the base",
         "outpost_crew_stationed": "👤 {{name}} stays at the outpost",
         "outpost_crew_recalled": "👤 {{name}} is back aboard",
         "outpost_crew_remote": "The garrison can only be changed on site",

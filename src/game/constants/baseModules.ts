@@ -21,11 +21,19 @@ export interface BaseModuleDef {
     /** Служебный эффект: не добывает, а меняет правила */
     service?: BaseService;
     /**
-     * Добыча зависит от типа планеты: числа из `output` остаются, а сами
-     * ресурсы подставляются из профиля планеты. Так буровая на вулканическом
-     * мире и на кристаллическом даёт разное, как и планетарный бур.
+     * Добыча зависит от типа планеты: числа из `output` остаются, а ресурсы
+     * подставляются из профиля планеты. Так буровая на вулканическом мире и
+     * на кристаллическом даёт разное, как и планетарный бур.
+     *
+     * `mining` — первое значение уходит в товар планеты, второе в её научный
+     * образец. `research` — первое остаётся своим, а планете следует только
+     * второе: лаборатория где угодно копает древние данные, но второй образец
+     * берёт с этого мира. Разделение не косметическое: у «mining» первое
+     * значение вчетверо больше второго, и подставь мы его в научный ресурс,
+     * лаборатория на кристаллической планете одна закрывала бы половину
+     * потребности дерева в квантовых кристаллах.
      */
-    followsPlanet?: boolean;
+    followsPlanet?: "mining" | "research";
 }
 
 /**
@@ -67,7 +75,7 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         // Ресурсы подставляются по типу планеты, числа — скорость добычи:
         // первое значение идёт в товар, второе в научный образец
         output: { minerals: 0.5, rare_minerals: 0.06 },
-        followsPlanet: true,
+        followsPlanet: "mining",
         boostedBy: "rich_deposits",
     },
     cryo_cracker: {
@@ -92,6 +100,10 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         // лаборатория была сильнейшим модулем, а проверка её не видела —
         // она считает кредиты, а наука кредитов не приносит
         output: { ancient_data: 0.25, alien_biology: 0.2 },
+        // Второй образец берётся с этого мира: на лесной планете это биология,
+        // на кристаллической — квантовые кристаллы, а на разрушенной войной
+        // лаборатория целиком уходит в древние данные
+        followsPlanet: "research",
         boostedBy: "ancient_traces",
     },
     relay: {
@@ -166,6 +178,14 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
     },
 };
 
+/** Какой модуль даёт эту услугу — чтобы назвать его игроку по имени */
+export const getServiceModule = (
+    service: BaseService,
+): BaseModuleId | undefined =>
+    (Object.keys(BASE_MODULES) as BaseModuleId[]).find(
+        (id) => BASE_MODULES[id].service === service,
+    );
+
 /** Что даёт каждый служебный модуль в числах */
 export const BASE_SERVICE_VALUES = {
     /** Ретранслятор: +к дальности сканирования, пока база цела */
@@ -224,15 +244,25 @@ export function getModuleOutput(
 
     const profile = getPlanetResourceProfile(planetType);
     const entries = Object.entries(def.output) as [OutpostResource, number][];
-    const goodRate = entries[0]?.[1] ?? 0;
-    const researchRate = entries[1]?.[1] ?? 0;
+    const primaryRate = entries[0]?.[1] ?? 0;
+    const secondRate = entries[1]?.[1] ?? 0;
 
     const out: Partial<Record<OutpostResource, number>> = {};
-    if (profile.good) out[profile.good] = goodRate;
+    if (def.followsPlanet === "research") {
+        // Своё главное остаётся при модуле, планете следует второй образец.
+        // Совпали — складываются: на разрушенной войной лаборатория уходит в
+        // древние данные целиком, и это ровно то, чего от такого мира ждёшь
+        const primary = entries[0]?.[0];
+        if (primary) out[primary] = primaryRate;
+        out[profile.research] = (out[profile.research] ?? 0) + secondRate;
+        return out;
+    }
+
+    if (profile.good) out[profile.good] = primaryRate;
     // Планеты без товара отдают всё научным материалом, а не теряют половину
     out[profile.research] =
         (out[profile.research] ?? 0) +
-        (profile.good ? researchRate : goodRate + researchRate);
+        (profile.good ? secondRate : primaryRate + secondRate);
     return out;
 }
 
