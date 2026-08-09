@@ -11,7 +11,7 @@ export interface RelayOffer {
 }
 
 /** Угловое расстояние между секторами по кольцу галактики */
-const angleGap = (a: number, b: number): number => {
+export const angleGap = (a: number, b: number): number => {
     const raw = Math.abs(a - b) % (Math.PI * 2);
     return Math.min(raw, Math.PI * 2 - raw);
 };

@@ -237,6 +237,7 @@
     },
     "ship_stats": {
         "fuel": "Топливо",
+        "burn_deuterium_hint": "Перегнать дейтерий в топливо: {{units}} ед. × {{fuel}} топлива",
         "engine": "Двигатель",
         "level": "Ур.",
         "captain": "Капитан",
@@ -334,6 +335,7 @@
             "population": "Население",
             "reputation": "Репутация",
             "mineral_buyback_only": "Только скупка руды",
+            "gas_only": "Только торговля газом",
             "population_knowledge": "Данные о населении",
             "unresolved": "Только незавершённые",
             "advanced": "Доп. фильтры"
@@ -357,6 +359,10 @@
             "cargo": "В трюме: {{quantity}} т",
             "buy": "Покупка: {{price}}₢/т",
             "sell": "Продажа: {{price}}₢/т"
+        },
+        "gas": {
+            "gas_sell": "Скупает газ",
+            "gas_buy_polymers": "Продаёт синтез-полимеры"
         },
         "facts": {
             "sector": "Сектор {{name}} · тир {{tier}}",
@@ -4008,6 +4014,7 @@
             "quantum_crystals": "Квантовые кристаллы",
             "ancient_data": "Данные Древних",
             "alien_biology": "Инопланетная биология",
+            "void_membrane": "Мембрана Пустоты",
             "electronics": "Электроника",
             "spares": "Запчасти"
         }
@@ -5203,8 +5210,20 @@
     },
     "outposts": {
         "legend": "Ваш аванпост",
+        "service_hire_from": "Вербовка на планете {{planet}} · {{cost}}₢ · дорога {{turns}} ход(ов)",
+        "settler_in_transit": "{{profession}} в пути, прибудет через {{turns}} ход(ов)",
+        "hire_no_source": "Вербовать некого: населённых планет в галактике не найдено",
+        "hire_in_transit": "Поселенец уже в пути",
+        "hire_no_slot": "В гарнизоне нет свободного места",
+        "hire_not_enough_credits": "Не хватает кредитов",
+        "service_repair_nothing": "Все модули целы",
+        "service_heal_nothing": "Экипаж здоров и отдохнул",
+        "service_no_supplies": "Нужно {{qty}} × {{item}} в трюме",
+        "legend_collector": "Ваш газосборник",
+        "legend_base": "Ваша база",
         "gas_from_outposts": "Газ с аванпостов",
         "gas_price": "{{price}}₢ за единицу",
+        "gas_buy_price": "Купить у станции: {{price}}₢ за единицу",
         "sell_all": "Продать всё · {{total}}₢",
         "cryogen_burning": "Горит сам: −{{value}} к расходу каждого модуля",
         "garrison": "Гарнизон",
@@ -5218,6 +5237,9 @@
         "base_hint": "Одна база за забег. Слотов меньше, чем модулей, — что поставить, придётся выбирать. Черты планеты решают, какие модули здесь вообще возможны и какие работают вдвое лучше.",
         "bunker": "Бункер",
         "bunker_empty": "Пусто",
+        "under_construction": "Идут работы",
+        "work_left": "До окончания работ: {{turns}} ход(ов). Постройка пока не работает.",
+        "build_turns": "Работы: {{turns}} ход(ов)",
         "dismantle": "Снести",
         "upgrade": "Уровень {{level}} · {{slots}} слотов · {{credits}}₢",
         "blocked_not_explored": "Планета исследована не полностью: нужны все разведмиссии",
@@ -5265,9 +5287,9 @@
             "use": "идёт прямо в топливо"
         },
         "polymers": {
-            "desc": "Метановая фракция, полимеризованная на месте. Идёт на запчасти и сборку гибридных модулей.",
+            "desc": "Метановая фракция, полимеризованная на месте. Без неё не собрать гибридный модуль.",
             "name": "Синтез-полимеры",
-            "use": "запчасти и сборка модулей"
+            "use": "сборка гибридных модулей"
         },
         "biosynth": {
             "desc": "Аммиачная биомасса — сырьё для медикаментов и продовольствия. Дороже прочих газов и особенно нужна во время эпидемий.",
@@ -5387,6 +5409,9 @@
     "game_logs": {
         "cargo_jettisoned": "🗑 Выброшено за борт: {{name}} ×{{qty}}",
         "gas_sold": "💰 Продано: {{gas}} ×{{qty}} за {{total}}₢",
+        "gas_bought": "🧪 Куплено: {{gas}} ×{{qty}} за {{total}}₢",
+        "deuterium_burned": "⚗️ Дейтерий в бак: −{{units}} ед., +{{gained}} топлива",
+        "deuterium_burn_pointless": "Бак полон или дейтерия нет",
         "gas_not_sellable": "Этот газ не продаётся",
         "boostArtifact_1": "Выберите активный артефакт!",
         "boostArtifact_2": "🔮 {{artifact_name}} готов к усилению!",
@@ -5788,8 +5813,12 @@
         "base_healed": "⚕️ Медблок вылечил экипаж и снял усталость",
         "base_heal_nothing": "Лечить некого",
         "base_withdrawn": "📤 Со склада базы: {{resource}} ×{{qty}}",
-        "base_hired": "👤 {{name}} ({{profession}}) вырос на базе и вступил в команду",
-        "base_hire_no_room": "На корабле нет места для нового человека",
+        "base_settler_hired": "🚶 {{profession}} завербован на планете {{planet}}, дорога займёт {{turns}} ход(ов)",
+        "base_settler_arrived": "👤 {{name}} ({{profession}}) прибыл на базу и встал в гарнизон",
+        "base_hire_no_source": "Вербовать некого: населённых планет не найдено",
+        "base_hire_in_transit": "Поселенец уже в пути",
+        "base_hire_no_slot": "В гарнизоне базы нет свободного места",
+        "base_hire_not_enough_credits": "Не хватает кредитов на вербовку",
         "base_service_no_supplies": "Не хватает материалов: нужно {{item}} ×{{qty}}",
         "base_stored": "📦 На склад базы: {{resource}} ×{{qty}}",
         "base_store_full": "Склад базы заполнен",
@@ -5799,6 +5828,8 @@
         "outpost_assault_started": "⚔ Штурм захваченной постройки",
         "outpost_assault_remote": "Штурмовать можно только на месте",
         "outpost_retaken": "✅ Постройка отбита, бункер вернулся вместе с ней",
+        "outpost_work_done": "🏗 Работы закончены: постройка вышла на режим",
+        "outpost_work_done_base": "🏗 База достроена и вышла на режим",
         "outpost_built_base": "🏗 Главная база заложена: {{location}}",
         "outpost_build_remote": "Строить и перестраивать можно только на месте",
         "outpost_blocked_not_explored": "Планета исследована не полностью",

@@ -1089,7 +1089,8 @@ export function drawOutpostSectorMarkers(
         const radius = getSectorRadius(maxRadius, sector.tier);
         const x = centerX + Math.cos(sector.mapAngle) * radius + 15;
         const y = centerY + Math.sin(sector.mapAngle) * radius - 15;
-        const color = anyFull ? "#ffb000" : "#00d4ff";
+        // База янтарная, сборщик циановый — как и на карте сектора
+        const color = anyFull || marker.isBase ? "#ffb000" : "#00d4ff";
 
         ctx.save();
 

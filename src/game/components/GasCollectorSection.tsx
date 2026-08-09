@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import {
     GAS_BY_ATMOSPHERE,
+    GAS_COLLECTOR_BUILD_TURNS,
     GAS_COLLECTOR_BUNKER_CAP,
     GAS_COLLECTOR_COST,
     GAS_COLLECTOR_FILL_TURNS,
@@ -16,6 +17,8 @@ import {
     getBunkerEntries,
     getGasCollectorBlocker,
     isBunkerFull,
+    isUnderConstruction,
+    turnsUntilReady,
 } from "@/game/slices/outposts/helpers";
 import type { Location } from "@/game/types";
 import { OutpostGarrison } from "./OutpostGarrison";
@@ -38,6 +41,7 @@ export function GasCollectorSection({ location }: Props) {
     const buildGasCollector = useGameStore((s) => s.buildGasCollector);
     const collectOutpost = useGameStore((s) => s.collectOutpost);
     const assaultOutpost = useGameStore((s) => s.assaultOutpost);
+    const turn = useGameStore((s) => s.turn);
 
     const outpost = outposts.find((o) => o.locationId === location.id);
     const gas = location.gasGiantAtmosphere
@@ -63,6 +67,22 @@ export function GasCollectorSection({ location }: Props) {
                 >
                     ⚔ {t("outposts.assault")}
                 </Button>
+            </div>
+        );
+    }
+
+    // ── Идут работы: стройплощадка, а не сборщик ───────────────────────────
+    if (outpost && isUnderConstruction(outpost)) {
+        return (
+            <div className="mt-2 border border-[#ffb00033] bg-[rgba(255,176,0,0.04)] p-2 sm:p-3">
+                <div className="text-[11px] uppercase tracking-wider text-[#ffb000] sm:text-xs">
+                    🏗 {t("outposts.under_construction")}
+                </div>
+                <div className="mt-1 text-[10px] text-[#b9c6cc] sm:text-xs">
+                    {t("outposts.work_left", {
+                        turns: turnsUntilReady(outpost, turn),
+                    })}
+                </div>
             </div>
         );
     }
@@ -100,6 +120,21 @@ export function GasCollectorSection({ location }: Props) {
                 <div className="mt-1 text-[10px] text-[#b9c6cc] sm:text-xs">
                     {t(`gases.${gas}.name`)} · {t(`gases.${gas}.use`)}
                 </div>
+
+                {/* Полоса показывает только профильный газ, а вывозится весь
+                    бункер: без этой строки кнопка «забрать добычу» выглядела
+                    активной при пустой на вид шкале */}
+                {haul.some(([kind]) => kind !== gas) && (
+                    <div className="mt-1 text-[10px] text-[#8a9ba3] sm:text-xs">
+                        {t("outposts.bunker")}:{" "}
+                        {haul
+                            .map(
+                                ([kind, amount]) =>
+                                    `${t(`gases.${kind}.name`)} ×${amount}`,
+                            )
+                            .join(", ")}
+                    </div>
+                )}
 
                 {full && (
                     <div className="mt-1.5 text-[10px] text-[#ffb000] sm:text-xs">
@@ -180,6 +215,13 @@ export function GasCollectorSection({ location }: Props) {
                     {t("outposts.limit", {
                         built,
                         limit: OUTPOST_LIMITS.gas_collector,
+                    })}
+                </span>
+                {/* Срок работ — часть цены, и знать её надо до оплаты */}
+                <span className="text-[#8a9ba3]">
+                    🏗{" "}
+                    {t("outposts.build_turns", {
+                        turns: GAS_COLLECTOR_BUILD_TURNS,
                     })}
                 </span>
             </div>

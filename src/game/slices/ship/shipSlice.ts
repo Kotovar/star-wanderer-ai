@@ -21,7 +21,7 @@ import {
 } from "./helpers";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
-import { refuel } from "./helpers/fuel";
+import { burnDeuterium, refuel } from "./helpers/fuel";
 import { areModulesAdjacent } from "@/game/modules/adjacency";
 
 /**
@@ -137,6 +137,12 @@ interface ShipSlice {
      * @param price - Стоимость заправки в кредитах
      */
     refuel: (amount: number, price: number) => void;
+
+    /**
+     * Перегоняет дейтерий из трюма в топливный бак. Работает где угодно:
+     * газ уже свой, станция для этого не нужна
+     */
+    burnDeuterium: (units: number) => void;
 
     /**
      * Получает суммарные бонусы от сращивания ксеноморфов
@@ -263,6 +269,10 @@ export const createShipSlice = (
     refuel: (amount: number, price: number) => {
         const state = get();
         refuel(state, amount, price, get().addLog, set);
+    },
+
+    burnDeuterium: (units: number) => {
+        burnDeuterium(get(), units, get().addLog, set);
     },
 
     getMergeEffectsBonus: () => {

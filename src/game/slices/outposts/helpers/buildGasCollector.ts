@@ -1,6 +1,7 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import {
     GAS_BY_ATMOSPHERE,
+    GAS_COLLECTOR_BUILD_TURNS,
     GAS_COLLECTOR_COST,
 } from "@/game/constants/outposts";
 import { patchLocation } from "@/game/utils/patchLocation";
@@ -37,6 +38,8 @@ export function buildGasCollector(
         sectorId: state.currentSector.id,
         builtAtTurn: state.turn,
         bunker: {},
+        // Сборщик не встаёт за один ход: до конца работ он не качает газ
+        readyAtTurn: state.turn + 1 + GAS_COLLECTOR_BUILD_TURNS,
     };
 
     set((s) => ({

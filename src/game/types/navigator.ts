@@ -43,6 +43,8 @@ export type NavigatorFilters = {
   goodId?: Goods;
   cargoOnly?: boolean;
   mineralBuybackOnly?: boolean;
+  /** Только станции, где идёт торговля газом: скупка и продажа полимеров */
+  gasOnly?: boolean;
   race?: RaceId;
   profession?: Profession;
   minLevel?: number;

@@ -748,6 +748,27 @@ assert.deepEqual(
   ["mining-station"],
   "Ore buyback filter must exclude regular stations and trader ships",
 );
+
+// Газ торгуется во вкладке торговли, а у добывающей станции та же вкладка под
+// минералы. Корабли-торговцы газ не берут вовсе — искать их бессмысленно
+const gasResults = results({ category: "trade", gasOnly: true });
+assert.ok(
+  gasResults.length > 0 && gasResults.every(({ kind }) => kind === "station"),
+  "Gas filter must return stations only — traders do not deal in gas",
+);
+assert.ok(
+  gasResults.some(({ locationId }) => locationId === "trade-station"),
+  "Gas filter must include trade stations",
+);
+assert.ok(
+  gasResults.some(({ locationId }) => locationId === "mining-station"),
+  "Gas filter must include mining stations — their minerals tab carries the gas block",
+);
+assert.deepEqual(
+  gasResults[0].details,
+  ["gas_sell", "gas_buy_polymers"],
+  "Gas result must say both what the station buys and what it sells",
+);
 const cargoSaleResults = results({
   category: "trade",
   cargoOnly: true,

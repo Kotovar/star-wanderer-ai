@@ -392,10 +392,13 @@ assert.match(
   /cargo\.section_gases/,
   "газ входит в занятое место, но не показан в разбивке — сумма не сходится с тем, что видно",
 );
+// Колонок ровно столько, сколько метрик: разъехавшаяся сетка прячет
+// последнюю строку разбивки, и сумма снова перестаёт сходиться с видимым
+const metricCount = (cargoPanel.match(/<CargoMetric\b/g) ?? []).length;
 assert.match(
   cargoPanel,
-  /grid-cols-5/,
-  "в разбивке осталось четыре колонки, а метрик стало пять",
+  new RegExp(`sm:grid-cols-${metricCount}\\b`),
+  `метрик ${metricCount}, а колонок в разбивке столько нет`,
 );
 for (const lang of ["ru", "en"]) {
   const catalog = JSON.parse(
@@ -700,6 +703,63 @@ assert.ok(
 );
 
 assert.equal(GAS_COLLECTOR_REQUIRED_DIVE_DEPTH, 4, "право на постройку даёт только ядро шторма");
+
+// ── У каждого газа есть применение, а не только цена ──────────────────────
+// Три газа из четырёх были чистым товаром, хотя описания обещали топливо и
+// сборку модулей. Проверка следит, что обещание подкреплено кодом.
+const { DEUTERIUM_FUEL_PER_UNIT, GAS_BUY_RATE, GAS_SELL_RATE: sellRate } =
+  await import("../src/game/constants/outposts.ts");
+const { getDeuteriumBurnUnits } = await import(
+  "../src/game/slices/ship/helpers/fuel/burnDeuterium.ts"
+);
+const { FUEL_PRICE_PER_UNIT } = await import(
+  "../src/game/slices/services/constants.ts"
+);
+
+const fuelState = (fuel, maxFuel, deuterium) => ({
+  crew: [],
+  ship: { fuel, maxFuel, modules: [] },
+  gases: { deuterium },
+});
+assert.equal(getDeuteriumBurnUnits(fuelState(0, 100, 20)), 10, "в пустой бак влезает не весь бак");
+assert.equal(getDeuteriumBurnUnits(fuelState(0, 100, 3)), 3, "сжигается больше, чем есть в трюме");
+assert.equal(getDeuteriumBurnUnits(fuelState(100, 100, 20)), 0, "дейтерий горит в полный бак");
+assert.equal(getDeuteriumBurnUnits(fuelState(95, 100, 20)), 1, "остаток бака требует лишних единиц");
+
+// Возить дейтерий в бак обязано быть выгоднее, чем продавать и заправляться
+assert.ok(
+  DEUTERIUM_FUEL_PER_UNIT * FUEL_PRICE_PER_UNIT >
+    GAS_BASE_PRICE.deuterium * sellRate,
+  "продать дейтерий выгоднее, чем залить в бак — кнопка заправки мертва",
+);
+
+// Полимеры нужны гибридным модулям, иначе это снова просто товар
+const { MODULE_RECIPES } = await import("../src/game/constants/crafting.ts");
+for (const [id, recipe] of Object.entries(MODULE_RECIPES)) {
+  assert.ok(
+    (recipe.gases?.polymers ?? 0) > 0,
+    `${id}: гибридный модуль собирается без полимеров`,
+  );
+}
+assert.match(
+  readFileSync(
+    new URL("../src/game/slices/crafting/craftingSlice.ts", import.meta.url),
+    "utf8",
+  ),
+  /recipe\.gases/,
+  "рецепт требует газ, а крафт его не проверяет и не списывает",
+);
+// Полимеры обязаны продаваться станцией: иначе рецепт заперт за атмосферой
+// гиганта, которая выпадает случайно
+assert.ok(GAS_BUY_RATE > sellRate, "купить газ дешевле, чем продать");
+assert.match(
+  readFileSync(
+    new URL("../src/game/slices/outposts/helpers/sellGas.ts", import.meta.url),
+    "utf8",
+  ),
+  /export function buyGas/,
+  "полимеры негде купить — без метанового гиганта гибриды недостижимы",
+);
 
 console.log("Outpost checks passed");
 console.log(

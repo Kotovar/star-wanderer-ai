@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState, CraftingWeapon } from "@/game/types";
 import { CRAFTING_RECIPES, MODULE_RECIPES, HYBRID_MODULE_SHOP_ITEMS } from "@/game/constants/crafting";
 import type { ModuleRecipeId } from "@/game/types/crafting";
+import type { GasType } from "@/game/types/outposts";
 
 export interface CraftingSlice {
     craftWeapon: (recipeId: CraftingWeapon) => void;
@@ -174,6 +175,23 @@ export const createCraftingSlice = (
             }
         }
 
+        // Газ: гибриды собираются на синтез-полимерах, и без них рецепт
+        // остаётся в списке, а не сгорает
+        for (const [gasId, required] of Object.entries(recipe.gases ?? {})) {
+            const available = state.gases?.[gasId as GasType] ?? 0;
+            if (available < (required ?? 0)) {
+                get().addLog(
+                    i18nStore.t("game_logs.craftingSlice_13", {
+                        goodName: i18nStore.t(`gases.${gasId}.name`),
+                        required,
+                        available,
+                    }),
+                    "error",
+                );
+                return;
+            }
+        }
+
         set((s) => {
             // Списываем торговые ресурсы
             const newTradeGoods = s.ship.tradeGoods.map((g) => {
@@ -187,6 +205,13 @@ export const createCraftingSlice = (
             return {
                 credits: s.credits - recipe.credits,
                 moduleRecipes: newModuleRecipes,
+                gases: Object.entries(recipe.gases ?? {}).reduce(
+                    (acc, [gasId, spent]) => ({
+                        ...acc,
+                        [gasId]: (acc[gasId as GasType] ?? 0) - (spent ?? 0),
+                    }),
+                    { ...s.gases },
+                ),
                 ship: {
                     ...s.ship,
                     tradeGoods: newTradeGoods,

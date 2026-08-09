@@ -215,6 +215,21 @@ assert.match(
   "пометка о штурме не снимается и потянется за игроком в следующие бои",
 );
 
+// Рейдеры — не планета: победа над ними не закрывает саму локацию. Закрыть её
+// могут двумя способами — пометкой defeated и списком completedLocations,
+// и второй сильнее: selectLocation просто откажет в повторном визите
+const victory = source("game/slices/combat/helpers/playerVictory.ts");
+assert.equal(
+  (victory.match(/!state\.assaultingOutpostId/g) ?? []).length,
+  2,
+  "штурм закрывает локацию — после отбития на свою постройку не вернуться",
+);
+assert.doesNotMatch(
+  assault,
+  /name: "locations\./,
+  "имя рейдеров уходит в бой ключом — игрок увидит locations.outpost_raiders",
+);
+
 // Угроза рейдеров растёт с тиром: отбивать в глубоком секторе труднее
 assert.ok(
   getRaidThreat(outpost({ sectorId: 4 }), sectors) >

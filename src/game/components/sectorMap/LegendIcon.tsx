@@ -2,6 +2,9 @@
 
 export function LegendIcon({ type }: { type: string }) {
   switch (type) {
+    // Сборщик и база рисуются по-разному (мачта против ската крыши, циан
+    // против янтаря) — легенда обязана повторять drawOutpostBadge, иначе она
+    // объясняет значок, которого на карте нет
     case "outpost":
       return (
         <svg width="22" height="22" viewBox="0 0 24 24">
@@ -17,6 +20,22 @@ export function LegendIcon({ type }: { type: string }) {
           <line x1="16" y1="17" x2="17.5" y2="20" stroke="#00d4ff" strokeWidth="1.3" />
           <line x1="12" y1="10" x2="12" y2="5.5" stroke="#00d4ff" strokeWidth="1.3" />
           <circle cx="12" cy="4.6" r="1.6" fill="#00d4ff" />
+        </svg>
+      );
+    case "outpost_base":
+      return (
+        <svg width="22" height="22" viewBox="0 0 24 24">
+          <defs>
+            <radialGradient id="lg-outpost-base" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#ffb000" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="#ffb000" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <circle cx="12" cy="12" r="11" fill="url(#lg-outpost-base)" />
+          <rect x="5.5" y="10" width="13" height="7" rx="1.5" fill="#0b1218" stroke="#ffb000" strokeWidth="1.3" />
+          <line x1="8" y1="17" x2="6.5" y2="20" stroke="#ffb000" strokeWidth="1.3" />
+          <line x1="16" y1="17" x2="17.5" y2="20" stroke="#ffb000" strokeWidth="1.3" />
+          <polyline points="3.5,10 12,4.5 20.5,10" fill="none" stroke="#ffb000" strokeWidth="1.3" />
         </svg>
       );
     case "unknown_ship":

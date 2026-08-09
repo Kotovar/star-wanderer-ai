@@ -113,8 +113,14 @@ export function handleVictory(
         });
     }
 
-    // Mark regular enemy as defeated
-    if (!updatedCombat.enemy.isBoss && get().currentLocation) {
+    // Mark regular enemy as defeated. Штурм постройки — исключение: дрались с
+    // рейдерами на планете, а не с самой планетой, и помечать её зачищенной
+    // нельзя — иначе после отбития туда больше не прилететь
+    if (
+        !updatedCombat.enemy.isBoss &&
+        !state.assaultingOutpostId &&
+        get().currentLocation
+    ) {
         set((s) => {
             if (!s.currentLocation) return {};
             return patchLocation(s, s.currentLocation.id, { defeated: true });
@@ -219,8 +225,10 @@ export function handleVictory(
         });
     }
 
-    // Mark location as completed
-    if (get().currentLocation) {
+    // Mark location as completed. Штурм постройки — снова исключение: локация
+    // закрывается навсегда (selectLocation откажет в повторном визите), а на
+    // свой газосборник надо возвращаться за бункером
+    if (get().currentLocation && !state.assaultingOutpostId) {
         set((s) => ({
             completedLocations: [
                 ...s.completedLocations,

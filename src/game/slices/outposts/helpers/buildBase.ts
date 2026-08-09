@@ -1,11 +1,15 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import {
+    BASE_BUILD_TURNS,
     BASE_COST,
     BASE_MODULES,
+    BASE_MODULE_BUILD_TURNS,
     BASE_SLOTS_BY_LEVEL,
     BASE_UPGRADE_COST,
+    BASE_UPGRADE_TURNS,
     BASE_MAX_LEVEL,
 } from "@/game/constants/baseModules";
+import { scheduleWork } from "./construction";
 import { planetHasFeature } from "@/game/planets";
 import { patchLocation } from "@/game/utils/patchLocation";
 import type { GameStore, SetState } from "@/game/types";
@@ -50,6 +54,8 @@ export function buildBase(
         bunker: {},
         level: 1,
         modules: [],
+        // Ход уходит на закладку, остальное — работы: база оживёт не сразу
+        readyAtTurn: state.turn + 1 + BASE_BUILD_TURNS,
     };
 
     set((s) => ({
@@ -121,7 +127,17 @@ export function upgradeBase(
             resources: spend(cost.resources, s.research.resources),
         },
         outposts: s.outposts.map((o) =>
-            o.id === outpostId ? { ...o, level: level + 1 } : o,
+            o.id === outpostId
+                ? {
+                      ...o,
+                      level: level + 1,
+                      readyAtTurn: scheduleWork(
+                          o,
+                          s.turn + 1,
+                          BASE_UPGRADE_TURNS,
+                      ),
+                  }
+                : o,
         ),
     }));
 
@@ -191,7 +207,15 @@ export function installBaseModule(
         },
         outposts: s.outposts.map((o) =>
             o.id === outpostId
-                ? { ...o, modules: [...(o.modules ?? []), moduleId] }
+                ? {
+                      ...o,
+                      modules: [...(o.modules ?? []), moduleId],
+                      readyAtTurn: scheduleWork(
+                          o,
+                          s.turn + 1,
+                          BASE_MODULE_BUILD_TURNS,
+                      ),
+                  }
                 : o,
         ),
     }));

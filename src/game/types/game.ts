@@ -250,6 +250,7 @@ export interface GameActions {
   areEnginesFunctional: () => boolean;
   areFuelTanksFunctional: () => boolean;
   refuel: (amount: number, price: number) => void;
+  burnDeuterium: (units: number) => void;
   gainExp: (crewMember: CrewMember | undefined, amount: number) => GainExpResult | undefined;
   hydratePlayerSettings: () => void;
   setAnimationsEnabled: (enabled: boolean) => void;

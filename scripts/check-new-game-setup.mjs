@@ -160,6 +160,29 @@ if (devAllTechExplorer) {
   );
   assert.match(buildStartingStateSource, /template\.startWithAllTechs/);
   assert.match(buildStartingStateSource, /Object\.values\(RESEARCH_TREE\)/);
+
+  // Полбака и готовые чертежи: в полный бак дейтерий не льётся, и кнопку
+  // заправки не потрогать, а чертежи иначе ждут случайной находки на брошенном
+  // корабле
+  assert.ok(
+    devAllTechExplorer.fuel < devAllTechExplorer.maxFuel,
+    "dev-шаблон стартует с полным баком — заправку дейтерием не потрогать",
+  );
+  assert.ok(
+    (devAllTechExplorer.moduleRecipes ?? []).length > 1,
+    "dev-шаблон стартует без чертежей гибридных модулей",
+  );
+  assert.match(
+    buildStartingStateSource,
+    /template\.moduleRecipes/,
+    "чертежи шаблона не доезжают до состояния забега",
+  );
+  // Полимеров обязано хватать не на один гибрид: иначе сборку приходится
+  // проверять через покупку на станции
+  assert.ok(
+    (devAllTechExplorer.gases?.polymers ?? 0) >= 16,
+    "dev-шаблон стартует с полимерами на один модуль",
+  );
 }
 
 for (const modifier of LAUNCH_MODIFIERS) {

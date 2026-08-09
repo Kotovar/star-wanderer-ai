@@ -1496,13 +1496,23 @@ export function GalaxyMap() {
                                 <div className="text-[#00ff41] font-['Orbitron'] text-[9px] tracking-widest mb-1 opacity-70">{t("galaxy.legend.markers_section")}</div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
                                     <div className="space-y-0.5">
+                                        {/* Мачта — сборщик, скат крыши — база:
+                                            карта их различает, легенда обязана
+                                            повторять, а не показывать один */}
                                         <div className="flex items-center gap-1.5">
                                             <svg width="14" height="14" viewBox="0 0 24 24">
                                                 <rect x="5.5" y="10" width="13" height="7" rx="1.5" fill="#0b1218" stroke="#00d4ff" strokeWidth="1.6" />
                                                 <line x1="12" y1="10" x2="12" y2="5.5" stroke="#00d4ff" strokeWidth="1.6" />
                                                 <circle cx="12" cy="4.6" r="1.8" fill="#00d4ff" />
                                             </svg>
-                                            <span>{t("outposts.legend")}</span>
+                                            <span>{t("outposts.legend_collector")}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <svg width="14" height="14" viewBox="0 0 24 24">
+                                                <rect x="5.5" y="10" width="13" height="7" rx="1.5" fill="#0b1218" stroke="#ffb000" strokeWidth="1.6" />
+                                                <polyline points="3.5,10 12,4.5 20.5,10" fill="none" stroke="#ffb000" strokeWidth="1.6" />
+                                            </svg>
+                                            <span>{t("outposts.legend_base")}</span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <span style={{ color: "#9933ff" }} className="font-mono font-bold">⛽12</span>

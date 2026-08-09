@@ -77,6 +77,7 @@ export const MODULE_RECIPES: Record<ModuleRecipeId, ModuleRecipe> = {
     description:
       "Работает как медотсек и лаборатория одновременно: +10 науки/ход, +8 HP лечения/ход",
     goods: { electronics: 4, rare_minerals: 3 },
+    gases: { polymers: 8 },
     credits: 800,
   },
   pulse_drive: {
@@ -86,6 +87,7 @@ export const MODULE_RECIPES: Record<ModuleRecipeId, ModuleRecipe> = {
     description:
       "Реактор и двигатель в одном: +5 энергии, меньше расход топлива",
     goods: { spares: 5, rare_minerals: 3 },
+    gases: { polymers: 10 },
     credits: 900,
   },
   habitat_module: {
@@ -95,6 +97,7 @@ export const MODULE_RECIPES: Record<ModuleRecipeId, ModuleRecipe> = {
     description:
       "Медотсек с жилыми каютами: +8 HP лечения/ход, +6 мест экипажа",
     goods: { spares: 4, electronics: 3 },
+    gases: { polymers: 8 },
     credits: 700,
   },
   deep_survey_array: {
@@ -104,6 +107,7 @@ export const MODULE_RECIPES: Record<ModuleRecipeId, ModuleRecipe> = {
     description:
       "Лаборатория со сканером: +8 науки/ход, +3 к дальности сканирования",
     goods: { electronics: 5, rare_minerals: 2 },
+    gases: { polymers: 10 },
     credits: 850,
   },
 };

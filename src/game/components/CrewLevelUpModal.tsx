@@ -13,6 +13,7 @@ import { useGameStore } from "@/game/store";
 import type { CrewLevelUpResult } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
 import { GameDialogContent } from "./GameDialog";
+import { useCombatCinematicUiStore } from "./combatCinematicUiStore";
 import { CrewPerkChoiceContent } from "./CrewPerkChoiceModal";
 import { getProfessionLevelGains } from "@/game/crew/professionLevelGains";
 import type { Profession } from "@/game/types";
@@ -69,6 +70,12 @@ export function CrewLevelUpModal() {
     const hasContractCompletion = useGameStore(
         (s) => s.pendingContractCompletions.length > 0,
     );
+    // Бой резолвится синхронно, а кинематика показывает его позже: повышение
+    // случается «в середине залпа» и накрывает анимацию диалогом. Очередь
+    // никуда не денется — покажем, когда сцена доиграет
+    const cinematicPlaying = useCombatCinematicUiStore((s) =>
+        Boolean(s.timeline),
+    );
     const crewMember = useGameStore((s) =>
         result ? s.crew.find((member) => member.id === result.crewMemberId) : undefined,
     );
@@ -77,7 +84,7 @@ export function CrewLevelUpModal() {
     const { t } = useTranslation();
     const [choiceState, setChoiceState] = useState<TalentChoiceState | null>(null);
 
-    if (!result || hasContractCompletion) return null;
+    if (!result || hasContractCompletion || cinematicPlaying) return null;
 
     const crossedTalentTiers = TECH_TREE_TIERS.filter((tier) => result.oldLevel < tier && tier <= result.newLevel);
     const currentChoice = choiceState?.result === result ? choiceState : null;

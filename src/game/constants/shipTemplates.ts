@@ -2,6 +2,7 @@ import type { Module } from "@/game/types/modules";
 import type { CrewBuildOptions } from "@/game/crew/buildCrewMember";
 import type { GasType, StartingOutpost } from "@/game/types/outposts";
 import type { ResearchResourceType } from "@/game/types/research";
+import type { ModuleRecipeId } from "@/game/types/crafting";
 
 // ─── Ship Class (placeholder for future implementation) ──────────────────────
 /**
@@ -42,6 +43,11 @@ export interface ShipTemplate {
    * сотни ходов, и увидеть захват со штурмом иначе почти невозможно.
    */
   startingOutposts?: StartingOutpost[];
+  /**
+   * Найденные чертежи гибридных модулей — только dev-шаблоны. Обычно их
+   * находит следопыт на брошенных кораблях, то есть по одному за много ходов.
+   */
+  moduleRecipes?: ModuleRecipeId[];
   /** Только dev-шаблон: начать со всеми изученными технологиями */
   startWithAllTechs?: boolean;
   /** Совместимые классы (null = все) — для будущей фильтрации */
@@ -263,12 +269,16 @@ const createDevAllTechExplorer = (arsenal: ShipTemplate): ShipTemplate => ({
     { id: 6, name: "Канонир", profession: "gunner", moduleId: 709, level: 8, exp: 790 },
   ],
   credits: arsenal.credits,
-  fuel: arsenal.fuel,
+  // Полбака намеренно: заправка дейтерием иначе не проверяется — в полный
+  // бак газ не льётся, и кнопки просто нет
+  fuel: Math.floor(arsenal.maxFuel / 2),
   maxFuel: arsenal.maxFuel,
   probes: arsenal.probes,
   // Все четыре газа сразу: три продаваемых — чтобы увидеть блок продажи на
   // станции, и криоген — чтобы увидеть, как он горит сам и режет расход
-  gases: { deuterium: 10, polymers: 10, biosynth: 10, cryogen: 10 },
+  // Полимеров с запасом: их требует каждый гибридный модуль, и на одном
+  // рецепте сборка не проверяется
+  gases: { deuterium: 10, polymers: 40, biosynth: 10, cryogen: 10 },
   // База второго уровня с добычей и услугами плюс захваченный сборщик:
   // все состояния системы видны с первого хода, включая штурм
   startingOutposts: [
@@ -279,6 +289,14 @@ const createDevAllTechExplorer = (arsenal: ShipTemplate): ShipTemplate => ({
       bunker: { minerals: 12 },
     },
     { kind: "gas_collector", captured: true, bunker: { deuterium: 18 } },
+  ],
+  // Все чертежи сразу: их находят по одному за десятки ходов, а посмотреть
+  // сборку гибридов на полимерах надо с первого хода
+  moduleRecipes: [
+    "bio_research_lab",
+    "pulse_drive",
+    "habitat_module",
+    "deep_survey_array",
   ],
   // Хватает и на постройку газосборника, и на пару исследований: dev-шаблон
   // существует, чтобы смотреть механики, а не собирать материалы

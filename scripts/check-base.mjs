@@ -350,15 +350,29 @@ const stocked = baseAt(withIce, {
   modules: ["warehouse"],
   bunker: { minerals: 10 },
   storedCargo: [{ item: "relic_case", quantity: 4, contractId: "c1" }],
+  storedGoods: { water: 6 },
 });
 assert.equal(
   getStorageUsed(stocked),
-  14,
+  20,
   "объём склада считается не по всему, что на нём лежит",
 );
 assert.equal(
   getStorageFree(stocked),
-  BASE_SERVICE_VALUES.storageCapacity - 14,
+  BASE_SERVICE_VALUES.storageCapacity - 20,
+);
+
+// Сложенное на хранение не должно уезжать обратно кнопкой «забрать добычу»:
+// вывоз гребёт бункер целиком, поэтому склад товаров живёт отдельно
+assert.match(
+  source("game/slices/outposts/helpers/storeAtBase.ts"),
+  /storedGoods:/,
+  "разгрузка трюма кладёт товар в бункер — вывоз добычи вернёт его в трюм",
+);
+assert.doesNotMatch(
+  source("game/slices/outposts/helpers/collectOutpost.ts"),
+  /storedGoods/,
+  "вывоз добычи забирает и то, что игрок оставил на хранение",
 );
 
 const storage = source("game/slices/outposts/helpers/baseStorage.ts");
@@ -444,10 +458,71 @@ assert.match(
   /hasBaseService\(outpost, "garrison"\)/,
   "поселенцев можно нанимать без казармы",
 );
+
+// ── Поселенца вербуют на планете, а не выращивают из воздуха ──────────────
+// Мгновенный наём за фиксированную цену делал базу в глухом секторе таким же
+// источником людей, как база у обитаемой планеты. Цена и дорога зависят от
+// расстояния — это и есть скрытая цена глубокого места.
+const { getSettlerOffer, getHireBlocker } = await import(
+  "../src/game/slices/outposts/helpers/hireAtBase.ts"
+);
+
+const hireSectors = [
+  { id: 1, tier: 1, mapAngle: 0, locations: [{ id: "p-home", type: "planet", name: "Дом", dominantRace: "human" }] },
+  { id: 2, tier: 2, mapAngle: Math.PI, locations: [{ id: "p-far", type: "planet", name: "Даль", dominantRace: "zaari" }] },
+  { id: 3, tier: 3, mapAngle: Math.PI, locations: [{ id: "p-empty", type: "planet", isEmpty: true }] },
+];
+const hireBase = (sectorId) => ({
+  id: "hb",
+  kind: "base",
+  locationId: "p-empty",
+  sectorId,
+  bunker: {},
+  level: 3,
+  modules: ["barracks"],
+});
+
+const near = getSettlerOffer(hireBase(1), hireSectors);
+const far = getSettlerOffer(hireBase(3), hireSectors);
+assert.equal(near.hops, 0, "своя система считается далёкой");
+assert.equal(near.cost, BASE_SERVICE_VALUES.settlerCost, "у соседа цена с надбавкой");
+assert.ok(far.hops > 0 && far.cost > near.cost, "глухой сектор не дороже обитаемого");
+assert.ok(far.turns > near.turns, "дорога из глухого сектора не дольше");
+assert.equal(
+  getSettlerOffer(hireBase(1), [{ id: 1, tier: 1, mapAngle: 0, locations: [] }]),
+  null,
+  "вербовка работает там, где вербовать некого",
+);
+assert.equal(near.race, "human", "раса планеты-донора теряется по дороге");
+
+const hireState = { credits: 100000, crew: [], galaxy: { sectors: hireSectors } };
+assert.equal(getHireBlocker(hireBase(1), hireState, near), null);
+assert.equal(
+  getHireBlocker(
+    { ...hireBase(1), pendingSettler: { profession: "medic", arrivesAtTurn: 9 } },
+    hireState,
+    near,
+  ),
+  "in_transit",
+  "второй поселенец заказывается, пока едет первый — дорога перестала быть кулдауном",
+);
+assert.equal(
+  getHireBlocker(
+    { ...hireBase(1), level: 1, modules: [] },
+    { ...hireState, crew: [{ id: 1, outpostId: "hb" }] },
+    near,
+  ),
+  "no_slot",
+  "поселенец приезжает в переполненный гарнизон",
+);
+assert.equal(
+  getHireBlocker(hireBase(1), { ...hireState, credits: 0 }, near),
+  "not_enough_credits",
+);
 assert.match(
   hire,
-  /getShipCrew\(state\.crew\)\.length >= state\.getCrewCapacity\(\)/,
-  "наём на базе обходит лимит экипажа",
+  /pendingSettler/,
+  "поселенец появляется мгновенно — дорога с планеты нигде не учитывается",
 );
 
 // Медблок — причина оставить человека надолго, а не просто койка
@@ -881,9 +956,56 @@ for (const lang of ["ru", "en"]) {
   for (const key of ["base", "build_base", "base_hint", "bunker", "dismantle", "upgrade", "blocked_not_explored", "status_title", "relay_title", "relay_hint", "services", "service_repair", "service_heal", "service_store", "service_craft", "service_hire"]) {
     assert.ok(catalog.outposts?.[key], `${lang}: нет outposts.${key}`);
   }
-  for (const key of ["base_hired", "base_hire_no_room", "base_withdrawn", "outpost_built_base", "base_upgraded", "base_module_installed", "base_module_removed", "outpost_build_remote", "base_repaired", "base_healed", "base_stored", "base_service_remote"]) {
+  for (const key of ["base_settler_hired", "base_settler_arrived", "base_withdrawn", "outpost_built_base", "base_upgraded", "base_module_installed", "base_module_removed", "outpost_build_remote", "base_repaired", "base_healed", "base_stored", "base_service_remote"]) {
     assert.ok(catalog.game_logs?.[key], `${lang}: нет лога ${key}`);
   }
+}
+
+// ── Стройка занимает ходы ─────────────────────────────────────────────────
+// Мгновенная постройка обесценивает решение «строить сейчас или подкопить»:
+// платишь один раз и в тот же ход получаешь всё. Пока работы идут, постройка
+// не добывает и не обслуживает — иначе срок ничего не стоит.
+const { isUnderConstruction, turnsUntilReady, scheduleWork } = await import(
+  "../src/game/slices/outposts/helpers/construction.ts"
+);
+const { BASE_BUILD_TURNS, BASE_UPGRADE_TURNS, BASE_MODULE_BUILD_TURNS } =
+  await import("../src/game/constants/baseModules.ts");
+const { RAID_GRACE_TURNS } = await import(
+  "../src/game/constants/outpostRaids.ts"
+);
+
+const building = baseAt(withIce, {
+  modules: ["drill_shaft", "warehouse"],
+  readyAtTurn: 20,
+});
+assert.ok(isUnderConstruction(building), "стройка не видна потребителям");
+assert.equal(turnsUntilReady(building, 14), 6);
+assert.equal(turnsUntilReady(building, 25), 0, "срок ушёл в минус");
+assert.deepEqual(
+  accrueOutposts([building], sectors, engineer)[0].bunker,
+  {},
+  "недостроенная база добывает — срок работ ничего не стоит",
+);
+assert.equal(
+  hasBaseService(building, "storage"),
+  false,
+  "недостроенная база обслуживает — срок работ ничего не стоит",
+);
+assert.equal(
+  hasBaseService({ ...building, readyAtTurn: undefined }, "storage"),
+  true,
+  "достроенная база не обслуживает",
+);
+// Работы складываются: модуль поверх недостроенной базы ждёт своей очереди
+assert.equal(scheduleWork(building, 15, BASE_MODULE_BUILD_TURNS), 24);
+assert.equal(scheduleWork(baseAt(withIce), 15, BASE_MODULE_BUILD_TURNS), 19);
+
+for (const turns of [BASE_BUILD_TURNS, BASE_UPGRADE_TURNS, BASE_MODULE_BUILD_TURNS]) {
+  assert.ok(turns > 0, "работы идут ноль ходов — постройка снова мгновенна");
+  assert.ok(
+    turns < RAID_GRACE_TURNS,
+    `работы (${turns}) дольше льготы рейдов (${RAID_GRACE_TURNS}) — стройплощадку захватят`,
+  );
 }
 
 console.log("Base checks passed");

@@ -43,6 +43,8 @@ export function accrueOutposts(
     return outposts.map((outpost) => {
         // Захваченная постройка стоит: бункер остался, но работает на рейдеров
         if (outpost.capturedAtTurn !== undefined) return outpost;
+        // Недостроенная — тем более: отметку снимает processConstruction
+        if (outpost.readyAtTurn !== undefined) return outpost;
         if (outpost.kind === "base") {
             return accrueBase(outpost, crew, typeOf.get(outpost.locationId));
         }

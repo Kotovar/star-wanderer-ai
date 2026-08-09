@@ -17,7 +17,14 @@ export function hasBaseService(
     // распоряжаются ими рейдеры. Проверка стоит здесь, в одной точке, —
     // иначе каждую услугу пришлось бы вспоминать отдельно, а забытая
     // означала бы, что потеря базы почти ничего не стоит
-    if (!outpost || outpost.capturedAtTurn !== undefined) return false;
+    // Та же логика и для стройки: недостроенное не обслуживает
+    if (
+        !outpost ||
+        outpost.capturedAtTurn !== undefined ||
+        outpost.readyAtTurn !== undefined
+    ) {
+        return false;
+    }
     return Boolean(
         outpost.modules?.some((id) => BASE_MODULES[id].service === service),
     );

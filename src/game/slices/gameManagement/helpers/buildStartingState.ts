@@ -8,6 +8,7 @@ import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import type { CrewMember, GameState, Artifact, TechnologyId } from "@/game/types";
 import type { ResearchResourceType } from "@/game/types/research";
+import type { ModuleRecipeId } from "@/game/types/crafting";
 import type { GasType, StartingOutpost } from "@/game/types/outposts";
 import type { RaceId } from "@/game/types/races";
 
@@ -23,6 +24,8 @@ export interface StartingStatePatch {
   gases?: Partial<Record<GasType, number>>;
   /** Готовые постройки — только dev-шаблоны */
   startingOutposts?: StartingOutpost[];
+  /** Найденные чертежи гибридных модулей — только dev-шаблоны */
+  moduleRecipes?: ModuleRecipeId[];
   /** Стартовая репутация с расами (override поверх нейтральных 0) */
   raceReputation?: Partial<Record<RaceId, number>>;
   /** Расы, которые должны быть известны игроку с первого хода */
@@ -271,6 +274,7 @@ export function buildStartingState(
     researchResources,
     gases: template.gases,
     startingOutposts: template.startingOutposts,
+    moduleRecipes: template.moduleRecipes,
     raceReputation: Object.keys(raceReputation).length > 0 ? raceReputation : undefined,
     knownRaces: knownRaces.size > 0 ? [...knownRaces] : undefined,
     startsWithCrisis: wantsStartingCrisis,

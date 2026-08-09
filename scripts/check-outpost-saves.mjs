@@ -44,12 +44,15 @@ const outpost = {
     { item: "relic", quantity: 3, contractId: "c1" },
     { item: "engine", quantity: 1, isModule: true, moduleLevel: 2 },
   ],
+  storedGoods: { water: 6, deuterium: 2 },
   moduleProgress: { minerals: 45, ancient_data: 12 },
   progress: 60,
   lastCollectedAtTurn: 12,
   capturedAtTurn: 9,
   raiderThreat: 3,
   raidGraceUntil: 30,
+  readyAtTurn: 14,
+  pendingSettler: { profession: "medic", race: "human", arrivesAtTurn: 18 },
 };
 
 const restored = loadWithMigrations(

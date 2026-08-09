@@ -1424,7 +1424,8 @@ export function SectorMap() {
                   { key: "wreck_field", label: t("location_types.wreck_field") },
                   { key: "space_monster", label: t("location_types.space_monster") },
                   { key: "asteroid_belt", label: t("location_types.asteroid_belt") },
-                  { key: "outpost", label: t("outposts.legend") },
+                  { key: "outpost", label: t("outposts.legend_collector") },
+                  { key: "outpost_base", label: t("outposts.legend_base") },
                 ].map(({ key, label }) => (
                   <span key={key} className="flex items-center gap-1 min-w-0">
                     <LegendIcon type={key} />

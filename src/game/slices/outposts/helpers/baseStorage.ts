@@ -14,7 +14,11 @@ export function getStorageUsed(outpost: Outpost): number {
         (sum, item) => sum + item.quantity,
         0,
     );
-    return bunker + stored;
+    const goods = Object.values(outpost.storedGoods ?? {}).reduce<number>(
+        (sum, n) => sum + (n ?? 0),
+        0,
+    );
+    return bunker + stored + goods;
 }
 
 export const getStorageFree = (outpost: Outpost): number =>

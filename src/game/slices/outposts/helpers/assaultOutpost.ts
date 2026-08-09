@@ -27,7 +27,9 @@ export function assaultOutpost(
         ...(state.currentLocation as Location),
         id: `${outpost.id}-raiders`,
         type: "enemy",
-        name: "locations.outpost_raiders",
+        // Имя уходит в бой и в панель результатов как есть — там ключи не
+        // переводят, поэтому переводим здесь
+        name: i18nStore.t("locations.outpost_raiders"),
         enemyType: "raider",
         threat: outpost.raiderThreat ?? 1,
     };

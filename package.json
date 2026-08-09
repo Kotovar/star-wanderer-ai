@@ -50,7 +50,7 @@
     "check:sector-access-copy": "node scripts/check-sector-access-copy.mjs",
     "check:sector-names": "node --no-warnings --experimental-strip-types scripts/check-sector-names.mjs",
     "check:crew-layout": "node --no-warnings --experimental-strip-types scripts/check-crew-layout.mjs",
-    "check:new-game": "node --no-warnings --experimental-strip-types scripts/check-new-game-setup.mjs",
+    "check:new-game": "NODE_ENV=development node --no-warnings --experimental-strip-types scripts/check-new-game-setup.mjs",
     "check:dev-template": "NODE_ENV=development node --no-warnings --experimental-strip-types scripts/check-new-game-setup.mjs && NODE_ENV=production node --no-warnings --experimental-strip-types scripts/check-new-game-setup.mjs",
     "check:enemy-progression": "node --no-warnings --experimental-strip-types scripts/check-enemy-progression.mjs",
     "check:enemy-codex": "node --no-warnings --experimental-strip-types scripts/check-enemy-codex.mjs",

@@ -119,6 +119,9 @@ const getResultDetailLabel = (
   if (result.category === "trade" && TRADE_GOODS[detail as Goods]) {
     return t(`trade.goods.${detail}`);
   }
+  if (detail === "gas_sell" || detail === "gas_buy_polymers") {
+    return t(`navigator.gas.${detail}`);
+  }
   if (result.category === "missions" || result.category === "discovery") {
     return getLocationKindLabel(detail, t);
   }
@@ -248,6 +251,8 @@ export function NavigatorPanel() {
   const cargoGoodCount = navigatorData.shipTradeGoods.filter(
     ({ quantity }) => quantity > 0,
   ).length;
+  // Оба режима сами решают, что искать: товар выбирать не из чего
+  const goodSelectDisabled = Boolean(filters.cargoOnly || filters.gasOnly);
   const isMarked = (result: NavigatorResult) =>
     navigatorTargets.some(
       (target) =>
@@ -397,7 +402,10 @@ export function NavigatorPanel() {
               <input
                 type="checkbox"
                 checked={Boolean(filters.cargoOnly)}
-                disabled={!filters.cargoOnly && cargoGoodCount === 0}
+                disabled={
+                  Boolean(filters.gasOnly) ||
+                  (!filters.cargoOnly && cargoGoodCount === 0)
+                }
                 onChange={(event) =>
                   updateFilters({
                     cargoOnly: event.target.checked || undefined,
@@ -408,34 +416,60 @@ export function NavigatorPanel() {
               />
               {t("navigator.filters.cargo_goods_only")}
             </label>
-            {!filters.cargoOnly && (
-              <label className="text-xs text-[#9aa59a]">
-                {t("navigator.filters.good")}
-                <select
-                  value={filters.goodId ?? ""}
-                  onChange={(event) =>
-                    updateFilters({
-                      goodId: optionalValue<Goods>(event.target.value),
-                    })
-                  }
-                  className="mt-1 w-full border border-[#00ff4166] bg-[#071019] px-2 py-1 text-[#d7f8ff]"
-                >
-                  <option value="">{t("navigator.filters.any")}</option>
-                  {(filters.mineralBuybackOnly
-                    ? MINERAL_BUYBACK_GOODS
-                    : Object.keys(TRADE_GOODS)
-                  ).map((goodId) => (
-                    <option key={goodId} value={goodId}>
-                      {t(`trade.goods.${goodId}`)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
+            {/* Выбор товара гасим, а не убираем: исчезнувшая ячейка сдвигает
+                сетку, и только что нажатый чекбокс уезжает под курсором в
+                другую строку */}
+            <label
+              className={`text-xs text-[#9aa59a] ${
+                goodSelectDisabled ? "opacity-40" : ""
+              }`}
+            >
+              {t("navigator.filters.good")}
+              <select
+                value={filters.goodId ?? ""}
+                disabled={goodSelectDisabled}
+                onChange={(event) =>
+                  updateFilters({
+                    goodId: optionalValue<Goods>(event.target.value),
+                  })
+                }
+                className="mt-1 w-full border border-[#00ff4166] bg-[#071019] px-2 py-1 text-[#d7f8ff] disabled:cursor-default"
+              >
+                <option value="">{t("navigator.filters.any")}</option>
+                {(filters.mineralBuybackOnly
+                  ? MINERAL_BUYBACK_GOODS
+                  : Object.keys(TRADE_GOODS)
+                ).map((goodId) => (
+                  <option key={goodId} value={goodId}>
+                    {t(`trade.goods.${goodId}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {/* Газ не входит в обычный товарный ряд: у него свой пул, свои
+                цены и только станции с торговым блоком */}
+            <label className="flex items-center gap-2 self-end pb-1 text-xs text-[#9aa59a]">
+              <input
+                type="checkbox"
+                checked={Boolean(filters.gasOnly)}
+                onChange={(event) =>
+                  updateFilters({
+                    gasOnly: event.target.checked || undefined,
+                    cargoOnly: event.target.checked ? undefined : filters.cargoOnly,
+                    mineralBuybackOnly: event.target.checked
+                      ? undefined
+                      : filters.mineralBuybackOnly,
+                    goodId: event.target.checked ? undefined : filters.goodId,
+                  })
+                }
+              />
+              {t("navigator.filters.gas_only")}
+            </label>
             <label className="flex items-center gap-2 self-end pb-1 text-xs text-[#9aa59a]">
               <input
                 type="checkbox"
                 checked={Boolean(filters.mineralBuybackOnly)}
+                disabled={Boolean(filters.gasOnly)}
                 onChange={(event) =>
                   updateFilters({
                     mineralBuybackOnly: event.target.checked,

@@ -13,6 +13,7 @@ import { CraftingTab } from "./station/CraftingTab";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import {
+    BASE_BUILD_TURNS,
     BASE_BUNKER_CAP,
     BASE_COST,
     BASE_MAX_LEVEL,
@@ -30,10 +31,14 @@ import {
     describeHaulResource,
     getBaseBlocker,
     getBasePotential,
+    getHireBlocker,
     getModuleBlocker,
     getOutpostOutputMultiplier,
+    getSettlerOffer,
     getStorageFree,
     hasBaseService,
+    isUnderConstruction,
+    turnsUntilReady,
 } from "@/game/slices/outposts/helpers";
 import { describeCargoItem } from "@/game/cargo/describeCargoItem";
 import { planetHasFeature, PLANET_FEATURES } from "@/game/planets";
@@ -52,6 +57,114 @@ const HIREABLE_PROFESSIONS = [
 
 interface Props {
     location: Location;
+}
+
+/**
+ * Кнопка услуги базы: цена видна всегда, отказ объяснён на месте.
+ *
+ * Раньше кнопка выглядела рабочей и молча писала в бортжурнал, которого на
+ * планетарном экране не видно: клик «ничего не делал». Причина отказа и
+ * расход обязаны быть на самой кнопке.
+ */
+function ServiceButton({
+    icon,
+    label,
+    color,
+    cost,
+    blocker,
+    nothingLabel,
+    onClick,
+}: {
+    icon: string;
+    label: string;
+    color: string;
+    cost: { item: string; quantity: number };
+    blocker: "nothing" | "supplies" | null;
+    nothingLabel: string;
+    onClick: () => void;
+}) {
+    const { t } = useTranslation();
+    return (
+        <div className="flex min-w-0 flex-col gap-0.5">
+            <Button
+                onClick={onClick}
+                disabled={blocker !== null}
+                className="min-h-8 cursor-pointer border bg-transparent px-2 text-[10px] uppercase disabled:cursor-default disabled:opacity-40"
+                style={{ borderColor: color, color }}
+            >
+                {icon} {label} · {cost.quantity}×{" "}
+                {t(`trade.goods.${cost.item}`)}
+            </Button>
+            {blocker && (
+                <span className="text-[9px] leading-tight text-[#8a9ba3]">
+                    {blocker === "supplies"
+                        ? t("outposts.service_no_supplies", {
+                              qty: cost.quantity,
+                              item: t(`trade.goods.${cost.item}`),
+                          })
+                        : nothingLabel}
+                </span>
+            )}
+        </div>
+    );
+}
+
+/**
+ * Строка передачи предмета между трюмом и складом.
+ *
+ * Ползунок, а не кнопка «всё сразу»: перекладывать имеет смысл ровно столько,
+ * сколько освобождает трюм под добычу, — остальное на базе только займёт
+ * место склада. Нативный `input[type=range]` вместо своего компонента.
+ */
+function TransferRow({
+    label,
+    max,
+    accent,
+    arrow,
+    onTransfer,
+}: {
+    label: string;
+    max: number;
+    accent: string;
+    arrow: string;
+    onTransfer: (amount: number) => void;
+}) {
+    const [amount, setAmount] = useState(max);
+    // Стак мог уменьшиться после прошлой передачи — держим ползунок в границах
+    const value = Math.max(1, Math.min(amount, max));
+
+    return (
+        <div className="flex items-center gap-1.5">
+            <span className="min-w-0 flex-1 truncate text-[10px] text-[#b9c6cc]">
+                {label}
+            </span>
+            {max > 1 && (
+                <input
+                    type="range"
+                    min={1}
+                    max={max}
+                    value={value}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    aria-label={label}
+                    className="h-1 w-16 cursor-pointer sm:w-24"
+                    style={{ accentColor: accent }}
+                />
+            )}
+            <span
+                className="w-7 shrink-0 text-right text-[10px] tabular-nums"
+                style={{ color: accent }}
+            >
+                {value}
+            </span>
+            <Button
+                onClick={() => onTransfer(value)}
+                className="min-h-7 shrink-0 cursor-pointer border bg-transparent px-2 text-[10px]"
+                style={{ borderColor: `${accent}55`, color: accent }}
+            >
+                {arrow}
+            </Button>
+        </div>
+    );
 }
 
 /**
@@ -76,12 +189,16 @@ export function BaseSection({ location }: Props) {
     const repairAtBase = useGameStore((s) => s.repairAtBase);
     const healAtBase = useGameStore((s) => s.healAtBase);
     const storeAtBase = useGameStore((s) => s.storeAtBase);
+    const withdrawFromBase = useGameStore((s) => s.withdrawFromBase);
     const storeCargoAtBase = useGameStore((s) => s.storeCargoAtBase);
     const withdrawCargoFromBase = useGameStore((s) => s.withdrawCargoFromBase);
     const hireAtBase = useGameStore((s) => s.hireAtBase);
     const assaultOutpost = useGameStore((s) => s.assaultOutpost);
     const ship = useGameStore((s) => s.ship);
     const gases = useGameStore((s) => s.gases);
+    const turn = useGameStore((s) => s.turn);
+    const galaxy = useGameStore((s) => s.galaxy);
+    const sectors = galaxy.sectors;
 
     const base = outposts.find((o) => o.locationId === location.id);
 
@@ -134,6 +251,10 @@ export function BaseSection({ location }: Props) {
                             </span>
                         );
                     })}
+                    {/* Срок работ — часть цены, и знать её надо до оплаты */}
+                    <span className="text-[#8a9ba3]">
+                        🏗 {t("outposts.build_turns", { turns: BASE_BUILD_TURNS })}
+                    </span>
                 </div>
 
                 {/* Что даст эта планета: 6000₢ слишком дорого, чтобы
@@ -215,6 +336,27 @@ export function BaseSection({ location }: Props) {
         );
     }
 
+    // ── Идут работы: база не добывает и не обслуживает, пока их не закончат ─
+    if (isUnderConstruction(base)) {
+        return (
+            <div className="mt-2 border border-[#ffb00033] bg-[rgba(255,176,0,0.04)] p-2 sm:p-3">
+                <GameImage
+                    src={getBaseImage(base.level ?? 1)}
+                    alt={t("outposts.base")}
+                    className="mb-2 w-full object-contain opacity-50"
+                />
+                <div className="text-[11px] uppercase tracking-wider text-[#ffb000] sm:text-xs">
+                    🏗 {t("outposts.under_construction")}
+                </div>
+                <div className="mt-1 text-[10px] text-[#b9c6cc] sm:text-xs">
+                    {t("outposts.work_left", {
+                        turns: turnsUntilReady(base, turn),
+                    })}
+                </div>
+            </div>
+        );
+    }
+
     // ── База стоит: слоты, бункер, гарнизон ────────────────────────────────
     const level = base.level ?? 1;
     const slots = BASE_SLOTS_BY_LEVEL[level] ?? 0;
@@ -228,6 +370,29 @@ export function BaseSection({ location }: Props) {
     const canCraft = hasBaseService(base, "craft");
     const canHire = hasBaseService(base, "garrison");
     const storageFree = getStorageFree(base);
+    // Те же условия, что и в самих услугах: иначе кнопка обещает одно, а
+    // helper отказывает по другому поводу
+    const held = (item: string) =>
+        ship.tradeGoods.find((g) => g.item === item)?.quantity ?? 0;
+    const serviceBlocker = (
+        needed: boolean,
+        cost: { item: string; quantity: number },
+    ): "nothing" | "supplies" | null =>
+        !needed ? "nothing" : held(cost.item) < cost.quantity ? "supplies" : null;
+    const repairBlocker = serviceBlocker(
+        ship.modules.some((m) => m.health < m.maxHealth),
+        BASE_SERVICE_VALUES.repairCost,
+    );
+    const healBlocker = serviceBlocker(
+        crew.some(
+            (c) => c.health < c.maxHealth || (c.assignmentFatigue ?? 0) > 0,
+        ),
+        BASE_SERVICE_VALUES.healCost,
+    );
+    const settlerOffer = canHire ? getSettlerOffer(base, sectors) : null;
+    const hireBlocker = canHire
+        ? getHireBlocker(base, { credits, crew, galaxy }, settlerOffer)
+        : null;
     // На склад кладём только то, что реально занимает трюм
     const storable: [OutpostResource, number][] = canStore
         ? [
@@ -237,6 +402,10 @@ export function BaseSection({ location }: Props) {
               ...(Object.entries(gases) as [OutpostResource, number][]),
           ].filter(([, amount]) => amount > 0)
         : [];
+    // Сложенное на хранение: бункер вывозят кнопкой, склад — по одному
+    const stored = (
+        Object.entries(base.storedGoods ?? {}) as [OutpostResource, number][]
+    ).filter(([, amount]) => amount > 0);
 
     return (
         <div className="mt-2 border border-[#ffb00033] bg-[rgba(255,176,0,0.04)] p-2 sm:p-3">
@@ -271,18 +440,29 @@ export function BaseSection({ location }: Props) {
                             key={moduleId}
                             className="flex items-center justify-between gap-2 border border-[#ffb00033] px-2 py-1"
                         >
-                            <span className="flex min-w-0 items-center gap-1.5 truncate text-[11px] text-white sm:text-xs">
+                            {/* Описание прямо в строке: раньше оно жило только
+                                в title-подсказке кнопки установки — то есть у
+                                поставленного модуля не было нигде, а на тач-
+                                экране не было вовсе */}
+                            <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-white sm:text-xs">
                                 <GameImage
                                     src={getBaseModuleImage(moduleId)}
                                     alt=""
                                     className="h-6 w-6 shrink-0 object-contain"
                                 />
-                                {t(`base_modules.${moduleId}.name`)}
-                                {boostFeature && (
-                                    <span className="ml-1 text-[#00ff41]">
-                                        {PLANET_FEATURES[boostFeature].icon} ×2
+                                <span className="min-w-0">
+                                    <span className="block truncate">
+                                        {t(`base_modules.${moduleId}.name`)}
+                                        {boostFeature && (
+                                            <span className="ml-1 text-[#00ff41]">
+                                                {PLANET_FEATURES[boostFeature].icon} ×2
+                                            </span>
+                                        )}
                                     </span>
-                                )}
+                                    <span className="block text-[9px] leading-tight text-[#8a9ba3]">
+                                        {t(`base_modules.${moduleId}.desc`)}
+                                    </span>
+                                </span>
                             </span>
                             <Button
                                 onClick={() => removeBaseModule(base.id, moduleId)}
@@ -295,7 +475,9 @@ export function BaseSection({ location }: Props) {
                 })}
 
                 {installed.length < slots && (
-                    <div className="flex flex-wrap gap-1">
+                    // Список, а не россыпь чипов: у слота цена в тысячи
+                    // кредитов, и «что это делает» должно читаться до нажатия
+                    <div className="space-y-1">
                         {(Object.keys(BASE_MODULES) as BaseModuleId[])
                             .filter((moduleId) => !installed.includes(moduleId))
                             .map((moduleId) => {
@@ -340,22 +522,29 @@ export function BaseSection({ location }: Props) {
                                                       `base_modules.${moduleId}.desc`,
                                                   )
                                         }
-                                        className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000] disabled:cursor-default disabled:opacity-40"
+                                        className="h-auto w-full cursor-pointer items-start justify-start gap-1.5 whitespace-normal border border-[#555] bg-transparent px-2 py-1 text-left text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000] disabled:cursor-default disabled:opacity-40"
                                     >
                                         <GameImage
                                             src={getBaseModuleImage(moduleId)}
                                             alt=""
-                                            className="mr-1 h-5 w-5 shrink-0 object-contain"
+                                            className="h-6 w-6 shrink-0 object-contain"
                                         />
-                                        {t(`base_modules.${moduleId}.name`)} ·{" "}
-                                        {def.cost.credits}₢
-                                        {blocker && (
-                                            <span className="ml-1 text-[#ff667f]">
-                                                {missing.length > 0
-                                                    ? `— ${missing.join(", ")}`
-                                                    : `— ${t(`outposts.module_${blocker}`)}`}
+                                        <span className="min-w-0 flex-1">
+                                            <span className="block">
+                                                {t(`base_modules.${moduleId}.name`)} ·{" "}
+                                                {def.cost.credits}₢
+                                                {blocker && (
+                                                    <span className="ml-1 text-[#ff667f]">
+                                                        {missing.length > 0
+                                                            ? `— ${missing.join(", ")}`
+                                                            : `— ${t(`outposts.module_${blocker}`)}`}
+                                                    </span>
+                                                )}
                                             </span>
-                                        )}
+                                            <span className="block text-[9px] leading-tight text-[#8a9ba3]">
+                                                {t(`base_modules.${moduleId}.desc`)}
+                                            </span>
+                                        </span>
                                     </Button>
                                 );
                             })}
@@ -397,20 +586,26 @@ export function BaseSection({ location }: Props) {
                     </div>
                     <div className="mt-1 flex flex-wrap gap-1">
                         {canRepair && (
-                            <Button
+                            <ServiceButton
+                                icon="🔧"
+                                label={t("outposts.service_repair")}
+                                color="#00d4ff"
+                                cost={BASE_SERVICE_VALUES.repairCost}
+                                blocker={repairBlocker}
+                                nothingLabel={t("outposts.service_repair_nothing")}
                                 onClick={() => repairAtBase(base.id)}
-                                className="min-h-8 cursor-pointer border border-[#00d4ff] bg-transparent px-2 text-[10px] uppercase text-[#00d4ff] hover:bg-[rgba(0,212,255,0.12)]"
-                            >
-                                🔧 {t("outposts.service_repair")}
-                            </Button>
+                            />
                         )}
                         {canHeal && (
-                            <Button
+                            <ServiceButton
+                                icon="⚕️"
+                                label={t("outposts.service_heal")}
+                                color="#00ff41"
+                                cost={BASE_SERVICE_VALUES.healCost}
+                                blocker={healBlocker}
+                                nothingLabel={t("outposts.service_heal_nothing")}
                                 onClick={() => healAtBase(base.id)}
-                                className="min-h-8 cursor-pointer border border-[#00ff41] bg-transparent px-2 text-[10px] uppercase text-[#00ff41] hover:bg-[rgba(0,255,65,0.12)]"
-                            >
-                                ⚕️ {t("outposts.service_heal")}
-                            </Button>
+                            />
                         )}
                         {canCraft && (
                             <Button
@@ -421,32 +616,58 @@ export function BaseSection({ location }: Props) {
                             </Button>
                         )}
                     </div>
-                    {/* Казарма растит своих: профессию выбирает игрок, а не
-                        случай, и этим наём на базе отличается от станции */}
+                    {/* Казарма вербует на ближайшей населённой планете:
+                        профессию выбирает игрок, а цену и срок — то, насколько
+                        глухое место выбрано под базу */}
                     {canHire && (
                         <div className="mt-1.5">
-                            <div className="text-[10px] text-[#8a9ba3]">
-                                {t("outposts.service_hire", {
-                                    cost: BASE_SERVICE_VALUES.settlerCost,
-                                })}
-                            </div>
-                            <div className="mt-1 flex flex-wrap gap-1">
-                                {HIREABLE_PROFESSIONS.map((profession) => (
-                                    <Button
-                                        key={profession}
-                                        onClick={() =>
-                                            hireAtBase(base.id, profession)
-                                        }
-                                        disabled={
-                                            credits <
-                                            BASE_SERVICE_VALUES.settlerCost
-                                        }
-                                        className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000] disabled:cursor-default disabled:opacity-40"
-                                    >
-                                        {t(`professions.${profession}`)}
-                                    </Button>
-                                ))}
-                            </div>
+                            {base.pendingSettler ? (
+                                <div className="text-[10px] text-[#00d4ff]">
+                                    🚶{" "}
+                                    {t("outposts.settler_in_transit", {
+                                        profession: t(
+                                            `professions.${base.pendingSettler.profession}`,
+                                        ),
+                                        turns: Math.max(
+                                            0,
+                                            base.pendingSettler.arrivesAtTurn - turn,
+                                        ),
+                                    })}
+                                </div>
+                            ) : settlerOffer ? (
+                                <>
+                                    <div className="text-[10px] text-[#8a9ba3]">
+                                        {t("outposts.service_hire_from", {
+                                            planet: t(settlerOffer.planetName),
+                                            cost: settlerOffer.cost,
+                                            turns: settlerOffer.turns,
+                                        })}
+                                    </div>
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                        {HIREABLE_PROFESSIONS.map((profession) => (
+                                            <Button
+                                                key={profession}
+                                                onClick={() =>
+                                                    hireAtBase(base.id, profession)
+                                                }
+                                                disabled={hireBlocker !== null}
+                                                className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000] disabled:cursor-default disabled:opacity-40"
+                                            >
+                                                {t(`professions.${profession}`)}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                    {hireBlocker && (
+                                        <div className="mt-0.5 text-[9px] text-[#8a9ba3]">
+                                            {t(`outposts.hire_${hireBlocker}`)}
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="text-[10px] text-[#8a9ba3]">
+                                    {t("outposts.hire_no_source")}
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -458,58 +679,67 @@ export function BaseSection({ location }: Props) {
                             </div>
 
                             {(storable.length > 0 || ship.cargo.length > 0) && (
-                                <div className="mt-1 flex flex-wrap gap-1">
+                                <div className="mt-1 space-y-1">
                                     {storable.map(([resource, amount]) => (
-                                        <Button
+                                        <TransferRow
                                             key={resource}
-                                            onClick={() =>
-                                                storeAtBase(base.id, resource, amount)
+                                            label={describeHaulResource(resource, t)}
+                                            max={amount}
+                                            accent="#ffb000"
+                                            arrow="↓"
+                                            onTransfer={(qty) =>
+                                                storeAtBase(base.id, resource, qty)
                                             }
-                                            className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000]"
-                                        >
-                                            ↓ {describeHaulResource(resource, t)} ×
-                                            {amount}
-                                        </Button>
+                                        />
                                     ))}
                                     {/* Ради этого склад и нужен: груз задания и
                                         запасной модуль продать нельзя, а трюм
                                         они занимают */}
                                     {ship.cargo.map((item, index) => (
-                                        <Button
+                                        <TransferRow
                                             key={`${item.item}-${index}`}
-                                            onClick={() =>
-                                                storeCargoAtBase(
-                                                    base.id,
-                                                    index,
-                                                    item.quantity,
-                                                )
+                                            label={describeCargoItem(item, t)}
+                                            max={item.quantity}
+                                            accent="#ffb000"
+                                            arrow="↓"
+                                            onTransfer={(qty) =>
+                                                storeCargoAtBase(base.id, index, qty)
                                             }
-                                            className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000]"
-                                        >
-                                            ↓ {describeCargoItem(item, t)} ×
-                                            {item.quantity}
-                                        </Button>
+                                        />
                                     ))}
                                 </div>
                             )}
 
-                            {(base.storedCargo ?? []).length > 0 && (
-                                <div className="mt-1 flex flex-wrap gap-1">
+                            {(stored.length > 0 ||
+                                (base.storedCargo ?? []).length > 0) && (
+                                <div className="mt-1 space-y-1 border-t border-[#00d4ff22] pt-1">
+                                    {stored.map(([resource, amount]) => (
+                                        <TransferRow
+                                            key={`stored-${resource}`}
+                                            label={describeHaulResource(resource, t)}
+                                            max={amount}
+                                            accent="#00d4ff"
+                                            arrow="↑"
+                                            onTransfer={(qty) =>
+                                                withdrawFromBase(base.id, resource, qty)
+                                            }
+                                        />
+                                    ))}
                                     {(base.storedCargo ?? []).map((item, index) => (
-                                        <Button
+                                        <TransferRow
                                             key={`stored-${item.item}-${index}`}
-                                            onClick={() =>
+                                            label={describeCargoItem(item, t)}
+                                            max={item.quantity}
+                                            accent="#00d4ff"
+                                            arrow="↑"
+                                            onTransfer={(qty) =>
                                                 withdrawCargoFromBase(
                                                     base.id,
                                                     index,
-                                                    item.quantity,
+                                                    qty,
                                                 )
                                             }
-                                            className="min-h-7 cursor-pointer border border-[#00d4ff55] bg-transparent px-2 text-[10px] text-[#00d4ff] hover:border-[#00d4ff]"
-                                        >
-                                            ↑ {describeCargoItem(item, t)} ×
-                                            {item.quantity}
-                                        </Button>
+                                        />
                                     ))}
                                 </div>
                             )}

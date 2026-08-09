@@ -237,6 +237,7 @@
     },
     "ship_stats": {
         "fuel": "Fuel",
+        "burn_deuterium_hint": "Convert deuterium into fuel: {{units}} unit(s) × {{fuel}} fuel",
         "engine": "Engine",
         "level": "Lvl",
         "captain": "Captain",
@@ -334,6 +335,7 @@
             "population": "Population",
             "reputation": "Reputation",
             "mineral_buyback_only": "Ore buyback only",
+            "gas_only": "Gas trading only",
             "population_knowledge": "Population data",
             "unresolved": "Unresolved only",
             "advanced": "More filters"
@@ -357,6 +359,10 @@
             "cargo": "In cargo: {{quantity}} t",
             "buy": "Buy: {{price}}₢/t",
             "sell": "Sell: {{price}}₢/t"
+        },
+        "gas": {
+            "gas_sell": "Buys gas",
+            "gas_buy_polymers": "Sells synth-polymers"
         },
         "facts": {
             "sector": "{{name}} sector · tier {{tier}}",
@@ -4008,6 +4014,7 @@
             "quantum_crystals": "Quantum Crystals",
             "ancient_data": "Ancient Data",
             "alien_biology": "Alien Biology",
+            "void_membrane": "Void Membrane",
             "electronics": "Electronics",
             "spares": "Spares"
         }
@@ -5203,8 +5210,20 @@
     },
     "outposts": {
         "legend": "Your outpost",
+        "service_hire_from": "Recruiting on {{planet}} · {{cost}}₢ · {{turns}} turn(s) travel",
+        "settler_in_transit": "{{profession}} is on the way, arrives in {{turns}} turn(s)",
+        "hire_no_source": "Nobody to recruit: no inhabited planets found",
+        "hire_in_transit": "A settler is already on the way",
+        "hire_no_slot": "No free garrison slot",
+        "hire_not_enough_credits": "Not enough credits",
+        "service_repair_nothing": "All modules intact",
+        "service_heal_nothing": "The crew is healthy and rested",
+        "service_no_supplies": "Needs {{qty}} × {{item}} in the hold",
+        "legend_collector": "Your gas collector",
+        "legend_base": "Your base",
         "gas_from_outposts": "Gas from outposts",
         "gas_price": "{{price}}₢ per unit",
+        "gas_buy_price": "Buy from the station: {{price}}₢ per unit",
         "sell_all": "Sell all · {{total}}₢",
         "cryogen_burning": "Burns on its own: −{{value}} draw on every module",
         "garrison": "Garrison",
@@ -5218,6 +5237,9 @@
         "base_hint": "One base per run. There are fewer slots than modules, so what goes in is a choice. Planet features decide which modules are possible here and which work twice as well.",
         "bunker": "Bunker",
         "bunker_empty": "Empty",
+        "under_construction": "Under construction",
+        "work_left": "Work left: {{turns}} turn(s). The site is not operating yet.",
+        "build_turns": "Construction: {{turns}} turn(s)",
         "dismantle": "Dismantle",
         "upgrade": "Level {{level}} · {{slots}} slots · {{credits}}₢",
         "blocked_not_explored": "The planet is not fully surveyed: all scouting missions are needed",
@@ -5265,9 +5287,9 @@
             "use": "feeds straight into fuel"
         },
         "polymers": {
-            "desc": "Methane fraction polymerised on site. Feeds spares and hybrid module assembly.",
+            "desc": "Methane fraction polymerised on site. Hybrid modules cannot be built without it.",
             "name": "Synth-polymers",
-            "use": "spares and module assembly"
+            "use": "hybrid module assembly"
         },
         "biosynth": {
             "desc": "Ammonia biomass — feedstock for medicine and provisions. Pricier than the other gases and badly needed during epidemics.",
@@ -5387,6 +5409,9 @@
     "game_logs": {
         "cargo_jettisoned": "🗑 Jettisoned: {{name}} ×{{qty}}",
         "gas_sold": "💰 Sold: {{gas}} ×{{qty}} for {{total}}₢",
+        "gas_bought": "🧪 Bought: {{gas}} ×{{qty}} for {{total}}₢",
+        "deuterium_burned": "⚗️ Deuterium to the tank: −{{units}} unit(s), +{{gained}} fuel",
+        "deuterium_burn_pointless": "The tank is full or there is no deuterium",
         "gas_not_sellable": "This gas cannot be sold",
         "boostArtifact_1": "Select an active artifact!",
         "boostArtifact_2": "🔮 {{artifact_name}} is ready to be boosted!",
@@ -5788,8 +5813,12 @@
         "base_healed": "⚕️ The medical bay treated the crew and cleared fatigue",
         "base_heal_nothing": "Nobody needs treatment",
         "base_withdrawn": "📤 From base storage: {{resource}} ×{{qty}}",
-        "base_hired": "👤 {{name}} ({{profession}}) grew up at the base and joined the crew",
-        "base_hire_no_room": "No room aboard for another crew member",
+        "base_settler_hired": "🚶 A {{profession}} was recruited on {{planet}}, {{turns}} turn(s) of travel ahead",
+        "base_settler_arrived": "👤 {{name}} ({{profession}}) reached the base and joined the garrison",
+        "base_hire_no_source": "Nobody to recruit: no inhabited planets found",
+        "base_hire_in_transit": "A settler is already on the way",
+        "base_hire_no_slot": "No free garrison slot at the base",
+        "base_hire_not_enough_credits": "Not enough credits to recruit",
         "base_service_no_supplies": "Not enough supplies: {{item}} x{{qty}} required",
         "base_stored": "📦 Into base storage: {{resource}} ×{{qty}}",
         "base_store_full": "Base storage is full",
@@ -5799,6 +5828,8 @@
         "outpost_assault_started": "⚔ Assaulting the captured outpost",
         "outpost_assault_remote": "You can only assault on site",
         "outpost_retaken": "✅ Outpost retaken, the bunker came back with it",
+        "outpost_work_done": "🏗 Construction finished: the outpost is online",
+        "outpost_work_done_base": "🏗 The base is built and online",
         "outpost_built_base": "🏗 Main base founded: {{location}}",
         "outpost_build_remote": "Building and rebuilding only works on site",
         "outpost_blocked_not_explored": "The planet is not fully surveyed",

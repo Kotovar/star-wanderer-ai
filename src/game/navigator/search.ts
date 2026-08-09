@@ -226,6 +226,23 @@ const getTradeResult = (
 ): NavigatorResult | null => {
   const result = createResult(sector, location, "trade", []);
 
+  // Газ торгуется только на станциях с торговым блоком: он живёт во вкладке
+  // торговли, а у добывающей та же вкладка под минералы. Корабли-торговцы
+  // газ не берут вовсе, поэтому здесь их отсекаем сразу
+  if (input.filters.gasOnly) {
+    if (location.type !== "station") return null;
+    const stationId = location.stationId ?? location.id;
+    const known =
+      intel.visited ||
+      intel.highestScanRange >= 3 ||
+      input.knownTradeStations.includes(stationId);
+    const tradesGas =
+      (location.stationConfig?.allowsTrade ?? true) ||
+      location.stationType === "mining";
+    if (!known || !tradesGas) return null;
+    return { ...result, details: ["gas_sell", "gas_buy_polymers"] };
+  }
+
   if (location.type === "station") {
     const isKnownTradeStation =
       (intel.visited ||
@@ -503,7 +520,7 @@ export const getNavigatorResults = (input: NavigatorInput): NavigatorResult[] =>
 
       switch (input.filters.category) {
         case "trade": {
-          if (input.filters.cargoOnly) {
+          if (input.filters.cargoOnly && !input.filters.gasOnly) {
             for (const [goodId, cargoQuantity] of cargoGoods) {
               if (
                 input.filters.mineralBuybackOnly &&

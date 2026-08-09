@@ -23,6 +23,8 @@ import {
   getPlayerCritChance,
 } from "@/game/slices/combat/helpers/playerDamage";
 import type { GameState, WeaponType } from "@/game/types";
+import { getDeuteriumBurnUnits } from "@/game/slices/ship/helpers/fuel";
+import { DEUTERIUM_FUEL_PER_UNIT } from "@/game/constants/outposts";
 import { getTechBonusSum } from "@/game/research";
 import { getActiveModules } from "../modules";
 import { RACES } from "@/game/constants/races";
@@ -152,6 +154,8 @@ export function ShipStats() {
     getBestByProfession(s.crew, "pilot"),
   );
   const research = useGameStore((s) => s.research);
+  const deuteriumBurn = useGameStore(getDeuteriumBurnUnits);
+  const burnDeuteriumAction = useGameStore((s) => s.burnDeuterium);
 
   const { t } = useTranslation();
 
@@ -435,6 +439,23 @@ export function ShipStats() {
           color={fuelColor}
           icon="fuel_efficiency"
           className="col-span-2 md:col-span-1"
+          detail={
+            /* Заправка своим дейтерием — прямо здесь, а не на станции:
+               газ уже в трюме, и лететь за этим никуда не надо */
+            deuteriumBurn > 0 ? (
+              <button
+                type="button"
+                onClick={() => burnDeuteriumAction(deuteriumBurn)}
+                title={t("ship_stats.burn_deuterium_hint", {
+                  units: deuteriumBurn,
+                  fuel: DEUTERIUM_FUEL_PER_UNIT,
+                })}
+                className="shrink-0 cursor-pointer border border-[#9933ff77] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-[#b184ff] hover:border-[#9933ff] hover:text-[#d0b0ff]"
+              >
+                ⚗️ +{deuteriumBurn * DEUTERIUM_FUEL_PER_UNIT}
+              </button>
+            ) : undefined
+          }
         />
       </div>
 

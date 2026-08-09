@@ -254,10 +254,13 @@ export function CargoDisplay() {
     }
 
     const totalCapacity = getCargoCapacity();
-    const contractCargo = ship.cargo.reduce((sum, c) => sum + c.quantity, 0);
+    // Место в трюме занимает весь ship.cargo, но в сводке это три разные
+    // строки: скрафченное оружие и модули лежат там же, где грузы заданий,
+    // и раньше крафт оружия увеличивал счётчик «Задания»
+    const holdCargo = ship.cargo.reduce((sum, c) => sum + c.quantity, 0);
     const tradeCargo = ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0);
     const gasCargo = getGasVolume(gases);
-    const totalCargo = contractCargo + tradeCargo + gasCargo + probes;
+    const totalCargo = holdCargo + tradeCargo + gasCargo + probes;
     const isOverflow = totalCargo > totalCapacity;
     const fillPercent =
         totalCapacity > 0
@@ -282,6 +285,15 @@ export function CargoDisplay() {
     const contractItems = ship.cargo
         .map((c, i) => ({ item: c, idx: i }))
         .filter(({ item }) => !item.isCraftedWeapon && !item.isModule);
+
+    const contractCargo = contractItems.reduce(
+        (sum, { item }) => sum + item.quantity,
+        0,
+    );
+    const weaponCargo = craftedWeapons.reduce(
+        (sum, { item }) => sum + item.quantity,
+        0,
+    );
 
     const weaponBaysWithSlots = ship.modules.filter(
         (m) =>
@@ -331,9 +343,10 @@ export function CargoDisplay() {
                         🗑 {t("cargo.jettison_title")}
                     </button>
                 )}
-                <div className="mt-2 grid grid-cols-5 gap-1 text-center text-[10px]">
+                <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[10px] sm:grid-cols-6">
                     <CargoMetric label={t("cargo.section_contracts")} value={contractCargo} />
                     <CargoMetric label={t("cargo.section_trade")} value={tradeCargo} />
+                    <CargoMetric label={t("cargo.section_weapons")} value={weaponCargo} />
                     <CargoMetric label={t("cargo.section_modules")} value={moduleItems.length} />
                     <CargoMetric label={t("cargo.section_gases")} value={gasCargo} />
                     <CargoMetric label={t("cargo.section_probes")} value={probes} />

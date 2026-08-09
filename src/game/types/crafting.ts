@@ -1,6 +1,7 @@
 import type { TechnologyId, ResearchResourceType } from "./research";
 import type { WeaponType, HybridModuleType } from "./modules";
 import type { Goods } from "./goods";
+import type { GasType } from "./outposts";
 
 export interface CraftingRecipe {
     id: CraftingRecipeId;
@@ -29,5 +30,11 @@ export interface ModuleRecipe {
     icon: string;
     description: string;
     goods: Partial<Record<Goods, number>>;
+    /**
+     * Газ из трюма. Гибриды собираются на синтез-полимерах: без них рецепт
+     * был чистым «заплати кредиты», а сам газ — товаром с описанием про
+     * сборку модулей, которого код не знал.
+     */
+    gases?: Partial<Record<GasType, number>>;
     credits: number;
 }

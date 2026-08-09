@@ -19,10 +19,13 @@ type ExpandedId = string | null;
 
 function RecipeRequirements({
   resources,
+  gases,
   credits,
   t,
 }: {
   resources: Record<string, number>;
+  /** Газ из трюма: у него свой словарь имён, не blueprints.resources */
+  gases?: Record<string, number | undefined>;
   credits: number;
   t: (key: string) => string;
 }) {
@@ -36,6 +39,12 @@ function RecipeRequirements({
           <span key={key} className="text-[#aaa] text-[10px]">
             {t(`blueprints.resources.${key}`)}{" "}
             <span className="text-[#ffb000] font-bold">×{qty}</span>
+          </span>
+        ))}
+        {Object.entries(gases ?? {}).map(([key, qty]) => (
+          <span key={key} className="text-[#aaa] text-[10px]">
+            {t(`gases.${key}.name`)}{" "}
+            <span className="text-[#00d4ff] font-bold">×{qty}</span>
           </span>
         ))}
         <span className="text-[#ffb000] font-bold text-[10px]">
@@ -238,6 +247,7 @@ function ModulePreview({
 
       <RecipeRequirements
         resources={recipe.goods}
+        gases={recipe.gases}
         credits={recipe.credits}
         t={t}
       />

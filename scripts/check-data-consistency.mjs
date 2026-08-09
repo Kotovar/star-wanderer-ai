@@ -48,6 +48,22 @@ for (const raceId of raceIds) {
 // ─── 3. Паритет ключей локалей ru/en ─────────────────────────────────────────
 const ru = require(path.join(root, "src/lib/locales/ru.json"));
 const en = require(path.join(root, "src/lib/locales/en.json"));
+
+// Каждый научный ресурс обязан иметь имя в blueprints.resources: стартовый
+// экран и вкладка чертежей печатают ресурсы по этому словарю, и пропущенный
+// показывается игроку сырым ключом
+const resourceSource = readFileSync(
+  path.join(root, "src/game/constants/research/resources.ts"),
+  "utf8",
+);
+for (const [, id] of resourceSource.matchAll(/^ {4}(\w+): \{$/gm)) {
+  for (const [lang, catalog] of [["ru", ru], ["en", en]]) {
+    assert.ok(
+      catalog.blueprints?.resources?.[id],
+      `${lang}: нет blueprints.resources.${id} — ресурс покажется сырым ключом`,
+    );
+  }
+}
 const collectKeys = (obj, prefix = "") =>
   Object.entries(obj).flatMap(([key, value]) =>
     typeof value === "object" && value !== null

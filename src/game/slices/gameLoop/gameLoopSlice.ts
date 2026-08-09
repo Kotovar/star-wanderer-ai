@@ -3,8 +3,10 @@ import {
     accrueOutposts,
     burnCryogen,
     processBaseEvents,
+    processConstruction,
     processOutpostCrew,
     processOutpostRaids,
+    processSettlerArrivals,
 } from "@/game/slices/outposts/helpers";
 import type { GameState, GameStore, SetState } from "@/game/types";
 import type { CrisisResponse } from "@/game/types/crisis";
@@ -168,6 +170,12 @@ export const createGameLoopSlice = (
 
         // Назначения экипажа
         processors.processCrewAssignments(set, get);
+
+        // Стройка идёт, пока игрок летает: достроенное включается здесь
+        processConstruction(set, get);
+
+        // Заказанные поселенцы доезжают до базы
+        processSettlerArrivals(set, get);
 
         // Аванпосты копят добычу в бункер
         set((s) => ({
