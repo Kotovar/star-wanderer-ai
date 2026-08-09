@@ -14,6 +14,9 @@ const { renderToStaticMarkup } = await import("react-dom/server");
 const { ContractsList } = await import(
   "../src/game/components/ContractsList.tsx"
 );
+const { PlanetPanel } = await import(
+  "../src/game/components/PlanetPanel.tsx"
+);
 
 const FABRICATION = {
   id: "c-fab",
@@ -40,6 +43,18 @@ const CRISIS_RESPONSE = {
   sourcePlanetName: "Церера-3",
   sourceSectorName: "Меридиан-1",
   sourceDominantRace: "human",
+};
+
+const SYNTHETIC_RESEARCH = {
+  id: "c-synthetic-research",
+  type: "research",
+  desc: "contracts.desc_research_synth",
+  reward: 700,
+  requiresTechResearch: true,
+  requiredTechTier: 2,
+  requiredRace: "synthetic",
+  isRaceQuest: true,
+  timeLimit: 15,
 };
 
 setUiState({
@@ -210,5 +225,51 @@ for (const type of declaredTypes) {
     `${type} не назван в getStatusText — в списке заданий покажется сырой ключ`,
   );
 }
+
+setUiState({
+  currentLocation: {
+    id: "synthetic-planet",
+    type: "planet",
+    name: "Синтетическая планета",
+    planetType: "Ледяная",
+    dominantRace: "synthetic",
+    contracts: [SYNTHETIC_RESEARCH],
+  },
+  credits: 0,
+  activeContracts: [],
+  completedContractIds: [],
+  raceReputation: { synthetic: 0 },
+  galaxy: { sectors: [] },
+  completedLocations: [],
+  artifacts: [],
+  research: { researchedTechs: [], unlockedRecipes: [] },
+  activeCrisis: null,
+  acceptContract: () => {},
+  completeDeliveryContract: () => {},
+  showSectorMap: () => {},
+  discoverRace: () => {},
+  knownRaces: ["synthetic"],
+  ship: { cargo: [], tradeGoods: [] },
+  activeExpedition: null,
+  planetCooldowns: {},
+});
+const syntheticOfferMarkup = renderToStaticMarkup(createElement(PlanetPanel));
+const acceptButton = syntheticOfferMarkup.match(
+  /<button(?=[^>]*>ПРИНЯТЬ<\/button>)[^>]*>/,
+);
+assert.ok(acceptButton, "кнопка принятия контракта не отрисовалась");
+assert.doesNotMatch(
+  acceptButton[0],
+  /\sdisabled(?:=|\s|>)/,
+  "контракт должен приниматься с нулевым балансом кредитов",
+);
+assert.ok(
+  syntheticOfferMarkup.includes("Завершить исследование технологии 2+ тира"),
+  "предложение должно заранее объяснять исследовательскую цель",
+);
+assert.ok(
+  !syntheticOfferMarkup.includes("Срок:"),
+  "анализ данных Древних не должен показывать срок",
+);
 
 console.log("Contract label checks passed");

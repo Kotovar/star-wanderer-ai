@@ -49,6 +49,53 @@ const { processScanContracts } = jiti(
 );
 const { loadWithMigrations } = jiti("../src/game/saves/migrations.ts");
 
+const legacySyntheticResearch = {
+  type: "research",
+  requiresTechResearch: true,
+  acceptedAt: 5,
+  timeLimit: 15,
+};
+assert.equal(
+  getContractTurnsRemaining(legacySyntheticResearch, 20),
+  null,
+  "исследование технологии не должно иметь срока даже в старом сохранении",
+);
+assert.equal(
+  isContractExpired(legacySyntheticResearch, 20),
+  false,
+  "исследование технологии из старого сохранения не должно проваливаться по сроку",
+);
+
+const syntheticSource = {
+  id: 101,
+  name: "Synthetic source",
+  tier: 2,
+  locations: [],
+};
+const syntheticTarget = {
+  id: 102,
+  name: "Synthetic target",
+  tier: 2,
+  locations: [],
+};
+const originalSyntheticRandom = Math.random;
+Math.random = () => 0.1;
+const syntheticQuest = generatePlanetContracts(
+  "Ледяная",
+  syntheticSource,
+  "synthetic-planet",
+  0,
+  [syntheticSource, syntheticTarget],
+  "synthetic",
+).find((contract) => contract.requiresTechResearch);
+Math.random = originalSyntheticRandom;
+assert.ok(syntheticQuest, "синтетики должны предлагать анализ данных Древних");
+assert.equal(
+  syntheticQuest.timeLimit,
+  undefined,
+  "новый анализ данных Древних не должен получать срок",
+);
+
 const locationTranslations = {
   "location_names.station_01": "Meridian Foundry",
   "location_names.planet_01": "Asterion",

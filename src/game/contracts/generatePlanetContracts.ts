@@ -132,7 +132,6 @@ export const generatePlanetContracts = (
                 requiredTechTier,
                 requiredRace: "synthetic",
                 isRaceQuest: true,
-                timeLimit: 15,
                 reward:
                     REWARD.synthetic.base[tier - 1] +
                     Math.floor(Math.random() * REWARD.synthetic.range[tier - 1]),

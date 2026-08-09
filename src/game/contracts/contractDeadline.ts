@@ -1,6 +1,9 @@
 import type { Contract } from "@/game/types";
 
-type TimedContract = Pick<Contract, "acceptedAt" | "timeLimit">;
+type TimedContract = Pick<
+  Contract,
+  "acceptedAt" | "timeLimit" | "requiresTechResearch"
+>;
 
 const STANDARD_CONTRACT_DEADLINES: Partial<Record<Contract["type"], number>> = {
   delivery: 8,
@@ -14,7 +17,11 @@ const getRawTurnsRemaining = (
   contract: TimedContract,
   currentTurn: number,
 ): number | null => {
-  if (contract.timeLimit === undefined || contract.acceptedAt === undefined) {
+  if (
+    contract.requiresTechResearch ||
+    contract.timeLimit === undefined ||
+    contract.acceptedAt === undefined
+  ) {
     return null;
   }
 

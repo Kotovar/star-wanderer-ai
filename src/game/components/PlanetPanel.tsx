@@ -120,7 +120,11 @@ function ContractDescription({
                 )}
             {c.type === "research" &&
                 (c.requiresTechResearch
-                    ? stripRaceQuestEmoji(t("contracts.desc_research_synth"), c.isRaceQuest)
+                    ? c.requiredTechTier
+                        ? t("contracts.research_tech_tier", {
+                              tier: c.requiredTechTier,
+                          })
+                        : t("contracts.research_tech")
                     : t("contracts.desc_research", { count: c.requiresAnomalies || 0 }))}
             {c.type === "bounty" &&
                 t("contracts.desc_bounty", {
@@ -226,7 +230,6 @@ function ContractDescription({
 function AvailableContractCard({
     contract: c,
     isActive,
-    credits,
     raceBg,
     raceBorder,
     onAccept,
@@ -235,7 +238,6 @@ function AvailableContractCard({
 }: {
     contract: Contract;
     isActive: boolean;
-    credits: number;
     raceBg: string;
     raceBorder: string;
     onAccept: (contract: Contract) => void;
@@ -286,7 +288,7 @@ function AvailableContractCard({
                     </div>
                 </div>
                 <Button
-                    disabled={isActive || credits < 50}
+                    disabled={isActive}
                     onClick={() => onAccept(c)}
                     className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs ml-2"
                 >
@@ -301,7 +303,7 @@ function AvailableContractCard({
                 <div className="text-[#00ff41]">
                     <ContractDescription contract={c} get={get} t={t} />
                 </div>
-                {c.timeLimit !== undefined && (
+                {c.timeLimit !== undefined && !c.requiresTechResearch && (
                     <div className="text-[#ffb000]">
                         ⏳ {t("contracts.turns_after_accept", { count: c.timeLimit })}
                     </div>
@@ -321,7 +323,6 @@ export function preloadRacePlanetBackgrounds() {
 
 export function PlanetPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
-    const credits = useGameStore((s) => s.credits);
     const activeContracts = useGameStore((s) => s.activeContracts);
     const completedContractIds = useGameStore((s) => s.completedContractIds);
     const raceReputation = useGameStore((s) => s.raceReputation);
@@ -694,7 +695,6 @@ export function PlanetPanel() {
                                         key={c.id}
                                         contract={c}
                                         isActive={isActive}
-                                        credits={credits}
                                         raceBg={raceBg}
                                         raceBorder={raceBorder}
                                         onAccept={acceptContract}
@@ -744,10 +744,6 @@ export function PlanetPanel() {
 
         </div>
     );
-}
-
-function stripRaceQuestEmoji(text: string, isRaceQuest?: boolean): string {
-    return isRaceQuest ? stripLeadingEmoji(text) : text;
 }
 
 function stripLeadingEmoji(text: string): string {

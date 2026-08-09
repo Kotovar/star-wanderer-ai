@@ -29,9 +29,16 @@ export const useGameStore = Object.assign(
     subscribe: () => () => {},
   },
 );`;
+const imageFixture = "export default function Image() { return null; }";
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
+    if (specifier === "next/image") {
+      return {
+        url: `data:text/javascript,${encodeURIComponent(imageFixture)}`,
+        shortCircuit: true,
+      };
+    }
     if (specifier === "@/game/store" || specifier === "../store") {
       return {
         url: `data:text/javascript,${encodeURIComponent(storeFixture)}`,
