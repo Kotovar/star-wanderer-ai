@@ -2,22 +2,21 @@ import {
     getFuelEfficiencyTechBonus,
     MAX_FUEL_EFFICIENCY_BONUS,
 } from "@/game/research";
-import {
-    getFuelEfficiency,
-    getRaceFuelEfficiencyModifier,
-    getPilotFuelConsumptionModifier,
-    getPlanetFuelEfficiencyModifier,
-} from "@/game/slices/ship";
-import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { getFuelEfficiency } from "@/game/slices/ship/helpers/getFuelEfficiency";
+import { getRaceFuelEfficiencyModifier } from "@/game/slices/ship/helpers/fuel/getRaceFuelEfficiencyModifier";
+import { getPilotFuelConsumptionModifier } from "@/game/slices/ship/helpers/fuel/getPilotFuelConsumptionModifier";
+import { getPlanetFuelEfficiencyModifier } from "@/game/slices/ship/helpers/fuel/getPlanetFuelEfficiencyModifier";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers/mergeEffects";
 import {
     BASE_FUEL_COST_MULTIPLIER,
     DEFAULT_FUEL_COST,
     ARTIFACT_TYPES,
 } from "@/game/constants";
 import { findActiveArtifact, findArtifactByEffect } from "@/game/artifacts";
+import { getSectorRule } from "@/game/galaxy/sectorRules";
 import type { GameState, Sector } from "@/game/types";
 import { hasWarpTravel } from "@/game/research/specialAbilities";
-import { getPilotInCockpit } from "@/game/crew";
+import { getPilotInCockpit } from "@/game/crew/getPilotInCockpit";
 
 /**
  * Множитель расхода топлива без пилота в кабине
@@ -174,6 +173,8 @@ export const calculateFuelCost = (
     pilotInCockpit: boolean,
 ): { fuelCost: number; travelInstant: boolean } => {
     const currentTier = getCurrentTier(state);
+    const noWarp =
+        getSectorRule(state.currentSector?.ruleId)?.restrictions?.noWarp === true;
 
     const targetSector = state.galaxy.sectors.find(
         (s) => s.id === targetSectorId,
@@ -183,7 +184,7 @@ export const calculateFuelCost = (
     }
 
     // Варп-драйв — бесплатные прыжки в любой сектор
-    if (hasWarpTravel(state.research.researchedTechs)) {
+    if (!noWarp && hasWarpTravel(state.research.researchedTechs)) {
         return { fuelCost: 0, travelInstant: true };
     }
 
@@ -221,7 +222,7 @@ export const calculateFuelCost = (
         fuelCost,
         hasFuelFree,
         hasVoidEngine,
-        hasWarpCoil,
+        hasWarpCoil && !noWarp,
         pilotInCockpit,
         tierDistance,
         angularDistance,

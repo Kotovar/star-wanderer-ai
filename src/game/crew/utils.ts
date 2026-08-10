@@ -13,6 +13,8 @@ import type {
     Quality,
 } from "@/game/types";
 
+export { getPilotInCockpit } from "./getPilotInCockpit";
+
 export {
     generateCrewTraits,
     getRandomName,
@@ -165,31 +167,6 @@ export const getMaxScientistLevel = (crew: CrewMember[]): number => {
     return scientists.length > 0
         ? Math.max(...scientists.map((s) => s.level || 1))
         : 0;
-};
-
-/**
- * Лучший (по уровню) пилот, находящийся в активной кабине.
- * Единая проверка «пилот за штурвалом» для топлива, уклонения,
- * манёвров в пути и отступления из боя.
- */
-export const getPilotInCockpit = (
-    crew: CrewMember[],
-    modules: { id: number; type: string; disabled?: boolean; manualDisabled?: boolean; health: number }[],
-): CrewMember | undefined => {
-    const cockpitIds = new Set(
-        modules
-            .filter(
-                (m) =>
-                    m.type === "cockpit" &&
-                    !m.disabled &&
-                    !m.manualDisabled &&
-                    m.health > 0,
-            )
-            .map((m) => m.id),
-    );
-    return crew
-        .filter((c) => c.profession === "pilot" && cockpitIds.has(c.moduleId))
-        .sort((a, b) => (b.level ?? 1) - (a.level ?? 1))[0];
 };
 
 /**

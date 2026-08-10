@@ -3,6 +3,7 @@ import type { GameStore, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 import { calculateRepairCost } from "./calculateRepairCost";
 import { ServiceCostResult } from "./types";
+import { getSectorRule } from "@/game/galaxy/sectorRules";
 
 /**
  * Выполняет ремонт корабля
@@ -11,6 +12,10 @@ import { ServiceCostResult } from "./types";
  */
 export const repairShip = (set: SetState, get: () => GameStore): void => {
     const state = get();
+    if (getSectorRule(state.currentSector?.ruleId)?.restrictions?.noRepair) {
+        get().addLog(i18nStore.t("sector_rules.logs.repair_blocked"), "warning");
+        return;
+    }
     const raceId = state.currentLocation?.dominantRace;
     const { cost, canUse }: ServiceCostResult = calculateRepairCost(
         state,

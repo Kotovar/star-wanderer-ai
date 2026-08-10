@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import { getSectorName } from "@/lib/translationHelpers";
 import type { GameStore, SetState } from "@/game/types";
 import { calculateFuelCostForUI } from "./calculateFuelCost";
+import { applySectorRuleEffect } from "./applySectorRuleEffect";
 
 // ============================================================================
 // Константы
@@ -100,6 +101,7 @@ export const emergencyJump = (set: SetState, get: () => GameStore): void => {
         ship: { ...state.ship, modules: damagedModules },
         gameMode: "sector_map",
     });
+    applySectorRuleEffect(destination, set, get);
 
     get().addLog( i18nStore.t("game_logs.emergencyJump_4"), "warning");
     get().addLog( i18nStore.t("game_logs.emergencyJump_5", { destination_name: getSectorName(destination.name, i18nStore.t) }), "info");

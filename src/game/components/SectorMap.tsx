@@ -14,6 +14,7 @@ import {
 } from "@/game/constants/starHazards";
 import { getStarTypeEffect } from "@/game/constants/starEffects";
 import { getStarEffectDisplay } from "@/game/constants/starEffectDisplay";
+import { getSectorRule } from "@/game/galaxy/sectorRules";
 import { STAR_SPRITE_SHEET } from "@/game/assets/starSprites";
 import type { Location, LocationType, StarType } from "@/game/types";
 import {
@@ -212,6 +213,7 @@ function loadSpriteImage(
 export function SectorMap() {
   const containerRef = useRef<HTMLDivElement>(null);
   const currentSector = useGameStore((s) => s.currentSector);
+  const currentSectorRule = getSectorRule(currentSector?.ruleId);
   const selectLocation = useGameStore((s) => s.selectLocation);
   const travelThroughBlackHole = useGameStore(
     (s) => s.travelThroughBlackHole,
@@ -1326,14 +1328,31 @@ export function SectorMap() {
         )}
 
         <div className="flex items-start justify-between gap-2">
-          {/* Current sector indicator */}
-          <div className="pointer-events-auto bg-[rgba(255,176,0,0.15)] border-2 border-accent px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm font-['Orbitron'] font-bold text-accent shadow-[0_0_15px_rgba(255,176,0,0.3)]">
-            <span className="text-[10px] md:text-xs opacity-70 mr-1">
-              {t("game.sector")}:
-            </span>
-            <span className="text-[#00ff41]">
-              {currentSector ? getLocationName(currentSector.name, t) : "START"}
-            </span>
+          <div className="flex min-w-0 flex-col gap-1">
+            <div className="pointer-events-auto bg-[rgba(255,176,0,0.15)] border-2 border-accent px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm font-['Orbitron'] font-bold text-accent shadow-[0_0_15px_rgba(255,176,0,0.3)]">
+              <span className="text-[10px] md:text-xs opacity-70 mr-1">
+                {t("game.sector")}:
+              </span>
+              <span className="text-[#00ff41]">
+                {currentSector ? getLocationName(currentSector.name, t) : "START"}
+              </span>
+            </div>
+            {currentSectorRule && (
+              <div
+                className="pointer-events-auto max-w-[min(26rem,calc(100vw-5rem))] border bg-[rgba(5,8,16,0.9)] px-2 py-1.5 text-[10px] leading-snug shadow-[0_0_12px_rgba(0,0,0,0.35)]"
+                style={{ borderColor: currentSectorRule.color }}
+              >
+                <div
+                  className="font-['Orbitron'] font-bold"
+                  style={{ color: currentSectorRule.color }}
+                >
+                  {t("sector_rules.current")}: {currentSectorRule.icon} {t(currentSectorRule.nameKey)}
+                </div>
+                <div className="mt-0.5 text-[#c7d4dc]">
+                  {t(currentSectorRule.descKey)}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Scanner range indicator */}

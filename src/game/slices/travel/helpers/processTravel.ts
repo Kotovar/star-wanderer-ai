@@ -43,6 +43,7 @@ import {
     applyPatrolContractCompletions,
     type PatrolContractResult,
 } from "./patrolCompletions";
+import { applySectorRuleEffect } from "./applySectorRuleEffect";
 
 /** Вероятность случайного события в пути (прямой маршрут) */
 const TRAVEL_EVENT_CHANCE_DIRECT = 0.45;
@@ -838,6 +839,7 @@ export const processTravel = (
 
         // Радиационная мутация при прибытии в сектор с нейтронной звездой
         applyNeutronRadiation(destinationSector, set, get);
+        applySectorRuleEffect(destinationSector, set, get);
 
         get().addLog( i18nStore.t("game_logs.processTravel_29", { destinationSector_name: getSectorName(destinationSector.name, i18nStore.t) }), "info");
         get().updateShipStats();

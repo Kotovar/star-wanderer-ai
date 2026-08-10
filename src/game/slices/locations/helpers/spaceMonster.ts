@@ -1,31 +1,12 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getLocationName } from "@/lib/translationHelpers";
-import { getArchiveHintLocations } from "@/game/artifacts/utils";
+import { getArtifactHint } from "@/game/artifacts/utils";
 import {
     FIRST_CONTACT_RESOURCE_BONUS,
     SPACE_MONSTERS,
 } from "@/game/constants/spaceMonsters";
 import { grantTimedEffect } from "@/game/effects/timedEffects";
-import type { Artifact, GameStore, Location, SetState } from "@/game/types";
-
-type ArtifactHint = {
-    artifactId: string;
-    hintedAt: NonNullable<Artifact["hintedAt"]>;
-};
-
-const getCrystalHydraArtifactHint = (
-    state: GameStore,
-): ArtifactHint | null => {
-    const hintedAt = getArchiveHintLocations(
-        state.galaxy.sectors,
-        state.currentSector?.id,
-    )[0];
-    const artifact = state.artifacts.find(
-        (candidate) => !candidate.discovered && !candidate.hinted,
-    );
-
-    return artifact && hintedAt ? { artifactId: artifact.id, hintedAt } : null;
-};
+import type { GameStore, Location, SetState } from "@/game/types";
 
 export const resonateWithSpaceMonster = (
     set: SetState,
@@ -64,7 +45,7 @@ export const resonateWithSpaceMonster = (
         : monster.firstContact;
     const artifactHint =
         firstContact?.type === "artifact_hint"
-            ? getCrystalHydraArtifactHint(state)
+            ? getArtifactHint(state)
             : null;
     // First contact is a one-time gift, not a partial top-up — heal and refuel go to full.
     const crewHealing =

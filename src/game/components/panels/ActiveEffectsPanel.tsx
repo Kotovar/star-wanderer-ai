@@ -22,6 +22,7 @@ const SOURCE_ICONS: Record<EffectSource, string> = {
   anomaly: "◈",
   event: "◆",
   station: "▣",
+  sector: "◌",
 };
 
 function getPlanetEffectKey(raceId: string): string {
@@ -49,7 +50,7 @@ export function ActiveEffectsPanel() {
   const permanentTechs = researchedTechs
     .map((techId) => RESEARCH_TREE[techId])
     .filter((tech) => tech.bonuses.some((bonus) => bonus.type === "special_ability"));
-  const permanentEffects = activeEffects.filter((effect) => effect.permanent);
+  const permanentEffects = activeEffects.filter((effect) => effect.permanent && effect.source !== "sector");
   const timedEffects = activeEffects.filter((effect) => !effect.permanent);
   const positiveCount = timedEffects.filter(
     (effect) => (effect.polarity ?? "positive") !== "negative",

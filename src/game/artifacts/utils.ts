@@ -64,6 +64,25 @@ export const getArchiveHintLocations = (
     return locations;
 };
 
+export const getArtifactHint = (
+    state: Pick<GameState, "artifacts" | "currentSector" | "galaxy">,
+):
+    | {
+          artifactId: string;
+          hintedAt: NonNullable<Artifact["hintedAt"]>;
+      }
+    | null => {
+    const hintedAt = getArchiveHintLocations(
+        state.galaxy.sectors,
+        state.currentSector?.id,
+    )[0];
+    const artifact = state.artifacts.find(
+        (candidate) => !candidate.discovered && !candidate.hinted,
+    );
+
+    return artifact && hintedAt ? { artifactId: artifact.id, hintedAt } : null;
+};
+
 // Get random undiscovered artifact weighted by rarity
 export const getRandomUndiscoveredArtifact = (
     artifacts: Artifact[],

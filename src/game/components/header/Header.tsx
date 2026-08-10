@@ -51,6 +51,7 @@ export function GameHeader() {
 
   const discoveredArtifacts = artifacts.filter((a) => a.discovered).length;
   const activeArtifacts = artifacts.filter((a) => a.effect.active).length;
+  const visibleEffectCount = activeEffects.filter((effect) => effect.source !== "sector").length;
   const crisis = activeCrisis
     ? GLOBAL_CRISES.find((item) => item.id === activeCrisis.id)
     : null;
@@ -236,9 +237,9 @@ export function GameHeader() {
               <span className="text-[#9933ff] hidden md:inline">
                 {t("game.effects")}
               </span>
-              {activeEffects.length > 0 && (
+              {visibleEffectCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-[#9933ff] text-[#050810] text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                  {activeEffects.length}
+                  {visibleEffectCount}
                 </span>
               )}
             </button>

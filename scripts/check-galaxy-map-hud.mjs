@@ -19,6 +19,10 @@ const galaxyMapUtilsSource = await readFile(
   new URL("../src/game/galaxy/galaxy-map-utils.ts", import.meta.url),
   "utf8",
 );
+const sectorMapSource = await readFile(
+  new URL("../src/game/components/SectorMap.tsx", import.meta.url),
+  "utf8",
+);
 
 assert.match(
   galaxyMapSource,
@@ -34,6 +38,42 @@ assert.doesNotMatch(
   galaxyMapUtilsSource,
   /Fallback before the bitmap asset is loaded/,
   "GalaxyMap never replaces the ship with a temporary vector marker",
+);
+
+assert.match(
+  galaxyMapSource,
+  /SECTOR_RULE_IDS\.map\(/,
+  "легенда галактики должна объяснять обозначения правил секторов",
+);
+assert.match(
+  galaxyMapSource,
+  /const routeChoiceRule = routeChoice/,
+  "выбор маршрута должен знать правило целевого сектора",
+);
+assert.match(
+  galaxyMapSource,
+  /\{routeChoiceRule && \(/,
+  "выбор маршрута через туманность должен показывать правило цели",
+);
+assert.match(
+  sectorMapSource,
+  /const currentSectorRule = getSectorRule\(/,
+  "карта сектора должна получать правило текущего сектора",
+);
+assert.match(
+  sectorMapSource,
+  /t\(currentSectorRule\.descKey\)/,
+  "карта сектора должна объяснять текущее правило",
+);
+assert.match(
+  galaxyMapUtilsSource,
+  /const badgeX =/,
+  "значок правила должен быть привязан к звезде через позицию бейджа",
+);
+assert.match(
+  galaxyMapUtilsSource,
+  /ctx\.arc\(badgeX, badgeY/,
+  "значок правила должен рисоваться как бейдж у конкретной звезды",
 );
 
 assert.equal(

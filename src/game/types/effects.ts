@@ -38,7 +38,7 @@ export type StationEffectType = "research_speed";
  */
 export type EffectType = ArtifactEffectType | PlanetEffectType | StationEffectType;
 
-export type EffectSource = "planet" | "crew" | "combat" | "anomaly" | "event" | "station";
+export type EffectSource = "planet" | "crew" | "combat" | "anomaly" | "event" | "station" | "sector";
 export type EffectPolarity = "positive" | "negative" | "mixed";
 
 export interface ActiveEffect {

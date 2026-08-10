@@ -1281,9 +1281,11 @@
         "undiscovered_hint": "Search anomalies, wrecks and ruins",
         "hint_label_archives": "ARCHIVE SIGNAL",
         "hint_label_space_monster": "CREATURE SIGNAL",
+        "hint_label_sector": "SECTOR SIGNAL",
         "hint_label_unknown": "LEAD",
         "hint_text_archives": "Archives marked this artifact as a priority for discovery",
         "hint_text_space_monster": "A space creature pointed to this artifact",
+        "hint_text_sector": "The sector left a trail leading to this artifact",
         "hint_text_unknown": "A lead was received for this artifact",
         "hint_location": "Search",
         "active_label": "ACTIVE",
@@ -1339,6 +1341,7 @@
             "anomaly": "Anomaly",
             "event": "Event decision",
             "station": "Station",
+            "sector": "Sector",
             "research": "Research"
         },
         "items": {
@@ -4268,6 +4271,34 @@
         "turns_left": "Turns remaining",
         "skipping": "SKIPPING...",
         "access_requires": "To enter sector level {{sectorLevel}}, you need: Engine Lv. {{requiredEngine}} and Captain Lv. {{requiredCaptain}}. Current: Engine Lv. {{engineLevel}}, Captain Lv. {{captainLevel}}."
+    },
+    "sector_rules": {
+        "current": "SYSTEM FEATURES",
+        "legend": "SECTOR RULES",
+        "zero_field": {
+            "name": "Zero Field",
+            "description": "Warp drive and warp coil do not work. Plan your fuel reserve ahead."
+        },
+        "blind_zone": {
+            "name": "Blind Zone",
+            "description": "Scanners are blind, but the ship is harder to hit (+15% evasion)."
+        },
+        "fleet_graveyard": {
+            "name": "Fleet Graveyard",
+            "description": "There are no stations or repairs, but wrecks, derelicts, and artifact trails are more common."
+        },
+        "resonance": {
+            "name": "Resonance",
+            "description": "Weapons deal 25% more damage, but the shield reserve is reduced by 25."
+        },
+        "dead_drift": {
+            "name": "Dead Drift",
+            "description": "Travel uses 50% more fuel, but distress signals and derelicts are more common."
+        },
+        "logs": {
+            "repair_blocked": "Repairs are impossible: Fleet Graveyard has no working shipyards.",
+            "artifact_hint": "📡 A trail leading to an artifact was found among the wreckage."
+        }
     },
     "sector_map_ui": {
         "zoom_in": "Zoom in",

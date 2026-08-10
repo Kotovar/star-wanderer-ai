@@ -28,6 +28,11 @@ import { bossDistribution } from "./bossDistribution";
 import { ANCIENT_BOSSES } from "@/game/constants/bosses";
 import { placeReservedBoss } from "./reservedBosses";
 import type { RunProfile } from "./runProfiles";
+import {
+    getSectorRule,
+    planSectorRules,
+    shouldSkipSectorEnsure,
+} from "./sectorRules";
 
 // ============================================================================
 // Основная функция генерации
@@ -55,15 +60,13 @@ export const generateGalaxy = (profile: RunProfile | null = null): Sector[] => {
     const sectors: Sector[] = [];
     let sectorIdx = 0;
 
-    // Генерация секторов по уровням
+    // Сначала собираем оболочки, чтобы правила увидели итоговые ЧД и боссов.
     TIER_CONFIG.forEach(({ tier, count, baseDanger, radiusRatio }) => {
         for (let i = 0; i < count; i++) {
             const angle = calculateSectorAngle(i, count, tier);
             const actualRadius = calculateSectorRadius(radiusRatio);
             const star = generateStar(tier);
-            const isBlackHole = star.type === "blackhole";
-
-            const sector: Sector = {
+            sectors.push({
                 id: sectorIdx,
                 name: getSectorNameKey(sectorIdx, tier),
                 danger: baseDanger + Math.floor(Math.random() * 2),
@@ -73,52 +76,13 @@ export const generateGalaxy = (profile: RunProfile | null = null): Sector[] => {
                 mapAngle: angle,
                 mapRadius: actualRadius,
                 star,
-            };
-
-            // Генерация локаций
-            const numLocations = getLocationCount(tier, isBlackHole);
-            for (let j = 0; j < numLocations; j++) {
-                sector.locations.push(
-                    generateLocation(
-                        sectorIdx,
-                        j,
-                        tier,
-                        isBlackHole,
-                        star.type,
-                        profile?.id === "war_spiral" && sectorIdx === 0
-                            ? undefined
-                            : profile ?? undefined,
-                    ),
-                );
-            }
-
-            // Обеспечение минимальных требований
-            ensureMinAnomalies(sector, tier);
-
-            if (!isBlackHole) {
-                ensureColonizedPlanet(sector);
-                if (!profile || profile.id !== "broken_trade_lanes") {
-                    ensureStation(sector);
-                }
-            }
-
-            sector.locations.push(
-                generateSpaceMonster(sectorIdx, tier, star.type),
-            );
-
-            // Позиционирование локаций на сетке
-            assignGridPositions(sector.locations, true);
-
-            sectors.push(sector);
+            });
             sectorIdx++;
         }
     });
 
     // Минимум две чёрные дыры нужен до размещения Вечного.
     ensureBlackHoles(sectors);
-    ensureBosses(sectors, 1);
-    ensureBosses(sectors, 2);
-    ensureBosses(sectors, 3);
 
     // Оракул — единственный финальный босс на Дальнем рубеже.
     const voidOracle = ANCIENT_BOSSES.find((boss) => boss.id === "void_oracle");
@@ -132,10 +96,6 @@ export const generateGalaxy = (profile: RunProfile | null = null): Sector[] => {
         bossDistribution.markBossAsUsed(voidOracle.id);
     }
 
-    // Постобработка ЧД-секторов: один Вечный на всю галактику, остальные — случайный босс.
-    const bhSectors = sectors.filter(
-        (s) => s.id !== 0 && s.star?.type === "blackhole",
-    );
     const eternal = ANCIENT_BOSSES.find((boss) => boss.id === "the_eternal");
     if (
         eternal &&
@@ -146,6 +106,55 @@ export const generateGalaxy = (profile: RunProfile | null = null): Sector[] => {
     ) {
         bossDistribution.markBossAsUsed(eternal.id);
     }
+
+    planSectorRules(sectors);
+
+    for (const sector of sectors) {
+        const isBlackHole = sector.star.type === "blackhole";
+        const rule = getSectorRule(sector.ruleId);
+        const sectorProfile =
+            profile?.id === "war_spiral" && sector.id === 0
+                ? undefined
+                : profile ?? undefined;
+        const numLocations = getLocationCount(sector.tier, isBlackHole);
+        for (let index = 0; index < numLocations; index++) {
+            sector.locations.push(
+                generateLocation(
+                    sector.id,
+                    index,
+                    sector.tier,
+                    isBlackHole,
+                    sector.star.type,
+                    sectorProfile,
+                    undefined,
+                    rule,
+                ),
+            );
+        }
+
+        ensureMinAnomalies(sector, sector.tier);
+        if (!isBlackHole) {
+            if (!shouldSkipSectorEnsure(sector, "colonizedPlanet")) {
+                ensureColonizedPlanet(sector);
+            }
+            if (!profile || profile.id !== "broken_trade_lanes") {
+                ensureStation(sector);
+            }
+        }
+
+        sector.locations.push(
+            generateSpaceMonster(sector.id, sector.tier, sector.star.type),
+        );
+    }
+
+    ensureBosses(sectors, 1);
+    ensureBosses(sectors, 2);
+    ensureBosses(sectors, 3);
+
+    // Постобработка ЧД-секторов: один Вечный на всю галактику, остальные — случайный босс.
+    const bhSectors = sectors.filter(
+        (sector) => sector.id !== 0 && sector.star.type === "blackhole",
+    );
     bhSectors.forEach((sector) => {
         if (!sector.locations.some((location) => location.type === "boss")) {
             addRandomBossToBlackHole(sector);
@@ -173,6 +182,7 @@ export const generateGalaxy = (profile: RunProfile | null = null): Sector[] => {
                             sector.star.type,
                             profile,
                             type,
+                            getSectorRule(sector.ruleId),
                         ),
                     );
                 }

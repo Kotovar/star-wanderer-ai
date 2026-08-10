@@ -1,5 +1,5 @@
 export type ArtifactRarity = "rare" | "legendary" | "mythic" | "cursed";
-export type ArtifactHintSource = "archives" | "space_monster";
+export type ArtifactHintSource = "archives" | "space_monster" | "sector";
 
 // Ancient Artifacts - unique items with special effects
 export interface Artifact {

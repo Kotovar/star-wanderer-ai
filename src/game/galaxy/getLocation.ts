@@ -1,5 +1,6 @@
 import type { GalaxyTierAll, LocationType, Location, StarType } from "@/game/types";
 import type { LocationWeightKey, RunProfile } from "./runProfiles";
+import type { SectorRule } from "./sectorRules";
 import {
     LOCATION_CHANCES,
     LOCATION_TYPE_CHANCES_BY_TIER,
@@ -32,6 +33,7 @@ const getLocationType = (
     isBlackHole: boolean,
     starType?: StarType,
     profile?: RunProfile,
+    rule?: SectorRule,
 ): LocationType => {
     if (isBlackHole) {
         // ЧД: аномалии, руины, мёртвые миры и их осколки — но не станции,
@@ -55,7 +57,10 @@ const getLocationType = (
         LOCATION_TYPE_CHANCES_BY_TIER[tier];
     const mods = starType ? (STAR_TYPE_LOCATION_MODIFIERS[starType] ?? {}) : {};
     const m = (base: number, key: LocationWeightKey): number =>
-        base * (mods[key === "enemyShip" ? "enemy" : key] ?? 1) * (profile?.locationWeights[key] ?? 1);
+        base *
+        (mods[key === "enemyShip" ? "enemy" : key] ?? 1) *
+        (profile?.locationWeights[key] ?? 1) *
+        (rule?.locationWeights?.[key] ?? 1);
 
     // Базовые веса с применением модификаторов звезды
     const w = {
@@ -105,8 +110,16 @@ export const generateLocation = (
     starType?: StarType,
     profile?: RunProfile,
     forcedType?: LocationType,
+    rule?: SectorRule,
 ): Location => {
-    const type = forcedType ?? getLocationType(Math.random(), tier, isBlackHole, starType, profile);
+    const type = forcedType ?? getLocationType(
+        Math.random(),
+        tier,
+        isBlackHole,
+        starType,
+        profile,
+        rule,
+    );
 
     switch (type) {
         case "station":

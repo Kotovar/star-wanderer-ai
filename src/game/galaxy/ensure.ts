@@ -5,6 +5,7 @@ import { ANOMALY_COLORS, MIN_REQUIREMENTS, STATION_CONFIG } from "./config";
 import { STATION_TYPES } from "./consts";
 import { getRandomRace, getDominantRaceForPlanet } from "@/game/races/utils";
 import { getLocationNameKey } from "./generate";
+import { shouldSkipSectorEnsure } from "./sectorRules";
 
 /**
  * Обеспечивает минимальное количество аномалий в секторе
@@ -113,6 +114,8 @@ export const ensureStation = (
     sector: Sector,
     minimumCount = MIN_REQUIREMENTS.stations,
 ): void => {
+    if (shouldSkipSectorEnsure(sector, "station")) return;
+
     const stationCount = sector.locations.filter(
         (l) => l.type === "station",
     ).length;
@@ -157,7 +160,10 @@ export const ensureStationAnchors = (
     for (const [tierText, required] of Object.entries(anchors)) {
         const tier = Number(tierText) as GalaxyTierAll;
         const eligible = sectors.filter(
-            (sector) => sector.tier === tier && sector.star.type !== "blackhole",
+            (sector) =>
+                sector.tier === tier &&
+                sector.star.type !== "blackhole" &&
+                !shouldSkipSectorEnsure(sector, "station"),
         );
         if (!eligible.length) continue;
         while (
@@ -188,7 +194,10 @@ export const ensureStationTypes = (
     tier: GalaxyTierAll,
 ): void => {
     const tierSectors = sectors.filter(
-        (s) => s.tier === tier && s.star?.type !== "blackhole",
+        (sector) =>
+            sector.tier === tier &&
+            sector.star?.type !== "blackhole" &&
+            !shouldSkipSectorEnsure(sector, "station"),
     );
 
     const requiredTypes: Array<"shipyard" | "medical"> = [
@@ -271,7 +280,10 @@ export const ensureDiplomaticStation = (sectors: Sector[]): void => {
 
     // Find a tier-1 sector with an existing station to replace
     const tier1Sectors = sectors.filter(
-        (s) => s.tier === 1 && s.star?.type !== "blackhole",
+        (sector) =>
+            sector.tier === 1 &&
+            sector.star?.type !== "blackhole" &&
+            !shouldSkipSectorEnsure(sector, "station"),
     );
 
     for (const sector of tier1Sectors) {

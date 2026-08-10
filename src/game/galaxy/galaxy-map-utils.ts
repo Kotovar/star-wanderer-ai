@@ -7,6 +7,7 @@ import type {
     Nebula,
 } from "@/game/types";
 import { drawStarSprite } from "@/game/assets/starSprites";
+import { getSectorRule } from "./sectorRules";
 import { findActiveArtifact } from "../artifacts";
 import { ARTIFACT_TYPES } from "../constants";
 
@@ -1130,6 +1131,55 @@ export function drawOutpostSectorMarkers(
             ctx.fill();
         }
 
+        ctx.restore();
+    }
+}
+
+/** Visible, non-interactive markers for the rule assigned to a sector. */
+export function drawSectorRuleMarkers(
+    ctx: CanvasRenderingContext2D,
+    sectors: Pick<Sector, "tier" | "mapAngle" | "ruleId">[],
+    centerX: number,
+    centerY: number,
+    maxRadius: number,
+    canvasWidth?: number,
+    canvasHeight?: number,
+) {
+    const isMobile = Math.min(canvasWidth ?? 600, canvasHeight ?? 600) < 450;
+
+    for (const sector of sectors) {
+        const rule = getSectorRule(sector.ruleId);
+        if (!rule || sector.mapAngle === undefined) continue;
+
+        const radius = getSectorRadius(maxRadius, sector.tier);
+        const x = centerX + Math.cos(sector.mapAngle) * radius;
+        const y = centerY + Math.sin(sector.mapAngle) * radius;
+        const badgeOffset = isMobile ? 9 : 13;
+        const badgeRadius = isMobile ? 5 : 8;
+        const badgeX = x + badgeOffset;
+        const badgeY = y - badgeOffset;
+
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = `bold ${isMobile ? 7 : 12}px Share Tech Mono`;
+        ctx.strokeStyle = rule.color;
+        ctx.lineWidth = isMobile ? 1 : 1.5;
+        ctx.globalAlpha = 0.72;
+        ctx.beginPath();
+        ctx.moveTo(x + badgeOffset * 0.4, y - badgeOffset * 0.4);
+        ctx.lineTo(badgeX - badgeRadius * 0.45, badgeY + badgeRadius * 0.45);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "#050810";
+        ctx.beginPath();
+        ctx.arc(badgeX, badgeY, badgeRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = rule.color;
+        ctx.shadowColor = rule.color;
+        ctx.shadowBlur = isMobile ? 4 : 7;
+        ctx.fillText(rule.icon, badgeX, badgeY + (isMobile ? 0.5 : 1));
         ctx.restore();
     }
 }

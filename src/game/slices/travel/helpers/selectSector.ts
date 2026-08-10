@@ -13,6 +13,7 @@ import { playSound } from "@/sounds";
 import { calculateFuelCost } from "./calculateFuelCost";
 import { applyNeutronRadiation, handlePatrolContracts } from "./processTravel";
 import { applyPatrolContractCompletions } from "./patrolCompletions";
+import { applySectorRuleEffect } from "./applySectorRuleEffect";
 import type { GameState, GameStore, GameMode, Artifact, SetState } from "@/game/types";
 
 // ============================================================================
@@ -354,6 +355,7 @@ const handleTravelCompletion = (
 
     // Радиация нейтронной звезды действует и при мгновенном прибытии
     applyNeutronRadiation(sector, set as SetState, get);
+    applySectorRuleEffect(sector, set as SetState, get);
 
     // Same-tier travel (distance=0) never goes through processTravel,
     // so patrol contracts must be checked here for ALL same-tier arrivals.
@@ -440,6 +442,7 @@ const handleTravelStart = (
 
         // Радиация нейтронной звезды действует и при варп-прыжке
         applyNeutronRadiation(sector, set as SetState, get);
+        applySectorRuleEffect(sector, set as SetState, get);
 
         const warpPatrolState = get();
         const warpPatrolContracts = warpPatrolState.activeContracts.filter(

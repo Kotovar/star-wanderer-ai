@@ -4,6 +4,7 @@ import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { getMaxCrewTraitBonus } from "@/game/traits";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getStarTypeEffect } from "@/game/constants/starEffects";
+import { getSectorRule } from "@/game/galaxy/sectorRules";
 import { getRegularScannerRange } from "./getRegularScannerRange";
 import type { GameState } from "@/game/types";
 
@@ -21,6 +22,10 @@ import type { GameState } from "@/game/types";
  * @returns Эффективный диапазон сканирования (0 если нет сканеров)
  */
 export const getEffectiveScanRange = (state: GameState) => {
+    if (getSectorRule(state.currentSector?.ruleId)?.restrictions?.noScan) {
+        return 0;
+    }
+
     const isActive = (m: { health: number; disabled?: boolean; manualDisabled?: boolean }) =>
         m.health > 0 && !m.disabled && !m.manualDisabled;
 

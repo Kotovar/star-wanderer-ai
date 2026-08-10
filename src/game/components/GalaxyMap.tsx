@@ -18,6 +18,7 @@ import {
     drawSector,
     drawGalaxyObjectiveMarkers,
     drawOutpostSectorMarkers,
+    drawSectorRuleMarkers,
     drawNebulae,
     drawTierRings,
     canSeeTier4,
@@ -44,6 +45,7 @@ import {
     DETOUR_FUEL_COST,
 } from "@/game/slices/travel/helpers";
 import { getSectorReadiness } from "@/game/progression/sectorReadiness";
+import { getSectorRule, SECTOR_RULE_IDS } from "@/game/galaxy/sectorRules";
 import { setupHiDPICanvas } from "./canvas-utils";
 import { getGalaxyMapObjectives } from "./galaxyMapObjectives";
 import { shouldRedrawMainMap } from "./mapFrameRate";
@@ -753,6 +755,15 @@ export function GalaxyMap() {
             centerY,
             baseMaxRadius,
         );
+        drawSectorRuleMarkers(
+            ctx,
+            sectors.filter((sector) => sector.tier !== 4 || canSeeT4),
+            centerX,
+            centerY,
+            baseMaxRadius,
+            width,
+            height,
+        );
         drawGalaxyObjectiveMarkers(
             ctx,
             sectors,
@@ -775,6 +786,7 @@ export function GalaxyMap() {
         outpostMarkers,
         calculateFuelCost,
         captainLevel,
+        canSeeT4,
         currentSector,
         fuel,
         modules,
@@ -1112,6 +1124,19 @@ export function GalaxyMap() {
         }
     };
 
+    const dangerousJumpRule = dangerousJump
+        ? getSectorRule(
+              sectors.find((sector) => sector.id === dangerousJump.sectorId)
+                  ?.ruleId,
+          )
+        : undefined;
+    const routeChoiceRule = routeChoice
+        ? getSectorRule(
+              sectors.find((sector) => sector.id === routeChoice.sectorId)
+                  ?.ruleId,
+          )
+        : undefined;
+
     return (
         <div
             ref={containerRef}
@@ -1189,6 +1214,20 @@ export function GalaxyMap() {
                     <div className="mt-2 border-l-2 border-[#ffb00066] pl-2 text-[11px] leading-relaxed text-[#9aa59a]">
                         {t("galaxy_map_ui.danger.readiness_hint")}
                     </div>
+                    {dangerousJumpRule && (
+                        <div
+                            className="mt-2 border-l-2 pl-2 text-[11px] leading-relaxed text-[#b8b8b8]"
+                            style={{ borderColor: dangerousJumpRule.color }}
+                        >
+                            <div
+                                className="font-bold"
+                                style={{ color: dangerousJumpRule.color }}
+                            >
+                                {dangerousJumpRule.icon} {t(dangerousJumpRule.nameKey)}
+                            </div>
+                            <div>{t(dangerousJumpRule.descKey)}</div>
+                        </div>
+                    )}
                     <div className="mt-3 grid grid-cols-2 gap-2">
                         <button
                             onClick={() => setDangerousJump(null)}
@@ -1226,6 +1265,20 @@ export function GalaxyMap() {
                             sector: routeChoice.sectorName,
                         })}
                     </div>
+                    {routeChoiceRule && (
+                        <div
+                            className="mt-2 border-l-2 pl-2 text-[11px] leading-relaxed text-[#b8b8b8]"
+                            style={{ borderColor: routeChoiceRule.color }}
+                        >
+                            <div
+                                className="font-bold"
+                                style={{ color: routeChoiceRule.color }}
+                            >
+                                {routeChoiceRule.icon} {t(routeChoiceRule.nameKey)}
+                            </div>
+                            <div>{t(routeChoiceRule.descKey)}</div>
+                        </div>
+                    )}
                     <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] leading-relaxed">
                         <div className="border border-[#ff444466] p-2 text-[#b8b8b8]">
                             <div className="font-bold text-[#ff4444]">
@@ -1549,6 +1602,29 @@ export function GalaxyMap() {
                                             <span>{t("game.artifacts")}</span>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div className="text-[#00ff41] font-['Orbitron'] text-[9px] tracking-widest mb-1 opacity-70">{t("sector_rules.legend")}</div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0.5">
+                                    {SECTOR_RULE_IDS.map((ruleId) => {
+                                        const rule = getSectorRule(ruleId);
+                                        if (!rule) return null;
+
+                                        return (
+                                            <div key={rule.id} className="flex items-center gap-1.5 min-w-0" title={t(rule.descKey)}>
+                                                <span
+                                                    className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border font-mono font-bold"
+                                                    style={{ borderColor: rule.color, color: rule.color }}
+                                                >
+                                                    {rule.icon}
+                                                </span>
+                                                <span className="truncate" style={{ color: rule.color }}>
+                                                    {t(rule.nameKey)}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                             {/* Star types */}

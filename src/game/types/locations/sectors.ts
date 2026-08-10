@@ -1,5 +1,6 @@
 import type { GalaxyTierAll } from "./galaxy";
 import type { Location } from "./locations";
+import type { SectorRuleId } from "@/game/galaxy/sectorRules";
 
 /**
  * Типы звёзд в галактике
@@ -58,6 +59,7 @@ export interface Sector {
     mapAngle?: number; // Position on galaxy map (radians)
     mapRadius?: number; // Distance from center on galaxy map
     visited?: boolean; // Has player visited this sector
+    ruleId?: SectorRuleId;
 }
 
 export type TravelRoute = "direct" | "detour";
