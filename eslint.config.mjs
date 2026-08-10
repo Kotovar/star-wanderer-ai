@@ -7,6 +7,9 @@ const eslintConfig = defineConfig([
     ...nextTypescript,
     globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
     {
+        // ponytail: pinned explicitly because eslint-plugin-react's auto-detect
+        // uses context.getFilename(), removed in ESLint 10. Drop when the plugin updates.
+        settings: { react: { version: "19.2" } },
         rules: {
             "@typescript-eslint/no-non-null-assertion": "error",
             "@typescript-eslint/ban-ts-comment": "error",

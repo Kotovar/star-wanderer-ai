@@ -1003,7 +1003,15 @@ export function SectorMap() {
         setHoveredLocation(null);
       }
     },
-    [animationsEnabled, canvasRef, currentSector, drawCanvas, offset, zoom],
+    [
+      animationsEnabled,
+      canvasRef,
+      currentSector,
+      drawCanvas,
+      offset,
+      setHoveredLocation,
+      zoom,
+    ],
   );
 
   // Handle mouse up to stop dragging
@@ -1210,6 +1218,7 @@ export function SectorMap() {
       canvasRef,
       currentSector,
       isPinchingRef,
+      setHoveredLocation,
       setOffset,
       setOffsetState,
       zoom,

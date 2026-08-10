@@ -27,7 +27,7 @@ const SECTOR = { id: 2, name: "Сектор", tier: 2, locations: [] };
 const CONTEXT = { artifacts: [], researchedTechs: [] };
 
 // ── Обычные кризисы знают, чем их гасить, и груз реально существует ──────────
-for (const crisis of GLOBAL_CRISES.filter((crisis) => crisis.id !== "nebula_front")) {
+for (const crisis of GLOBAL_CRISES.filter((c) => c.id !== "nebula_front")) {
   const cargo = CRISIS_RELIEF_CARGO[crisis.id];
   assert.ok(cargo, `кризис ${crisis.id} остался без груза помощи`);
   assert.ok(TRADE_GOODS[cargo], `груз ${cargo} отсутствует в списке товаров`);

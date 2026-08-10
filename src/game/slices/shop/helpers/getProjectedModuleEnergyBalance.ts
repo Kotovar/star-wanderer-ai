@@ -39,11 +39,14 @@ export const getProjectedModulePurchaseEnergyBalance = (
     state: GameState,
     item: ShopItem,
 ): number => {
-    const module = createModuleFromShopItem(item, {
+    const newModule = createModuleFromShopItem(item, {
         x: 0,
         y: 0,
         generateId: () => -1,
     });
 
-    return getEnergyBalanceWithModules(state, [...state.ship.modules, module]);
+    return getEnergyBalanceWithModules(state, [
+        ...state.ship.modules,
+        newModule,
+    ]);
 };
