@@ -107,7 +107,7 @@ export const generateGalaxy = (profile: RunProfile | null = null): Sector[] => {
         bossDistribution.markBossAsUsed(eternal.id);
     }
 
-    planSectorRules(sectors);
+    planSectorRules(sectors, profile?.id ?? null);
 
     for (const sector of sectors) {
         const isBlackHole = sector.star.type === "blackhole";

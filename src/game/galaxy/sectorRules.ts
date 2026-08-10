@@ -1,5 +1,5 @@
 import type { ActiveEffect, EffectPolarity, GalaxyTierAll, Sector } from "@/game/types";
-import type { LocationWeightKey } from "./runProfiles";
+import type { LocationWeightKey, RunProfileId } from "./runProfiles";
 
 export const SECTOR_RULE_IDS = [
     "zero_field",
@@ -30,6 +30,8 @@ export interface SectorRule {
     readonly restrictions?: Readonly<Partial<Record<SectorRestriction, true>>>;
     readonly locationWeights?: Readonly<Partial<Record<LocationWeightKey, number>>>;
     readonly skipEnsure?: readonly SectorEnsureKey[];
+    /** Сценарии, чей вес обнуляет обещание правила: там его нельзя ставить. */
+    readonly excludeProfiles?: readonly RunProfileId[];
 }
 
 export const SECTOR_RULES = {
@@ -102,6 +104,9 @@ export const SECTOR_RULES = {
         tiers: [1, 2, 3],
         effects: [],
         locationWeights: { station: 3, friendlyShip: 2, enemyShip: 0.5 },
+        // В «разорванных торговых путях» вес станций равен 0, и ×3 остаётся
+        // нулём: правило обещало бы станции, которых там не бывает.
+        excludeProfiles: ["broken_trade_lanes"],
     },
     debris_belt: {
         id: "debris_belt",
@@ -115,7 +120,9 @@ export const SECTOR_RULES = {
             { type: "fuel_efficiency", value: -0.2 },
             { type: "combat_bonus", value: -0.15 },
         ],
-        locationWeights: { asteroidBelt: 4, wreckField: 2 },
+        // Веса нормализуются к сумме 1, поэтому большой множитель на астероидах
+        // съедает долю редких обломков — их множитель должен быть заметно выше.
+        locationWeights: { asteroidBelt: 3, wreckField: 6 },
     },
     anomaly_storm: {
         id: "anomaly_storm",
@@ -182,9 +189,16 @@ const shuffle = <T>(values: readonly T[]): T[] => {
     return result;
 };
 
-export const planSectorRules = (sectors: Sector[]): void => {
+export const planSectorRules = (
+    sectors: Sector[],
+    profileId: RunProfileId | null = null,
+): void => {
     const ruleCount = 4 + Math.floor(Math.random() * 2);
-    const ruleIds = shuffle(SECTOR_RULE_IDS).slice(0, ruleCount);
+    const eligible = SECTOR_RULE_IDS.filter(
+        (ruleId) =>
+            !profileId || !getSectorRule(ruleId)?.excludeProfiles?.includes(profileId),
+    );
+    const ruleIds = shuffle(eligible).slice(0, ruleCount);
     let tierOneRulePlaced = false;
 
     for (const ruleId of ruleIds) {

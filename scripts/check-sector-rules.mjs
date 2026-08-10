@@ -17,6 +17,7 @@ const {
   planSectorRules,
 } = jiti("../src/game/galaxy/sectorRules.ts");
 const { generateGalaxy } = jiti("../src/game/galaxy/generateGalaxy.ts");
+const { RUN_PROFILES } = jiti("../src/game/galaxy/runProfiles.ts");
 const { generateLocation } = jiti("../src/game/galaxy/getLocation.ts");
 const { ensureStation, ensureStationAnchors } = jiti("../src/game/galaxy/ensure.ts");
 const { calculateFuelCost } = jiti("../src/game/slices/travel/helpers/calculateFuelCost.ts");
@@ -243,6 +244,39 @@ assert.equal(
   plannedRuleIds.length,
   "each generated sector rule must be unique",
 );
+
+// Правило, чьё обещание сценарий обнуляет, не должно в этом сценарии выпадать.
+for (const profile of Object.values(RUN_PROFILES)) {
+  const excluded = Object.values(SECTOR_RULES)
+    .filter((rule) => rule.excludeProfiles?.includes(profile.id))
+    .map((rule) => rule.id);
+  if (excluded.length === 0) continue;
+
+  for (let run = 0; run < 15; run += 1) {
+    const placed = generateGalaxy(profile)
+      .flatMap((sector) => (sector.ruleId ? [sector.ruleId] : []));
+    for (const ruleId of excluded) {
+      assert.ok(
+        !placed.includes(ruleId),
+        `${ruleId} must not spawn in the ${profile.id} scenario that zeroes its weights`,
+      );
+    }
+  }
+}
+
+// Обратная сторона: исключение должно быть заявлено везде, где сценарий
+// обнуляет вес, который правило поднимает. Иначе правило врёт игроку.
+for (const profile of Object.values(RUN_PROFILES)) {
+  for (const rule of Object.values(SECTOR_RULES)) {
+    for (const [key, ruleWeight] of Object.entries(rule.locationWeights ?? {})) {
+      if (ruleWeight <= 1 || profile.locationWeights[key] !== 0) continue;
+      assert.ok(
+        rule.excludeProfiles?.includes(profile.id),
+        `${rule.id} promises more ${key} but ${profile.id} zeroes it — exclude the pairing`,
+      );
+    }
+  }
+}
 const graveyard = makeSector(100, 2, "fleet_graveyard");
 ensureStation(graveyard);
 assert.equal(
@@ -300,6 +334,19 @@ const deadDriftRate = sampleLocationRate(
 assert.ok(
   deadDriftRate > ordinaryDriftRate * 1.7,
   "dead drift must substantially increase distress and derelict locations",
+);
+// Веса нормализуются, поэтому крупный множитель на одном типе способен съесть
+// прирост соседнего: пояс обломков обязан поднимать оба, а не только астероиды.
+const debrisBelt = getSectorRule("debris_belt");
+assert.ok(
+  sampleLocationRate(debrisBelt, ["asteroid_belt"]) >
+    sampleLocationRate(undefined, ["asteroid_belt"]) * 1.5,
+  "debris belt must noticeably increase asteroid belts",
+);
+assert.ok(
+  sampleLocationRate(debrisBelt, ["wreck_field"]) >
+    sampleLocationRate(undefined, ["wreck_field"]) * 2.5,
+  "debris belt must noticeably increase wreck fields, not just asteroids",
 );
 
 const makeState = () => ({
