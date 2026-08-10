@@ -3,6 +3,7 @@ import type { ResearchResourceType } from "@/game/types/research";
 import type { RaceId } from "@/game/types/races";
 import type { Goods } from "@/game/types/goods";
 import type { LocationWeightKey } from "@/game/galaxy/runProfiles";
+import type { ShipTemplate } from "@/game/constants/shipTemplates";
 
 // ─── Launch Modifier ──────────────────────────────────────────────────────────
 
@@ -125,6 +126,38 @@ const getActiveModifiers = (modifierIds: readonly string[] | undefined) =>
   modifierIds?.length
     ? LAUNCH_MODIFIERS.filter((mod) => modifierIds.includes(mod.id))
     : [];
+
+export const getStartingTradeGoodsVolume = (
+  modifiers: readonly LaunchModifier[],
+): number =>
+  modifiers.reduce(
+    (total, modifier) =>
+      total +
+      Object.values(modifier.startingTradeGoods ?? {}).reduce(
+        (sum, quantity) => sum + (quantity ?? 0),
+        0,
+      ),
+    0,
+  );
+
+const getTemplateFreeCargoSpace = (template: ShipTemplate): number => {
+  const capacity = template.modules
+    .filter((module) => module.type === "cargo")
+    .reduce((sum, module) => sum + (module.capacity ?? 40), 0);
+  const gasVolume = Object.values(template.gases ?? {}).reduce<number>(
+    (sum, quantity) => sum + (quantity ?? 0),
+    0,
+  );
+
+  return Math.max(0, capacity - template.probes - gasVolume);
+};
+
+export const hasLaunchCargoCapacity = (
+  template: ShipTemplate,
+  modifiers: readonly LaunchModifier[],
+): boolean =>
+  getStartingTradeGoodsVolume(modifiers) <=
+  getTemplateFreeCargoSpace(template);
 
 /** Суммарное значение числового эффекта активных модификаторов забега. */
 export function getRunModifierValue(

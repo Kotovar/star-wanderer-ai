@@ -17,10 +17,6 @@ const getSectorShipBonuses = (
     for (const effect of effects) {
         if (effect.source !== "sector") continue;
 
-        // Щит откатываем ровно тем, что реально сняли: у корабля без щитовых
-        // модулей штраф упирается в 0, и вернуть весь номинал нельзя.
-        bonuses.shields += effect.appliedShieldDelta ?? 0;
-
         for (const item of effect.effects) {
             if (typeof item.value !== "number") continue;
 
@@ -30,6 +26,9 @@ const getSectorShipBonuses = (
                     break;
                 case "evasion_bonus":
                     bonuses.evasion += Math.round(item.value * 100);
+                    break;
+                case "shield_boost":
+                    bonuses.shields += item.value;
                     break;
             }
         }
@@ -54,18 +53,6 @@ export const applySectorRuleEffect = (
         )
             ? getArtifactHint(gameState)
             : null;
-    // Щитовой резерв без вклада прошлого правила: от него считаем новый штраф,
-    // чтобы упор в 0 не превратился при вылете в бесплатные щиты.
-    const baseMaxShields = gameState.ship.maxShields - previousBonuses.shields;
-    const nominalShields = (rule?.effects ?? []).reduce(
-        (sum, effect) =>
-            effect.type === "shield_boost" && typeof effect.value === "number"
-                ? sum + effect.value
-                : sum,
-        0,
-    );
-    const appliedShieldDelta =
-        Math.max(0, baseMaxShields + nominalShields) - baseMaxShields;
     const nextEffects: ActiveEffect[] = rule
         ? [
               {
@@ -83,16 +70,12 @@ export const applySectorRuleEffect = (
                   turnsRemaining: 0,
                   permanent: true,
                   effects: [...rule.effects],
-                  appliedShieldDelta,
               },
           ]
         : [];
     const nextBonuses = getSectorShipBonuses(nextEffects);
 
     set((state) => {
-        const maxShields =
-            state.ship.maxShields - previousBonuses.shields + nextBonuses.shields;
-
         return {
             activeEffects: [
                 ...state.activeEffects.filter((effect) => effect.source !== "sector"),
@@ -123,23 +106,18 @@ export const applySectorRuleEffect = (
                     (state.ship.bonusEvasion ?? 0) -
                     previousBonuses.evasion +
                     nextBonuses.evasion,
+                // maxShields не трогаем: он производный от модулей, и его
+                // пересчитает updateShipStats — иначе щит, установленный уже
+                // внутри сектора, разошёлся бы со штрафом правила.
                 bonusShields:
                     (state.ship.bonusShields ?? 0) -
                     previousBonuses.shields +
                     nextBonuses.shields,
-                maxShields,
-                shields: Math.max(
-                    0,
-                    Math.min(
-                        maxShields,
-                        state.ship.shields -
-                            previousBonuses.shields +
-                            nextBonuses.shields,
-                    ),
-                ),
             },
         };
     });
+
+    get().updateShipStats();
 
     if (artifactHint) {
         get().addLog(i18nStore.t("sector_rules.logs.artifact_hint"), "info");

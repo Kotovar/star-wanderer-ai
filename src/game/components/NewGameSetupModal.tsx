@@ -17,6 +17,7 @@ import {
 import {
   LAUNCH_MODIFIERS,
   getLaunchCredits,
+  hasLaunchCargoCapacity,
   type LaunchModifier,
 } from "../constants/launchModifiers";
 import { useTranslation } from "@/lib/useTranslation";
@@ -251,6 +252,22 @@ function getBlockingModifier(mod: LaunchModifier, selectedIds: string[]) {
   );
 }
 
+function selectModifierIds(
+  selectedIds: string[],
+  modifier: LaunchModifier,
+) {
+  const withoutSameGroup = modifier.group
+    ? selectedIds.filter((selectedId) => {
+        const selected = LAUNCH_MODIFIERS.find(
+          (item) => item.id === selectedId,
+        );
+        return selected?.group !== modifier.group;
+      })
+    : selectedIds;
+
+  return [...withoutSameGroup, modifier.id];
+}
+
 function Pill({
   children,
   tone = "neutral",
@@ -396,16 +413,33 @@ export function NewGameSetupModal({
       const modifier = LAUNCH_MODIFIERS.find((mod) => mod.id === id);
       if (!modifier || getBlockingModifier(modifier, prev)) return prev;
 
-      const next = modifier?.group
-        ? prev.filter((selectedId) => {
-            const selected = LAUNCH_MODIFIERS.find(
-              (mod) => mod.id === selectedId,
-            );
-            return selected?.group !== modifier.group;
-          })
-        : prev;
+      const next = selectModifierIds(prev, modifier);
+      const nextModifiers = LAUNCH_MODIFIERS.filter((mod) =>
+        next.includes(mod.id),
+      );
+      if (!hasLaunchCargoCapacity(selectedTemplate, nextModifiers)) {
+        return prev;
+      }
 
-      return [...next, id];
+      return next;
+    });
+  };
+
+  const selectTemplate = (templateId: string) => {
+    const template = SHIP_TEMPLATES.find((item) => item.id === templateId);
+    if (!template) return;
+
+    setSelectedTemplateId(templateId);
+    setSelectedModifiers((prev) => {
+      const modifiers = LAUNCH_MODIFIERS.filter((mod) =>
+        prev.includes(mod.id),
+      );
+      return hasLaunchCargoCapacity(template, modifiers)
+        ? prev
+        : prev.filter((id) => {
+            const modifier = LAUNCH_MODIFIERS.find((item) => item.id === id);
+            return !modifier?.startingTradeGoods;
+          });
     });
   };
 
@@ -442,7 +476,12 @@ export function NewGameSetupModal({
 
     const isActive = selectedModifiers.includes(mod.id);
     const blockingModifier = getBlockingModifier(mod, selectedModifiers);
-    const isBlocked = !isActive && blockingModifier !== null;
+    const candidateModifiers = LAUNCH_MODIFIERS.filter((item) =>
+      selectModifierIds(selectedModifiers, mod).includes(item.id),
+    );
+    const cargoBlocked =
+      !isActive && !hasLaunchCargoCapacity(selectedTemplate, candidateModifiers);
+    const isBlocked = !isActive && (blockingModifier !== null || cargoBlocked);
     const tc = MODIFIER_TYPE_COLORS[mod.type];
     const details = getModifierDetails(mod, t);
     const creditText =
@@ -517,12 +556,22 @@ export function NewGameSetupModal({
             {t("new_game_setup.conflicts_with")}: {t(blockingModifier.nameKey)}
           </div>
         )}
+        {cargoBlocked && (
+          <div className="mt-2 text-[10px] text-[#ff9a9a]">
+            {t("new_game_setup.requires_cargo_hold")}
+          </div>
+        )}
       </button>
     );
   };
 
   const handleStart = () => {
-    if (!hasSufficientCredits) return;
+    if (
+      !hasSufficientCredits ||
+      !hasLaunchCargoCapacity(selectedTemplate, selectedModifierItems)
+    ) {
+      return;
+    }
     restartGame(
       selectedTemplateId,
       selectedModifiers,
@@ -682,7 +731,7 @@ export function NewGameSetupModal({
                   return (
                     <button
                       key={tmpl.id}
-                      onClick={() => setSelectedTemplateId(tmpl.id)}
+                      onClick={() => selectTemplate(tmpl.id)}
                       className="min-w-0 text-left border p-2.5 transition-all cursor-pointer"
                       style={{
                         borderColor: isSelected

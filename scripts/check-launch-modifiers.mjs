@@ -14,6 +14,9 @@ const { buildStartingState } = await import(
 const { getTotalConsumption } = await import(
   "../src/game/slices/ship/helpers/getTotalConsumption.ts"
 );
+const { getCurrentCargo } = await import(
+  "../src/game/slices/ship/helpers/getCurrentCargo.ts"
+);
 const { shiftHappiness } = await import("../src/game/crew/utils.ts");
 const { TRADE_GOODS } = await import("../src/game/constants/goods.ts");
 
@@ -65,6 +68,11 @@ assert.equal(
     .length,
   4,
   "изгнанник должен начать враждебным для четырёх рас",
+);
+assert.throws(
+  () => buildStartingState("fighter", ["doctrine_exile"]),
+  /cargo capacity/,
+  "изгнанник не должен создавать груз на корабле без трюма",
 );
 
 const extraFuel = buildStartingState("explorer", ["extra_fuel"]);
@@ -192,6 +200,20 @@ assert.deepEqual(byId("wanted").conflictsWith, ["doctrine_exile"]);
 
 // ── Валовой доход не теряется после траты или смены состояния ─────────────
 const { useGameStore } = await import("../src/game/store.ts");
+const originalRandom = Math.random;
+try {
+  Math.random = () => 0;
+  useGameStore.getState().restartGame("fighter", ["crisis_start"]);
+  const crisisState = useGameStore.getState();
+  assert.equal(crisisState.activeCrisis?.id, "raider_wave");
+  assert.ok(
+    getCurrentCargo(crisisState) <= crisisState.getCargoCapacity(),
+    "кризисный резерв не должен переполнять трюм",
+  );
+} finally {
+  Math.random = originalRandom;
+}
+
 useGameStore.getState().restartGame("fighter");
 const fighterState = useGameStore.getState();
 const weaponBay = fighterState.ship.modules.find(

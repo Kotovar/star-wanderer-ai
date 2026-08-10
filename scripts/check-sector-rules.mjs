@@ -32,6 +32,9 @@ const { applySectorRuleEffect } = jiti(
   "../src/game/slices/travel/helpers/applySectorRuleEffect.ts",
 );
 const { updateShipStats } = jiti("../src/game/slices/ship/helpers/updateShipStats.ts");
+const { RESEARCH_TREE } = jiti("../src/game/constants/research/index.ts");
+// Полное дерево упирает топливный бонус в MAX_FUEL_EFFICIENCY_BONUS.
+const MAX_FUEL_TECHS = Object.keys(RESEARCH_TREE).filter((id) => id !== "warp_drive");
 const activeEffectsPanelSource = readFileSync(
   path.join(root, "src/game/components/panels/ActiveEffectsPanel.tsx"),
   "utf8",
@@ -358,12 +361,27 @@ const makeState = () => ({
   artifacts: [],
   activeContracts: [],
   ship: {
-    modules: [{ type: "engine", health: 100, fuelEfficiency: 10 }],
+    // maxShields теперь производный от модулей — щитовой модуль обязателен,
+    // иначе updateShipStats честно обнулит резерв.
+    modules: [
+      { type: "engine", health: 100, fuelEfficiency: 10 },
+      { type: "shield", health: 100, maxHealth: 100, shields: 100 },
+    ],
     maxShields: 100,
     shields: 100,
+    bonusShields: 0,
   },
   crew: [],
+  outposts: [],
   activeEffects: [],
+});
+// applySectorRuleEffect пересчитывает корабль через стор — фейковый get()
+// обязан отдавать то же действие, что и настоящий.
+const withShipStats = (state, extra = {}) => ({
+  ...state,
+  updateShipStats: () => updateShipStats(state),
+  addLog: () => undefined,
+  ...extra,
 });
 const warpState = makeState();
 const warpOrigin = {
@@ -389,6 +407,46 @@ assert.equal(
   false,
   "zero field must disable warp coil",
 );
+// calculateFuelCost отказывает правильно, но решение о мгновенности принимает
+// selectSector — раньше он сам объявлял прыжок мгновенным по одному лишь теху.
+const selectSectorSource = readFileSync(
+  path.join(root, "src/game/slices/travel/helpers/selectSector.ts"),
+  "utf8",
+);
+assert.match(
+  selectSectorSource,
+  /const hasWarpDrive =\s*state\.research\.researchedTechs\.includes\("warp_drive"\) &&\s*getSectorRule\(state\.currentSector\?\.ruleId\)\?\.restrictions\?\.noWarp !== true;/,
+  "the warp drive tech must not bypass a noWarp sector rule",
+);
+assert.doesNotMatch(
+  selectSectorSource,
+  /const hasWarpDrive = state\.research\.researchedTechs\.includes\("warp_drive"\);/,
+  "warp drive must never be read without its sector restriction",
+);
+
+// Экономия топлива от правила обязана переживать потолок топливных технологий.
+const wellState = makeState();
+const wellOrigin = { ...makeSector(929, 2, "gravity_well"), mapAngle: 0 };
+const wellTarget = { ...makeSector(930, 3), mapAngle: 0 };
+wellState.currentSector = wellOrigin;
+wellState.galaxy.sectors = [wellOrigin, wellTarget];
+const plainState = makeState();
+const plainOrigin = { ...makeSector(931, 2), mapAngle: 0 };
+plainState.currentSector = plainOrigin;
+plainState.galaxy.sectors = [plainOrigin, wellTarget];
+const applyWellState = (update) => {
+  Object.assign(wellState, typeof update === "function" ? update(wellState) : update);
+};
+applySectorRuleEffect(wellOrigin, applyWellState, () => withShipStats(wellState));
+for (const techs of [[], MAX_FUEL_TECHS]) {
+  wellState.research = { researchedTechs: techs };
+  plainState.research = { researchedTechs: techs };
+  assert.ok(
+    calculateFuelCost(wellState, wellTarget.id, false, false, false, true).fuelCost <
+      calculateFuelCost(plainState, wellTarget.id, false, false, false, true).fuelCost,
+    "a fuel-saving rule must stay visible even at the technology efficiency cap",
+  );
+}
 
 const noScanState = makeState();
 noScanState.currentSector = makeSector(903, 2, "blind_zone");
@@ -427,10 +485,8 @@ const effectLogs = [];
 const applyEffectState = (update) => {
   Object.assign(effectState, typeof update === "function" ? update(effectState) : update);
 };
-const effectGet = () => ({
-  ...effectState,
-  addLog: (...args) => effectLogs.push(args),
-});
+const effectGet = () =>
+  withShipStats(effectState, { addLog: (...args) => effectLogs.push(args) });
 const blindZone = { ...makeSector(902, 2, "blind_zone"), visited: false };
 applySectorRuleEffect(blindZone, applyEffectState, effectGet);
 assert.equal(
@@ -458,7 +514,7 @@ const applyResonanceState = (update) => {
 applySectorRuleEffect(
   makeSector(907, 2, "resonance"),
   applyResonanceState,
-  () => ({ ...resonanceState, addLog: () => undefined }),
+  () => withShipStats(resonanceState),
 );
 assert.equal(resonanceState.ship.bonusDamage, 0.25, "resonance must boost weapon damage");
 assert.equal(resonanceState.ship.maxShields, 75, "resonance must reduce shield reserve by 25");
@@ -473,6 +529,10 @@ assert.equal(
 // больше, чем правило реально сняло.
 for (const startingShields of [0, 20, 100]) {
   const roundTripState = makeState();
+  // Резерв задаём через модуль: maxShields выводится из модулей, а не наоборот.
+  roundTripState.ship.modules = startingShields
+    ? [{ type: "shield", health: 100, maxHealth: 100, shields: startingShields }]
+    : [];
   roundTripState.ship.maxShields = startingShields;
   roundTripState.ship.shields = startingShields;
   const applyRoundTrip = (update) => {
@@ -481,7 +541,7 @@ for (const startingShields of [0, 20, 100]) {
       typeof update === "function" ? update(roundTripState) : update,
     );
   };
-  const roundTripGet = () => ({ ...roundTripState, addLog: () => undefined });
+  const roundTripGet = () => withShipStats(roundTripState);
   for (let lap = 0; lap < 2; lap += 1) {
     applySectorRuleEffect(makeSector(920, 2, "resonance"), applyRoundTrip, roundTripGet);
     assert.ok(
@@ -503,6 +563,36 @@ for (const startingShields of [0, 20, 100]) {
   }
 }
 
+// Щитовой модуль, поставленный уже внутри сектора, обязан получить штраф:
+// maxShields выводится из модулей, а не фиксируется в момент прилёта.
+const lateShieldState = makeState();
+lateShieldState.ship.modules = [];
+lateShieldState.ship.maxShields = 0;
+lateShieldState.ship.shields = 0;
+const applyLateShield = (update) => {
+  Object.assign(
+    lateShieldState,
+    typeof update === "function" ? update(lateShieldState) : update,
+  );
+};
+const lateShieldGet = () => withShipStats(lateShieldState);
+applySectorRuleEffect(makeSector(927, 2, "resonance"), applyLateShield, lateShieldGet);
+lateShieldState.ship.modules = [
+  { type: "shield", health: 100, maxHealth: 100, shields: 100 },
+];
+updateShipStats(lateShieldState);
+assert.equal(
+  lateShieldState.ship.maxShields,
+  75,
+  "a shield module installed inside a resonance sector must still take the penalty",
+);
+applySectorRuleEffect(makeSector(928, 2), applyLateShield, lateShieldGet);
+assert.equal(
+  lateShieldState.ship.maxShields,
+  100,
+  "leaving must return the full reserve of a shield installed inside the sector",
+);
+
 // Штрафы к урону и уклонению обязаны доходить до корабля и полностью сниматься.
 const penaltyState = makeState();
 penaltyState.ship.modules = [
@@ -511,7 +601,7 @@ penaltyState.ship.modules = [
 const applyPenaltyState = (update) => {
   Object.assign(penaltyState, typeof update === "function" ? update(penaltyState) : update);
 };
-const penaltyGet = () => ({ ...penaltyState, addLog: () => undefined });
+const penaltyGet = () => withShipStats(penaltyState);
 const cleanDamage = getTotalDamage(penaltyState).total;
 applySectorRuleEffect(makeSector(922, 2, "debris_belt"), applyPenaltyState, penaltyGet);
 assert.equal(penaltyState.ship.bonusDamage, -0.15, "debris belt must record its damage penalty");
@@ -535,7 +625,7 @@ const expiryState = makeState();
 const applyExpiryState = (update) => {
   Object.assign(expiryState, typeof update === "function" ? update(expiryState) : update);
 };
-const expiryGet = () => ({ ...expiryState, addLog: () => undefined });
+const expiryGet = () => withShipStats(expiryState);
 applySectorRuleEffect(makeSector(925, 2, "debris_belt"), applyExpiryState, expiryGet);
 applySectorRuleEffect(makeSector(926, 2, "resonance"), applyExpiryState, expiryGet);
 const sectorDamage = expiryState.ship.bonusDamage;
@@ -595,10 +685,9 @@ const applyDeadDriftState = (update) => {
     typeof update === "function" ? update(deadDriftState) : update,
   );
 };
-applySectorRuleEffect(deadDriftOrigin, applyDeadDriftState, () => ({
-  ...deadDriftState,
-  addLog: () => undefined,
-}));
+applySectorRuleEffect(deadDriftOrigin, applyDeadDriftState, () =>
+  withShipStats(deadDriftState),
+);
 const deadDriftFuelCost = calculateFuelCost(
   deadDriftState,
   deadDriftTarget.id,
@@ -627,14 +716,14 @@ const hintAnomalySector = {
 };
 hintState.currentSector = hintGraveyard;
 hintState.galaxy.sectors = [hintGraveyard, hintAnomalySector];
-hintState.artifacts = [{ id: "hinted-artifact", discovered: false, hinted: false }];
+hintState.artifacts = [
+  // effect обязателен: updateShipStats перебирает артефакты по нему.
+  { id: "hinted-artifact", discovered: false, hinted: false, effect: { type: "none", active: false } },
+];
 const applyHintState = (update) => {
   Object.assign(hintState, typeof update === "function" ? update(hintState) : update);
 };
-applySectorRuleEffect(hintGraveyard, applyHintState, () => ({
-  ...hintState,
-  addLog: () => undefined,
-}));
+applySectorRuleEffect(hintGraveyard, applyHintState, () => withShipStats(hintState));
 assert.equal(hintState.artifacts[0].hinted, true, "fleet graveyard must reveal an artifact lead");
 assert.equal(hintState.artifacts[0].hintSource, "sector");
 

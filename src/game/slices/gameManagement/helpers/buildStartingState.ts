@@ -2,6 +2,7 @@ import { SHIP_TEMPLATES, DEFAULT_TEMPLATE_ID } from "@/game/constants/shipTempla
 import {
   LAUNCH_MODIFIERS,
   assertValidLaunchSelection,
+  hasLaunchCargoCapacity,
 } from "@/game/constants/launchModifiers";
 import { RESEARCH_TREE } from "@/game/constants/research";
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
@@ -104,6 +105,10 @@ export function buildStartingState(
   const activeModifiers = LAUNCH_MODIFIERS.filter((m) =>
     modifierIds.includes(m.id),
   );
+
+  if (!hasLaunchCargoCapacity(template, activeModifiers)) {
+    throw new Error("Selected modifiers exceed template cargo capacity");
+  }
 
   // ── Кредиты ──────────────────────────────────────────────────────────────
   const credits = assertValidLaunchSelection(

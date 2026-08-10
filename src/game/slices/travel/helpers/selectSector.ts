@@ -3,6 +3,7 @@ import { getSectorName } from "@/lib/translationHelpers";
 import { findActiveArtifact, findArtifactByEffect } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { findRouteNebula } from "@/game/galaxy/nebulae";
+import { getSectorRule } from "@/game/galaxy/sectorRules";
 import {
     PILOT_EXP_SAME_SECTOR,
     PILOT_EXP_PER_TIER,
@@ -531,8 +532,12 @@ export const selectSector = (
     const engineLevel = getEngineLevel(state);
     const captainLevel = getCaptainLevel(state);
 
-    // Варп-двигатель обходит все ограничения доступа к тирам
-    const hasWarpDrive = state.research.researchedTechs.includes("warp_drive");
+    // Варп-двигатель обходит все ограничения доступа к тирам — но не там, где
+    // правило сектора глушит варп: иначе `noWarp` списывает топливо, а прыжок
+    // всё равно остаётся мгновенным.
+    const hasWarpDrive =
+        state.research.researchedTechs.includes("warp_drive") &&
+        getSectorRule(state.currentSector?.ruleId)?.restrictions?.noWarp !== true;
     const crossedNebula = findRouteNebula(
         state.currentSector,
         sector,

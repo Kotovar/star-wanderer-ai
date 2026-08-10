@@ -29,7 +29,8 @@ import {
   pickRunProfileId,
   type RunProfileId,
 } from "@/game/galaxy/runProfiles";
-import { addTradeGood } from "@/game/slices/ship/helpers/addTradeGood";
+import { addTradeGoodWithinCapacity } from "@/game/slices/ship/helpers/addTradeGood";
+import { getFreeCargoSpace } from "@/game/slices/ship/helpers/getCargoCapacity";
 import type {
   GameStore,
   Goods,
@@ -194,12 +195,22 @@ export const restartGame = (
     });
     if (patch.crisisReserveKit) {
       const reserve = getCrisisReserveKit(crisis.id);
+      let reserveCargoLeftBehind = 0;
       set((state) => {
         let tradeGoods = state.ship.tradeGoods;
+        let freeCargoSpace = getFreeCargoSpace(state);
         for (const [item, quantity] of Object.entries(
           reserve.tradeGoods ?? {},
         )) {
-          tradeGoods = addTradeGood(tradeGoods, item as Goods, quantity);
+          const result = addTradeGoodWithinCapacity(
+            tradeGoods,
+            item as Goods,
+            quantity,
+            freeCargoSpace,
+          );
+          tradeGoods = result.tradeGoods;
+          freeCargoSpace -= result.accepted;
+          reserveCargoLeftBehind += result.discarded;
         }
 
         const resources = { ...state.research.resources };
@@ -222,6 +233,14 @@ export const restartGame = (
           research: { ...state.research, resources },
         };
       });
+      if (reserveCargoLeftBehind > 0) {
+        get().addLog(
+          i18nStore.t("game_logs.crisis_reserve_cargo_left_behind", {
+            count: reserveCargoLeftBehind,
+          }),
+          "warning",
+        );
+      }
       get().addLog(
         i18nStore.t("game_logs.crisis_reserve_kit", {
           value: i18nStore.t(reserve.labelKey),

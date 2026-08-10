@@ -83,7 +83,9 @@ const calculateDistanceMultiplier = (
 const collectFuelModifiers = (state: GameState): number => {
     const raceModifier = getRaceFuelEfficiencyModifier(state.crew);
     const pilotModifier = getPilotFuelConsumptionModifier(state.crew);
-    const planetModifier = getPlanetFuelEfficiencyModifier(state.activeEffects);
+    const planetModifier = getPlanetFuelEfficiencyModifier(
+        state.activeEffects.filter((effect) => effect.source !== "sector"),
+    );
 
     // Бонус от сращивания ксеноморфов
     const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
@@ -93,6 +95,16 @@ const collectFuelModifiers = (state: GameState): number => {
 
     return raceModifier * pilotModifier * planetModifier * mergeFuelModifier;
 };
+
+/**
+ * Модификатор правила сектора. Считается отдельно и применяется ПОСЛЕ
+ * технологического пола: внутри пола экономия прокачанного корабля уже упёрта
+ * в MAX_FUEL_EFFICIENCY_BONUS, и обещанная правилом скидка была бы невидимой.
+ */
+const getSectorFuelModifier = (state: GameState): number =>
+    getPlanetFuelEfficiencyModifier(
+        state.activeEffects.filter((effect) => effect.source === "sector"),
+    );
 
 /**
  * Вычисляет суммарный бонус эффективности топлива от технологий
@@ -213,6 +225,8 @@ export const calculateFuelCost = (
         Math.ceil(baseCost * (1 - MAX_FUEL_EFFICIENCY_BONUS)),
         Math.ceil(baseCost * otherModifiers * (1 - techBonus)),
     );
+
+    fuelCost = Math.max(1, Math.ceil(fuelCost * getSectorFuelModifier(state)));
 
     if (Number.isNaN(fuelCost)) {
         fuelCost = DEFAULT_FUEL_COST;
