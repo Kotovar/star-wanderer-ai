@@ -15,6 +15,7 @@ import {
 } from "@/game/slices/planetEffects/helpers/retrainCrew";
 import type { Profession } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
+import { getLocationName } from "@/lib/translationHelpers";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
 
 interface PlanetSpecializationPanelProps {
@@ -178,7 +179,7 @@ export function PlanetSpecializationPanel({
                         {t(`planet_specializations.${spec.id}.name`)}
                     </div>
                     <div className="text-xs text-[#888]">
-                        {t(`race_names.${currentLocation.dominantRace}`)} • {currentLocation.name}
+                        {t(`race_names.${currentLocation.dominantRace}`)} • {getLocationName(currentLocation.name, t)}
                     </div>
                 </div>
             </div>

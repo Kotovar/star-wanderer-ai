@@ -379,6 +379,9 @@ export function EventDisplay() {
           <div className="font-['Orbitron'] font-bold text-lg text-accent">
             ▸ {t("travel_events.title")}
           </div>
+          <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.05)] p-2 text-xs leading-relaxed text-[#ffb000]">
+            {t("travel_events.delay_notice")}
+          </div>
           <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.05)] p-4">
             <div className="font-['Orbitron'] text-base font-bold text-accent">
               {t(`${eventKey}.title`)}
@@ -475,6 +478,29 @@ export function EventDisplay() {
               : t("travel_onboard.route_direct")}
           </span>
         </div>
+        {traveling.travelLog?.length ? (
+          <div className="border border-[#00d4ff44] bg-[rgba(0,212,255,0.03)] p-3 text-xs leading-relaxed">
+            <div className="font-['Orbitron'] text-[10px] font-bold uppercase tracking-wider text-[#00d4ff]">
+              {t("travel_onboard.flight_log")}
+            </div>
+            <div className="mt-2 max-h-32 space-y-1 overflow-y-auto pr-1">
+              {traveling.travelLog.map((entry, index) => (
+                <div className="flex gap-2" key={`${entry.turn}-${index}`}>
+                  <span className="shrink-0 text-[#657365]">
+                    {t("travel_onboard.log_turn", { turn: entry.turn })}
+                  </span>
+                  <span
+                    className={
+                      entry.type === "warning" ? "text-[#ffb000]" : "text-[#9aa59a]"
+                    }
+                  >
+                    {entry.message}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
         <div className="border border-[#00ff4133] bg-[rgba(0,255,65,0.03)] p-3 text-xs leading-relaxed text-[#9aa59a]">
           <div className="font-['Orbitron'] text-[10px] font-bold uppercase tracking-wider text-[#00ff41]">
             {t("travel_onboard.title")}

@@ -37,6 +37,7 @@ import {
     getNebulaDisruptionPatch,
     rollNebulaDisruption,
 } from "./nebulaHazards";
+import { appendTravelLog } from "./travelLog";
 import { addPilotAsteroidManeuverDelay } from "./asteroidManeuver";
 import { getReputationChanges } from "@/game/contracts/completionRewards";
 import {
@@ -576,7 +577,17 @@ export const resolveTravelEvent = (
 
     if (!resolved) return;
 
-    set({ pendingTravelEvent: null });
+    const resolutionMessage = i18nStore.t("travel_onboard.decision_resolved");
+    set((state) => ({
+        pendingTravelEvent: null,
+        traveling: state.traveling
+            ? appendTravelLog(state.traveling, {
+                  message: resolutionMessage,
+                  type: "info",
+                  turn: state.turn,
+              })
+            : null,
+    }));
     get().updateShipStats();
     get().saveGame();
 };
@@ -714,27 +725,34 @@ export const processTravel = (
                         patch.ship.modules[index]?.health < module.health,
                 );
                 const fuelLost = state.ship.fuel - patch.ship.fuel;
+                let message: string;
 
-                set(patch);
                 if (damagedModule) {
                     const patchedModule = patch.ship.modules.find(
                         (module) => module.id === damagedModule.id,
                     );
-                    get().addLog(
-                        i18nStore.t("game_logs.nebula_module_damage", {
-                            module: damagedModule.name,
-                            damage: damagedModule.health - (patchedModule?.health ?? damagedModule.health),
-                        }),
-                        "warning",
-                    );
+                    message = i18nStore.t("game_logs.nebula_module_damage", {
+                        module: damagedModule.name,
+                        damage:
+                            damagedModule.health -
+                            (patchedModule?.health ?? damagedModule.health),
+                    });
                 } else if (disruption === "fuel_loss" || fuelLost > 0) {
-                    get().addLog(
-                        i18nStore.t("game_logs.nebula_fuel_loss", { fuel: fuelLost }),
-                        "warning",
-                    );
+                    message = i18nStore.t("game_logs.nebula_fuel_loss", { fuel: fuelLost });
                 } else {
-                    get().addLog(i18nStore.t("game_logs.nebula_drift"), "warning");
+                    message = i18nStore.t("game_logs.nebula_drift");
                 }
+                set({
+                    ...patch,
+                    traveling: patch.traveling
+                        ? appendTravelLog(patch.traveling, {
+                              message,
+                              type: "warning",
+                              turn: state.turn,
+                          })
+                        : null,
+                });
+                get().addLog(message, "warning");
                 get().saveGame();
                 return;
             }
@@ -752,15 +770,17 @@ export const processTravel = (
     // traderTurn сразу сбрасывается, иначе событие сработает повторно:
     // turnsLeft в этот ход не уменьшается.
     if (traveling.traderTurn === traveling.turnsLeft) {
+        const message = i18nStore.t("game_logs.processTravel_27");
         set((s) => ({
             pendingTravelEvent: { type: "trader" },
             traveling: s.traveling
-                ? { ...s.traveling, traderTurn: undefined }
+                ? appendTravelLog(
+                      { ...s.traveling, traderTurn: undefined },
+                      { message, type: "warning", turn: s.turn },
+                  )
                 : null,
         }));
-        get().addLog( i18nStore.t("game_logs.processTravel_27"),
-            "warning",
-        );
+        get().addLog(message, "warning");
         get().saveGame();
         return;
     }
@@ -782,19 +802,35 @@ export const processTravel = (
             ? getStarTypeEffect(traveling.destination.star.type)
             : {};
         const event = pickTravelEvent(hazardLevel, destinationStarEffect.extraTravelEventWeight);
-        set({ pendingTravelEvent: { type: event } });
-        get().addLog( i18nStore.t("game_logs.processTravel_28"),
-            "warning",
-        );
+        const message = i18nStore.t("game_logs.processTravel_28");
+        set((s) => ({
+            pendingTravelEvent: { type: event },
+            traveling: s.traveling
+                ? appendTravelLog(s.traveling, {
+                      message,
+                      type: "warning",
+                      turn: s.turn,
+                  })
+                : null,
+        }));
+        get().addLog(message, "warning");
         get().saveGame();
         return;
     }
 
     const nextTurnsLeft = traveling.turnsLeft - 1;
+    const progressMessage = i18nStore.t("travel_onboard.progress", {
+        turns: nextTurnsLeft,
+    });
 
     set((s) => ({
         traveling: s.traveling
-            ? { ...s.traveling, turnsLeft: nextTurnsLeft }
+            ? nextTurnsLeft > 0
+                ? appendTravelLog(
+                      { ...s.traveling, turnsLeft: nextTurnsLeft },
+                      { message: progressMessage, type: "info", turn: s.turn },
+                  )
+                : { ...s.traveling, turnsLeft: nextTurnsLeft }
             : null,
     }));
 

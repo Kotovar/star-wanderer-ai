@@ -418,8 +418,12 @@ const handleTravelStart = (
         !travelInstant && Math.random() < TRADER_ENCOUNTER_CHANCE
             ? 1 + Math.floor(Math.random() * distance)
             : undefined;
+    const travelStartMessage = i18nStore.t("game_logs.selectSector_6", {
+        sector_name: getSectorName(sector.name, i18nStore.t),
+        distance,
+    });
 
-    set(() => ({
+    set((state) => ({
         traveling: travelInstant
             ? null
             : {
@@ -430,6 +434,13 @@ const handleTravelStart = (
                   nebulaId,
                   nebulaChecked: false,
                   traderTurn,
+                  travelLog: [
+                      {
+                          message: travelStartMessage,
+                          type: "info",
+                          turn: state.turn,
+                      },
+                  ],
               },
         gameMode: "galaxy_map" as GameMode,
     }));
@@ -466,9 +477,7 @@ const handleTravelStart = (
             get().checkVictory();
         }
     } else {
-        get().addLog( i18nStore.t("game_logs.selectSector_6", { sector_name: getSectorName(sector.name, i18nStore.t), distance }),
-            "info",
-        );
+        get().addLog(travelStartMessage, "info");
     }
 };
 

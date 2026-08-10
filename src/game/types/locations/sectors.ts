@@ -1,5 +1,6 @@
 import type { GalaxyTierAll } from "./galaxy";
 import type { Location } from "./locations";
+import type { LogEntry } from "../logs";
 import type { SectorRuleId } from "@/game/galaxy/sectorRules";
 
 /**
@@ -76,6 +77,8 @@ export interface TravelingState {
     nebulaChecked?: boolean;
     /** На каком значении turnsLeft встретится странствующий торговец */
     traderTurn?: number;
+    /** Последние записи журнала текущего перелёта */
+    travelLog?: LogEntry[];
 }
 
 export type TravelEventType =

@@ -1740,6 +1740,7 @@
         "availability": "Availability",
         "no_fuel": "not enough fuel",
         "no_fuel_hint": "Not enough fuel for the cautious option.",
+        "delay_notice": "⚠️ This decision takes the current turn: the travel counter will not decrease.",
         "asteroids": {
             "title": "Asteroid stream",
             "description": "The course runs through a dense debris cloud.",
@@ -1853,7 +1854,11 @@
         "crew_busy": "👥 Crew on assignments: {{count}}",
         "crew_rest": "👥 Crew is resting",
         "modules_damaged": "🔧 Damaged modules: {{count}}",
-        "modules_ok": "🔧 All modules operational"
+        "modules_ok": "🔧 All modules operational",
+        "flight_log": "Flight log",
+        "log_turn": "Turn {{turn}}",
+        "progress": "Route progress: {{turns}} turn(s) remaining",
+        "decision_resolved": "Captain's decision recorded; the route resumes next turn."
     },
     "route_dialog": {
         "title": "Route to {{sector}}",
@@ -1861,7 +1866,7 @@
         "detour": "Detour",
         "turns": "{{turns}} turn(s)",
         "fuel": "fuel {{fuel}}",
-        "high_risk": "high event risk",
+        "high_risk": "high risk: an event may delay travel",
         "low_risk": "low event risk"
     },
     "augmentations": {
@@ -4323,7 +4328,7 @@
         },
         "nebula": {
             "route_warning": "Route crosses a nebula",
-            "direct_risk": "60%: fuel loss, module damage, or drift"
+            "direct_risk": "60%: the disruption takes a turn — fuel loss, module damage, or drift (+1 turn)"
         },
         "fuel_trap": {
             "title": "Stranding risk",
@@ -6256,11 +6261,11 @@
         "processTravel_24": "Bio-sample collection complete! +{{reward}}₢",
         "processTravel_25": "Bio-samples: {{visitedTargetCount}}/{{targetSectors_length}} sectors",
         "processTravel_26": "☢️ {{crewMember_name}} got a mutation from the neutron star's radiation: {{mutationName}}!",
-        "processTravel_27": "🛸 Unknown ship on the scanner. The captain's decision is required.",
-        "processTravel_28": "An event was detected en route. The captain's decision is required.",
+        "processTravel_27": "🛸 Unknown ship on the scanner. The current turn is spent on the captain's decision; the travel counter did not decrease.",
+        "processTravel_28": "An event was detected en route. The current turn is spent on the captain's decision; the travel counter did not decrease.",
         "processTravel_29": "Arrived at {{destinationSector_name}}",
-        "nebula_fuel_loss": "The nebula swallowed {{fuel}} fuel",
-        "nebula_module_damage": "The nebula damaged module “{{module}}” for {{damage}} HP",
+        "nebula_fuel_loss": "The nebula swallowed {{fuel}} fuel; route progress is paused for this turn",
+        "nebula_module_damage": "The nebula damaged module “{{module}}” for {{damage}} HP; route progress is paused for this turn",
         "nebula_drift": "The ship was blown off course: travel takes one extra turn",
         "selectLocation_1": "{{loc_name}} has already been visited",
         "selectLocation_2": "{{loc_name}} has already been defeated",
