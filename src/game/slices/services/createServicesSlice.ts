@@ -1,5 +1,12 @@
 import type { GameStore, SetState } from "@/game/types";
 import { getSectorRule } from "@/game/galaxy/sectorRules";
+import { store as i18nStore } from "@/lib/useTranslation";
+import {
+    getNebulaFrontDispersal,
+    getNebulaFrontProgress,
+    NEBULA_FRONT_CRISIS_ID,
+    NEBULA_FRONT_STABILIZER_COST,
+} from "@/game/crises/nebulaFront";
 import {
     calculateRepairCost,
     calculateHealCost,
@@ -75,6 +82,7 @@ export interface ServicesSlice {
      */
     cureMutation: (crewId: number, traitId: string) => void;
     treatNegativeTrait: (crewId: number, traitId: string) => void;
+    stabilizeNebulaFront: () => void;
 }
 
 /**
@@ -129,4 +137,65 @@ export const createServicesSlice = (
 
     treatNegativeTrait: (crewId, traitId) =>
         treatNegativeTraitAction(crewId, traitId, set, get),
+
+    stabilizeNebulaFront: () => {
+        const state = get();
+        const nebulaId = getNebulaFrontDispersal(
+            state.activeCrisis,
+            state.galaxy.nebulae,
+            state.research.resources,
+            state.currentLocation?.stationType === "research",
+        );
+        if (!nebulaId) {
+            if (state.activeCrisis?.id === NEBULA_FRONT_CRISIS_ID) {
+                get().addLog(
+                    i18nStore.t("game_logs.nebula_front_stabilizer_unavailable"),
+                    "warning",
+                );
+            }
+            return;
+        }
+
+        set((s) => ({
+            research: {
+                ...s.research,
+                resources: {
+                    ...s.research.resources,
+                    quantum_crystals: Math.max(
+                        0,
+                        (s.research.resources.quantum_crystals ?? 0) -
+                            NEBULA_FRONT_STABILIZER_COST.quantum_crystals,
+                    ),
+                    energy_samples: Math.max(
+                        0,
+                        (s.research.resources.energy_samples ?? 0) -
+                            NEBULA_FRONT_STABILIZER_COST.energy_samples,
+                    ),
+                    void_membrane: Math.max(
+                        0,
+                        (s.research.resources.void_membrane ?? 0) -
+                            NEBULA_FRONT_STABILIZER_COST.void_membrane,
+                    ),
+                },
+            },
+            galaxy: {
+                ...s.galaxy,
+                nebulae: s.galaxy.nebulae.filter(
+                    (nebula) => nebula.id !== nebulaId,
+                ),
+            },
+        }));
+
+        const progress = getNebulaFrontProgress(
+            get().activeCrisis,
+            get().galaxy.nebulae,
+        );
+        get().addLog(
+            i18nStore.t("game_logs.nebula_front_dispersed", {
+                remaining: progress?.remaining ?? 0,
+            }),
+            "info",
+        );
+        get().saveGame();
+    },
 });

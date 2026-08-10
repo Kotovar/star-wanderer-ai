@@ -4,6 +4,14 @@ import type { GameState } from "@/game/types";
 import { RACES } from "@/game/constants/races";
 import { TRADE_GOODS } from "@/game/constants/goods";
 import { getCrisisStage } from "@/game/crises/escalation";
+import { store as i18nStore } from "@/lib/useTranslation";
+import { generateNebulaFrontNebulae } from "@/game/galaxy/nebulae";
+import {
+  canStartNebulaFront,
+  getNebulaFrontProgress,
+  NEBULA_FRONT_CRISIS_ID,
+  NEBULA_FRONT_NEBULA_COUNT,
+} from "@/game/crises/nebulaFront";
 
 // ─── Константы ────────────────────────────────────────────────────────────────
 
@@ -20,6 +28,7 @@ const CRISIS_DURATIONS = {
   solar_flare: 28,
   epidemic: 36,
   fuel_shortage: 32,
+  nebula_front: 42,
 } as const;
 
 // ─── Значения эффектов ────────────────────────────────────────────────────────
@@ -190,6 +199,12 @@ const getCrisisWeights = (
       fuelSystems * 0.9 +
       Math.max(0, (40 - state.ship.fuel) / 12) +
       Math.random() * 1.5,
+    [NEBULA_FRONT_CRISIS_ID]: canStartNebulaFront(
+      state.currentSector?.tier,
+      state.discoveredCrisisIds,
+    )
+      ? 3 + Math.random() * 1.5
+      : 0,
   };
 
   if (excludeId) {
@@ -208,7 +223,15 @@ export const pickWeightedCrisis = (state: GameState, excludeId?: string) => {
   );
 
   if (pool.length === 0 || totalWeight <= 0) {
-    const fallback = GLOBAL_CRISES.filter((crisis) => crisis.id !== excludeId);
+    const fallback = GLOBAL_CRISES.filter(
+      (crisis) =>
+        crisis.id !== excludeId &&
+        (crisis.id !== NEBULA_FRONT_CRISIS_ID ||
+          canStartNebulaFront(
+            state.currentSector?.tier,
+            state.discoveredCrisisIds,
+          )),
+    );
     return fallback[Math.floor(Math.random() * fallback.length)];
   }
 
@@ -219,6 +242,21 @@ export const pickWeightedCrisis = (state: GameState, excludeId?: string) => {
   }
 
   return pool[pool.length - 1];
+};
+
+/** Не даёт устаревшему плану кризиса обойти условия Завесы. */
+export const pickScheduledCrisis = (
+  state: GameState,
+  scheduledCrisisId: string | null,
+): GlobalCrisis => {
+  const scheduled = GLOBAL_CRISES.find(
+    (crisis) => crisis.id === scheduledCrisisId,
+  );
+  return scheduled &&
+    (scheduled.id !== NEBULA_FRONT_CRISIS_ID ||
+      canStartNebulaFront(state.currentSector?.tier, state.discoveredCrisisIds))
+    ? scheduled
+    : pickWeightedCrisis(state);
 };
 
 export const rollNextCrisisTurn = (currentTurn: number, state: GameState) => {
@@ -697,6 +735,52 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       get().addLog(
         "⛽ Топливные поставки стабилизировались, двигатели снова доступны",
         "info",
+      );
+    },
+  },
+
+  // ── 5. Завеса древних маяков ──────────────────────────────────────────────
+  {
+    id: NEBULA_FRONT_CRISIS_ID,
+    nameKey: "crises.nebula_front.name",
+    warningKey: "crises.nebula_front.warning",
+    descriptionKey: "crises.nebula_front.description",
+    effectsKey: "crises.nebula_front.effects",
+    icon: "🌀",
+    duration: CRISIS_DURATIONS.nebula_front,
+    allowedResponses: [],
+    usesEscalation: false,
+    onStartEffect: (set, get) => {
+      const createdNebulae = generateNebulaFrontNebulae(
+        get().galaxy.sectors,
+        get().galaxy.nebulae,
+        NEBULA_FRONT_NEBULA_COUNT,
+      );
+      set((state: GameState) => ({
+        galaxy: {
+          ...state.galaxy,
+          nebulae: [...state.galaxy.nebulae, ...createdNebulae],
+        },
+      }));
+      get().addLog(
+        i18nStore.t("game_logs.nebula_front_started", {
+          count: createdNebulae.length,
+        }),
+        "error",
+      );
+      return { nebulaIds: createdNebulae.map((nebula) => nebula.id) };
+    },
+    onTurnEffect: () => undefined,
+    onEndEffect: (_set, get, activeCrisis) => {
+      const progress = getNebulaFrontProgress(
+        activeCrisis,
+        get().galaxy.nebulae,
+      );
+      get().addLog(
+        i18nStore.t("game_logs.nebula_front_ended", {
+          remaining: progress?.remaining ?? 0,
+        }),
+        progress?.remaining ? "warning" : "info",
       );
     },
   },

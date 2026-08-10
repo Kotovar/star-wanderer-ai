@@ -78,6 +78,7 @@ import {
     getResearchMaterialStocks,
     RESEARCH_STATION_BUY_PRICES,
 } from "@/game/stations/researchMaterials";
+import { getNebulaFrontProgress } from "@/game/crises/nebulaFront";
 
 const STATION_BACKGROUNDS = {
     trade: "/assets/station-backgrounds/trade-hub.webp",
@@ -281,6 +282,9 @@ export function StationPanel() {
     const buyProbe = useGameStore((s) => s.buyProbe);
     const research = useGameStore((s) => s.research);
     const activateResearchBoost = useGameStore((s) => s.activateResearchBoost);
+    const activeCrisis = useGameStore((s) => s.activeCrisis);
+    const nebulae = useGameStore((s) => s.galaxy.nebulae);
+    const stabilizeNebulaFront = useGameStore((s) => s.stabilizeNebulaFront);
     const researchBoostEffect = useGameStore((s) =>
         s.activeEffects.find((e) => e.id === RESEARCH_BOOST_EFFECT_ID),
     );
@@ -327,6 +331,7 @@ export function StationPanel() {
     const stationConfig = currentLocation?.stationConfig;
     const isResearchStation = stationType === "research";
     const isMiningStation = stationType === "mining";
+    const nebulaFrontProgress = getNebulaFrontProgress(activeCrisis, nebulae);
 
     // Station service flags (default true for backwards compat with old saves)
     const allowsTrade = stationConfig?.allowsTrade ?? true;
@@ -806,6 +811,8 @@ export function StationPanel() {
                             researchBoostEffect?.turnsRemaining ?? 0
                         }
                         onActivateResearchBoost={activateResearchBoost}
+                        nebulaFrontProgress={nebulaFrontProgress}
+                        onStabilizeNebulaFront={stabilizeNebulaFront}
                         onSellResearchResource={(type, qty) => {
                             const price =
                                 {

@@ -13,6 +13,18 @@ const hasProtectedBoss = (sector: Sector): boolean =>
       location.bossId === "void_oracle" || location.bossId === "the_eternal",
   );
 
+const isOutsideNebula = (sector: Sector, nebula: Nebula): boolean => {
+  const point = getSectorMapPoint(sector);
+  return (point.x - nebula.x) ** 2 + (point.y - nebula.y) ** 2 > nebula.radius ** 2;
+};
+
+const doesNotOverlap = (nebula: Nebula, others: Nebula[]): boolean =>
+  others.every(
+    (other) =>
+      Math.hypot(nebula.x - other.x, nebula.y - other.y) >
+      nebula.radius + other.radius,
+  );
+
 export const getSectorMapPoint = (sector: Sector): { x: number; y: number } => {
   const radius = TIER_RADII[sector.tier];
   const angle = sector.mapAngle ?? 0;
@@ -76,10 +88,9 @@ export const generateNebulae = (sectors: Sector[]): Nebula[] => {
       y: (startPoint.y + candidatePoint.y) / 2,
       radius: 0.16,
     };
-    const protectsRequiredSectors = protectedSectors.every((sector) => {
-      const point = getSectorMapPoint(sector);
-      return (point.x - nebula.x) ** 2 + (point.y - nebula.y) ** 2 > nebula.radius ** 2;
-    });
+    const protectsRequiredSectors = protectedSectors.every((sector) =>
+      isOutsideNebula(sector, nebula),
+    );
 
     if (protectsRequiredSectors && routeIntersectsNebula(start, candidate, nebula)) {
       return [nebula];
@@ -87,4 +98,54 @@ export const generateNebulae = (sectors: Sector[]): Nebula[] => {
   }
 
   return [];
+};
+
+/** Три устойчивые туманности, возникающие во время одноразового кризиса. */
+export const generateNebulaFrontNebulae = (
+  sectors: Sector[],
+  existingNebulae: Nebula[],
+  count = 3,
+): Nebula[] => {
+  const start = sectors.find((sector) => sector.id === 0);
+  if (!start) return [];
+
+  const protectedSectors = sectors.filter(
+    (sector) => sector.id === 0 || hasProtectedBoss(sector),
+  );
+  const eligible = sectors.filter(
+    (sector) => sector.id !== 0 && !hasProtectedBoss(sector),
+  );
+  const candidates = [
+    ...eligible.filter((sector) => sector.tier === 2 || sector.tier === 3),
+    ...eligible.filter((sector) => sector.tier !== 2 && sector.tier !== 3),
+  ];
+  const startPoint = getSectorMapPoint(start);
+  const generated: Nebula[] = [];
+  const usedIds = new Set(existingNebulae.map((nebula) => nebula.id));
+
+  for (const candidate of candidates) {
+    let index = generated.length + 1;
+    while (usedIds.has(`nebula-front-${index}`)) index++;
+
+    const candidatePoint = getSectorMapPoint(candidate);
+    const nebula: Nebula = {
+      id: `nebula-front-${index}`,
+      x: (startPoint.x + candidatePoint.x) / 2,
+      y: (startPoint.y + candidatePoint.y) / 2,
+      radius: 0.13,
+    };
+    const currentNebulae = [...existingNebulae, ...generated];
+
+    if (
+      protectedSectors.every((sector) => isOutsideNebula(sector, nebula)) &&
+      doesNotOverlap(nebula, currentNebulae) &&
+      routeIntersectsNebula(start, candidate, nebula)
+    ) {
+      generated.push(nebula);
+      usedIds.add(nebula.id);
+      if (generated.length === count) return generated;
+    }
+  }
+
+  return generated;
 };

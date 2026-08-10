@@ -26,6 +26,11 @@ import {
 } from "@/game/slices/research/methods/activateResearchBoost";
 import { RESEARCH_STATION_BUY_PRICES } from "@/game/stations/researchMaterials";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
+import {
+    hasNebulaFrontMaterials,
+    NEBULA_FRONT_STABILIZER_COST,
+    type NebulaFrontProgress,
+} from "@/game/crises/nebulaFront";
 
 const AUGMENTATION_RARITY_COLORS: Record<AugmentationRarity, string> = {
     common: "text-[#8a8a8a]",
@@ -162,6 +167,8 @@ interface ServicesTabProps {
     onBuyResearchResource?: (type: ResearchResourceType, qty: number) => void;
     researchBoostTurnsRemaining?: number;
     onActivateResearchBoost?: () => void;
+    nebulaFrontProgress?: NebulaFrontProgress | null;
+    onStabilizeNebulaFront?: () => void;
 }
 
 export function ServicesTab({
@@ -212,6 +219,8 @@ export function ServicesTab({
     onBuyResearchResource,
     researchBoostTurnsRemaining,
     onActivateResearchBoost,
+    nebulaFrontProgress,
+    onStabilizeNebulaFront,
 }: ServicesTabProps) {
     const fuelNeeded = maxFuel - fuel;
 
@@ -292,6 +301,13 @@ export function ServicesTab({
                     onInstall={installCraftedWeapon}
                 />
             )}
+            {isResearchStation && nebulaFrontProgress && onStabilizeNebulaFront && (
+                <NebulaStabilizerSection
+                    progress={nebulaFrontProgress}
+                    researchResources={researchResources ?? {}}
+                    onStabilize={onStabilizeNebulaFront}
+                />
+            )}
             {isResearchStation && onBuyResearchResource && (
                 <BuyResearchSection
                     credits={credits}
@@ -318,6 +334,73 @@ export function ServicesTab({
 }
 
 const PROBE_PRICE = 150;
+
+function NebulaStabilizerSection({
+    progress,
+    researchResources,
+    onStabilize,
+}: {
+    progress: NebulaFrontProgress;
+    researchResources: Partial<Record<ResearchResourceType, number>>;
+    onStabilize: () => void;
+}) {
+    const { t } = useTranslation();
+    const canStabilize =
+        progress.remaining > 0 && hasNebulaFrontMaterials(researchResources);
+
+    return (
+        <SectionPanel
+            tone="cyan"
+            className="border-[#a855f7] bg-[rgba(168,85,247,0.08)]"
+        >
+            <div className="font-bold text-[#d8b4fe]">
+                🌀 {t("services.nebula_front.title")}
+            </div>
+            <div className="mb-3 text-xs text-[#b9a2ca]">
+                {t("services.nebula_front.description")}
+            </div>
+            <div className="flex items-center justify-between gap-3 border border-[#a855f755] bg-[rgba(0,0,0,0.22)] px-3 py-2">
+                <div>
+                    <div className="text-sm text-[#f3e8ff]">
+                        {t("services.nebula_front.progress", {
+                            dispersed: progress.dispersed,
+                            total: progress.total,
+                        })}
+                    </div>
+                    <div className="mt-1 text-[11px] text-[#c4b5fd]">
+                        {RESEARCH_RESOURCES.quantum_crystals.icon}{" "}
+                        {RESEARCH_RESOURCES.energy_samples.icon}{" "}
+                        {RESEARCH_RESOURCES.void_membrane.icon}{" "}
+                        {t("services.nebula_front.cost", {
+                            crystals:
+                                NEBULA_FRONT_STABILIZER_COST.quantum_crystals,
+                            energy: NEBULA_FRONT_STABILIZER_COST.energy_samples,
+                            membranes: NEBULA_FRONT_STABILIZER_COST.void_membrane,
+                        })}
+                    </div>
+                </div>
+                {progress.remaining === 0 ? (
+                    <span className="text-xs font-bold text-[#00ff41]">
+                        {t("services.nebula_front.complete")}
+                    </span>
+                ) : (
+                    <Button
+                        disabled={!canStabilize}
+                        onClick={onStabilize}
+                        className="h-auto cursor-pointer border border-[#d8b4fe] bg-transparent px-2 py-1 text-[10px] uppercase text-[#e9d5ff] hover:bg-[#a855f7] hover:text-[#050810] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        {t("services.nebula_front.activate")}
+                    </Button>
+                )}
+            </div>
+            {!canStabilize && progress.remaining > 0 && (
+                <div className="mt-2 text-[11px] text-[#f0abfc]">
+                    {t("services.nebula_front.materials_missing")}
+                </div>
+            )}
+        </SectionPanel>
+    );
+}
 
 function ProbeSection({
     probes,

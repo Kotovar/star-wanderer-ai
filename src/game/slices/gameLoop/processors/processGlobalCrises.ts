@@ -4,6 +4,7 @@ import type { GameState, GameStore, SetState } from "@/game/types";
 import {
   FIRST_CRISIS_TURN_MIN,
   GLOBAL_CRISES,
+  pickScheduledCrisis,
   pickWeightedCrisis,
   rollInitialCrisisTurn,
   rollNextCrisisTurn,
@@ -91,7 +92,7 @@ export const processGlobalCrises = (
         "info",
       );
       playSound("ui_notification");
-    } else {
+    } else if (crisis?.usesEscalation !== false) {
       const currentStage = getCrisisStage(activeCrisis, crisis?.duration ?? newRemaining);
       const nextStage = getCrisisStage(
         { ...crisisAfterTurn, turnsRemaining: newRemaining },
@@ -111,13 +112,17 @@ export const processGlobalCrises = (
         );
         playSound("world_danger");
       }
+    } else {
+      set(() => ({
+        activeCrisis: { ...crisisAfterTurn, turnsRemaining: newRemaining },
+      }));
     }
     return;
   }
 
   // ── Начало нового кризиса ──────────────────────────────────────────────────
   if (turn >= nextCrisisTurn) {
-    const crisis = getCrisisById(nextCrisisId) ?? pickWeightedCrisis(state);
+    const crisis = pickScheduledCrisis(state, nextCrisisId);
     const preparedData = crisis.onStartEffect?.(set, get) ?? undefined;
     const freshState = get();
     const nextPlannedCrisis = pickWeightedCrisis(freshState, crisis.id);

@@ -29,6 +29,8 @@ export interface GlobalCrisis {
   duration: number;
   /** Какие способы подавления подходят именно этому кризису */
   allowedResponses: CrisisResponse[];
+  /** У туманностного фронта нет нарастающих стадий: его последствия остаются на карте. */
+  usesEscalation?: boolean;
   /** Контекстные пояснения для способов подавления */
   responseNotes?: Partial<Record<CrisisResponse, string>>;
   /** Эффект при старте кризиса */

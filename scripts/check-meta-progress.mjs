@@ -35,7 +35,12 @@ const weird = normalizeMetaProgress({
   bossesDefeated: Infinity, // not finite -> fallback
   contractsCompleted: 7, // valid -> passes through
   legendaryOrMythicArtifactsDiscovered: 2,
-  discoveredCrisisIds: ["raider_wave", "raider_wave", "not_a_real_crisis_id"],
+  discoveredCrisisIds: [
+    "raider_wave",
+    "raider_wave",
+    "nebula_front",
+    "not_a_real_crisis_id",
+  ],
   // "veteran_crew" is a real achievement id, "not_a_real_achievement" isn't,
   // 5/null aren't strings — all three non-valid entries must be dropped.
   unlockedAchievementIds: ["veteran_crew", "not_a_real_achievement", 5, null],
@@ -48,7 +53,7 @@ assert.equal(weird.losses, 0);
 assert.equal(weird.bossesDefeated, 0);
 assert.equal(weird.contractsCompleted, 7);
 assert.equal(weird.legendaryOrMythicArtifactsDiscovered, 2);
-assert.deepEqual(weird.discoveredCrisisIds, ["raider_wave"]);
+assert.deepEqual(weird.discoveredCrisisIds, ["raider_wave", "nebula_front"]);
 assert.deepEqual(weird.unlockedAchievementIds, ["veteran_crew"]);
 assert.deepEqual(weird.unlockedShipIds, ["explorer", "trader"]);
 assert.equal(weird.lastRecordedRunId, null);
@@ -193,6 +198,21 @@ for (const [id, field, below, atTarget] of careerCases) {
     achievement.isSatisfied(
       baseLifetime({
         discoveredCrisisIds: ["raider_wave", "solar_flare", "epidemic", "fuel_shortage"],
+      }),
+      baseSummary(),
+    ),
+    false,
+  );
+  assert.equal(
+    achievement.isSatisfied(
+      baseLifetime({
+        discoveredCrisisIds: [
+          "raider_wave",
+          "solar_flare",
+          "epidemic",
+          "fuel_shortage",
+          "nebula_front",
+        ],
       }),
       baseSummary(),
     ),

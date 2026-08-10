@@ -20,6 +20,7 @@ const KNOWN_CRISIS_IDS = new Set([
   "solar_flare",
   "epidemic",
   "fuel_shortage",
+  "nebula_front",
 ]);
 const KNOWN_SHIP_IDS = new Set(SHIP_TEMPLATES.map((t) => t.id));
 

@@ -9,6 +9,10 @@ import {
   getCrisisStage,
 } from "@/game/crises/escalation";
 import { CRISIS_RESPONSES } from "@/game/constants/crisisResponses";
+import {
+  getNebulaFrontProgress,
+  NEBULA_FRONT_STABILIZER_COST,
+} from "@/game/crises/nebulaFront";
 import { useGameStore } from "@/game/store";
 import { useTranslation } from "@/lib/useTranslation";
 
@@ -23,7 +27,13 @@ export function CrisisPanel() {
     ? GLOBAL_CRISES.find((crisis) => crisis.id === activeCrisis.id)
     : null;
   const currentStage =
-    active && activeCrisis ? getCrisisStage(activeCrisis, active.duration) : null;
+    active && activeCrisis && active.usesEscalation !== false
+      ? getCrisisStage(activeCrisis, active.duration)
+      : null;
+  const nebulaFrontProgress = getNebulaFrontProgress(
+    activeCrisis,
+    state.galaxy.nebulae,
+  );
   const availableResponses = active
     ? CRISIS_RESPONSES.filter((response) =>
         active.allowedResponses.includes(response.id),
@@ -196,7 +206,33 @@ export function CrisisPanel() {
         </div>
       </section>
 
-      {active && (
+      {nebulaFrontProgress && (
+        <section className="border border-[#a855f766] bg-[rgba(168,85,247,0.08)] p-3">
+          <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d8b4fe]">
+            {t("crisis_panel.nebula_front.title")}
+          </div>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+            <span className="font-['Orbitron'] text-sm text-[#f3e8ff]">
+              {t("crisis_panel.nebula_front.progress", {
+                dispersed: nebulaFrontProgress.dispersed,
+                total: nebulaFrontProgress.total,
+              })}
+            </span>
+            <span className="border border-[#a855f755] px-2 py-1 text-[10px] uppercase tracking-[0.12em] text-[#e9d5ff]">
+              {t("crisis_panel.nebula_front.materials", {
+                crystals: NEBULA_FRONT_STABILIZER_COST.quantum_crystals,
+                energy: NEBULA_FRONT_STABILIZER_COST.energy_samples,
+                membranes: NEBULA_FRONT_STABILIZER_COST.void_membrane,
+              })}
+            </span>
+          </div>
+          <div className="mt-2 text-xs leading-relaxed text-[#d8b4fe]">
+            {t("crisis_panel.nebula_front.instruction")}
+          </div>
+        </section>
+      )}
+
+      {active && availableResponses.length > 0 && (
         <section>
           <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#ff8da2]">
             {t("crisis_panel.suppression")}

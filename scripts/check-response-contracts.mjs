@@ -26,8 +26,8 @@ const PLANET = { id: "p-1", name: "Тестовая", dominantRace: "human" };
 const SECTOR = { id: 2, name: "Сектор", tier: 2, locations: [] };
 const CONTEXT = { artifacts: [], researchedTechs: [] };
 
-// ── Каждый кризис знает, чем его гасить, и груз реально существует ───────────
-for (const crisis of GLOBAL_CRISES) {
+// ── Обычные кризисы знают, чем их гасить, и груз реально существует ──────────
+for (const crisis of GLOBAL_CRISES.filter((crisis) => crisis.id !== "nebula_front")) {
   const cargo = CRISIS_RELIEF_CARGO[crisis.id];
   assert.ok(cargo, `кризис ${crisis.id} остался без груза помощи`);
   assert.ok(TRADE_GOODS[cargo], `груз ${cargo} отсутствует в списке товаров`);
@@ -244,6 +244,20 @@ for (const id of ["visited", "fresh"]) {
   assert.equal(findPlanet(withCrisis, id).contracts[0].type, "crisis_response");
 }
 assert.equal(seedCrisisResponseOffers(withCrisis, crisisState), null);
+
+// Туманностный фронт гасится только коалицией на исследовательской станции,
+// а не ложными планетарными заказами на обычный товар.
+const nebulaFrontState = { id: "nebula_front", turnsRemaining: 30 };
+assert.equal(
+  generateCrisisResponseContract(PLANET, SECTOR, nebulaFrontState),
+  null,
+  "туманностный фронт не должен выдавать обычный кризисный контракт",
+);
+assert.equal(
+  seedCrisisResponseOffers(makeSectors(), nebulaFrontState),
+  null,
+  "туманностный фронт не должен засевать планеты ложными просьбами о помощи",
+);
 
 // Прошедший кризис уносит свои предложения с собой
 const cleaned = dropStaleCrisisOffers(withCrisis, null);

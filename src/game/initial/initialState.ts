@@ -1,6 +1,6 @@
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { RESEARCH_TREE } from "@/game/constants";
-import { GLOBAL_CRISES, rollInitialCrisisTurn } from "@/game/constants/globalCrises";
+import { rollInitialCrisisTurn } from "@/game/constants/globalCrises";
 import { CURRENT_STATE_VERSION } from "@/game/constants/version";
 import { generateGalaxy } from "@/game/galaxy/generateGalaxy";
 import { generateNebulae } from "@/game/galaxy/nebulae";
@@ -263,8 +263,7 @@ const baseState: GameState = {
   discoveredAugmentationIds: [],
   discoveredWeaponTypes: [],
   nextCrisisTurn: rollInitialCrisisTurn(),
-  nextCrisisId:
-    GLOBAL_CRISES[Math.floor(Math.random() * GLOBAL_CRISES.length)]?.id ?? null,
+  nextCrisisId: null,
   runId: crypto.randomUUID(),
   bossesDefeatedThisRun: 0,
   maxEnemyThreatDefeatedThisRun: 0,

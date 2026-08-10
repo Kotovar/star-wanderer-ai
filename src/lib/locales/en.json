@@ -1898,6 +1898,15 @@
         "research_buy_title": "Research material purchase",
         "research_buy_desc": "Limited stock of common research materials",
         "research_stock": "Stock: {{stock}}",
+        "nebula_front": {
+            "title": "Veil stabilizer",
+            "description": "A coalition of species synchronizes the lattice; your cargo powers one stabilizer.",
+            "progress": "Nebulae dispersed: {{dispersed}}/{{total}}",
+            "cost": "Requires {{crystals}} Quantum Crystals, {{energy}} Energy Samples, and {{membranes}} Void Membranes",
+            "activate": "ASSEMBLE",
+            "complete": "VEIL DISPERSED",
+            "materials_missing": "Quantum Crystals, Energy Samples, or Void Membranes are missing."
+        },
         "tab_title": "SERVICES",
         "refuel_title": "⛽ Refuel",
         "refuel_fuel_label": "Fuel: {{fuel}}/{{maxFuel}}",
@@ -5337,6 +5346,12 @@
         "requirement": "Requirement:",
         "cost": "Cost:",
         "conditions_unmet": "requirements not met",
+        "nebula_front": {
+            "title": "Veil dispersion network",
+            "progress": "Dispersed: {{dispersed}}/{{total}}",
+            "materials": "{{crystals}} Quantum Crystals + {{energy}} Energy Samples + {{membranes}} Void Membranes",
+            "instruction": "Representatives of several species assemble a stabilizer at any research station. Void Membranes come from depth 3–4 gas-giant dives. Each activation permanently disperses one nebula; undispersed nebulae remain after the Veil fades."
+        },
         "threat_database": "Threat database",
         "threat_database_description": "An archive of crises already encountered by the crew.",
         "threat_database_empty": "No data yet. The first encountered crisis will be added automatically.",
@@ -5416,6 +5431,12 @@
             "warning": "Fuel markets are unstable",
             "description": "Fuel reserves become unreliable and parts of the propulsion chain must be throttled.",
             "effects": "You immediately lose some fuel and engine or fuel systems may be temporarily limited. Then each turn drains fuel, wears down those systems, and hurts morale. Consumption and wear accelerate sharply in later stages."
+        },
+        "nebula_front": {
+            "name": "Veil of Ancient Beacons",
+            "warning": "Ancient beacons are weaving a veil of nebulae",
+            "description": "A cascading pulse from ancient navigation beacons condensed interstellar dust into stable nebulae. Research stations of several species assembled a shared dispersion network.",
+            "effects": "Three new nebulae appear in the galaxy. While the Veil is active, research stations can assemble costly stabilizers from Quantum Crystals, Energy Samples, and Void Membranes. Each activation permanently removes one nebula; the others persist after the crisis."
         }
     },
     "outposts": {
@@ -5655,6 +5676,10 @@
     },
     "game_logs": {
         "cargo_jettisoned": "🗑 Jettisoned: {{name}} ×{{qty}}",
+        "nebula_front_started": "🌀 The Veil of Ancient Beacons created {{count}} new nebulae. Research stations are activating a stabilizer network.",
+        "nebula_front_dispersed": "🌀 Veil stabilizer activated: one nebula dispersed. Remaining: {{remaining}}.",
+        "nebula_front_ended": "🌀 The Veil faded. Permanent nebulae remaining: {{remaining}}.",
+        "nebula_front_stabilizer_unavailable": "🌀 The Veil stabilizer lacks materials.",
         "gas_sold": "💰 Sold: {{gas}} ×{{qty}} for {{total}}₢",
         "gas_bought": "🧪 Bought: {{gas}} ×{{qty}} for {{total}}₢",
         "deuterium_burned": "⚗️ Deuterium to the tank: −{{units}} unit(s), +{{gained}} fuel",
