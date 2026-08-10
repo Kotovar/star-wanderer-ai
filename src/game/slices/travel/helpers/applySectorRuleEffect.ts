@@ -112,12 +112,10 @@ export const applySectorRuleEffect = (
                         previousBonuses.evasion +
                         nextBonuses.evasion,
                 ),
-                bonusShields: Math.max(
-                    0,
+                bonusShields:
                     (state.ship.bonusShields ?? 0) -
-                        previousBonuses.shields +
-                        nextBonuses.shields,
-                ),
+                    previousBonuses.shields +
+                    nextBonuses.shields,
                 maxShields,
                 shields: Math.max(
                     0,

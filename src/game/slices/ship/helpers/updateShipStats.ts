@@ -58,7 +58,7 @@ export const updateShipStats = (state: GameState): void => {
 
     // Сохраняем бонусные щиты от эффектов планет
     const bonusShields = ship.bonusShields || 0;
-    let maxShieldsWithBonus = totalShields + bonusShields;
+    let maxShieldsWithBonus = Math.max(0, totalShields + bonusShields);
 
     // === Расчёт топлива и вместимости экипажа ===
     let totalFuelCapacity = calculateTotalFuelCapacity(modules);

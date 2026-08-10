@@ -20,6 +20,8 @@ const { getEffectiveScanRange } = jiti("../src/game/slices/scanner/helpers/getEf
 const { applySectorRuleEffect } = jiti(
   "../src/game/slices/travel/helpers/applySectorRuleEffect.ts",
 );
+const { updateShipStats } = jiti("../src/game/slices/ship/helpers/updateShipStats.ts");
+const { emergencyJump } = jiti("../src/game/slices/travel/helpers/emergencyJump.ts");
 const activeEffectsPanelSource = readFileSync(
   path.join(root, "src/game/components/panels/ActiveEffectsPanel.tsx"),
   "utf8",
@@ -157,6 +159,7 @@ const makeState = () => ({
   traveling: null,
   galaxy: { sectors: [] },
   research: { researchedTechs: [] },
+  artifacts: [],
   ship: {
     modules: [{ type: "engine", health: 100, fuelEfficiency: 10 }],
     maxShields: 100,
@@ -231,6 +234,7 @@ assert.equal(
 assert.equal(effectState.ship.bonusEvasion, 0, "old sector bonus must be removed");
 
 const resonanceState = makeState();
+resonanceState.ship.modules = [{ type: "shield", health: 100, shields: 100 }];
 const applyResonanceState = (update) => {
   Object.assign(
     resonanceState,
@@ -244,6 +248,12 @@ applySectorRuleEffect(
 );
 assert.equal(resonanceState.ship.bonusDamage, 0.25, "resonance must boost weapon damage");
 assert.equal(resonanceState.ship.maxShields, 75, "resonance must reduce shield reserve by 25");
+updateShipStats(resonanceState);
+assert.equal(
+  resonanceState.ship.maxShields,
+  75,
+  "resonance shield penalty must survive a ship stat recalculation",
+);
 
 const hintState = makeState();
 const hintGraveyard = {
@@ -270,5 +280,60 @@ applySectorRuleEffect(hintGraveyard, applyHintState, () => ({
 }));
 assert.equal(hintState.artifacts[0].hinted, true, "fleet graveyard must reveal an artifact lead");
 assert.equal(hintState.artifacts[0].hintSource, "sector");
+
+const emergencyState = makeState();
+const emergencyOrigin = {
+  ...makeSector(908, 2),
+  name: "Black Hole",
+  danger: 1,
+  mapAngle: 0,
+  mapRadius: 1,
+  locations: [{ type: "anomaly", name: "Artifact Echo" }],
+  star: { type: "blackhole", name: "star_types.blackhole" },
+};
+const emergencyDestination = {
+  ...makeSector(909, 2, "fleet_graveyard"),
+  name: "Emergency Graveyard",
+  danger: 2,
+  mapAngle: 0.1,
+  mapRadius: 1,
+  visited: false,
+};
+emergencyState.currentSector = emergencyOrigin;
+emergencyState.galaxy.sectors = [emergencyOrigin, emergencyDestination];
+emergencyState.crewAutomation = { emergencyFuelTarget: emergencyDestination.id };
+emergencyState.ship = { ...emergencyState.ship, fuel: 0, maxFuel: 10 };
+emergencyState.artifacts = [
+  {
+    id: "emergency-artifact",
+    discovered: false,
+    hinted: false,
+    effect: { type: "shield_boost", active: false },
+  },
+];
+const applyEmergencyState = (update) => {
+  Object.assign(emergencyState, typeof update === "function" ? update(emergencyState) : update);
+};
+emergencyJump(applyEmergencyState, () => ({
+  ...emergencyState,
+  addLog: () => undefined,
+  updateShipStats: () => undefined,
+  checkGameOver: () => undefined,
+}));
+assert.equal(
+  emergencyState.currentSector.visited,
+  true,
+  "emergency arrival must mark the current sector as visited",
+);
+assert.equal(
+  emergencyState.galaxy.sectors.find((sector) => sector.id === emergencyDestination.id).visited,
+  true,
+  "emergency arrival must persist the visited sector in the galaxy",
+);
+assert.equal(
+  emergencyState.artifacts[0].hinted,
+  true,
+  "the first emergency arrival must still receive the graveyard artifact hint",
+);
 
 console.log("Sector rule contract checks passed");
