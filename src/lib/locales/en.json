@@ -4274,7 +4274,7 @@
     },
     "sector_rules": {
         "current": "SYSTEM FEATURES",
-        "legend": "SECTOR RULES",
+        "legend": "SECTOR FEATURES",
         "zero_field": {
             "name": "Zero Field",
             "description": "Warp drive and warp coil do not work. Plan your fuel reserve ahead."

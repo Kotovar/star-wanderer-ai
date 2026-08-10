@@ -3,6 +3,8 @@ import { getSectorName } from "@/lib/translationHelpers";
 import type { GameStore, SetState } from "@/game/types";
 import { calculateFuelCostForUI } from "./calculateFuelCost";
 import { applySectorRuleEffect } from "./applySectorRuleEffect";
+import { applyPatrolContractCompletions } from "./patrolCompletions";
+import { applyNeutronRadiation, handlePatrolContracts } from "./processTravel";
 
 // ============================================================================
 // Константы
@@ -91,6 +93,19 @@ export const emergencyJump = (set: SetState, get: () => GameStore): void => {
         ...m,
         health: Math.max(1, m.health - damage),
     }));
+    const patrolContracts = state.activeContracts.filter(
+        (contract) =>
+            contract.type === "patrol" &&
+            contract.isRaceQuest &&
+            contract.targetSectors?.includes(destination.id),
+    );
+    const patrolResult = handlePatrolContracts(
+        patrolContracts,
+        destination,
+        state,
+        set,
+        get,
+    );
 
     set({
         currentSector: { ...destination, visited: true },
@@ -109,7 +124,12 @@ export const emergencyJump = (set: SetState, get: () => GameStore): void => {
         ship: { ...state.ship, modules: damagedModules },
         gameMode: "sector_map",
     });
+    if (patrolContracts.length > 0) {
+        applyPatrolContractCompletions(patrolResult, set, get);
+    }
+    applyNeutronRadiation(destination, set, get);
     applySectorRuleEffect(destination, set, get);
+    get().syncNavigatorIntel();
 
     get().addLog( i18nStore.t("game_logs.emergencyJump_4"), "warning");
     get().addLog( i18nStore.t("game_logs.emergencyJump_5", { destination_name: getSectorName(destination.name, i18nStore.t) }), "info");
@@ -118,5 +138,8 @@ export const emergencyJump = (set: SetState, get: () => GameStore): void => {
     );
 
     get().updateShipStats();
+    if (destination.tier === 4) {
+        get().checkVictory();
+    }
     get().checkGameOver();
 };

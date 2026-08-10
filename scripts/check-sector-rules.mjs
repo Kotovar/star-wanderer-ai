@@ -10,7 +10,12 @@ const root = path.resolve(path.dirname(scriptPath), "..");
 const jiti = require("jiti")(scriptPath, {
   alias: { "@": path.join(root, "src") },
 });
-const { SECTOR_RULES, getSectorRule } = jiti("../src/game/galaxy/sectorRules.ts");
+const {
+  SECTOR_RULES,
+  SECTOR_RULE_IDS,
+  getSectorRule,
+  planSectorRules,
+} = jiti("../src/game/galaxy/sectorRules.ts");
 const { generateGalaxy } = jiti("../src/game/galaxy/generateGalaxy.ts");
 const { generateLocation } = jiti("../src/game/galaxy/getLocation.ts");
 const { ensureStation, ensureStationAnchors } = jiti("../src/game/galaxy/ensure.ts");
@@ -21,13 +26,32 @@ const { applySectorRuleEffect } = jiti(
   "../src/game/slices/travel/helpers/applySectorRuleEffect.ts",
 );
 const { updateShipStats } = jiti("../src/game/slices/ship/helpers/updateShipStats.ts");
-const { emergencyJump } = jiti("../src/game/slices/travel/helpers/emergencyJump.ts");
 const activeEffectsPanelSource = readFileSync(
   path.join(root, "src/game/components/panels/ActiveEffectsPanel.tsx"),
   "utf8",
 );
 const headerSource = readFileSync(
   path.join(root, "src/game/components/header/Header.tsx"),
+  "utf8",
+);
+const galaxyMapSource = readFileSync(
+  path.join(root, "src/game/components/GalaxyMap.tsx"),
+  "utf8",
+);
+const servicesSliceSource = readFileSync(
+  path.join(root, "src/game/slices/services/createServicesSlice.ts"),
+  "utf8",
+);
+const stationPanelSource = readFileSync(
+  path.join(root, "src/game/components/StationPanel.tsx"),
+  "utf8",
+);
+const servicesTabSource = readFileSync(
+  path.join(root, "src/game/components/station/ServicesTab.tsx"),
+  "utf8",
+);
+const emergencyJumpSource = readFileSync(
+  path.join(root, "src/game/slices/travel/helpers/emergencyJump.ts"),
   "utf8",
 );
 
@@ -69,6 +93,51 @@ assert.doesNotMatch(
   /\{activeEffects\.length > 0 && \(/,
   "effects badge must not read the raw effect count",
 );
+assert.match(
+  galaxyMapSource,
+  /const dangerousJumpRule =\s*dangerousSector\?\.visited\s*\?\s*getSectorRule\(dangerousSector\.ruleId\)\s*:\s*undefined;/,
+  "unvisited sectors must not reveal their rule in dangerous-jump details",
+);
+assert.match(
+  galaxyMapSource,
+  /const routeChoiceRule =\s*routeChoiceSector\?\.visited\s*\?\s*getSectorRule\(routeChoiceSector\.ruleId\)\s*:\s*undefined;/,
+  "unvisited sectors must not reveal their rule in route details",
+);
+assert.match(
+  galaxyMapSource,
+  /sectors\.filter\(\s*\(sector\) =>\s*sector\.visited && \(sector\.tier !== 4 \|\| canSeeT4\),\s*\)/,
+  "only visited sectors may show rule markers",
+);
+assert.match(
+  galaxyMapSource,
+  /const discoveredRuleIds = SECTOR_RULE_IDS\.filter\(\s*\(ruleId\) =>\s*sectors\.some\(\(sector\) => sector\.visited && sector\.ruleId === ruleId\),\s*\);/,
+  "the legend must only list rules discovered in visited sectors",
+);
+assert.match(
+  galaxyMapSource,
+  /\{discoveredRuleIds\.length > 0 && \(/,
+  "the rule legend must stay hidden until a rule is discovered",
+);
+assert.match(
+  servicesSliceSource,
+  /const repairBlocked =\s*getSectorRule\(state\.currentSector\?\.ruleId\)\?\.restrictions\?\.noRepair === true;/,
+  "fleet graveyard must disable repairs before the button can be clicked",
+);
+assert.match(
+  servicesSliceSource,
+  /return !repairBlocked && canUse;/,
+  "repair availability must include the sector restriction",
+);
+assert.match(
+  stationPanelSource,
+  /repairUnavailableReason=\{\s*repairBlockedBySector\s*\?\s*t\("sector_rules\.logs\.repair_blocked"\)\s*:\s*undefined\s*\}/,
+  "station UI must explain a repair block caused by the sector",
+);
+assert.match(
+  servicesTabSource,
+  /repairUnavailableReason \?\? `✗ \$\{t\("services\.not_needed"\)\}`/,
+  "repair UI must render its supplied unavailable reason",
+);
 assert.equal(getTranslation(locales[0], "sector_rules.current"), "ОСОБЕННОСТИ СИСТЕМЫ");
 assert.equal(getTranslation(locales[1], "sector_rules.current"), "SYSTEM FEATURES");
 for (const rule of Object.values(SECTOR_RULES)) {
@@ -81,7 +150,12 @@ for (const rule of Object.values(SECTOR_RULES)) {
 for (let run = 0; run < 20; run += 1) {
   const sectors = generateGalaxy();
   const ruleSectors = sectors.filter((sector) => sector.ruleId);
-  assert.ok(ruleSectors.length >= 4 && ruleSectors.length <= 6, "each galaxy needs 4-6 sector rules");
+  assert.ok(ruleSectors.length >= 4 && ruleSectors.length <= 5, "each galaxy needs 4-5 sector rules");
+  assert.equal(
+    new Set(ruleSectors.map((sector) => sector.ruleId)).size,
+    ruleSectors.length,
+    "each generated sector rule must be unique",
+  );
   assert.ok(
     ruleSectors.every(
       (sector) =>
@@ -106,6 +180,30 @@ const makeSector = (id, tier, ruleId) => ({
   locations: [],
   star: { type: "yellow_dwarf", name: "star_types.yellow_dwarf" },
 });
+const plannedRuleSectors = Array.from(
+  { length: 6 },
+  (_, index) => makeSector(110 + index, 2),
+);
+const originalRandom = Math.random;
+try {
+  Math.random = () => 0.999;
+  planSectorRules(plannedRuleSectors);
+} finally {
+  Math.random = originalRandom;
+}
+const plannedRuleIds = plannedRuleSectors.flatMap((sector) =>
+  sector.ruleId ? [sector.ruleId] : [],
+);
+assert.equal(
+  plannedRuleIds.length,
+  SECTOR_RULE_IDS.length,
+  "sector generation must not place more rules than unique rule types",
+);
+assert.equal(
+  new Set(plannedRuleIds).size,
+  plannedRuleIds.length,
+  "each generated sector rule must be unique",
+);
 const graveyard = makeSector(100, 2, "fleet_graveyard");
 ensureStation(graveyard);
 assert.equal(
@@ -128,8 +226,8 @@ assert.equal(
   "station anchor must move to an eligible sector",
 );
 
-const sampleSalvageRate = (rule) => {
-  let salvage = 0;
+const sampleLocationRate = (rule, types) => {
+  let matched = 0;
   const samples = 12_000;
   for (let index = 0; index < samples; index += 1) {
     const location = generateLocation(
@@ -142,15 +240,27 @@ const sampleSalvageRate = (rule) => {
       undefined,
       rule,
     );
-    if (location.type === "derelict_ship" || location.type === "wreck_field") salvage += 1;
+    if (types.includes(location.type)) matched += 1;
   }
-  return salvage / samples;
+  return matched / samples;
 };
-const ordinarySalvageRate = sampleSalvageRate(undefined);
-const graveyardSalvageRate = sampleSalvageRate(getSectorRule("fleet_graveyard"));
+const ordinarySalvageRate = sampleLocationRate(undefined, ["derelict_ship", "wreck_field"]);
+const graveyardSalvageRate = sampleLocationRate(
+  getSectorRule("fleet_graveyard"),
+  ["derelict_ship", "wreck_field"],
+);
 assert.ok(
   graveyardSalvageRate > ordinarySalvageRate * 2,
   "fleet graveyard must more than double salvage locations",
+);
+const ordinaryDriftRate = sampleLocationRate(undefined, ["distress_signal", "derelict_ship"]);
+const deadDriftRate = sampleLocationRate(
+  getSectorRule("dead_drift"),
+  ["distress_signal", "derelict_ship"],
+);
+assert.ok(
+  deadDriftRate > ordinaryDriftRate * 1.7,
+  "dead drift must substantially increase distress and derelict locations",
 );
 
 const makeState = () => ({
@@ -160,6 +270,7 @@ const makeState = () => ({
   galaxy: { sectors: [] },
   research: { researchedTechs: [] },
   artifacts: [],
+  activeContracts: [],
   ship: {
     modules: [{ type: "engine", health: 100, fuelEfficiency: 10 }],
     maxShields: 100,
@@ -255,6 +366,51 @@ assert.equal(
   "resonance shield penalty must survive a ship stat recalculation",
 );
 
+const deadDriftState = makeState();
+const deadDriftOrigin = {
+  ...makeSector(911, 2, "dead_drift"),
+  mapAngle: 0,
+  mapRadius: 1,
+  visited: false,
+};
+const deadDriftTarget = {
+  ...makeSector(912, 3),
+  mapAngle: Math.PI / 2,
+  mapRadius: 1,
+};
+deadDriftState.currentSector = deadDriftOrigin;
+deadDriftState.galaxy.sectors = [deadDriftOrigin, deadDriftTarget];
+const ordinaryFuelCost = calculateFuelCost(
+  deadDriftState,
+  deadDriftTarget.id,
+  false,
+  false,
+  false,
+  true,
+).fuelCost;
+const applyDeadDriftState = (update) => {
+  Object.assign(
+    deadDriftState,
+    typeof update === "function" ? update(deadDriftState) : update,
+  );
+};
+applySectorRuleEffect(deadDriftOrigin, applyDeadDriftState, () => ({
+  ...deadDriftState,
+  addLog: () => undefined,
+}));
+const deadDriftFuelCost = calculateFuelCost(
+  deadDriftState,
+  deadDriftTarget.id,
+  false,
+  false,
+  false,
+  true,
+).fuelCost;
+assert.ok(
+  deadDriftFuelCost > ordinaryFuelCost,
+  "dead drift must increase fuel consumption after arrival",
+);
+
 const hintState = makeState();
 const hintGraveyard = {
   ...makeSector(905, 2, "fleet_graveyard"),
@@ -281,59 +437,40 @@ applySectorRuleEffect(hintGraveyard, applyHintState, () => ({
 assert.equal(hintState.artifacts[0].hinted, true, "fleet graveyard must reveal an artifact lead");
 assert.equal(hintState.artifacts[0].hintSource, "sector");
 
-const emergencyState = makeState();
-const emergencyOrigin = {
-  ...makeSector(908, 2),
-  name: "Black Hole",
-  danger: 1,
-  mapAngle: 0,
-  mapRadius: 1,
-  locations: [{ type: "anomaly", name: "Artifact Echo" }],
-  star: { type: "blackhole", name: "star_types.blackhole" },
-};
-const emergencyDestination = {
-  ...makeSector(909, 2, "fleet_graveyard"),
-  name: "Emergency Graveyard",
-  danger: 2,
-  mapAngle: 0.1,
-  mapRadius: 1,
-  visited: false,
-};
-emergencyState.currentSector = emergencyOrigin;
-emergencyState.galaxy.sectors = [emergencyOrigin, emergencyDestination];
-emergencyState.crewAutomation = { emergencyFuelTarget: emergencyDestination.id };
-emergencyState.ship = { ...emergencyState.ship, fuel: 0, maxFuel: 10 };
-emergencyState.artifacts = [
-  {
-    id: "emergency-artifact",
-    discovered: false,
-    hinted: false,
-    effect: { type: "shield_boost", active: false },
-  },
-];
-const applyEmergencyState = (update) => {
-  Object.assign(emergencyState, typeof update === "function" ? update(emergencyState) : update);
-};
-emergencyJump(applyEmergencyState, () => ({
-  ...emergencyState,
-  addLog: () => undefined,
-  updateShipStats: () => undefined,
-  checkGameOver: () => undefined,
-}));
-assert.equal(
-  emergencyState.currentSector.visited,
-  true,
-  "emergency arrival must mark the current sector as visited",
+assert.match(
+  emergencyJumpSource,
+  /currentSector:\s*\{\s*\.\.\.destination,\s*visited:\s*true\s*\}/,
+  "emergency arrival must mark its destination as visited",
 );
-assert.equal(
-  emergencyState.galaxy.sectors.find((sector) => sector.id === emergencyDestination.id).visited,
-  true,
-  "emergency arrival must persist the visited sector in the galaxy",
+assert.match(
+  emergencyJumpSource,
+  /sector\.id === destination\.id\s*\?\s*\{\s*\.\.\.sector,\s*visited:\s*true\s*\}/,
+  "emergency arrival must persist the visited destination in the galaxy",
 );
-assert.equal(
-  emergencyState.artifacts[0].hinted,
-  true,
-  "the first emergency arrival must still receive the graveyard artifact hint",
+assert.match(
+  emergencyJumpSource,
+  /applySectorRuleEffect\(destination, set, get\);/,
+  "emergency arrival must apply its sector rule",
+);
+assert.match(
+  emergencyJumpSource,
+  /get\(\)\.syncNavigatorIntel\(\);/,
+  "emergency arrival must refresh navigator intel",
+);
+assert.match(
+  emergencyJumpSource,
+  /if \(destination\.tier === 4\)\s*\{\s*get\(\)\.checkVictory\(\);/,
+  "emergency arrival in tier 4 must check victory",
+);
+assert.match(
+  emergencyJumpSource,
+  /applyNeutronRadiation\(destination, set, get\);/,
+  "emergency arrival must apply neutron-star radiation",
+);
+assert.match(
+  emergencyJumpSource,
+  /applyPatrolContractCompletions\(patrolResult, set, get\);/,
+  "emergency arrival must resolve patrol contracts",
 );
 
 console.log("Sector rule contract checks passed");

@@ -1,4 +1,5 @@
 import type { GameStore, SetState } from "@/game/types";
+import { getSectorRule } from "@/game/galaxy/sectorRules";
 import {
     calculateRepairCost,
     calculateHealCost,
@@ -94,7 +95,9 @@ export const createServicesSlice = (
         const state = get();
         const raceId = state.currentLocation?.dominantRace;
         const { canUse } = calculateRepairCost(state, raceId);
-        return canUse;
+        const repairBlocked =
+            getSectorRule(state.currentSector?.ruleId)?.restrictions?.noRepair === true;
+        return !repairBlocked && canUse;
     },
 
     canHealCrew: () => {

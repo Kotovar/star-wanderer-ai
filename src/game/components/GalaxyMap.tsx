@@ -757,7 +757,9 @@ export function GalaxyMap() {
         );
         drawSectorRuleMarkers(
             ctx,
-            sectors.filter((sector) => sector.tier !== 4 || canSeeT4),
+            sectors.filter(
+                (sector) => sector.visited && (sector.tier !== 4 || canSeeT4),
+            ),
             centerX,
             centerY,
             baseMaxRadius,
@@ -1124,18 +1126,22 @@ export function GalaxyMap() {
         }
     };
 
-    const dangerousJumpRule = dangerousJump
-        ? getSectorRule(
-              sectors.find((sector) => sector.id === dangerousJump.sectorId)
-                  ?.ruleId,
-          )
+    const dangerousSector = dangerousJump
+        ? sectors.find((sector) => sector.id === dangerousJump.sectorId)
         : undefined;
-    const routeChoiceRule = routeChoice
-        ? getSectorRule(
-              sectors.find((sector) => sector.id === routeChoice.sectorId)
-                  ?.ruleId,
-          )
+    const dangerousJumpRule = dangerousSector?.visited
+        ? getSectorRule(dangerousSector.ruleId)
         : undefined;
+    const routeChoiceSector = routeChoice
+        ? sectors.find((sector) => sector.id === routeChoice.sectorId)
+        : undefined;
+    const routeChoiceRule = routeChoiceSector?.visited
+        ? getSectorRule(routeChoiceSector.ruleId)
+        : undefined;
+    const discoveredRuleIds = SECTOR_RULE_IDS.filter(
+        (ruleId) =>
+            sectors.some((sector) => sector.visited && sector.ruleId === ruleId),
+    );
 
     return (
         <div
@@ -1604,29 +1610,31 @@ export function GalaxyMap() {
                                     </div>
                                 </div>
                             </div>
-                            <div>
-                                <div className="text-[#00ff41] font-['Orbitron'] text-[9px] tracking-widest mb-1 opacity-70">{t("sector_rules.legend")}</div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0.5">
-                                    {SECTOR_RULE_IDS.map((ruleId) => {
-                                        const rule = getSectorRule(ruleId);
-                                        if (!rule) return null;
+                            {discoveredRuleIds.length > 0 && (
+                                <div>
+                                    <div className="text-[#00ff41] font-['Orbitron'] text-[9px] tracking-widest mb-1 opacity-70">{t("sector_rules.legend")}</div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0.5">
+                                        {discoveredRuleIds.map((ruleId) => {
+                                            const rule = getSectorRule(ruleId);
+                                            if (!rule) return null;
 
-                                        return (
-                                            <div key={rule.id} className="flex items-center gap-1.5 min-w-0" title={t(rule.descKey)}>
-                                                <span
-                                                    className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border font-mono font-bold"
-                                                    style={{ borderColor: rule.color, color: rule.color }}
-                                                >
-                                                    {rule.icon}
-                                                </span>
-                                                <span className="truncate" style={{ color: rule.color }}>
-                                                    {t(rule.nameKey)}
-                                                </span>
-                                            </div>
-                                        );
-                                    })}
+                                            return (
+                                                <div key={rule.id} className="flex items-center gap-1.5 min-w-0" title={t(rule.descKey)}>
+                                                    <span
+                                                        className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border font-mono font-bold"
+                                                        style={{ borderColor: rule.color, color: rule.color }}
+                                                    >
+                                                        {rule.icon}
+                                                    </span>
+                                                    <span className="truncate" style={{ color: rule.color }}>
+                                                        {t(rule.nameKey)}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                             {/* Star types */}
                             <div>
                                 <div className="text-[#00ff41] font-['Orbitron'] text-[9px] tracking-widest mb-1 opacity-70">{t("galaxy.legend.stars_section")}</div>

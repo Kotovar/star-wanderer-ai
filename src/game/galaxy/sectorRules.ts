@@ -113,12 +113,8 @@ const shuffle = <T>(values: readonly T[]): T[] => {
 };
 
 export const planSectorRules = (sectors: Sector[]): void => {
-    const ruleCount = 4 + Math.floor(Math.random() * 3);
-    const shuffledRuleIds = shuffle(SECTOR_RULE_IDS);
-    const ruleIds = Array.from(
-        { length: ruleCount },
-        (_, index) => shuffledRuleIds[index % shuffledRuleIds.length],
-    );
+    const ruleCount = 4 + Math.floor(Math.random() * 2);
+    const ruleIds = shuffle(SECTOR_RULE_IDS).slice(0, ruleCount);
     let tierOneRulePlaced = false;
 
     for (const ruleId of ruleIds) {

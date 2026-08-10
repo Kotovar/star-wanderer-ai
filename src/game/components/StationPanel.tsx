@@ -36,6 +36,7 @@ import { ModuleUpgradeModal } from "./station/ModuleUpgradeModal";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getLocationName } from "@/lib/translationHelpers";
+import { getSectorRule } from "@/game/galaxy/sectorRules";
 import {
     canHireRace,
     getRaceReputation,
@@ -320,6 +321,8 @@ export function StationPanel() {
 
     const stationId = currentLocation?.stationId || currentLocation?.id || "";
     const sectorTier = currentSector?.tier || 1;
+    const repairBlockedBySector =
+        getSectorRule(currentSector?.ruleId)?.restrictions?.noRepair === true;
     const stationType = currentLocation?.stationType ?? null;
     const stationConfig = currentLocation?.stationConfig;
     const isResearchStation = stationType === "research";
@@ -775,6 +778,11 @@ export function StationPanel() {
                         mutationCureCost={MUTATION_CURE_PRICE}
                         geneticTherapyCost={GENETIC_THERAPY_PRICE}
                         canRepair={canRepairShip()}
+                        repairUnavailableReason={
+                            repairBlockedBySector
+                                ? t("sector_rules.logs.repair_blocked")
+                                : undefined
+                        }
                         canHeal={canHealCrew()}
                         allowsCrewHeal={allowsCrewHeal}
                         allowsModuleInstall={allowsModuleInstall}

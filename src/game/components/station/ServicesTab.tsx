@@ -137,6 +137,7 @@ interface ServicesTabProps {
     mutationCureCost: number;
     geneticTherapyCost: number;
     canRepair: boolean;
+    repairUnavailableReason?: string;
     canHeal: boolean;
     // Station type flags
     allowsCrewHeal: boolean;
@@ -187,6 +188,7 @@ export function ServicesTab({
     mutationCureCost,
     geneticTherapyCost,
     canRepair,
+    repairUnavailableReason,
     canHeal,
     allowsCrewHeal,
     allowsModuleInstall,
@@ -237,6 +239,7 @@ export function ServicesTab({
                 credits={credits}
                 repairCost={repairCost}
                 canRepair={canRepair}
+                repairUnavailableReason={repairUnavailableReason}
                 onRepair={repairShip}
             />
             {allowsCrewHeal && (
@@ -456,11 +459,13 @@ function RepairSection({
     credits,
     repairCost,
     canRepair,
+    repairUnavailableReason,
     onRepair,
 }: {
     credits: number;
     repairCost: number;
     canRepair: boolean;
+    repairUnavailableReason?: string;
     onRepair: () => void;
 }) {
     const { t } = useTranslation();
@@ -478,7 +483,7 @@ function RepairSection({
                     💰{" "}
                     {canRepair
                         ? `${repairCost}₢`
-                        : `✗ ${t("services.not_needed")}`}
+                        : repairUnavailableReason ?? `✗ ${t("services.not_needed")}`}
                 </span>
                 <Button
                     disabled={!canRepair || credits < repairCost}
