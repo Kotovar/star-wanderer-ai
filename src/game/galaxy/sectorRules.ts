@@ -103,7 +103,9 @@ export const SECTOR_RULES = {
         polarity: "positive",
         tiers: [1, 2, 3],
         effects: [],
-        locationWeights: { station: 3, friendlyShip: 2, enemyShip: 0.5 },
+        // ensureStation и так кладёт станцию в каждый сектор, поэтому множитель
+        // работает только «сверху гарантии» — ×3 давал прибавку в пределах шума.
+        locationWeights: { station: 8, friendlyShip: 6, enemyShip: 0.5 },
         // В «разорванных торговых путях» вес станций равен 0, и ×3 остаётся
         // нулём: правило обещало бы станции, которых там не бывает.
         excludeProfiles: ["broken_trade_lanes"],
@@ -136,7 +138,10 @@ export const SECTOR_RULES = {
             { type: "shield_boost", value: -15 },
             { type: "artifact_hints", value: 1 },
         ],
-        locationWeights: { anomaly: 3, gasGiant: 1.5 },
+        // anomaly — это ещё и fallback-корзина getLocation, а ensureMinAnomalies
+        // подсыпает их в каждый сектор: базовая доля высокая, множитель нужен
+        // больше, чем кажется по таблице.
+        locationWeights: { anomaly: 6, gasGiant: 4 },
     },
     becalmed: {
         id: "becalmed",
@@ -147,7 +152,9 @@ export const SECTOR_RULES = {
         polarity: "mixed",
         tiers: [1, 2, 3, 4],
         effects: [],
-        locationWeights: { enemyShip: 0.2, storm: 0, station: 0.3 },
+        // Ровно 0, а не «мало»: skipEnsure убирает только гарантию станции,
+        // случайную он не запрещает, а описание обещает пустоту.
+        locationWeights: { enemyShip: 0.2, storm: 0, station: 0 },
         skipEnsure: ["station"],
     },
     gravity_well: {

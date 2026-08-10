@@ -181,6 +181,112 @@ for (const logKey of ["repair_blocked", "scan_blocked", "artifact_hint"]) {
   }
 }
 
+// noRepair глушит только станционную верфь: наниты, ремонт на своей базе и
+// бонус сращивания работают дальше. Текст обязан говорить про верфь, а не про
+// «ремонт» вообще, иначе он обещает игроку больше, чем ограничение делает.
+const SHIPYARD_WORD = [/верф/i, /shipyard/i];
+for (const rule of Object.values(SECTOR_RULES)) {
+  if (!rule.restrictions?.noRepair) continue;
+
+  for (const [index, locale] of locales.entries()) {
+    assert.match(
+      getTranslation(locale, rule.descKey),
+      SHIPYARD_WORD[index],
+      `${rule.id} must scope its repair claim to a shipyard`,
+    );
+  }
+}
+for (const [index, locale] of locales.entries()) {
+  assert.match(
+    getTranslation(locale, "sector_rules.logs.repair_blocked"),
+    SHIPYARD_WORD[index],
+    "the repair rejection log must name the shipyard, not repairs in general",
+  );
+}
+
+// skipEnsure снимает только гарантию: чтобы правило могло обещать полное
+// отсутствие типа локации, его вес обязан быть ровно 0 — и это должно
+// подтверждаться сгенерированной галактикой, а не только таблицей.
+const zeroStationRules = Object.values(SECTOR_RULES)
+  .filter(
+    (rule) =>
+      rule.locationWeights?.station === 0 && rule.skipEnsure?.includes("station"),
+  )
+  .map((rule) => rule.id);
+assert.ok(
+  zeroStationRules.includes("becalmed"),
+  "becalmed promises an empty sector, so its station weight must be exactly 0",
+);
+for (let run = 0; run < 25; run += 1) {
+  for (const sector of generateGalaxy()) {
+    if (!zeroStationRules.includes(sector.ruleId)) continue;
+    assert.equal(
+      sector.locations.filter((location) => location.type === "station").length,
+      0,
+      `${sector.ruleId} must never generate a station`,
+    );
+  }
+}
+
+// Общая защита от «обещали, но нормализация съела»: вес — это не то, что видит
+// игрок. Сумма весов приводится к 1, часть типов ещё и досыпается гарантиями
+// (ensureMinAnomalies, anomaly как fallback-корзина), поэтому единственная
+// честная проверка — доля в реально сгенерированной галактике.
+const LOCATION_TYPE_BY_WEIGHT = {
+  station: "station",
+  friendlyShip: "friendly_ship",
+  planet: "planet",
+  enemyShip: "enemy",
+  asteroidBelt: "asteroid_belt",
+  storm: "storm",
+  distressSignal: "distress_signal",
+  derelictShip: "derelict_ship",
+  gasGiant: "gas_giant",
+  boss: "boss",
+  anomaly: "anomaly",
+  wreckField: "wreck_field",
+};
+const ruleSamples = {};
+const plainSample = { sectors: 0 };
+for (let run = 0; run < 120; run += 1) {
+  for (const sector of generateGalaxy()) {
+    if (sector.star.type === "blackhole") continue;
+
+    const bucket = sector.ruleId
+      ? (ruleSamples[sector.ruleId] ??= { sectors: 0 })
+      : plainSample;
+    bucket.sectors += 1;
+    for (const location of sector.locations) {
+      bucket[location.type] = (bucket[location.type] ?? 0) + 1;
+    }
+  }
+}
+const shareOf = (bucket, type) => (bucket[type] ?? 0) / bucket.sectors;
+for (const rule of Object.values(SECTOR_RULES)) {
+  const sample = ruleSamples[rule.id];
+  assert.ok(sample, `${rule.id} never spawned across the sampled galaxies`);
+
+  for (const [key, weight] of Object.entries(rule.locationWeights ?? {})) {
+    const type = LOCATION_TYPE_BY_WEIGHT[key];
+    const actual = shareOf(sample, type);
+    const plain = shareOf(plainSample, type);
+
+    if (weight === 0) {
+      assert.equal(actual, 0, `${rule.id} zeroes ${key}, so none may generate`);
+    } else if (weight > 1) {
+      assert.ok(
+        actual > plain * 1.3,
+        `${rule.id} raises ${key} to ×${weight} but galaxies show only ×${(actual / plain).toFixed(2)}`,
+      );
+    } else if (weight < 1) {
+      assert.ok(
+        actual < plain * 0.8,
+        `${rule.id} lowers ${key} to ×${weight} but galaxies show ×${(actual / plain).toFixed(2)}`,
+      );
+    }
+  }
+}
+
 for (let run = 0; run < 20; run += 1) {
   const sectors = generateGalaxy();
   const ruleSectors = sectors.filter((sector) => sector.ruleId);

@@ -4299,7 +4299,7 @@
         },
         "fleet_graveyard": {
             "name": "Fleet Graveyard",
-            "description": "There are no stations or repairs, but wrecks, derelicts, and artifact trails are more common."
+            "description": "Stations are rare here and there are no working shipyards at all — you cannot repair at a shipyard. Wrecks, derelicts, and artifact trails are more common instead."
         },
         "resonance": {
             "name": "Resonance",
@@ -4319,11 +4319,11 @@
         },
         "anomaly_storm": {
             "name": "Anomaly Storm",
-            "description": "Anomalies and gas giants are three times as common and an artifact trail turns up here, but the shield reserve drops by 15."
+            "description": "Anomalies and gas giants are far more common and an artifact trail turns up here, but the shield reserve drops by 15."
         },
         "becalmed": {
             "name": "Becalmed",
-            "description": "No storms, no raiders — and no station either: nowhere to repair or trade."
+            "description": "No storms at all and raiders are rare — but no station either: nowhere to repair or trade."
         },
         "gravity_well": {
             "name": "Gravity Well",
