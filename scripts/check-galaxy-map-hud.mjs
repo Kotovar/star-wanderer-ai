@@ -42,8 +42,13 @@ assert.doesNotMatch(
 
 assert.match(
   galaxyMapSource,
-  /SECTOR_RULE_IDS\.map\(/,
-  "легенда галактики должна объяснять обозначения правил секторов",
+  /SECTOR_RULE_IDS\.filter\(/,
+  "легенда галактики должна брать правила из общего списка",
+);
+assert.match(
+  galaxyMapSource,
+  /discoveredRuleIds\.map\(/,
+  "легенда галактики должна объяснять обозначения уже встреченных правил секторов",
 );
 assert.match(
   galaxyMapSource,

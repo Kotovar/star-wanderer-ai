@@ -4309,9 +4309,30 @@
             "name": "Dead Drift",
             "description": "Travel uses 50% more fuel, but distress signals and derelicts are more common."
         },
+        "trade_lane": {
+            "name": "Trade Lane",
+            "description": "A settled corridor: far more stations and friendly ships, half as many raiders."
+        },
+        "debris_belt": {
+            "name": "Debris Belt",
+            "description": "Asteroids and wreck fields everywhere. Targeting is disrupted (-15% damage) and travel uses 20% more fuel."
+        },
+        "anomaly_storm": {
+            "name": "Anomaly Storm",
+            "description": "Anomalies and gas giants are three times as common and an artifact trail turns up here, but the shield reserve drops by 15."
+        },
+        "becalmed": {
+            "name": "Becalmed",
+            "description": "No storms, no raiders — and no station either: nowhere to repair or trade."
+        },
+        "gravity_well": {
+            "name": "Gravity Well",
+            "description": "Warp does not work, but the well slingshots the ship: travel uses 30% less fuel. Maneuvering suffers (-10% evasion)."
+        },
         "logs": {
-            "repair_blocked": "Repairs are impossible: Fleet Graveyard has no working shipyards.",
-            "artifact_hint": "📡 A trail leading to an artifact was found among the wreckage."
+            "repair_blocked": "Repairs are impossible: this sector has no working shipyards.",
+            "scan_blocked": "Scanning is impossible: this sector jams the signal.",
+            "artifact_hint": "📡 A trail leading to an artifact was found in this sector."
         }
     },
     "sector_map_ui": {
@@ -4512,7 +4533,12 @@
         "effect_key_module": "key module",
         "effect_cursed_artifact": "cursed artifact",
         "effect_starting_crisis": "crisis from turn one",
-        "effect_random_tech": "random starting technology",
+        "effect_random_tech": "random starting technology ×{{count}}",
+        "effect_starting_credits": "start ₢{{value}}",
+        "effect_starting_cargo": "valuable cargo in the hold",
+        "effect_enemy_ships": "enemy ships ×{{value}}",
+        "effect_rare_artifact": "researched rare relic",
+        "effect_crisis_reserve": "reserve matched to the revealed crisis",
         "effect_reputation": "reputation changed",
         "effect_consumption": "module draw",
         "effect_hermit": "no fatigue, no morale loss",
@@ -4562,19 +4588,19 @@
     "launch_modifiers": {
         "doctrine_explorer": {
             "name": "Deep-Space Explorer",
-            "description": "More fuel and starting data for pushing beyond the map, but fewer credits for repairs and trade."
+            "description": "A Mk.2 engine for long routes, but only ₢400 to start and no research resources."
         },
         "doctrine_boss_hunter": {
             "name": "Ancient Hunter",
-            "description": "Crew starts more experienced and better prepared for dangerous fights, but the campaign begins with costly preparation and less fuel."
+            "description": "Level 2 crew and a researched basic relic, but preparation costs ₢900 and 20 fuel."
         },
         "doctrine_trader": {
             "name": "Free Trader",
-            "description": "Strong starting capital for markets and upgrades, but reduced fuel makes route planning tighter."
+            "description": "Start with ₢3000, but the galaxy has 1.5× as many enemy ships and both tank capacity and fuel are down by 20."
         },
         "doctrine_exile": {
             "name": "Exile",
-            "description": "Extra credits for a risky start: the ship is damaged and Krylorians already distrust you."
+            "description": "Valuables worth ₢2700 fill the hold, but four races are already hostile to you."
         },
         "veteran_crew": {
             "name": "Veteran Crew",
@@ -4582,11 +4608,11 @@
         },
         "extra_fuel": {
             "name": "Extra Tanks",
-            "description": "+50 to max fuel capacity and starting fuel."
+            "description": "A Mk.2 fuel tank: capacity 120 and a full starting reserve."
         },
         "research_head_start": {
             "name": "Research Head Start",
-            "description": "Starting research resources: ancient_data ×5, tech_salvage ×5."
+            "description": "Three random root technologies are already researched at launch."
         },
         "random_starting_tech": {
             "name": "Random Breakthrough",
@@ -4594,15 +4620,15 @@
         },
         "solo_mission": {
             "name": "Solo Mission",
-            "description": "Only the pilot aboard — but at level 3, immune to assignment fatigue and morale loss. A fast, fragile one-specialist run."
+            "description": "Only the level 5 pilot is aboard, immune to assignment fatigue and morale loss. A fast, fragile one-specialist run."
         },
         "weakened_reactor": {
             "name": "Weakened Reactor",
             "description": "The reactor puts out 4 less power, but the low-voltage refit cuts every module's draw by 1 (minimum 1). A bet on a wide ship built from many cheap modules."
         },
         "crisis_start": {
-            "name": "Emergency Start",
-            "description": "Game begins with a random galactic crisis already active. Very dangerous, but the starting budget is much higher."
+            "name": "Crisis Reserve Ship",
+            "description": "A random galactic crisis is already active, but the hold contains a reserve matched to it. +₢600 at launch."
         },
         "cursed_relic": {
             "name": "Cursed Relic",
@@ -4625,6 +4651,14 @@
             "description": "Ship cobbled together from scraps: modules damaged 20%, but +10 tech salvage in the hold for research."
         }
     },
+    "crisis_reserve": {
+        "raider_wave": "spare parts ×6 for emergency repairs",
+        "solar_flare": "shielding energy samples ×4",
+        "epidemic": "quarantine medicine ×4",
+        "fuel_shortage": "30 units of emergency fuel",
+        "nebula_front": "beacon kit: energy samples ×5 and tech salvage ×2",
+        "generic": "emergency tech-salvage kit ×2"
+    },
     "achievements": {
         "tab_label": "Achievements",
         "panel_title": "Achievements",
@@ -4634,7 +4668,7 @@
         "modifiers_section": "Modifiers",
         "doctrine_explorer": {
             "name": "Explorer's Path",
-            "description": "Win 2 separate expeditions, each having explored at least 15 sectors."
+            "description": "Visit 10 tier 3 or higher sectors across all expeditions."
         },
         "doctrine_boss_hunter": {
             "name": "Terror of the Ancients",
@@ -4642,7 +4676,7 @@
         },
         "doctrine_trader": {
             "name": "Business Instinct",
-            "description": "Finish 2 separate expeditions with a balance of at least ₢3000."
+            "description": "Earn ₢15000 in a single expedition; spending does not reduce the tally."
         },
         "doctrine_exile": {
             "name": "Path of the Exile",
@@ -4650,15 +4684,15 @@
         },
         "veteran_crew": {
             "name": "Battle-Hardened",
-            "description": "Win 3 expeditions total across your career."
+            "description": "Have 3 crew members at level 10 at the same time in one expedition."
         },
         "extra_fuel": {
             "name": "The Long Road",
-            "description": "Survive at least 100 turns in a single expedition."
+            "description": "Reach maximum fuel capacity of at least 200 in a single expedition."
         },
         "research_head_start": {
             "name": "Scientific Leap",
-            "description": "Research at least 5 technologies in a single expedition."
+            "description": "Research at least 10 technologies in a single expedition."
         },
         "random_starting_tech": {
             "name": "Lucky Find",
@@ -4674,7 +4708,7 @@
         },
         "crisis_start": {
             "name": "Chronicles of Catastrophe",
-            "description": "Encounter all 4 types of global crises across your career."
+            "description": "Encounter all 5 types of global crises across your career."
         },
         "cursed_relic": {
             "name": "Cursed but Alive",
@@ -5972,6 +6006,7 @@
         "restartGame_1": "🔬 Starting technology: {{startingTechId}}",
         "restartGame_all_tech": "🔬 DEV: all technologies unlocked ({{count}})",
         "restartGame_2": "🚨 GALACTIC CRISIS: {{icon}} {{value}} · duration {{duration}} turns",
+        "crisis_reserve_kit": "📦 Crisis reserve: {{value}}",
         "restartGame_3": "New game",
         "restartGame_4": "Victory paths: {{value}}",
         "createLocationsSlice_1": "Not enough credits to buy a probe.",

@@ -1,6 +1,7 @@
 import type { ModuleType } from "@/game/types/modules";
 import type { ResearchResourceType } from "@/game/types/research";
 import type { RaceId } from "@/game/types/races";
+import type { Goods } from "@/game/types/goods";
 import type { LocationWeightKey } from "@/game/galaxy/runProfiles";
 
 // ─── Launch Modifier ──────────────────────────────────────────────────────────
@@ -20,10 +21,14 @@ export interface LaunchModifier {
   conflictsWith?: string[];
   /** Изменение стартовых кредитов */
   creditDelta: number;
+  /** Задаёт стартовый баланс до цен остальных выбранных модификаторов */
+  startingCredits?: number;
   /** Изменение стартового запаса топлива */
   fuelDelta?: number;
   /** Изменение максимальной вместимости бака */
   maxFuelDelta?: number;
+  /** Уровни имеющихся модулей, с которыми начинается забег */
+  startingModuleLevels?: Partial<Record<ModuleType, number>>;
   /** Дополнительные исследовательские ресурсы */
   researchResources?: Partial<Record<ResearchResourceType, number>>;
   /** Уровень старта всего экипажа (override, не суммируется с шаблоном) */
@@ -34,10 +39,14 @@ export interface LaunchModifier {
   crewLimit?: number;
   /** Запустить игру с одним случайным cursed артефактом в активном состоянии */
   startWithCursedArtifact?: boolean;
+  /** Запустить игру с одной случайной исследованной реликвией редкого тира */
+  startWithRareArtifact?: boolean;
   /** Запустить игру с активным случайным кризисом */
   startWithCrisis?: boolean;
-  /** Запустить игру с одной случайной изученной стартовой технологией */
-  startWithRandomTech?: boolean;
+  /** Выдать кризисный резерв, зависящий от раскрытого кризиса */
+  crisisReserveKit?: boolean;
+  /** Число случайных изученных корневых технологий на старте */
+  startingRandomTechCount?: number;
   /** Процент урона, применяемый ко всем модулям при старте (0–100) */
   moduleDamagePercent?: number;
   /** Процент урона по одному случайному модулю выбранных типов при старте (0–100) */
@@ -46,6 +55,8 @@ export interface LaunchModifier {
   targetedModuleTypes?: ModuleType[];
   /** Стартовая репутация с расами (override поверх нейтральных 0) */
   startRaceReputation?: Partial<Record<RaceId, number>>;
+  /** Торговые товары в трюме на старте */
+  startingTradeGoods?: Partial<Record<Goods, number>>;
 
   // ── Эффекты на весь забег (читаются из state.startModifierIds) ─────────────
   /** Снижение потребления энергии каждым модулем, минимум 1 */
@@ -70,6 +81,45 @@ type NumericRunEffect =
 
 /** Булевы эффекты забега — активны, если их даёт хотя бы один модификатор */
 type FlagRunEffect = "hermitCrew" | "repairSalvage";
+
+export interface CrisisReserveKit {
+  labelKey: string;
+  fuel?: number;
+  researchResources?: Partial<Record<ResearchResourceType, number>>;
+  tradeGoods?: Partial<Record<Goods, number>>;
+}
+
+const CRISIS_RESERVE_KITS: Record<string, CrisisReserveKit> = {
+  raider_wave: {
+    labelKey: "crisis_reserve.raider_wave",
+    tradeGoods: { spares: 6 },
+  },
+  solar_flare: {
+    labelKey: "crisis_reserve.solar_flare",
+    researchResources: { energy_samples: 4 },
+  },
+  epidemic: {
+    labelKey: "crisis_reserve.epidemic",
+    tradeGoods: { medicine: 4 },
+  },
+  fuel_shortage: {
+    labelKey: "crisis_reserve.fuel_shortage",
+    fuel: 30,
+  },
+  nebula_front: {
+    labelKey: "crisis_reserve.nebula_front",
+    researchResources: { energy_samples: 5, tech_salvage: 2 },
+  },
+};
+
+export function getCrisisReserveKit(crisisId: string): CrisisReserveKit {
+  return (
+    CRISIS_RESERVE_KITS[crisisId] ?? {
+      labelKey: "crisis_reserve.generic",
+      researchResources: { tech_salvage: 2 },
+    }
+  );
+}
 
 const getActiveModifiers = (modifierIds: readonly string[] | undefined) =>
   modifierIds?.length
@@ -115,7 +165,10 @@ export function getLaunchCredits(
   startingCredits: number,
   modifiers: readonly LaunchModifier[],
 ) {
-  return startingCredits + modifiers.reduce(
+  const creditBaseline =
+    modifiers.find((mod) => mod.startingCredits !== undefined)
+      ?.startingCredits ?? startingCredits;
+  return creditBaseline + modifiers.reduce(
     (sum, mod) => sum + mod.creditDelta,
     0,
   );
@@ -156,13 +209,8 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     icon: "🧭",
     type: "mixed",
     group: "doctrine",
-    creditDelta: -400,
-    fuelDelta: 40,
-    maxFuelDelta: 40,
-    researchResources: {
-      ancient_data: 4,
-      tech_salvage: 2,
-    },
+    creditDelta: -600,
+    startingModuleLevels: { engine: 2 },
   },
   {
     id: "doctrine_boss_hunter",
@@ -171,9 +219,10 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     icon: "⚔️",
     type: "mixed",
     group: "doctrine",
-    creditDelta: -700,
+    creditDelta: -900,
     crewLevel: 2,
     fuelDelta: -20,
+    startWithRareArtifact: true,
     conflictsWith: ["veteran_crew"],
   },
   {
@@ -183,9 +232,11 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     icon: "💳",
     type: "mixed",
     group: "doctrine",
-    creditDelta: 900,
-    fuelDelta: -25,
-    maxFuelDelta: -25,
+    creditDelta: 0,
+    startingCredits: 3000,
+    fuelDelta: -20,
+    maxFuelDelta: -20,
+    locationWeightMultipliers: { enemyShip: 1.5 },
   },
   {
     id: "doctrine_exile",
@@ -194,9 +245,18 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     icon: "☄️",
     type: "mixed",
     group: "doctrine",
-    creditDelta: 700,
-    startRaceReputation: { krylorian: -45 },
-    moduleDamagePercent: 15,
+    creditDelta: 0,
+    startRaceReputation: {
+      synthetic: -55,
+      krylorian: -70,
+      voidborn: -60,
+      crystalline: -55,
+    },
+    startingTradeGoods: {
+      rare_minerals: 3,
+      electronics: 3,
+      medicine: 4,
+    },
     conflictsWith: ["wanted"],
   },
 
@@ -217,9 +277,9 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     descriptionKey: "launch_modifiers.extra_fuel.description",
     icon: "⛽",
     type: "bonus",
-    creditDelta: -500,
-    fuelDelta: 50,
-    maxFuelDelta: 50,
+    creditDelta: -600,
+    fuelDelta: 40,
+    startingModuleLevels: { fueltank: 2 },
   },
   {
     id: "research_head_start",
@@ -227,11 +287,8 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     descriptionKey: "launch_modifiers.research_head_start.description",
     icon: "🔬",
     type: "bonus",
-    creditDelta: -300,
-    researchResources: {
-      ancient_data: 5,
-      tech_salvage: 5,
-    },
+    creditDelta: -1000,
+    startingRandomTechCount: 3,
   },
   {
     id: "random_starting_tech",
@@ -240,7 +297,7 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     icon: "🧬",
     type: "bonus",
     creditDelta: -800,
-    startWithRandomTech: true,
+    startingRandomTechCount: 1,
   },
 
   // ── Испытания под билд (штраф платит структурой, а не кредитами) ─────────
@@ -255,7 +312,7 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     type: "mixed",
     creditDelta: 0,
     crewLimit: 1,
-    crewLevel: 3,
+    crewLevel: 5,
     hermitCrew: true,
   },
   {
@@ -275,8 +332,9 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     descriptionKey: "launch_modifiers.crisis_start.description",
     icon: "🚨",
     type: "challenge",
-    creditDelta: +1200,
+    creditDelta: +600,
     startWithCrisis: true,
+    crisisReserveKit: true,
   },
 
   // ── Смешанные (риск + потенциальная награда) ──────────────────────────────

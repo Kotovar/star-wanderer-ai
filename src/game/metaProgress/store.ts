@@ -8,11 +8,6 @@ import {
   SHIP_UNLOCK_RULES,
 } from "./shipUnlocks.ts";
 
-// Пороги — когда именно этот забег засчитывается в bespoke-счётчики доктрин
-// (сколько раз условие выполнено — уже в achievements.ts, DOCTRINE_REPEAT_TARGET).
-const EXPLORER_SECTORS_THRESHOLD = 15;
-const TRADER_CREDITS_THRESHOLD = 3000;
-
 let snapshot: MetaProgressState = loadMetaProgress();
 const listeners = new Set<() => void>();
 
@@ -64,8 +59,6 @@ export function recordRunResult(summary: RunSummary): void {
   if (summary.runId === snapshot.lastRecordedRunId) return;
 
   const won = summary.outcome === "victory";
-  const wonWithSectors15Plus = won && summary.sectorsExplored >= EXPLORER_SECTORS_THRESHOLD;
-  const ranWithCredits3000Plus = summary.credits >= TRADER_CREDITS_THRESHOLD;
   const wonWithHostileRep = won && summary.hostileReputationRaceCount >= 1;
 
   const updatedCounters: MetaProgressState = {
@@ -83,10 +76,8 @@ export function recordRunResult(summary: RunSummary): void {
       snapshot.discoveredCrisisIds,
       summary.discoveredCrisisIds,
     ),
-    winsWithSectors15Plus:
-      snapshot.winsWithSectors15Plus + (wonWithSectors15Plus ? 1 : 0),
-    runsWithCredits3000Plus:
-      snapshot.runsWithCredits3000Plus + (ranWithCredits3000Plus ? 1 : 0),
+    tier3SectorsVisited:
+      snapshot.tier3SectorsVisited + summary.tier3SectorsVisited,
     winsWithHostileRep:
       snapshot.winsWithHostileRep + (wonWithHostileRep ? 1 : 0),
     lastRecordedRunId: summary.runId,

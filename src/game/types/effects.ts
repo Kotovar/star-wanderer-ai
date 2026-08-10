@@ -62,4 +62,9 @@ export interface ActiveEffect {
         value: number | string;
     }[];
     targetArtifactId?: string; // For artifact_boost effect - which artifact is enhanced
+    /**
+     * Сколько щита эффект реально снял/добавил после упора в 0.
+     * Без этого снятие эффекта вернуло бы больше, чем он забрал.
+     */
+    appliedShieldDelta?: number;
 }

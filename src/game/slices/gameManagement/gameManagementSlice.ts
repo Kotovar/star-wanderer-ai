@@ -112,6 +112,11 @@ export const createGameManagementSlice = (
             saved.scheduledRandomEventConsequence = null;
         }
         saved.startModifierIds ??= [];
+        saved.creditsEarnedThisRun ??= 0;
+        saved.maxLevel10CrewCountThisRun ??= saved.crew.filter(
+            (crew) => crew.level >= 10,
+        ).length;
+        saved.runId ??= crypto.randomUUID();
         saved.emergencyFuelStationIds ??= [];
         saved.knownTradeStations ??= [];
         saved.discoveredStationTypes ??= [];
@@ -171,6 +176,11 @@ export const createGameManagementSlice = (
             saved.scheduledRandomEventConsequence = null;
         }
         saved.startModifierIds ??= [];
+        saved.creditsEarnedThisRun ??= 0;
+        saved.maxLevel10CrewCountThisRun ??= saved.crew.filter(
+            (crew) => crew.level >= 10,
+        ).length;
+        saved.runId ??= crypto.randomUUID();
         saved.emergencyFuelStationIds ??= [];
         saved.knownTradeStations ??= [];
         saved.discoveredStationTypes ??= [];

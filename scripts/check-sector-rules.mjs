@@ -22,6 +22,11 @@ const { ensureStation, ensureStationAnchors } = jiti("../src/game/galaxy/ensure.
 const { calculateFuelCost } = jiti("../src/game/slices/travel/helpers/calculateFuelCost.ts");
 const { repairShip } = jiti("../src/game/slices/services/helpers/repairShip.ts");
 const { getEffectiveScanRange } = jiti("../src/game/slices/scanner/helpers/getEffectiveScanRange.ts");
+const { scanSector } = jiti("../src/game/slices/planetEffects/helpers/scanSector.ts");
+const { getTotalDamage } = jiti("../src/game/slices/ship/helpers/getTotalDamage.ts");
+const { removeExpiredEffects } = jiti(
+  "../src/game/slices/planetEffects/helpers/removeEffect.ts",
+);
 const { applySectorRuleEffect } = jiti(
   "../src/game/slices/travel/helpers/applySectorRuleEffect.ts",
 );
@@ -61,6 +66,11 @@ const ruleIds = [
   "fleet_graveyard",
   "resonance",
   "dead_drift",
+  "trade_lane",
+  "debris_belt",
+  "anomaly_storm",
+  "becalmed",
+  "gravity_well",
 ];
 const getTranslation = (locale, key) =>
   key.split(".").reduce((value, part) => value?.[part], locale);
@@ -70,6 +80,11 @@ const locales = [
 ];
 
 assert.deepEqual(Object.keys(SECTOR_RULES), ruleIds);
+// Бейдж на карте — это глиф и цвет: два одинаковых правила не отличить.
+const ruleIcons = Object.values(SECTOR_RULES).map((rule) => rule.icon);
+assert.equal(new Set(ruleIcons).size, ruleIcons.length, "every rule needs its own map glyph");
+const ruleColors = Object.values(SECTOR_RULES).map((rule) => rule.color);
+assert.equal(new Set(ruleColors).size, ruleColors.length, "every rule needs its own colour");
 assert.equal(getSectorRule("zero_field")?.restrictions?.noWarp, true);
 assert.equal("noEmergencyJump" in (getSectorRule("zero_field")?.restrictions ?? {}), false);
 assert.equal(getSectorRule(undefined), undefined);
@@ -147,6 +162,21 @@ for (const rule of Object.values(SECTOR_RULES)) {
   }
 }
 
+// Сообщения об ограничениях общие: их увидит любое правило с тем же флагом.
+const ruleNames = Object.values(SECTOR_RULES).flatMap((rule) =>
+  locales.map((locale) => getTranslation(locale, rule.nameKey)),
+);
+for (const logKey of ["repair_blocked", "scan_blocked", "artifact_hint"]) {
+  for (const locale of locales) {
+    const message = getTranslation(locale, `sector_rules.logs.${logKey}`);
+    assert.equal(typeof message, "string", `sector_rules.logs.${logKey} must be localized`);
+    assert.ok(
+      ruleNames.every((name) => !message.includes(name)),
+      `sector_rules.logs.${logKey} must not name a single rule`,
+    );
+  }
+}
+
 for (let run = 0; run < 20; run += 1) {
   const sectors = generateGalaxy();
   const ruleSectors = sectors.filter((sector) => sector.ruleId);
@@ -194,10 +224,19 @@ try {
 const plannedRuleIds = plannedRuleSectors.flatMap((sector) =>
   sector.ruleId ? [sector.ruleId] : [],
 );
-assert.equal(
-  plannedRuleIds.length,
-  SECTOR_RULE_IDS.length,
+assert.ok(
+  plannedRuleIds.length <= SECTOR_RULE_IDS.length,
   "sector generation must not place more rules than unique rule types",
+);
+// Пул правил должен превышать выборку, иначе каждый забег выглядит одинаково.
+assert.ok(
+  SECTOR_RULE_IDS.length > plannedRuleIds.length,
+  "the rule pool must be larger than one galaxy's draw",
+);
+// Ни одно правило не подходит стартовому сектору — генерация должна выжить.
+assert.doesNotThrow(
+  () => planSectorRules([makeSector(0, 1)]),
+  "planning must degrade to fewer rules instead of killing galaxy generation",
 );
 assert.equal(
   new Set(plannedRuleIds).size,
@@ -308,6 +347,23 @@ const noScanState = makeState();
 noScanState.currentSector = makeSector(903, 2, "blind_zone");
 assert.equal(getEffectiveScanRange(noScanState), 0, "blind zone must disable scanning");
 
+// Платный скан архивов синтетиков не должен обходить слепую зону.
+const archiveScanState = makeState();
+archiveScanState.credits = 1_000_000;
+archiveScanState.currentSector = makeSector(908, 2, "blind_zone");
+const archiveScanLogs = [];
+assert.equal(
+  scanSector(
+    () => {
+      throw new Error("archive scan must not change state in a blind zone");
+    },
+    () => ({ ...archiveScanState, addLog: (...args) => archiveScanLogs.push(args) }),
+  ),
+  false,
+  "blind zone must reject the synthetic archive scan",
+);
+assert.equal(archiveScanLogs.length, 1, "rejected archive scan must tell the player why");
+
 const repairState = makeState();
 repairState.currentSector = makeSector(904, 2, "fleet_graveyard");
 const repairLogs = [];
@@ -364,6 +420,104 @@ assert.equal(
   resonanceState.ship.maxShields,
   75,
   "resonance shield penalty must survive a ship stat recalculation",
+);
+
+// Штраф резонанса упирается в 0 у слабого корабля — вылет не должен вернуть
+// больше, чем правило реально сняло.
+for (const startingShields of [0, 20, 100]) {
+  const roundTripState = makeState();
+  roundTripState.ship.maxShields = startingShields;
+  roundTripState.ship.shields = startingShields;
+  const applyRoundTrip = (update) => {
+    Object.assign(
+      roundTripState,
+      typeof update === "function" ? update(roundTripState) : update,
+    );
+  };
+  const roundTripGet = () => ({ ...roundTripState, addLog: () => undefined });
+  for (let lap = 0; lap < 2; lap += 1) {
+    applySectorRuleEffect(makeSector(920, 2, "resonance"), applyRoundTrip, roundTripGet);
+    assert.ok(
+      roundTripState.ship.maxShields >= 0 &&
+        roundTripState.ship.maxShields <= startingShields,
+      "resonance must never raise the shield reserve",
+    );
+    applySectorRuleEffect(makeSector(921, 2), applyRoundTrip, roundTripGet);
+    assert.equal(
+      roundTripState.ship.maxShields,
+      startingShields,
+      "leaving a resonance sector must restore exactly the original shield reserve",
+    );
+    assert.equal(
+      roundTripState.ship.bonusShields ?? 0,
+      0,
+      "leaving a resonance sector must clear its shield bonus",
+    );
+  }
+}
+
+// Штрафы к урону и уклонению обязаны доходить до корабля и полностью сниматься.
+const penaltyState = makeState();
+penaltyState.ship.modules = [
+  { type: "weaponbay", health: 100, level: 1, weapons: [{ type: "kinetic" }] },
+];
+const applyPenaltyState = (update) => {
+  Object.assign(penaltyState, typeof update === "function" ? update(penaltyState) : update);
+};
+const penaltyGet = () => ({ ...penaltyState, addLog: () => undefined });
+const cleanDamage = getTotalDamage(penaltyState).total;
+applySectorRuleEffect(makeSector(922, 2, "debris_belt"), applyPenaltyState, penaltyGet);
+assert.equal(penaltyState.ship.bonusDamage, -0.15, "debris belt must record its damage penalty");
+assert.ok(
+  getTotalDamage(penaltyState).total < cleanDamage,
+  "a negative combat bonus must actually reduce weapon damage",
+);
+applySectorRuleEffect(makeSector(923, 2, "gravity_well"), applyPenaltyState, penaltyGet);
+assert.equal(penaltyState.ship.bonusDamage, 0, "leaving must clear the damage penalty");
+assert.equal(penaltyState.ship.bonusEvasion, -10, "gravity well must record its evasion penalty");
+assert.equal(
+  getTotalDamage(penaltyState).total,
+  cleanDamage,
+  "damage must return to its clean value once the penalty rule is gone",
+);
+applySectorRuleEffect(makeSector(924, 2), applyPenaltyState, penaltyGet);
+assert.equal(penaltyState.ship.bonusEvasion, 0, "leaving must clear the evasion penalty");
+
+// Истекающий эффект планеты не должен стирать штраф сектора заодно с собой.
+const expiryState = makeState();
+const applyExpiryState = (update) => {
+  Object.assign(expiryState, typeof update === "function" ? update(expiryState) : update);
+};
+const expiryGet = () => ({ ...expiryState, addLog: () => undefined });
+applySectorRuleEffect(makeSector(925, 2, "debris_belt"), applyExpiryState, expiryGet);
+applySectorRuleEffect(makeSector(926, 2, "resonance"), applyExpiryState, expiryGet);
+const sectorDamage = expiryState.ship.bonusDamage;
+const sectorShields = expiryState.ship.bonusShields;
+expiryState.activeEffects = [
+  ...expiryState.activeEffects,
+  {
+    id: "planet-buff",
+    name: "Planet buff",
+    source: "planet",
+    turnsRemaining: 1,
+    effects: [
+      { type: "combat_bonus", value: 0.1 },
+      { type: "shield_boost", value: 10 },
+    ],
+  },
+];
+expiryState.ship.bonusDamage += 0.1;
+expiryState.ship.bonusShields += 10;
+removeExpiredEffects(applyExpiryState, expiryGet);
+assert.equal(
+  expiryState.ship.bonusDamage.toFixed(4),
+  sectorDamage.toFixed(4),
+  "an expiring planet effect must not erase the sector damage modifier",
+);
+assert.equal(
+  expiryState.ship.bonusShields,
+  sectorShields,
+  "an expiring planet effect must not erase the sector shield modifier",
 );
 
 const deadDriftState = makeState();

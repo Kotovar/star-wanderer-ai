@@ -105,6 +105,8 @@ export interface GameState {
   stateVersion: number;
   turn: number;
   credits: number;
+  /** Валовые поступления кредитов в текущем забеге, без стартового баланса */
+  creditsEarnedThisRun: number;
   probes: number;
   currentSector: Sector | null;
   currentLocation: Location | null;
@@ -224,6 +226,8 @@ export interface GameState {
   bossesDefeatedThisRun: number;
   /** Максимальный threat/tier врага, побеждённого в этом забеге */
   maxEnemyThreatDefeatedThisRun: number;
+  /** Наибольшее число членов экипажа 10-го уровня одновременно за забег */
+  maxLevel10CrewCountThisRun: number;
 }
 
 export interface GameActions {

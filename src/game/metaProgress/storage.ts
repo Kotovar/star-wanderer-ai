@@ -39,8 +39,7 @@ export function emptyMetaProgress(): MetaProgressState {
     contractsCompleted: 0,
     legendaryOrMythicArtifactsDiscovered: 0,
     discoveredCrisisIds: [],
-    winsWithSectors15Plus: 0,
-    runsWithCredits3000Plus: 0,
+    tier3SectorsVisited: 0,
     winsWithHostileRep: 0,
     unlockedAchievementIds: [],
     unlockedShipIds: [],
@@ -86,8 +85,7 @@ export function normalizeMetaProgress(raw: unknown): MetaProgressState {
     discoveredCrisisIds: strArray(r.discoveredCrisisIds).filter((id) =>
       KNOWN_CRISIS_IDS.has(id),
     ),
-    winsWithSectors15Plus: num(r.winsWithSectors15Plus),
-    runsWithCredits3000Plus: num(r.runsWithCredits3000Plus),
+    tier3SectorsVisited: num(r.tier3SectorsVisited),
     winsWithHostileRep: num(r.winsWithHostileRep),
     unlockedAchievementIds: strArray(r.unlockedAchievementIds).filter((id) =>
       ACHIEVEMENT_IDS.has(id),

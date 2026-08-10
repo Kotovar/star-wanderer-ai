@@ -21,6 +21,9 @@ export function buildRunSummary(
   const sectorsExplored = state.galaxy.sectors.filter(
     (sector) => sector.visited,
   ).length;
+  const tier3SectorsVisited = state.galaxy.sectors.filter(
+    (sector) => sector.visited && sector.tier >= 3,
+  ).length;
   const maxVisitedSectorTier = state.galaxy.sectors.reduce(
     (max, sector) => (sector.visited ? Math.max(max, sector.tier) : max),
     0,
@@ -35,9 +38,16 @@ export function buildRunSummary(
     outcome,
     turn: state.turn,
     credits: state.credits,
+    creditsEarnedThisRun: state.creditsEarnedThisRun,
     crewAliveCount: state.crew.length,
     sectorsExplored,
+    tier3SectorsVisited,
     maxVisitedSectorTier,
+    maxFuelCapacity: state.ship.maxFuel,
+    level10CrewCount: Math.max(
+      state.maxLevel10CrewCountThisRun,
+      state.crew.filter((crew) => crew.level >= 10).length,
+    ),
     researchedTechsCount: state.research.researchedTechs.length,
     completedContractsCount: state.completedContractIds.length,
     legendaryOrMythicArtifactsDiscovered: state.artifacts.filter(

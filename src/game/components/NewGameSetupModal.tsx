@@ -99,7 +99,7 @@ const MODULE_NAME_KEYS: Partial<Record<ModuleType, string>> = {
   engine: "new_game_setup.mod_engine",
 };
 
-type TFn = (key: string) => string;
+type TFn = (key: string, params?: Record<string, string | number>) => string;
 
 function countModules(modules: Module[]) {
   return modules.reduce<Partial<Record<ModuleType, number>>>((acc, module) => {
@@ -145,6 +145,31 @@ function getResearchResourceSummary(
 function getModifierDetails(mod: LaunchModifier, t: TFn) {
   const details: string[] = [];
 
+  if (mod.startingCredits !== undefined) {
+    details.push(
+      t("new_game_setup.effect_starting_credits", {
+        value: mod.startingCredits,
+      }),
+    );
+  }
+  for (const [type, level] of Object.entries(
+    mod.startingModuleLevels ?? {},
+  )) {
+    details.push(`${getModuleLabel(type as ModuleType, t)} Mk.${level}`);
+  }
+  if (mod.startingTradeGoods) {
+    details.push(t("new_game_setup.effect_starting_cargo"));
+  }
+  if (mod.startRaceReputation) {
+    details.push(t("new_game_setup.effect_reputation"));
+  }
+  if (mod.locationWeightMultipliers?.enemyShip) {
+    details.push(
+      t("new_game_setup.effect_enemy_ships", {
+        value: mod.locationWeightMultipliers.enemyShip,
+      }),
+    );
+  }
   if (mod.crewLevel)
     details.push(`${t("new_game_setup.effect_crew")} LV${mod.crewLevel}`);
   if (mod.crewLimit)
@@ -191,16 +216,21 @@ function getModifierDetails(mod: LaunchModifier, t: TFn) {
       `${t("new_game_setup.effect_salvage_loot")} +${Math.round(mod.salvageLootBonus * 100)}%`,
     );
   }
-  if (mod.locationWeightMultipliers?.enemyShip)
-    details.push(t("new_game_setup.effect_bounty_hunters"));
   if (mod.startWithCursedArtifact)
     details.push(t("new_game_setup.effect_cursed_artifact"));
+  if (mod.startWithRareArtifact)
+    details.push(t("new_game_setup.effect_rare_artifact"));
   if (mod.startWithCrisis)
     details.push(t("new_game_setup.effect_starting_crisis"));
-  if (mod.startWithRandomTech)
-    details.push(t("new_game_setup.effect_random_tech"));
-  if (mod.startRaceReputation)
-    details.push(t("new_game_setup.effect_reputation"));
+  if (mod.crisisReserveKit)
+    details.push(t("new_game_setup.effect_crisis_reserve"));
+  if (mod.startingRandomTechCount) {
+    details.push(
+      t("new_game_setup.effect_random_tech", {
+        count: mod.startingRandomTechCount,
+      }),
+    );
+  }
   if (mod.researchResources) {
     const summary = getResearchResourceSummary(mod.researchResources, t);
     if (summary) details.push(summary);
@@ -327,7 +357,14 @@ export function NewGameSetupModal({
 
   const finalMaxFuel = Math.max(
     0,
-    selectedTemplate.maxFuel +
+    Math.max(
+      selectedTemplate.maxFuel,
+      selectedModifierItems.some(
+        (mod) => mod.startingModuleLevels?.fueltank === 2,
+      )
+        ? 120
+        : 0,
+    ) +
       selectedModifierItems.reduce(
         (sum, mod) => sum + (mod.maxFuelDelta ?? 0),
         0,
@@ -408,6 +445,10 @@ export function NewGameSetupModal({
     const isBlocked = !isActive && blockingModifier !== null;
     const tc = MODIFIER_TYPE_COLORS[mod.type];
     const details = getModifierDetails(mod, t);
+    const creditText =
+      mod.startingCredits !== undefined
+        ? `₢${mod.startingCredits}`
+        : `${mod.creditDelta > 0 ? `+${mod.creditDelta}` : mod.creditDelta}₢`;
 
     return (
       <button
@@ -443,10 +484,13 @@ export function NewGameSetupModal({
           <span
             className="shrink-0 text-xs font-bold tabular-nums"
             style={{
-              color: mod.creditDelta >= 0 ? "#00ff41" : "#ff4444",
+              color:
+                mod.startingCredits !== undefined || mod.creditDelta >= 0
+                  ? "#00ff41"
+                  : "#ff4444",
             }}
           >
-            {mod.creditDelta > 0 ? `+${mod.creditDelta}` : mod.creditDelta}₢
+            {creditText}
           </span>
         </div>
 

@@ -8,6 +8,6 @@ export type SetState = {
     (
         partial:
             | Partial<GameState>
-            | ((state: GameState) => Partial<GameState>),
+            | ((state: GameState) => Partial<GameState> | void),
     ): void;
 };

@@ -143,6 +143,7 @@ const baseState: GameState = {
   stateVersion: CURRENT_STATE_VERSION,
   turn: INITIAL_TURN,
   credits: INITIAL_CREDITS,
+  creditsEarnedThisRun: 0,
   probes: 1,
   currentSector: sectors[0],
   currentLocation: null,
@@ -267,6 +268,7 @@ const baseState: GameState = {
   runId: crypto.randomUUID(),
   bossesDefeatedThisRun: 0,
   maxEnemyThreatDefeatedThisRun: 0,
+  maxLevel10CrewCountThisRun: 0,
 };
 
 /**

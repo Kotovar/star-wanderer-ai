@@ -827,6 +827,8 @@ export function StationPanel() {
                             const earned = price * qty;
                             useGameStore.setState((s) => ({
                                 credits: s.credits + earned,
+                                creditsEarnedThisRun:
+                                    s.creditsEarnedThisRun + earned,
                                 research: {
                                     ...s.research,
                                     resources: {

@@ -12,14 +12,9 @@ export interface MetaProgressState {
   legendaryOrMythicArtifactsDiscovered: number;
   /** Объединение id кризисов, встреченных игроком, по всем забегам */
   discoveredCrisisIds: string[];
-  /**
-   * Бespoke-счётчики для доктрин, чьё условие — «повторить условие X в
-   * N разных забегах» (см. таблицу ачивок в META_PROGRESSION_PLAN.md).
-   * Инкрементируются в recordRunResult на основе RunSummary текущего
-   * забега, отдельно от общих счётчиков выше.
-   */
-  winsWithSectors15Plus: number; // doctrine_explorer
-  runsWithCredits3000Plus: number; // doctrine_trader
+  /** Секторы тира 3+, посещённые за все забеги — doctrine_explorer */
+  tier3SectorsVisited: number;
+  /** Победы с хотя бы одной враждебной расой — doctrine_exile */
   winsWithHostileRep: number; // doctrine_exile
   unlockedAchievementIds: string[];
   unlockedShipIds: string[];
@@ -37,9 +32,17 @@ export interface RunSummary {
   outcome: "victory" | "defeat";
   turn: number;
   credits: number;
+  /** Валовой доход за забег; стартовый баланс и траты не учитываются */
+  creditsEarnedThisRun: number;
   crewAliveCount: number;
   sectorsExplored: number;
+  /** Посещённые в этом забеге секторы тира 3+ */
+  tier3SectorsVisited: number;
   maxVisitedSectorTier: number;
+  /** Наибольшая достигнутая ёмкость топлива за забег */
+  maxFuelCapacity: number;
+  /** Наибольшее число членов экипажа 10-го уровня одновременно */
+  level10CrewCount: number;
   researchedTechsCount: number;
   completedContractsCount: number;
   legendaryOrMythicArtifactsDiscovered: number;

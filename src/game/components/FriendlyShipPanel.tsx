@@ -351,6 +351,7 @@ export function FriendlyShipPanel() {
                 useGameStore.setState((s) => ({
                   friendlyShipStock: { ...s.friendlyShipStock, [shipId]: { ...s.friendlyShipStock[shipId], [g.id]: (s.friendlyShipStock[shipId]?.[g.id] || 0) + qty } },
                   credits: s.credits + revenue,
+                  creditsEarnedThisRun: s.creditsEarnedThisRun + revenue,
                   ship: { ...s.ship, tradeGoods: s.ship.tradeGoods.map((tg: TradeGood) => tg.item === g.id ? { ...tg, quantity: tg.quantity - qty } : tg).filter((tg: TradeGood) => tg.quantity > 0) },
                 }));
               };
@@ -597,6 +598,8 @@ export function FriendlyShipPanel() {
                   currentLocation.id,
                 ],
                 credits: s.credits + creditReward,
+                creditsEarnedThisRun:
+                  s.creditsEarnedThisRun + creditReward,
                 ship: {
                   ...s.ship,
                   fuel: newFuel,

@@ -87,8 +87,9 @@ const getTechDamageBonus = (research: GameState["research"]) =>
  * Применяет процентный бонус к урону
  */
 const applyDamageBonus = (damage: number, bonus: number) => {
-    if (bonus <= 0) return damage;
-    return Math.floor(damage * (1 + bonus));
+    if (bonus === 0) return damage;
+    // ponytail: штраф не может съесть больше 90% урона — иначе бой встаёт
+    return Math.floor(damage * (1 + Math.max(-0.9, bonus)));
 };
 
 /**
@@ -116,8 +117,8 @@ export function getTotalDamage(state: GameState) {
     const combatBonus = getMaxRaceCombatBonus(crew);
     damage.total = applyDamageBonus(damage.total, combatBonus);
 
-    // === Временный бонус от планетарных эффектов (Крилориане) ===
-    if (ship.bonusDamage && ship.bonusDamage > 0) {
+    // === Временный бонус от планетарных эффектов (Крилориане) и правил сектора ===
+    if (ship.bonusDamage) {
         damage.total = applyDamageBonus(damage.total, ship.bonusDamage);
     }
 

@@ -21,29 +21,30 @@ export interface AchievementDef {
   getProgress?(lifetime: MetaProgressState): AchievementProgress;
 }
 
-const DOCTRINE_REPEAT_TARGET = 2;
 const BOSSES_TARGET = 3;
-const WINS_TARGET = 3;
 const ARTIFACTS_TARGET = 2;
 const CONTRACTS_TARGET = 10;
 const CRISIS_TYPES_TOTAL = 5;
-const SURVIVE_TURN_TARGET = 100;
-const RESEARCH_TECHS_TARGET = 5;
+const TIER3_SECTORS_TARGET = 10;
+const TRADER_CREDITS_EARNED_TARGET = 15_000;
+const LEVEL10_CREW_TARGET = 3;
+const FUEL_CAPACITY_TARGET = 200;
+const RESEARCH_TECHS_TARGET = 10;
 const SECTOR_TIER_TARGET = 3;
 const HIGH_THREAT_TARGET = 5;
 const HOSTILE_RACES_AT_ONCE_TARGET = 2;
 
 export const ACHIEVEMENTS: AchievementDef[] = [
-  // ── Доктрины — все требуют условий за карьеру (см. META_PROGRESSION_PLAN.md) ──
+  // ── Доктрины ──────────────────────────────────────────────────────────────
   {
     id: "doctrine_explorer",
     nameKey: "achievements.doctrine_explorer.name",
     descriptionKey: "achievements.doctrine_explorer.description",
     isSatisfied: (lifetime) =>
-      lifetime.winsWithSectors15Plus >= DOCTRINE_REPEAT_TARGET,
+      lifetime.tier3SectorsVisited >= TIER3_SECTORS_TARGET,
     getProgress: (lifetime) => ({
-      current: lifetime.winsWithSectors15Plus,
-      target: DOCTRINE_REPEAT_TARGET,
+      current: lifetime.tier3SectorsVisited,
+      target: TIER3_SECTORS_TARGET,
     }),
   },
   {
@@ -60,22 +61,18 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     id: "doctrine_trader",
     nameKey: "achievements.doctrine_trader.name",
     descriptionKey: "achievements.doctrine_trader.description",
-    isSatisfied: (lifetime) =>
-      lifetime.runsWithCredits3000Plus >= DOCTRINE_REPEAT_TARGET,
-    getProgress: (lifetime) => ({
-      current: lifetime.runsWithCredits3000Plus,
-      target: DOCTRINE_REPEAT_TARGET,
-    }),
+    isSatisfied: (_lifetime, summary) =>
+      summary.creditsEarnedThisRun >= TRADER_CREDITS_EARNED_TARGET,
   },
   {
     id: "doctrine_exile",
     nameKey: "achievements.doctrine_exile.name",
     descriptionKey: "achievements.doctrine_exile.description",
     isSatisfied: (lifetime) =>
-      lifetime.winsWithHostileRep >= DOCTRINE_REPEAT_TARGET,
+      lifetime.winsWithHostileRep >= 2,
     getProgress: (lifetime) => ({
       current: lifetime.winsWithHostileRep,
-      target: DOCTRINE_REPEAT_TARGET,
+      target: 2,
     }),
   },
 
@@ -84,14 +81,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     id: "veteran_crew",
     nameKey: "achievements.veteran_crew.name",
     descriptionKey: "achievements.veteran_crew.description",
-    isSatisfied: (lifetime) => lifetime.wins >= WINS_TARGET,
-    getProgress: (lifetime) => ({ current: lifetime.wins, target: WINS_TARGET }),
+    isSatisfied: (_lifetime, summary) =>
+      summary.level10CrewCount >= LEVEL10_CREW_TARGET,
   },
   {
     id: "extra_fuel",
     nameKey: "achievements.extra_fuel.name",
     descriptionKey: "achievements.extra_fuel.description",
-    isSatisfied: (_lifetime, summary) => summary.turn >= SURVIVE_TURN_TARGET,
+    isSatisfied: (_lifetime, summary) =>
+      summary.maxFuelCapacity >= FUEL_CAPACITY_TARGET,
   },
   {
     id: "research_head_start",

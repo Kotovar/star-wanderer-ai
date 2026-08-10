@@ -6,7 +6,16 @@ import {
 import { RESEARCH_TREE } from "@/game/constants/research";
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
-import type { CrewMember, GameState, Artifact, TechnologyId } from "@/game/types";
+import type {
+  Artifact,
+  CrewMember,
+  GameState,
+  Goods,
+  Module,
+  ModuleType,
+  TechnologyId,
+  TradeGood,
+} from "@/game/types";
 import type { ResearchResourceType } from "@/game/types/research";
 import type { ModuleRecipeId } from "@/game/types/crafting";
 import type { GasType, StartingOutpost } from "@/game/types/outposts";
@@ -32,8 +41,45 @@ export interface StartingStatePatch {
   knownRaces?: RaceId[];
   /** Нужно активировать подходящий текущему состоянию кризис сразу после старта */
   startsWithCrisis: boolean;
+  /** После раскрытия стартового кризиса выдать соответствующий резерв */
+  crisisReserveKit: boolean;
   /** Технологии, которые надо сразу засчитать изученными */
   startingTechIds?: TechnologyId[];
+}
+
+function applyStartingModuleLevels(
+  modules: Module[],
+  requestedLevels: Partial<Record<ModuleType, number>>,
+): Module[] {
+  return modules.map((module) => {
+    const level = requestedLevels[module.type];
+    if (level !== 2) return module;
+
+    if (module.type === "engine") {
+      return {
+        ...module,
+        level,
+        fuelEfficiency: Math.max(1, (module.fuelEfficiency ?? 10) - 2),
+        consumption: 2,
+        defense: 2,
+        maxHealth: 120,
+        health: 120,
+      };
+    }
+
+    if (module.type === "fueltank") {
+      return {
+        ...module,
+        level,
+        capacity: 120,
+        defense: 2,
+        maxHealth: 120,
+        health: 120,
+      };
+    }
+
+    return module;
+  });
 }
 
 /**
@@ -65,9 +111,27 @@ export function buildStartingState(
     activeModifiers,
   );
 
+  // ── Модули ────────────────────────────────────────────────────────────────
+  let modules = template.modules.map((m) => ({ ...m }));
+  const requestedModuleLevels = activeModifiers.reduce<
+    Partial<Record<ModuleType, number>>
+  >((levels, mod) => {
+    for (const [type, level] of Object.entries(mod.startingModuleLevels ?? {})) {
+      const moduleType = type as ModuleType;
+      levels[moduleType] = Math.max(levels[moduleType] ?? 0, level);
+    }
+    return levels;
+  }, {});
+  modules = applyStartingModuleLevels(modules, requestedModuleLevels);
+
   // ── Топливо ───────────────────────────────────────────────────────────────
   let fuel = template.fuel;
-  let maxFuel = template.maxFuel;
+  let maxFuel = Math.max(
+    template.maxFuel,
+    ...modules
+      .filter((module) => module.type === "fueltank")
+      .map((module) => module.capacity ?? 0),
+  );
   for (const mod of activeModifiers) {
     if (mod.fuelDelta !== undefined) {
       fuel += mod.fuelDelta;
@@ -78,9 +142,6 @@ export function buildStartingState(
   }
   maxFuel = Math.max(0, maxFuel);
   fuel = Math.max(0, Math.min(fuel, maxFuel));
-
-  // ── Модули ────────────────────────────────────────────────────────────────
-  let modules = template.modules.map((m) => ({ ...m }));
 
   // Штраф к реактору
   const reactorPenalty = activeModifiers.reduce(
@@ -230,20 +291,61 @@ export function buildStartingState(
     }
   }
 
+  const wantsRareArtifact = activeModifiers.some((m) => m.startWithRareArtifact);
+  if (wantsRareArtifact) {
+    const rareUndiscovered = artifacts.filter(
+      (artifact) => artifact.rarity === "rare" && !artifact.discovered,
+    );
+    if (rareUndiscovered.length > 0) {
+      const picked =
+        rareUndiscovered[Math.floor(Math.random() * rareUndiscovered.length)];
+      const index = artifacts.findIndex((artifact) => artifact.id === picked.id);
+      if (index !== -1) {
+        artifacts[index] = {
+          ...artifacts[index],
+          discovered: true,
+          researched: true,
+        };
+      }
+    }
+  }
+
   const wantsStartingCrisis = activeModifiers.some((m) => m.startWithCrisis);
   const startingTechPool = Object.values(RESEARCH_TREE).filter(
     (tech) => tech.discovered && tech.prerequisites.length === 0,
   );
-  const wantsStartingTech = activeModifiers.some((m) => m.startWithRandomTech);
-  const startingTech = wantsStartingTech
-    ? startingTechPool[Math.floor(Math.random() * startingTechPool.length)]
-    : undefined;
+  const startingRandomTechCount = activeModifiers.reduce(
+    (count, mod) => count + (mod.startingRandomTechCount ?? 0),
+    0,
+  );
+  const randomStartingTechIds: TechnologyId[] = [];
+  const remainingStartingTechs = [...startingTechPool];
+  for (
+    let index = 0;
+    index < startingRandomTechCount && remainingStartingTechs.length > 0;
+    index += 1
+  ) {
+    const pickedIndex = Math.floor(Math.random() * remainingStartingTechs.length);
+    const [picked] = remainingStartingTechs.splice(pickedIndex, 1);
+    randomStartingTechIds.push(picked.id);
+  }
   const startingTechIds = [
     ...(template.startWithAllTechs
       ? Object.values(RESEARCH_TREE).map((tech) => tech.id)
       : []),
-    ...(startingTech ? [startingTech.id] : []),
+    ...randomStartingTechIds,
   ];
+
+  const startingTradeGoods = new Map<Goods, number>();
+  for (const mod of activeModifiers) {
+    for (const [goodId, quantity] of Object.entries(mod.startingTradeGoods ?? {})) {
+      const good = goodId as Goods;
+      startingTradeGoods.set(good, (startingTradeGoods.get(good) ?? 0) + quantity);
+    }
+  }
+  const tradeGoods: TradeGood[] = [...startingTradeGoods].map(
+    ([item, quantity]) => ({ item, quantity, buyPrice: 0 }),
+  );
 
   // ── Корабль ───────────────────────────────────────────────────────────────
   const crewCapacity =
@@ -257,7 +359,7 @@ export function buildStartingState(
     modules,
     gridSize: template.gridSize ?? 5,
     cargo: [],
-    tradeGoods: [],
+    tradeGoods,
     fuel,
     maxFuel,
     mergeTraits: [],
@@ -278,6 +380,7 @@ export function buildStartingState(
     raceReputation: Object.keys(raceReputation).length > 0 ? raceReputation : undefined,
     knownRaces: knownRaces.size > 0 ? [...knownRaces] : undefined,
     startsWithCrisis: wantsStartingCrisis,
+    crisisReserveKit: activeModifiers.some((mod) => mod.crisisReserveKit),
     startingTechIds:
       startingTechIds.length > 0 ? [...new Set(startingTechIds)] : undefined,
   };

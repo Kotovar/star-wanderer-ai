@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getSectorRule } from "@/game/galaxy/sectorRules";
 import { getSectorName } from "@/lib/translationHelpers";
 import { PLANET_SPECIALIZATIONS } from "@/game/constants";
 import {
@@ -19,6 +20,11 @@ import { playSound } from "@/sounds";
 export const scanSector = (set: SetState, get: () => GameStore): boolean => {
     const state = get();
     const cost = PLANET_SPECIALIZATIONS.synthetic.cost;
+
+    if (getSectorRule(state.currentSector?.ruleId)?.restrictions?.noScan) {
+        get().addLog(i18nStore.t("sector_rules.logs.scan_blocked"), "error");
+        return false;
+    }
 
     if (state.credits < cost) {
         get().addLog( i18nStore.t("game_logs.scanSector_1"), "error");

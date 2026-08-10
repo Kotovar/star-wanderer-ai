@@ -7,6 +7,11 @@ export const SECTOR_RULE_IDS = [
     "fleet_graveyard",
     "resonance",
     "dead_drift",
+    "trade_lane",
+    "debris_belt",
+    "anomaly_storm",
+    "becalmed",
+    "gravity_well",
 ] as const;
 
 export type SectorRuleId = typeof SECTOR_RULE_IDS[number];
@@ -87,6 +92,71 @@ export const SECTOR_RULES = {
         effects: [{ type: "fuel_efficiency", value: -0.5 }],
         locationWeights: { distressSignal: 3, derelictShip: 2 },
     },
+    trade_lane: {
+        id: "trade_lane",
+        nameKey: "sector_rules.trade_lane.name",
+        descKey: "sector_rules.trade_lane.description",
+        icon: "⇄",
+        color: "#4ade80",
+        polarity: "positive",
+        tiers: [1, 2, 3],
+        effects: [],
+        locationWeights: { station: 3, friendlyShip: 2, enemyShip: 0.5 },
+    },
+    debris_belt: {
+        id: "debris_belt",
+        nameKey: "sector_rules.debris_belt.name",
+        descKey: "sector_rules.debris_belt.description",
+        icon: "∴",
+        color: "#d6d3d1",
+        polarity: "mixed",
+        tiers: [1, 2, 3, 4],
+        effects: [
+            { type: "fuel_efficiency", value: -0.2 },
+            { type: "combat_bonus", value: -0.15 },
+        ],
+        locationWeights: { asteroidBelt: 4, wreckField: 2 },
+    },
+    anomaly_storm: {
+        id: "anomaly_storm",
+        nameKey: "sector_rules.anomaly_storm.name",
+        descKey: "sector_rules.anomaly_storm.description",
+        icon: "✦",
+        color: "#e879f9",
+        polarity: "mixed",
+        tiers: [2, 3, 4],
+        effects: [
+            { type: "shield_boost", value: -15 },
+            { type: "artifact_hints", value: 1 },
+        ],
+        locationWeights: { anomaly: 3, gasGiant: 1.5 },
+    },
+    becalmed: {
+        id: "becalmed",
+        nameKey: "sector_rules.becalmed.name",
+        descKey: "sector_rules.becalmed.description",
+        icon: "≡",
+        color: "#2dd4bf",
+        polarity: "mixed",
+        tiers: [1, 2, 3, 4],
+        effects: [],
+        locationWeights: { enemyShip: 0.2, storm: 0, station: 0.3 },
+        skipEnsure: ["station"],
+    },
+    gravity_well: {
+        id: "gravity_well",
+        nameKey: "sector_rules.gravity_well.name",
+        descKey: "sector_rules.gravity_well.description",
+        icon: "⇓",
+        color: "#f97316",
+        polarity: "mixed",
+        tiers: [2, 3, 4],
+        effects: [
+            { type: "fuel_efficiency", value: 0.3 },
+            { type: "evasion_bonus", value: -0.1 },
+        ],
+        restrictions: { noWarp: true },
+    },
 } as const satisfies Record<SectorRuleId, SectorRule>;
 
 export const getSectorRule = (ruleId?: SectorRuleId): SectorRule | undefined =>
@@ -130,9 +200,9 @@ export const planSectorRules = (sectors: Sector[]): void => {
         );
         const sector = candidates[Math.floor(Math.random() * candidates.length)];
 
-        if (!sector) {
-            throw new Error(`No eligible sector for rule ${ruleId}`);
-        }
+        // Правило без подходящего сектора просто не ставится: ронять генерацию
+        // галактики из-за одной особенности нельзя.
+        if (!sector) continue;
 
         sector.ruleId = ruleId;
         tierOneRulePlaced ||= sector.tier === 1;

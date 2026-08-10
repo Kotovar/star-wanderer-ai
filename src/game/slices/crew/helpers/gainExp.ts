@@ -38,6 +38,10 @@ export const gainExp = (
             const previousMaxHealth = crew.maxHealth;
             const previousHealth = crew.health;
             crew.level = result.newLevel;
+            s.maxLevel10CrewCountThisRun = Math.max(
+                s.maxLevel10CrewCountThisRun,
+                s.crew.filter((member) => member.level >= 10).length,
+            );
             // При повышении уровня увеличиваем maxHealth и health
             const levelUpData = result.levelUpData;
             if (levelUpData) {

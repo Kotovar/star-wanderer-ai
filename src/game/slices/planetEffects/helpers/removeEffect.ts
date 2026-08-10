@@ -88,18 +88,12 @@ export const removeExpiredEffects = (set: SetState, get: () => GameStore) => {
                     0,
                     (s.ship.bonusPower || 0) - bonusPowerToRemove,
                 ),
-                bonusShields: Math.max(
-                    0,
-                    (s.ship.bonusShields || 0) - bonusShieldsToRemove,
-                ),
-                bonusEvasion: Math.max(
-                    0,
-                    (s.ship.bonusEvasion || 0) - bonusEvasionToRemove,
-                ),
-                bonusDamage: Math.max(
-                    0,
-                    (s.ship.bonusDamage || 0) - bonusDamageToRemove,
-                ),
+                // Без клампа: правило сектора держит здесь штраф, и упор в 0
+                // стёр бы его вместе с истекающим эффектом планеты.
+                // Пол и потолок — в getTotalDamage/getTotalEvasion.
+                bonusShields: (s.ship.bonusShields || 0) - bonusShieldsToRemove,
+                bonusEvasion: (s.ship.bonusEvasion || 0) - bonusEvasionToRemove,
+                bonusDamage: (s.ship.bonusDamage || 0) - bonusDamageToRemove,
                 bonusShieldRegen: Math.max(
                     0,
                     (s.ship.bonusShieldRegen || 0) - bonusShieldRegenToRemove,

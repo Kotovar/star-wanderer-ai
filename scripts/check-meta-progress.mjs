@@ -57,8 +57,7 @@ assert.deepEqual(weird.discoveredCrisisIds, ["raider_wave", "nebula_front"]);
 assert.deepEqual(weird.unlockedAchievementIds, ["veteran_crew"]);
 assert.deepEqual(weird.unlockedShipIds, ["explorer", "trader"]);
 assert.equal(weird.lastRecordedRunId, null);
-assert.equal(weird.winsWithSectors15Plus, 0);
-assert.equal(weird.runsWithCredits3000Plus, 0);
+assert.equal(weird.tier3SectorsVisited, 0);
 assert.equal(weird.winsWithHostileRep, 0);
 
 assert.ok(
@@ -121,8 +120,7 @@ function baseLifetime(overrides) {
     contractsCompleted: 0,
     legendaryOrMythicArtifactsDiscovered: 0,
     discoveredCrisisIds: [],
-    winsWithSectors15Plus: 0,
-    runsWithCredits3000Plus: 0,
+    tier3SectorsVisited: 0,
     winsWithHostileRep: 0,
     unlockedAchievementIds: [],
     unlockedShipIds: [],
@@ -136,9 +134,13 @@ function baseSummary(overrides) {
     outcome: "victory",
     turn: 1,
     credits: 0,
+    creditsEarnedThisRun: 0,
     crewAliveCount: 3,
     sectorsExplored: 0,
+    tier3SectorsVisited: 0,
     maxVisitedSectorTier: 0,
+    maxFuelCapacity: 80,
+    level10CrewCount: 0,
     researchedTechsCount: 0,
     completedContractsCount: 0,
     legendaryOrMythicArtifactsDiscovered: 0,
@@ -159,11 +161,9 @@ function achievementById(id) {
 
 // Career-counter achievements: below vs at threshold, summary irrelevant.
 const careerCases = [
-  ["doctrine_explorer", "winsWithSectors15Plus", 1, 2],
+  ["doctrine_explorer", "tier3SectorsVisited", 9, 10],
   ["doctrine_boss_hunter", "bossesDefeated", 2, 3],
-  ["doctrine_trader", "runsWithCredits3000Plus", 1, 2],
   ["doctrine_exile", "winsWithHostileRep", 1, 2],
-  ["veteran_crew", "wins", 2, 3],
   ["random_starting_tech", "legendaryOrMythicArtifactsDiscovered", 1, 2],
   ["salvaged_parts", "contractsCompleted", 9, 10],
 ];
@@ -222,8 +222,14 @@ for (const [id, field, below, atTarget] of careerCases) {
 
 // Per-run achievements: lifetime irrelevant, summary decides.
 const perRunCases = [
-  ["extra_fuel", { turn: 99 }, { turn: 100 }],
-  ["research_head_start", { researchedTechsCount: 4 }, { researchedTechsCount: 5 }],
+  [
+    "doctrine_trader",
+    { creditsEarnedThisRun: 14999 },
+    { creditsEarnedThisRun: 15000 },
+  ],
+  ["veteran_crew", { level10CrewCount: 2 }, { level10CrewCount: 3 }],
+  ["extra_fuel", { maxFuelCapacity: 199 }, { maxFuelCapacity: 200 }],
+  ["research_head_start", { researchedTechsCount: 9 }, { researchedTechsCount: 10 }],
   ["weakened_reactor", { maxVisitedSectorTier: 2 }, { maxVisitedSectorTier: 3 }],
   ["stranded", { usedEmergencyFuelBailout: false }, { usedEmergencyFuelBailout: true }],
   [
@@ -334,9 +340,13 @@ function fakeSummary(overrides) {
     outcome: "victory",
     turn: 42,
     credits: 5000,
+    creditsEarnedThisRun: 0,
     crewAliveCount: 3,
     sectorsExplored: 10,
+    tier3SectorsVisited: 2,
     maxVisitedSectorTier: 2,
+    maxFuelCapacity: 80,
+    level10CrewCount: 0,
     researchedTechsCount: 4,
     completedContractsCount: 3,
     legendaryOrMythicArtifactsDiscovered: 1,
@@ -357,6 +367,10 @@ assert.equal(afterFirst.runsCompleted, before.runsCompleted + 1);
 assert.equal(afterFirst.wins, before.wins + 1);
 assert.equal(afterFirst.bossesDefeated, before.bossesDefeated + 1);
 assert.equal(afterFirst.contractsCompleted, before.contractsCompleted + 3);
+assert.equal(
+  afterFirst.tier3SectorsVisited,
+  before.tier3SectorsVisited + 2,
+);
 assert.deepEqual(afterFirst.discoveredCrisisIds, ["raider_wave"]);
 assert.equal(afterFirst.lastRecordedRunId, "run-A");
 // Ship unlock rules fire through the real pipeline too, not just in isolation above.

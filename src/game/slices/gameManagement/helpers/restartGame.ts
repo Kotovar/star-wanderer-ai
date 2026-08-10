@@ -8,7 +8,10 @@ import { clearLocalStorage, saveToLocalStorage } from "@/game/saves/utils";
 import { playSound, setAudioVolumes, setSoundPlaybackEnabled } from "@/sounds";
 import { loadPlayerSettings } from "../../settings/playerSettings";
 import { buildStartingState } from "./buildStartingState";
-import { getRunModifierLocationWeights } from "@/game/constants/launchModifiers";
+import {
+  getCrisisReserveKit,
+  getRunModifierLocationWeights,
+} from "@/game/constants/launchModifiers";
 import {
   seedCrisisResponseOffers,
   seedStartingFabricationOffers,
@@ -26,7 +29,13 @@ import {
   pickRunProfileId,
   type RunProfileId,
 } from "@/game/galaxy/runProfiles";
-import type { GameStore, SetState } from "@/game/types";
+import { addTradeGood } from "@/game/slices/ship/helpers/addTradeGood";
+import type {
+  GameStore,
+  Goods,
+  ResearchResourceType,
+  SetState,
+} from "@/game/types";
 
 /**
  * Индекс начального сектора в галактике
@@ -183,6 +192,43 @@ export const restartGame = (
         ...(sectors ? { galaxy: { ...state.galaxy, sectors } } : {}),
       };
     });
+    if (patch.crisisReserveKit) {
+      const reserve = getCrisisReserveKit(crisis.id);
+      set((state) => {
+        let tradeGoods = state.ship.tradeGoods;
+        for (const [item, quantity] of Object.entries(
+          reserve.tradeGoods ?? {},
+        )) {
+          tradeGoods = addTradeGood(tradeGoods, item as Goods, quantity);
+        }
+
+        const resources = { ...state.research.resources };
+        for (const [resource, quantity] of Object.entries(
+          reserve.researchResources ?? {},
+        )) {
+          const type = resource as ResearchResourceType;
+          resources[type] = (resources[type] ?? 0) + quantity;
+        }
+
+        return {
+          ship: {
+            ...state.ship,
+            fuel: Math.min(
+              state.ship.maxFuel,
+              state.ship.fuel + (reserve.fuel ?? 0),
+            ),
+            tradeGoods,
+          },
+          research: { ...state.research, resources },
+        };
+      });
+      get().addLog(
+        i18nStore.t("game_logs.crisis_reserve_kit", {
+          value: i18nStore.t(reserve.labelKey),
+        }),
+        "info",
+      );
+    }
     get().addLog( i18nStore.t("game_logs.restartGame_2", { icon: crisis.icon, value: i18nStore.t(crisis.nameKey), duration: crisis.duration }),
       "error",
     );
