@@ -15,6 +15,15 @@ const { getArchiveHintLocations, getArtifactEffectValue } = jiti(
 const { ANCIENT_ARTIFACTS } = jiti("../src/game/constants/artifacts.ts");
 const { loadWithMigrations } = jiti("../src/game/saves/migrations.ts");
 
+const requiredLevels = { rare: 3, cursed: 3, legendary: 4, mythic: 5 };
+for (const artifact of ANCIENT_ARTIFACTS) {
+  assert.equal(
+    artifact.requiresScientistLevel,
+    requiredLevels[artifact.rarity],
+    `${artifact.id} must use the level for ${artifact.rarity}`,
+  );
+}
+
 assert.ok(
   ANCIENT_ARTIFACTS.every((artifact) => !/^\p{Extended_Pictographic}/u.test(artifact.name)),
   "названия артефактов не должны дублировать иконку эффекта в карточке",
