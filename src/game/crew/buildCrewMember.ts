@@ -191,7 +191,13 @@ export function buildCrewMember(options: CrewBuildOptions = {}): CrewMember {
     if (typeof traitsOpt === "string") {
         // Quality string — random generation
         const hasHappiness = RACES[race]?.hasHappiness ?? true;
-        traits = generateCrewTraits(traitsOpt, seed ?? 0, hasHappiness).traits;
+        traits = generateCrewTraits(
+            traitsOpt,
+            seed ?? 0,
+            hasHappiness,
+            profession,
+            race,
+        ).traits;
     } else if (
         Array.isArray(traitsOpt) &&
         (traitsOpt.length === 0 || typeof traitsOpt[0] === "string")

@@ -3,6 +3,7 @@ import {
     MUTATION_CHANCES,
     RACE_CREW_NAMES,
 } from "@/game/constants";
+import { RACES } from "@/game/constants/races";
 import type {
     CrewTrait,
     Profession,
@@ -133,7 +134,8 @@ export const generateCrewTraits = (
     }
 
     const mutationChance = MUTATION_CHANCES.HIRE_MUTATION_BY_QUALITY[quality];
-    if (seededRandom(300) < mutationChance) {
+    const canMutate = !race || RACES[race]?.canGetSick !== false;
+    if (canMutate && seededRandom(300) < mutationChance) {
         const pool = CREW_TRAITS.mutation
             .filter(moraleFilter)
             .filter((trait) => !conflictsWithExisting(trait.id, traits));

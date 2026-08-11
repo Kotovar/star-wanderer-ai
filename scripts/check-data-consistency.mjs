@@ -12,7 +12,27 @@ const jiti = require("jiti")(scriptPath, {
 });
 
 const { RACES } = jiti("../src/game/constants/races.ts");
+const { generateCrewTraits } = jiti("../src/game/crew/generation.ts");
+const { buildCrewMember } = jiti("../src/game/crew/buildCrewMember.ts");
 const raceIds = Object.keys(RACES);
+
+const syntheticTraitSets = Array.from({ length: 200 }, (_, seed) =>
+  generateCrewTraits("poor", seed, false, "scientist", "synthetic").traits,
+);
+assert.equal(
+  syntheticTraitSets.flat().some((trait) => trait.type === "mutation"),
+  false,
+  "synthetic candidates cannot receive mutations",
+);
+
+const syntheticMembers = Array.from({ length: 200 }, (_, seed) =>
+  buildCrewMember({ race: "synthetic", profession: "scientist", traits: "poor", seed }),
+);
+assert.equal(
+  syntheticMembers.some((member) => member.traits.some((trait) => trait.type === "mutation")),
+  false,
+  "buildCrewMember forwards the synthetic race to trait generation",
+);
 
 // ─── 1. Симметричность relations ─────────────────────────────────────────────
 // Каскад репутации (ripple) использует relations только первичной расы,
