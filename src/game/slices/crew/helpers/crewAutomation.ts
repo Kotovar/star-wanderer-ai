@@ -469,15 +469,15 @@ export const planCrewAutomation = ({
   ).forEach(assign);
 
   const labs = activeModules.filter((module) => LAB_MODULE_TYPES.has(module.type));
-  if (mode === "civilian" && hasActiveResearch) {
-    const researchScientists = unassigned("scientist");
+  if (mode === "civilian") {
+    const labScientists = unassigned("scientist");
     selectUniqueCandidates(
       candidatesFor(
-        researchScientists,
+        labScientists,
         labs,
-        "research",
+        hasActiveResearch ? "research" : null,
         PRIORITY.role,
-        researchScientists.length > labs.length,
+        labScientists.length > labs.length,
       ),
     ).forEach(assign);
   }

@@ -105,6 +105,25 @@ const decide = (crew, modules, overrides = {}) => {
 };
 
 {
+  const modules = [
+    shipModule(1, "cockpit", 0, 0),
+    shipModule(2, "lab", 1, 0),
+    shipModule(3, "scanner", 2, 0),
+  ];
+  const idle = decide([crewMember(1, "scientist", 1)], modules).get(1);
+  assert.equal(idle?.targetModuleId, 2, "idle scientist prefers a laboratory");
+  assert.equal(idle?.task, null, "idle laboratory placement does not invent research");
+
+  const researching = decide(
+    [crewMember(1, "scientist", 1)],
+    modules,
+    { hasActiveResearch: true },
+  ).get(1);
+  assert.equal(researching?.targetModuleId, 2, "researching scientist uses the laboratory");
+  assert.equal(researching?.task, "research", "laboratory scientist researches when needed");
+}
+
+{
   const plan = planCrewAutomation({
     crew: [crewMember(1, "gunner", 1)],
     modules: [shipModule(1, "cockpit", 0, 0)],
