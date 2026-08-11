@@ -255,4 +255,12 @@ for (const label of [
   );
 }
 
+const contractsList = readFileSync("src/game/components/ContractsList.tsx", "utf8");
+assert.match(contractsList, /getLocationName\(contract\.sourceName, t\)/);
+assert.equal(
+  ru.random_events.consequence.trader.specialist.includes("Recommend"),
+  false,
+  "trader consequence must not contain an untranslated fragment",
+);
+
 console.log("Player feedback checks passed");

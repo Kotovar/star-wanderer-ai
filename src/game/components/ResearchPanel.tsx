@@ -925,7 +925,7 @@ export function ResearchPanel() {
     [activeEffects],
   );
   const startResearch = useGameStore((s) => s.startResearch);
-  const showSectorMap = useGameStore((s) => s.showSectorMap);
+  const closeResearchPanel = useGameStore((s) => s.closeResearchPanel);
   const addLog = useGameStore((s) => s.addLog);
   const { t, currentLanguage } = useTranslation();
 
@@ -1015,7 +1015,7 @@ export function ResearchPanel() {
             🔬 {t("research.panel_title")}
           </div>
           <Button
-            onClick={showSectorMap}
+            onClick={closeResearchPanel}
             className="shrink-0 cursor-pointer border border-[#00ff41] bg-transparent text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
           >
             {t("common.back_to_map")}

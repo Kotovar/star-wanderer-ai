@@ -40,6 +40,7 @@ export function GameHeader() {
   const showArtifacts = useGameStore((s) => s.showArtifacts);
   const showEffects = useGameStore((s) => s.showEffects);
   const showResearch = useGameStore((s) => s.showResearch);
+  const closeResearchPanel = useGameStore((s) => s.closeResearchPanel);
   const showNavigator = useGameStore((s) => s.showNavigator);
   const closeNavigator = useGameStore((s) => s.closeNavigator);
   const showReputation = useGameStore((s) => s.showReputation);
@@ -96,7 +97,7 @@ export function GameHeader() {
 
   const handleResearchClick = () => {
     if (gameMode === "research") {
-      showSectorMap();
+      closeResearchPanel();
     } else {
       showResearch();
     }
