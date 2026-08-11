@@ -51,11 +51,13 @@ export function CrisisPanel() {
   const crewCondition =
     state.crew.length > 0
       ? (state.crew.reduce(
-          (sum, crew) =>
-            sum +
-            (crew.health / crew.maxHealth +
-              crew.happiness / crew.maxHappiness) /
-              2,
+          (sum, crew) => {
+            const healthCondition = crew.health / Math.max(crew.maxHealth, 1);
+            return sum +
+              (crew.maxHappiness > 0
+                ? (healthCondition + crew.happiness / crew.maxHappiness) / 2
+                : healthCondition);
+          },
           0,
         ) /
           state.crew.length) *

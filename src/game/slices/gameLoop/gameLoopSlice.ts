@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { store as i18nStore } from "@/lib/useTranslation";
 import {
     accrueOutposts,
@@ -274,18 +275,22 @@ export const createGameLoopSlice = (
             crisis.duration,
         );
         if (Math.random() > chance) {
-            get().addLog( i18nStore.t("game_logs.gameLoopSlice_5"),
-                "warning",
-            );
+            const failureMessage = i18nStore.t("game_logs.gameLoopSlice_5");
+            get().addLog(failureMessage, "warning");
+            toast.error(failureMessage);
             get().saveGame();
             return;
         }
 
         crisis?.onEndEffect?.(set, get, activeCrisis);
         set(() => ({ activeCrisis: null }));
-        get().addLog( i18nStore.t("game_logs.gameLoopSlice_6", { value: crisis?.icon ?? "", value2: crisis ? i18nStore.t(crisis.nameKey) : "", value3: responseDefinition.label.toLowerCase() }),
-            "info",
-        );
+        const successMessage = i18nStore.t("game_logs.gameLoopSlice_6", {
+            value: crisis.icon ?? "",
+            value2: i18nStore.t(crisis.nameKey),
+            value3: responseDefinition.label.toLowerCase(),
+        });
+        get().addLog(successMessage, "info");
+        toast.success(successMessage);
         get().saveGame();
     },
 });

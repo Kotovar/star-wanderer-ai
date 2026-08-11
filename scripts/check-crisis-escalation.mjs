@@ -140,4 +140,17 @@ for (const locale of ["ru", "en"]) {
   }
 }
 
+const gameLoop = readFileSync(
+  path.join(root, "src/game/slices/gameLoop/gameLoopSlice.ts"),
+  "utf8",
+);
+const crisisPanel = readFileSync(
+  path.join(root, "src/game/components/CrisisPanel.tsx"),
+  "utf8",
+);
+assert.match(gameLoop, /import \{ toast \} from "sonner";/);
+assert.match(gameLoop, /toast\.error\(failureMessage\)/);
+assert.match(gameLoop, /toast\.success\(successMessage\)/);
+assert.match(crisisPanel, /crew\.maxHappiness > 0/);
+
 console.log("Crisis escalation checks passed");
