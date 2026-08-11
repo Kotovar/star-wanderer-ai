@@ -263,4 +263,12 @@ assert.equal(
   "trader consequence must not contain an untranslated fragment",
 );
 
+const gasGiant = readFileSync("src/game/components/GasGiantPanel.tsx", "utf8");
+assert.match(gasGiant, /overflow-y-auto scrollbar-gutter-stable rounded-lg/);
+assert.equal(
+  (gasGiant.match(/disabled=\{Boolean\(activeDive\.currentEvent\)\}/g) ?? []).length,
+  2,
+  "both dive controls remain mounted and disabled during a decision",
+);
+
 console.log("Player feedback checks passed");

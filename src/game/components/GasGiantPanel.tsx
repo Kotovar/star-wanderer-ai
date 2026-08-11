@@ -463,7 +463,7 @@ export function GasGiantPanel() {
 
   return (
     <div
-      className="flex h-full min-h-0 flex-col overflow-y-auto rounded-lg border bg-[#050810]"
+      className="flex h-full min-h-0 flex-col overflow-y-auto scrollbar-gutter-stable rounded-lg border bg-[#050810]"
       style={{ borderColor: `${depthColor}88` }}
     >
       <GasGiantDescentVisual
@@ -543,7 +543,7 @@ export function GasGiantPanel() {
             </>
           )}
 
-          {activeDive && !activeDive.currentEvent && (
+          {activeDive && (
             <>
               {cargoFull && (
                 <div className="text-[10px] text-[#ffaa00] sm:text-xs">
@@ -553,6 +553,7 @@ export function GasGiantPanel() {
               {activeDive.currentDepth < 4 && !activeDive.finished && (
                 <Button
                   onClick={diveDeeper}
+                  disabled={Boolean(activeDive.currentEvent)}
                   className="min-h-9 cursor-pointer border-2 bg-transparent px-2 text-[9px] uppercase tracking-normal sm:min-h-11 sm:text-xs sm:tracking-wider"
                   style={{
                     borderColor: DEPTH_COLORS[
@@ -571,6 +572,7 @@ export function GasGiantPanel() {
               )}
               <Button
                 onClick={surfaceDive}
+                disabled={Boolean(activeDive.currentEvent)}
                 className={
                   probeLost
                     ? "min-h-9 cursor-pointer border-2 border-destructive bg-transparent px-2 text-[9px] uppercase tracking-normal text-[#ff667f] hover:bg-destructive hover:text-[#050810] sm:text-xs sm:tracking-wider"
