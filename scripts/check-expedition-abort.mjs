@@ -99,6 +99,7 @@ const createState = () => {
         profession: "scout",
         happiness: 80,
         expeditionFatigue: 0,
+        movedThisTurn: true,
       },
     ],
     currentLocation: planet,
@@ -112,6 +113,9 @@ const run = (finishExpedition) => {
   const logs = [];
   let experienceCalls = 0;
   let statsUpdates = 0;
+  let nextTurnCalls = 0;
+  let activeExpeditionAtTick;
+  let saveCalls = 0;
   const set = (update) => {
     const next = typeof update === "function" ? update(state) : update;
     if (next) Object.assign(state, next);
@@ -125,10 +129,27 @@ const run = (finishExpedition) => {
     updateShipStats: () => {
       statsUpdates += 1;
     },
+    nextTurn: () => {
+      nextTurnCalls += 1;
+      activeExpeditionAtTick = state.activeExpedition;
+      state.turn += 1;
+      state.crew = state.crew.map((member) => ({ ...member, movedThisTurn: false }));
+    },
+    saveGame: () => {
+      saveCalls += 1;
+    },
   });
 
   finishExpedition(set, get);
-  return { experienceCalls, logs, state, statsUpdates };
+  return {
+    activeExpeditionAtTick,
+    experienceCalls,
+    logs,
+    nextTurnCalls,
+    saveCalls,
+    state,
+    statsUpdates,
+  };
 };
 
 const aborted = run(abortExpedition);
@@ -139,7 +160,11 @@ assert.equal(aborted.experienceCalls, 0);
 assert.equal(aborted.state.currentLocation.expeditionCompleted, false);
 assert.equal(aborted.state.crew[0].expeditionFatigue, 5);
 assert.equal(aborted.state.crew[0].happiness, 70);
+assert.equal(aborted.state.crew[0].movedThisTurn, false);
 assert.equal(aborted.statsUpdates, 1);
+assert.equal(aborted.nextTurnCalls, 1);
+assert.equal(aborted.activeExpeditionAtTick, null);
+assert.ok(aborted.saveCalls >= 1);
 
 const completed = run(endExpedition);
 assert.equal(completed.state.activeExpedition, null);
@@ -147,6 +172,10 @@ assert.equal(completed.state.turn, 13);
 assert.equal(completed.state.credits, 550);
 assert.equal(completed.experienceCalls, 1);
 assert.equal(completed.state.currentLocation.expeditionCompleted, true);
+assert.equal(completed.nextTurnCalls, 1);
+assert.equal(completed.activeExpeditionAtTick, null);
+assert.equal(completed.state.crew[0].expeditionFatigue, 5);
+assert.ok(completed.saveCalls >= 1);
 
 const ru = JSON.parse(
   readFileSync(new URL("../src/lib/locales/ru.json", import.meta.url), "utf8"),

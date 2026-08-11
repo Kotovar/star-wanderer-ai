@@ -41,6 +41,16 @@ export function endExpedition(
     }
 
     set((s) => ({
+        activeExpedition: null,
+        ...(completed
+            ? patchLocation(s, expedition.planetId, {
+                  expeditionCompleted: true,
+              })
+            : {}),
+    }));
+    get().nextTurn();
+
+    set((s) => ({
         crew: s.crew.map((member) => {
             if (!expedition.crewIds.includes(member.id)) return member;
             const race = RACES[member.race];
@@ -69,16 +79,6 @@ export function endExpedition(
         "warning",
     );
 
-    set((s) => ({
-        turn: s.turn + 1,
-        activeExpedition: null,
-        ...(completed
-            ? patchLocation(s, expedition.planetId, {
-                  expeditionCompleted: true,
-              })
-            : {}),
-    }));
-
     get().addLog(
         i18nStore.t(
             completed
@@ -88,6 +88,7 @@ export function endExpedition(
         "info",
     );
     get().updateShipStats();
+    get().saveGame();
     playSound(completed ? "world_discovery" : "ui_cancel");
 }
 
