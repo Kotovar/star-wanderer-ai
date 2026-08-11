@@ -469,30 +469,63 @@ export const planCrewAutomation = ({
   ).forEach(assign);
 
   const labs = activeModules.filter((module) => LAB_MODULE_TYPES.has(module.type));
+  const scannerTargets = activeModules.filter((module) => module.type === "scanner");
   if (mode === "civilian") {
-    const labScientists = unassigned("scientist");
-    selectUniqueCandidates(
-      candidatesFor(
-        labScientists,
-        labs,
-        hasActiveResearch ? "research" : null,
-        PRIORITY.role,
-        labScientists.length > labs.length,
-      ),
-    ).forEach(assign);
-  }
-  if (mode === "civilian") {
-    const scannerTargets = activeModules.filter((module) => module.type === "scanner");
-    const analyzingScientists = unassigned("scientist");
-    selectUniqueCandidates(
-      candidatesFor(
-        analyzingScientists,
-        scannerTargets,
-        "analyzing",
-        PRIORITY.role,
-        analyzingScientists.length > scannerTargets.length,
-      ),
-    ).forEach(assign);
+    const scientists = unassigned("scientist");
+    const initialScannerCandidates = candidatesFor(
+      scientists,
+      scannerTargets,
+      "analyzing",
+      PRIORITY.role,
+      scientists.length > scannerTargets.length,
+    );
+    const reserveScanner =
+      labs.length > 0 &&
+      initialScannerCandidates.length > 0 &&
+      (!hasActiveResearch || scientists.length > 1);
+
+    if (hasActiveResearch) {
+      const labScientists = reserveScanner
+        ? [...scientists].sort((left, right) => right.level - left.level).slice(0, -1)
+        : scientists;
+      selectUniqueCandidates(
+        candidatesFor(
+          labScientists,
+          labs,
+          "research",
+          PRIORITY.role,
+          labScientists.length > labs.length,
+        ),
+      ).forEach(assign);
+    }
+
+    const scannerCandidates = candidatesFor(
+      unassigned("scientist"),
+      scannerTargets,
+      "analyzing",
+      PRIORITY.role,
+      scientists.length > scannerTargets.length,
+    );
+    if (labs.length === 0) {
+      selectUniqueCandidates(scannerCandidates).forEach(assign);
+    } else if (reserveScanner) {
+      const scannerScientist = scannerCandidates
+        .sort((left, right) => right.score - left.score)[0];
+      if (scannerScientist) assign(scannerScientist);
+    }
+
+    if (!hasActiveResearch) {
+      const labScientists = unassigned("scientist");
+      selectUniqueCandidates(
+        candidatesFor(
+          labScientists,
+          labs,
+          null,
+          PRIORITY.role,
+          labScientists.length > labs.length,
+        ),
+      ).forEach(assign);
+    }
   }
   if (
     mode === "combat" &&

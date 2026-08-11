@@ -24,6 +24,16 @@ assert.equal(
   false,
   "synthetic candidates cannot receive mutations",
 );
+assert.equal(
+  syntheticTraitSets.flat().some((trait) => trait.id === "sickly"),
+  false,
+  "synthetic candidates do not receive biological Sickly traits",
+);
+assert.equal(
+  syntheticTraitSets.flat().some((trait) => trait.id === "defective"),
+  true,
+  "synthetic candidates receive Defective instead of Sickly",
+);
 
 const syntheticMembers = Array.from({ length: 200 }, (_, seed) =>
   buildCrewMember({ race: "synthetic", profession: "scientist", traits: "poor", seed }),

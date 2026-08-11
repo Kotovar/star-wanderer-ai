@@ -56,6 +56,7 @@ export type NegativeTraitId =
     | "coward"
     | "slob"
     | "sickly"
+    | "defective"
     | "greedy"
     | "bad_shot"
     | "pessimist"
@@ -240,4 +241,6 @@ export type TraitDetails = {
     forProfession?: Profession;
     /** Ограничивает выпадение трейта при найме этой расой (иначе — любая) */
     forRace?: RaceId;
+    /** Требует биологическую расу (canGetSick !== false). */
+    requiresBiology?: boolean;
 };

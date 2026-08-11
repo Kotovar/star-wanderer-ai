@@ -647,6 +647,10 @@
             "name": "Sickly",
             "description": "-15% health"
         },
+        "defective": {
+            "name": "Defective",
+            "description": "-15% health"
+        },
         "trader": {
             "name": "Trader",
             "description": "+10% to trade goods sell price"

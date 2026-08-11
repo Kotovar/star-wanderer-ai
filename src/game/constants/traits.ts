@@ -174,6 +174,16 @@ export const CREW_TRAITS: Record<
             effect: { healthPenalty: 0.15 },
             rarity: "common",
             priceMod: 0.85,
+            requiresBiology: true,
+        },
+        {
+            id: "defective",
+            name: "Дефектный",
+            desc: "-15% здоровье",
+            effect: { healthPenalty: 0.15 },
+            rarity: "common",
+            priceMod: 0.85,
+            forRace: "synthetic",
         },
         // Rare negative traits (30% chance)
         {

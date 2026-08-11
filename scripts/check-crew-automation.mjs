@@ -105,14 +105,22 @@ const decide = (crew, modules, overrides = {}) => {
 };
 
 {
+  const scannerOnlyModules = [
+    shipModule(1, "cockpit", 0, 0),
+    shipModule(2, "scanner", 1, 0),
+  ];
+  const scannerOnly = decide([crewMember(1, "scientist", 1)], scannerOnlyModules).get(1);
+  assert.equal(scannerOnly?.targetModuleId, 2, "scientist uses a scanner when no laboratory exists");
+  assert.equal(scannerOnly?.task, "analyzing", "scanner scientist analyzes by default");
+
   const modules = [
     shipModule(1, "cockpit", 0, 0),
     shipModule(2, "lab", 1, 0),
     shipModule(3, "scanner", 2, 0),
   ];
   const idle = decide([crewMember(1, "scientist", 1)], modules).get(1);
-  assert.equal(idle?.targetModuleId, 2, "idle scientist prefers a laboratory");
-  assert.equal(idle?.task, null, "idle laboratory placement does not invent research");
+  assert.equal(idle?.targetModuleId, 3, "idle scientist prefers a scanner over an idle laboratory");
+  assert.equal(idle?.task, "analyzing", "idle scientist analyzes instead of occupying an idle laboratory");
 
   const researching = decide(
     [crewMember(1, "scientist", 1)],
@@ -121,6 +129,37 @@ const decide = (crew, modules, overrides = {}) => {
   ).get(1);
   assert.equal(researching?.targetModuleId, 2, "researching scientist uses the laboratory");
   assert.equal(researching?.task, "research", "laboratory scientist researches when needed");
+
+  const idlePair = decide(
+    [crewMember(1, "scientist", 1), crewMember(2, "scientist", 1)],
+    modules,
+  );
+  assert.equal(
+    [...idlePair.values()].filter((decision) => decision.targetModuleId === 3).length,
+    1,
+    "one of two idle scientists keeps the scanner staffed",
+  );
+  assert.equal(
+    [...idlePair.values()].filter((decision) => decision.targetModuleId === 2).length,
+    1,
+    "remaining idle scientists use laboratories",
+  );
+
+  const researchingPair = decide(
+    [crewMember(1, "scientist", 1), crewMember(2, "scientist", 1)],
+    modules,
+    { hasActiveResearch: true },
+  );
+  assert.equal(
+    [...researchingPair.values()].filter((decision) => decision.targetModuleId === 3).length,
+    1,
+    "one of two researching scientists keeps the scanner staffed",
+  );
+  assert.equal(
+    [...researchingPair.values()].filter((decision) => decision.targetModuleId === 2).length,
+    1,
+    "remaining researching scientists use laboratories",
+  );
 }
 
 {

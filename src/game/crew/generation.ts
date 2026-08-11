@@ -13,9 +13,9 @@ import type {
 } from "@/game/types";
 
 const conflictingTraits: Partial<Record<TraitId, TraitId[]>> = {
-    resilient: ["sickly"],
-    invincible: ["sickly"],
-    legend: ["sickly"],
+    resilient: ["sickly", "defective"],
+    invincible: ["sickly", "defective"],
+    legend: ["sickly", "defective"],
     sharpshooter: ["bad_shot"],
     veteran: ["bad_shot"],
     trader: ["greedy"],
@@ -75,12 +75,15 @@ export const generateCrewTraits = (
         Math.abs(Math.sin(seed + offset) * 10000) % 1;
     const moraleFilter = (trait: { effect: CrewTrait["effect"] }) =>
         hasHappiness || !hasPersonalMoraleEffect(trait.effect);
+    const isBiological = !race || RACES[race]?.canGetSick !== false;
     const scopeFilter = (trait: {
         forProfession?: Profession;
         forRace?: RaceId;
+        requiresBiology?: boolean;
     }) =>
         (!trait.forProfession || trait.forProfession === profession) &&
-        (!trait.forRace || trait.forRace === race);
+        (!trait.forRace || trait.forRace === race) &&
+        (!trait.requiresBiology || isBiological);
 
     if (seededRandom(100) < positiveChance) {
         const roll = seededRandom(101);
@@ -134,8 +137,7 @@ export const generateCrewTraits = (
     }
 
     const mutationChance = MUTATION_CHANCES.HIRE_MUTATION_BY_QUALITY[quality];
-    const canMutate = !race || RACES[race]?.canGetSick !== false;
-    if (canMutate && seededRandom(300) < mutationChance) {
+    if (isBiological && seededRandom(300) < mutationChance) {
         const pool = CREW_TRAITS.mutation
             .filter(moraleFilter)
             .filter((trait) => !conflictsWithExisting(trait.id, traits));
