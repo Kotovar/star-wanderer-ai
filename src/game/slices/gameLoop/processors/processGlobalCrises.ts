@@ -81,6 +81,7 @@ export const processGlobalCrises = (
         const sectors = dropStaleCrisisOffers(s.galaxy.sectors, null);
         return {
           activeCrisis: null,
+          nextCrisisTurn: rollNextCrisisTurn(turn, s),
           ...(sectors ? { galaxy: { ...s.galaxy, sectors } } : {}),
         };
       });
@@ -140,7 +141,6 @@ export const processGlobalCrises = (
         discoveredCrisisIds: [
           ...new Set([...freshState.discoveredCrisisIds, crisis.id]),
         ],
-        nextCrisisTurn: rollNextCrisisTurn(turn, freshState),
         nextCrisisId: nextPlannedCrisis.id,
         ...(sectors ? { galaxy: { ...s.galaxy, sectors } } : {}),
       };

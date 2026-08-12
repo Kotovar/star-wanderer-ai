@@ -22,7 +22,6 @@ import { getVictoryObjectives } from "@/game/constants/victoryObjectives";
 import { RESEARCH_TREE } from "@/game/constants/research";
 import {
   pickWeightedCrisis,
-  rollNextCrisisTurn,
 } from "@/game/constants/globalCrises";
 import {
   getRunProfile,
@@ -188,7 +187,6 @@ export const restartGame = (
         discoveredCrisisIds: [
           ...new Set([...state.discoveredCrisisIds, crisis.id]),
         ],
-        nextCrisisTurn: rollNextCrisisTurn(state.turn, stateAfterStart),
         nextCrisisId: nextCrisis.id,
         ...(sectors ? { galaxy: { ...state.galaxy, sectors } } : {}),
       };

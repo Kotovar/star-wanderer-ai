@@ -37,6 +37,7 @@ import {
 import type { CombatTurnTimeline } from "@/game/types/combatCinematics";
 import {
     GLOBAL_CRISES,
+    rollNextCrisisTurn,
 } from "@/game/constants/globalCrises";
 import { getCrisisResponseChance } from "@/game/crises/escalation";
 import { getCrisisResponseDefinition } from "@/game/constants/crisisResponses";
@@ -283,7 +284,10 @@ export const createGameLoopSlice = (
         }
 
         crisis?.onEndEffect?.(set, get, activeCrisis);
-        set(() => ({ activeCrisis: null }));
+        set((s) => ({
+            activeCrisis: null,
+            nextCrisisTurn: rollNextCrisisTurn(s.turn, s),
+        }));
         const successMessage = i18nStore.t("game_logs.gameLoopSlice_6", {
             value: crisis.icon ?? "",
             value2: i18nStore.t(crisis.nameKey),

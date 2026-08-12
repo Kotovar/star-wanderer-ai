@@ -18,6 +18,9 @@ const jiti = require("jiti")(scriptPath, {
 const { GLOBAL_CRISES } = jiti(
   "../src/game/constants/globalCrises.ts",
 );
+const { processGlobalCrises } = jiti(
+  "../src/game/slices/gameLoop/processors/processGlobalCrises.ts",
+);
 
 const duration = 32;
 const crisisAt = (turnsRemaining) => ({
@@ -118,6 +121,49 @@ assert.deepEqual(
   ["error", "warning"],
   "новое заражение должно остаться разовым error-событием",
 );
+
+{
+  const state = {
+    turn: 135,
+    activeCrisis: {
+      id: "solar_flare",
+      turnsRemaining: 1,
+      data: { disabledModuleIds: [] },
+    },
+    nextCrisisTurn: 120,
+    nextCrisisId: "raider_wave",
+    discoveredCrisisIds: [],
+    galaxy: { sectors: [], nebulae: [] },
+    credits: 1000,
+    currentSector: { tier: 1 },
+    victoryTriggered: false,
+    gameVictory: false,
+    ship: {
+      modules: [],
+      tradeGoods: [],
+      fuel: 100,
+      shields: 10,
+    },
+    crew: [],
+  };
+  const set = (updater) => Object.assign(state, updater(state));
+  const get = () => ({ ...state, addLog: () => {} });
+
+  processGlobalCrises(state, set, get);
+  assert.equal(state.activeCrisis, null, "кризис должен завершиться на последнем ходе");
+  assert.ok(
+    state.nextCrisisTurn > 136,
+    "следующий кризис нельзя запускать на следующем ходу после завершения текущего",
+  );
+
+  state.turn = 136;
+  processGlobalCrises(state, set, get);
+  assert.equal(
+    state.activeCrisis,
+    null,
+    "завершившийся кризис не должен запускать новый кризис на следующем ходу",
+  );
+}
 
 for (const locale of ["ru", "en"]) {
   const catalog = JSON.parse(
