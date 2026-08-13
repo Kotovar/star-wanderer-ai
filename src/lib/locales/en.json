@@ -1028,6 +1028,12 @@
         "completion_reputation_row": "{{race}}: {{change}}",
         "completion_experience": "Crew experience",
         "completion_experience_row": "{{name}}: +{{amount}} XP",
+        "frontier": {
+            "title": "Frontier contracts",
+            "progress": "Progress: {{current}}/2",
+            "route": "Military contact: 1 jump · {{fuel}} fuel",
+            "subsidy": "Subsidy remaining: weapon bay {{weaponBay}}₢ · weapon {{weapon}}₢"
+        },
         "completed_count": "COMPLETED",
         "location_planet": "planet",
         "location_station": "station",
@@ -5714,6 +5720,7 @@
         }
     },
     "game_logs": {
+        "frontier_military_contact": "Military contact established. The station is marked in the navigator; the armament subsidy is available.",
         "cargo_jettisoned": "🗑 Jettisoned: {{name}} ×{{qty}}",
         "nebula_front_started": "🌀 The Veil of Ancient Beacons created {{count}} new nebulae. Research stations are activating a stabilizer network.",
         "nebula_front_dispersed": "🌀 Veil stabilizer activated: one nebula dispersed. Remaining: {{remaining}}.",

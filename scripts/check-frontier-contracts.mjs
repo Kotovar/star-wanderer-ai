@@ -7,7 +7,9 @@ const require = createRequire(import.meta.url);
 const scriptPath = fileURLToPath(import.meta.url);
 const root = path.resolve(path.dirname(scriptPath), "..");
 const jiti = require("jiti")(scriptPath, { alias: { "@": path.join(root, "src") } });
-const { hasCombatArmament } = jiti("../src/game/contracts/frontierContracts.ts");
+const { hasCombatArmament, getFrontierContactPatch } = jiti("../src/game/contracts/frontierContracts.ts");
+const { isKnownNavigatorTarget } = jiti("../src/game/navigator/intel.ts");
+const { STATION_CONFIG } = jiti("../src/game/galaxy/config.ts");
 const { generatePlanetContracts } = jiti("../src/game/contracts/generatePlanetContracts.ts");
 const { getContractReputationImpact } = jiti("../src/game/reputation/utils.ts");
 const { generateGalaxy } = jiti("../src/game/galaxy/generateGalaxy.ts");
@@ -17,6 +19,7 @@ const { generateStationItems } = await import("../src/game/components/station/st
 const { refreshVisitedPlanetContracts } = await import("../src/game/contracts/refreshPlanetContracts.ts");
 const { createShopSlice } = await import("../src/game/slices/shop/createShopSlice.ts");
 const { createCraftingSlice } = await import("../src/game/slices/crafting/craftingSlice.ts");
+const { createContractsSlice } = await import("../src/game/slices/contracts/contractsSlice.ts");
 
 const armedModules = [{ type: "weaponbay", weapons: [{ type: "laser" }], health: 100 }];
 
@@ -453,6 +456,114 @@ const noSlotCraft = makeStoreStub({
 });
 createCraftingSlice(noSlotCraft.set, noSlotCraft.get).installCraftedWeapon(0, 1);
 assert.equal(noSlotCraft.syncCalls(), 0, "full crafted-weapon bay must not sync");
+
+const frontierContactState = {
+  activeEffects: [],
+  artifacts: [],
+  crew: [],
+  research: { researchedTechs: [], unlockedRecipes: [] },
+  ship: { modules: [] },
+};
+const frontierLogs = [];
+const frontierSourceSector = {
+  id: 1,
+  name: "Frontier source",
+  tier: 1,
+  mapAngle: 0,
+  locations: [
+    {
+      id: "legacy-station",
+      stationId: "legacy-station",
+      type: "station",
+      name: "Legacy station",
+      stationType: "trade",
+      stationConfig: STATION_CONFIG.trade,
+    },
+  ],
+};
+const frontierFarSector = {
+  id: 2,
+  name: "Frontier far",
+  tier: 1,
+  mapAngle: 1,
+  locations: [
+    {
+      id: "far-station",
+      stationId: "far-station",
+      type: "station",
+      name: "Far station",
+      stationType: "research",
+      stationConfig: STATION_CONFIG.research,
+    },
+  ],
+};
+Object.assign(frontierContactState, {
+  galaxy: { sectors: [frontierSourceSector, frontierFarSector] },
+  currentSector: frontierSourceSector,
+  knownLocationIntel: {},
+  navigatorTargets: [],
+  frontierContractsCompleted: 0,
+  frontierChainClosed: false,
+  frontierSubsidy: null,
+  pendingContractCompletions: [],
+  addLog: (message) => frontierLogs.push(message),
+});
+const setFrontierContactState = (update) => {
+  const next = typeof update === "function"
+    ? update(frontierContactState)
+    : update;
+  if (next) Object.assign(frontierContactState, next);
+};
+Object.assign(
+  frontierContactState,
+  createContractsSlice(setFrontierContactState, () => frontierContactState),
+);
+const frontierCompletion = (id) => ({
+  contract: {
+    id,
+    type: "delivery",
+    desc: "frontier",
+    reward: 1,
+    progressionTrack: "frontier",
+  },
+  credits: 1,
+  reputationChanges: [],
+  experience: [],
+});
+frontierContactState.showContractCompletion(frontierCompletion("frontier-1"));
+frontierContactState.showContractCompletion(frontierCompletion("frontier-2"));
+assert.equal(frontierContactState.frontierContractsCompleted, 2);
+assert.equal(frontierContactState.frontierChainClosed, true);
+assert.equal(frontierContactState.frontierSubsidy?.weaponBayAvailable, true);
+assert.equal(frontierContactState.frontierSubsidy?.weaponAvailable, true);
+assert.equal(frontierContactState.navigatorTargets.length, 1);
+assert.equal(frontierLogs.length, 1);
+assert.equal(
+  isKnownNavigatorTarget(
+    frontierContactState.navigatorTargets[0],
+    frontierContactState.knownLocationIntel,
+  ),
+  true,
+);
+const contactedStation = frontierContactState.galaxy.sectors
+  .flatMap((sector) => sector.locations)
+  .find((location) => location.id === "legacy-station");
+assert.equal(contactedStation?.stationType, "military");
+assert.deepEqual(contactedStation?.stationConfig, STATION_CONFIG.military);
+const contactInventory = generateStationItems(
+  contactedStation.stationId,
+  1,
+  contactedStation.stationConfig,
+);
+assert.ok(contactInventory.some((item) => item.moduleType === "weaponbay"));
+assert.ok(contactInventory.some((item) => item.weaponType === "kinetic"));
+assert.ok(contactInventory.some((item) => item.weaponType === "laser"));
+frontierContactState.frontierSubsidy.weaponBayAvailable = false;
+frontierContactState.showContractCompletion(frontierCompletion("frontier-2"));
+assert.equal(frontierContactState.navigatorTargets.length, 1);
+assert.equal(frontierContactState.frontierSubsidy.weaponBayAvailable, false);
+assert.equal(frontierLogs.length, 1);
+assert.equal(getFrontierContactPatch(frontierContactState), null);
 
 for (let run = 0; run < 16; run += 1) {
   const militaryStations = generateGalaxy()

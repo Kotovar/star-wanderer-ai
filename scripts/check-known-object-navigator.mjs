@@ -71,6 +71,7 @@ const {
   collectNavigatorIntel,
   getNavigatorLocationKey,
   getVisibleNavigatorTargetIds,
+  isKnownNavigatorTarget,
 } = await import("../src/game/navigator/intel.ts");
 const {
   getGalaxyMapObjectives,
@@ -640,6 +641,33 @@ const hiddenGalaxyNavigatorObjectives = getGalaxyMapObjectives({
 assert.equal(
   hiddenGalaxyNavigatorObjectives.some(({ kind }) => kind === "navigator"),
   false,
+);
+const frontierContactTarget = { sectorId: 10, locationId: "hidden" };
+const frontierContactIntel = {
+  [getNavigatorLocationKey(10, "hidden")]: {
+    sectorId: 10,
+    locationId: "hidden",
+    highestScanRange: 0,
+    visited: false,
+  },
+};
+assert.equal(
+  isKnownNavigatorTarget(frontierContactTarget, frontierContactIntel),
+  true,
+  "A contact target must be known by its exact identity without a fake scan result",
+);
+assert.ok(
+  getGalaxyMapObjectives({
+    sectors: navigatorSectors,
+    activeContracts: [],
+    artifacts: [],
+    completedLocations: [],
+    runProfileArcTarget: null,
+    runProfileArcRewardClaimed: false,
+    bossesVisible: false,
+    knownLocationIntel: frontierContactIntel,
+    navigatorTargets: [frontierContactTarget],
+  }).some(({ kind, sectorId }) => kind === "navigator" && sectorId === 10),
 );
 const navigatorInput = {
   galaxy: { sectors: navigatorSectors },

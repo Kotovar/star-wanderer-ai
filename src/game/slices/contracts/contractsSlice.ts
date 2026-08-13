@@ -17,6 +17,7 @@ import {
 import { refreshVisitedPlanetContracts } from "@/game/contracts/refreshPlanetContracts";
 import {
     FRONTIER_CONTRACT_TARGET,
+    getFrontierContactPatch,
     hasCombatArmament,
 } from "@/game/contracts/frontierContracts";
 
@@ -93,6 +94,36 @@ export const createContractsSlice = (
     get: () => GameStore,
 ): ContractsSlice => ({
     showContractCompletion: (completion) => {
+        const current = get();
+        const isFrontierCompletion =
+            completion.contract.progressionTrack === "frontier" &&
+            !current.frontierChainClosed;
+        const frontierContractsCompleted = isFrontierCompletion
+            ? current.frontierContractsCompleted + 1
+            : current.frontierContractsCompleted;
+        const frontierChainClosed =
+            current.frontierChainClosed ||
+            frontierContractsCompleted >= FRONTIER_CONTRACT_TARGET;
+        const contactPatch =
+            isFrontierCompletion &&
+            frontierContractsCompleted === FRONTIER_CONTRACT_TARGET
+                ? getFrontierContactPatch({
+                      ...current,
+                      frontierContractsCompleted,
+                      frontierChainClosed,
+                  })
+                : null;
+
+        if (isFrontierCompletion) {
+            set(() => ({
+                frontierContractsCompleted,
+                frontierChainClosed,
+                ...(contactPatch ?? {}),
+            }));
+        }
+        if (contactPatch) {
+            get().addLog(i18nStore.t("game_logs.frontier_military_contact"), "info");
+        }
         set((state) => ({
             pendingContractCompletions: [
                 ...state.pendingContractCompletions,

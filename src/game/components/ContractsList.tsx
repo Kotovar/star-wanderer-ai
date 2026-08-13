@@ -20,6 +20,7 @@ import { RaceSprite } from "./RaceSprite";
 import { ContractReputationImpact } from "./ContractReputationImpact";
 import { getContractReputationImpact } from "@/game/reputation/utils";
 import { getContractTurnsRemaining } from "@/game/contracts/contractDeadline";
+import { calculateFuelCostForUI } from "@/game/slices/travel/helpers/calculateFuelCost";
 import {
     formatResearchTechRequirement,
 } from "@/game/contracts/formatContractDescription";
@@ -99,6 +100,12 @@ export function ContractsList() {
     const completedContractIds = useGameStore((s) => s.completedContractIds);
     const cancelContract = useGameStore((s) => s.cancelContract);
     const turn = useGameStore((s) => s.turn);
+    const frontierContractsCompleted = useGameStore(
+        (s) => s.frontierContractsCompleted,
+    );
+    const frontierChainClosed = useGameStore((s) => s.frontierChainClosed);
+    const frontierSubsidy = useGameStore((s) => s.frontierSubsidy);
+    const galaxy = useGameStore((s) => s.galaxy);
     const get = useGameStore.getState;
     const addLog = useGameStore((s) => s.addLog);
     const { t } = useTranslation();
@@ -112,7 +119,28 @@ export function ContractsList() {
         null,
     );
 
-    if (activeContracts.length === 0) {
+    const frontierStation = frontierSubsidy
+        ? galaxy.sectors
+              .flatMap((sector) =>
+                  sector.locations.map((location) => ({ sector, location })),
+              )
+              .find(
+                  ({ location }) =>
+                      (location.stationId ?? location.id) ===
+                      frontierSubsidy.targetStationId,
+              )
+        : null;
+    const frontierFuelCost = frontierStation
+        ? calculateFuelCostForUI(get(), frontierStation.sector.id).fuelCost
+        : null;
+    const showFrontierCard =
+        !frontierChainClosed ||
+        !!(
+            frontierSubsidy &&
+            (frontierSubsidy.weaponBayAvailable || frontierSubsidy.weaponAvailable)
+        );
+
+    if (activeContracts.length === 0 && !showFrontierCard) {
         return (
             <div className="border border-[#333] bg-[rgba(255,255,255,0.025)] p-3 text-xs text-[#888]">
                 <div className="text-accent font-bold uppercase tracking-wide mb-1">
@@ -1001,6 +1029,37 @@ export function ContractsList() {
             </div>
 
             <div className="flex flex-col gap-2">
+                {showFrontierCard && (
+                    <div className="border border-[#00d4ff66] bg-[rgba(0,212,255,0.055)] p-2.5 text-xs">
+                        <div className="text-ring font-bold uppercase tracking-wide">
+                            {t("contracts.frontier.title")}
+                        </div>
+                        {!frontierSubsidy ? (
+                            <div className="mt-1 text-[#99aa99]">
+                                {t("contracts.frontier.progress", {
+                                    current: Math.min(frontierContractsCompleted, 2),
+                                })}
+                            </div>
+                        ) : frontierStation ? (
+                            <div className="mt-1 space-y-1 text-[#99aa99]">
+                                <div className="text-[#00ff41]">
+                                    {getLocationName(frontierStation.location.name, t)} · {getLocationName(frontierStation.sector.name, t)}
+                                </div>
+                                <div>
+                                    {t("contracts.frontier.route", {
+                                        fuel: frontierFuelCost ?? 0,
+                                    })}
+                                </div>
+                                <div>
+                                    {t("contracts.frontier.subsidy", {
+                                        weaponBay: frontierSubsidy.weaponBayAvailable ? 200 : 0,
+                                        weapon: frontierSubsidy.weaponAvailable ? 300 : 0,
+                                    })}
+                                </div>
+                            </div>
+                        ) : null}
+                    </div>
+                )}
                 {activeContracts.map((contract) => {
                     const progress = getProgress(contract);
                     const ready = isContractReady(contract);

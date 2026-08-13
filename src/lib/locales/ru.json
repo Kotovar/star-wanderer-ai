@@ -1028,6 +1028,12 @@
         "completion_reputation_row": "{{race}}: {{change}}",
         "completion_experience": "Опыт экипажа",
         "completion_experience_row": "{{name}}: +{{amount}} опыта",
+        "frontier": {
+            "title": "Контракты дальнего рубежа",
+            "progress": "Прогресс: {{current}}/2",
+            "route": "Военный контакт: 1 прыжок · {{fuel}} топлива",
+            "subsidy": "Остаток субсидии: оружейная палуба {{weaponBay}}₢ · оружие {{weapon}}₢"
+        },
         "completed_count": "ВЫПОЛНЕНО",
         "location_planet": "планете",
         "location_station": "станции",
@@ -5714,6 +5720,7 @@
         }
     },
     "game_logs": {
+        "frontier_military_contact": "Военный контакт установлен. Станция отмечена в навигаторе; субсидия на вооружение доступна.",
         "cargo_jettisoned": "🗑 Выброшено за борт: {{name}} ×{{qty}}",
         "nebula_front_started": "🌀 Завеса древних маяков создала {{count}} новые туманности. Исследовательские станции запускают сеть стабилизаторов.",
         "nebula_front_dispersed": "🌀 Стабилизатор Завесы сработал: туманность рассеяна. Осталось: {{remaining}}.",
