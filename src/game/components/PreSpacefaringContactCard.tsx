@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { getPreSpacefaringCivilization } from "@/game/constants";
 import {
     getPreSpacefaringContactActionBlocker,
+    getPreSpacefaringContactSummary,
 } from "@/game/slices/locations/helpers/preSpacefaringContact";
 import { useGameStore } from "@/game/store";
-import type { Location } from "@/game/types";
+import type { Location, PreSpacefaringAction } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
 
 export function PreSpacefaringContactCard({ location }: { location: Location }) {
@@ -30,6 +31,44 @@ export function PreSpacefaringContactCard({ location }: { location: Location }) 
             : civilization.actions.filter(
                   (action) => action.step === contact.step,
               );
+    const contactSummary = getPreSpacefaringContactSummary(
+        civilization.id,
+        contact.actionHistory,
+    );
+    const completedActions = contactSummary.actionIds.flatMap((actionId) => {
+        const action = civilization.actions.find(
+            (entry) => entry.id === actionId,
+        );
+        return action ? [action] : [];
+    });
+    const formatActionEffect = (action: PreSpacefaringAction) =>
+        [
+            action.requiredGood
+                ? t("pre_spacefaring.summary_spent", {
+                      value: `${action.requiredGood.quantity} × ${t(`trade.goods.${action.requiredGood.id}`)}`,
+                  })
+                : null,
+            t("pre_spacefaring.summary_received", {
+                value: action.reward.researchResources
+                    .map(
+                        (reward) =>
+                            `+${reward.quantity} ${t(`blueprints.resources.${reward.type}`)}`,
+                    )
+                    .join(", "),
+            }),
+            t("pre_spacefaring.summary_turns", { count: 1 }),
+        ]
+            .filter((effect): effect is string => effect !== null)
+            .join(" · ");
+    const spentTotals = Object.entries(contactSummary.goodsSpent)
+        .map(([good, quantity]) => `${quantity} × ${t(`trade.goods.${good}`)}`)
+        .join(", ");
+    const receivedTotals = Object.entries(contactSummary.researchReceived)
+        .map(
+            ([resource, quantity]) =>
+                `+${quantity} ${t(`blueprints.resources.${resource}`)}`,
+        )
+        .join(", ");
 
     return (
         <div className="border border-[#00d4ff66] bg-[rgba(0,212,255,0.04)] p-3">
@@ -45,8 +84,58 @@ export function PreSpacefaringContactCard({ location }: { location: Location }) 
             </div>
 
             {contact.step === 3 ? (
-                <div className="mt-1 text-xs text-[#b9c6cc]">
-                    {t(`pre_spacefaring.outcomes.${contact.outcome}`)}
+                <div className="mt-3 space-y-3 text-xs text-[#b9c6cc]">
+                    <div>{t(`pre_spacefaring.outcomes.${contact.outcome}`)}</div>
+                    {contact.actionHistory === undefined ? (
+                        <div className="text-[#ffb000]">
+                            {t(
+                                "pre_spacefaring.legacy_history_unavailable",
+                            )}
+                        </div>
+                    ) : (
+                        <div className="space-y-2 border-t border-[#00d4ff33] pt-2">
+                            <div className="font-['Orbitron'] text-[10px] font-bold uppercase tracking-wider text-[#00d4ff]">
+                                {t("pre_spacefaring.summary_title")}
+                            </div>
+                            <ol className="space-y-1">
+                                {completedActions.map((action, index) => (
+                                    <li key={`${action.id}-${index}`}>
+                                        <div className="text-[#d9eef5]">
+                                            {index + 1}.{" "}
+                                            {t(
+                                                `pre_spacefaring.actions.${action.id}`,
+                                            )}
+                                        </div>
+                                        <div className="text-[10px] text-[#8faab5]">
+                                            {formatActionEffect(action)}
+                                        </div>
+                                    </li>
+                                ))}
+                            </ol>
+                            <div className="space-y-1 border-t border-[#00d4ff22] pt-2 text-[10px] text-[#b9c6cc]">
+                                {spentTotals && (
+                                    <div>
+                                        {t("pre_spacefaring.summary_spent", {
+                                            value: spentTotals,
+                                        })}
+                                    </div>
+                                )}
+                                <div>
+                                    {t("pre_spacefaring.summary_received", {
+                                        value: receivedTotals,
+                                    })}
+                                </div>
+                                <div>
+                                    {t("pre_spacefaring.summary_turns", {
+                                        count: contactSummary.turnsSpent,
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div className="border-t border-[#00d4ff22] pt-2 text-[10px] text-[#8faab5]">
+                        {t("pre_spacefaring.summary_permanent_effect")}
+                    </div>
                 </div>
             ) : (
                 <div className="mt-3 space-y-2">
@@ -77,6 +166,9 @@ export function PreSpacefaringContactCard({ location }: { location: Location }) 
                                         `pre_spacefaring.actions.${action.id}`,
                                     )}
                                 </Button>
+                                <div className="mt-1 text-[10px] text-[#8faab5]">
+                                    {formatActionEffect(action)}
+                                </div>
                                 {blocker && (
                                     <div className="mt-1 text-[10px] text-[#ffb000]">
                                         {t(

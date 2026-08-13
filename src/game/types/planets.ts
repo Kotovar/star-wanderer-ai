@@ -25,6 +25,7 @@ export interface PreSpacefaringSettlementCandidate
 export interface PreSpacefaringContact extends PreSpacefaringSettlementSite {
     step: PreSpacefaringContactStep;
     outcome?: PreSpacefaringOutcome;
+    actionHistory?: string[];
 }
 
 export interface PreSpacefaringAction {

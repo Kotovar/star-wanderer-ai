@@ -134,7 +134,10 @@ registerHooks({
   },
 });
 
-const { advancePreSpacefaringContact } = await import(
+const {
+  advancePreSpacefaringContact,
+  getPreSpacefaringContactSummary,
+} = await import(
   "../src/game/slices/locations/helpers/preSpacefaringContact.ts",
 );
 
@@ -247,6 +250,7 @@ assert.deepEqual(state.currentLocation.preSpacefaringContact, {
   civilizationId: "river_clans",
   development: "primitive",
   step: 0,
+  actionHistory: [],
 });
 assert.deepEqual(
   state.activeExpedition.pendingPreSpacefaringDiscovery,
@@ -276,6 +280,7 @@ const makeContactState = (civilization) => {
       civilizationId: civilization.id,
       development: civilization.development,
       step: 0,
+      actionHistory: [],
     },
   };
   const sector = { id: 1, locations: [contactPlanet] };
@@ -358,6 +363,10 @@ for (const civilization of PRE_SPACEFARING_CIVILIZATIONS) {
   );
   assert.equal(nextTurnCalls, 3);
   assert.equal(saveCalls, 3);
+  assert.deepEqual(
+    contactState.currentLocation.preSpacefaringContact.actionHistory,
+    [observation.id, help.id, boundary.id],
+  );
 
   const completedSnapshot = JSON.stringify({
     turn: contactState.turn,
@@ -382,6 +391,27 @@ for (const civilization of PRE_SPACEFARING_CIVILIZATIONS) {
     completedSnapshot,
   );
 }
+
+const riverSummary = getPreSpacefaringContactSummary("river_clans", [
+  "observe_starlight",
+  "leave_food",
+  "partner_with_clans",
+]);
+assert.deepEqual(riverSummary.actionIds, [
+  "observe_starlight",
+  "leave_food",
+  "partner_with_clans",
+]);
+assert.deepEqual(riverSummary.goodsSpent, { food: 2 });
+assert.deepEqual(riverSummary.researchReceived, {
+  alien_biology: 3,
+  ancient_data: 2,
+});
+assert.equal(riverSummary.turnsSpent, 3);
+assert.deepEqual(
+  getPreSpacefaringContactSummary("river_clans", undefined).actionIds,
+  [],
+);
 
 const makeHarness = (harnessState) => {
   let nextTurnCalls = 0;
@@ -432,6 +462,22 @@ const otherObservation = PRE_SPACEFARING_CIVILIZATIONS[1].actions.find(
 assert.ok(firstHelp);
 assert.ok(firstObservation);
 assert.ok(otherObservation);
+
+const legacyHistoryState = makeContactState(firstCulture);
+delete legacyHistoryState.currentLocation.preSpacefaringContact.actionHistory;
+const legacyHistory = makeHarness(legacyHistoryState);
+advancePreSpacefaringContact(
+  legacyHistoryState.currentLocation.id,
+  firstObservation.id,
+  0,
+  legacyHistory.set,
+  legacyHistory.get,
+);
+assert.equal(
+  legacyHistoryState.currentLocation.preSpacefaringContact.actionHistory,
+  undefined,
+);
+assert.equal(legacyHistory.nextTurnCalls(), 1);
 
 const assertBlockedActionIsNoop = (
   blockedState,
@@ -489,9 +535,23 @@ const contactBlockers = [
   "base_present",
   "missing_goods",
 ];
+const contactSummaryKeys = [
+  "summary_title",
+  "summary_spent",
+  "summary_received",
+  "summary_turns",
+  "summary_permanent_effect",
+  "legacy_history_unavailable",
+];
 
 for (const { language, catalog } of translations) {
   assert.ok(catalog.pre_spacefaring.title, `${language}: contact title`);
+  for (const key of contactSummaryKeys) {
+    assert.ok(
+      catalog.pre_spacefaring[key],
+      `${language}: contact summary ${key}`,
+    );
+  }
   for (const civilization of PRE_SPACEFARING_CIVILIZATIONS) {
     assert.ok(
       catalog.pre_spacefaring.development[civilization.development],
@@ -544,6 +604,13 @@ const emptyPlanetPanelSource = readFileSync(
 );
 assert.match(emptyPlanetPanelSource, /PreSpacefaringContactCard/);
 assert.match(emptyPlanetPanelSource, /currentLocation\.preSpacefaringContact/);
+
+const contactCardSource = readFileSync(
+  resolve("src/game/components/PreSpacefaringContactCard.tsx"),
+  "utf8",
+);
+assert.match(contactCardSource, /contact\.actionHistory/);
+assert.match(contactCardSource, /pre_spacefaring\.summary_title/);
 
 const explorationPanelSource = readFileSync(
   resolve("src/game/components/PlanetExplorationPanel.tsx"),

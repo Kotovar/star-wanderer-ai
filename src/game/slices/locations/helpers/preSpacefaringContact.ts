@@ -1,9 +1,11 @@
 import { getPreSpacefaringCivilization } from "@/game/constants";
 import type {
     GameStore,
+    Goods,
     Location,
     Outpost,
     PreSpacefaringActionStep,
+    ResearchResourceType,
     SetState,
     TradeGood,
 } from "@/game/types";
@@ -18,6 +20,48 @@ export type PreSpacefaringContactActionBlocker =
     | "invalid_action"
     | "base_present"
     | "missing_goods";
+
+export interface PreSpacefaringContactSummary {
+    actionIds: string[];
+    goodsSpent: Partial<Record<Goods, number>>;
+    researchReceived: Partial<Record<ResearchResourceType, number>>;
+    turnsSpent: number;
+}
+
+export function getPreSpacefaringContactSummary(
+    civilizationId: string,
+    actionHistory: string[] | undefined,
+): PreSpacefaringContactSummary {
+    const civilization = getPreSpacefaringCivilization(civilizationId);
+    const actions = (actionHistory ?? []).flatMap((actionId) => {
+        const action = civilization?.actions.find(
+            (entry) => entry.id === actionId,
+        );
+        return action ? [action] : [];
+    });
+    const goodsSpent: Partial<Record<Goods, number>> = {};
+    const researchReceived: Partial<Record<ResearchResourceType, number>> =
+        {};
+
+    for (const action of actions) {
+        if (action.requiredGood) {
+            goodsSpent[action.requiredGood.id] =
+                (goodsSpent[action.requiredGood.id] ?? 0) +
+                action.requiredGood.quantity;
+        }
+        for (const reward of action.reward.researchResources) {
+            researchReceived[reward.type] =
+                (researchReceived[reward.type] ?? 0) + reward.quantity;
+        }
+    }
+
+    return {
+        actionIds: actions.map((action) => action.id),
+        goodsSpent,
+        researchReceived,
+        turnsSpent: actions.length,
+    };
+}
 
 const hasRequiredGood = (
     goods: TradeGood[],
@@ -140,6 +184,14 @@ export function advancePreSpacefaringContact(
                 ...contact,
                 step: nextStep,
                 outcome: action.outcome,
+                ...(contact.actionHistory === undefined
+                    ? {}
+                    : {
+                          actionHistory: [
+                              ...contact.actionHistory,
+                              action.id,
+                          ],
+                      }),
             },
         }),
     }));

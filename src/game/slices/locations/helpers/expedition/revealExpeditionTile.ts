@@ -213,6 +213,7 @@ export function revealExpeditionTile(
                 civilizationId: site.civilizationId,
                 development: site.development,
                 step: 0 as const,
+                actionHistory: [],
             };
             set((draft) => ({
                 ...patchLocation(draft, expedition.planetId, {

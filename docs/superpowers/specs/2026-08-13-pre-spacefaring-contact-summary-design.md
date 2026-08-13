@@ -7,7 +7,7 @@ Make the local-contact choices understandable: show the immediate cost and rewar
 ## Scope
 
 - Add an optional `actionHistory?: string[]` to `PreSpacefaringContact`.
-- Append the validated catalog action ID only after each successful contact action.
+- Give newly discovered contacts an empty history, then append the validated catalog action ID after each successful contact action.
 - In `PreSpacefaringContactCard`, show each available action's cargo cost (when present), research reward, and one-turn cost.
 - After completion, show the selected action labels, per-action effects, aggregate cargo spent, aggregate research received, and turns spent.
 - State explicitly that the outcome is a local story outcome, not an ongoing economic or faction bonus; the discovered settlement still prevents a base on that planet.
@@ -15,7 +15,7 @@ Make the local-contact choices understandable: show the immediate cost and rewar
 
 ## Data and Compatibility
 
-Action IDs are validated against the static civilization catalog before mutation, so persisting their strings adds no new source of truth. The field is optional: no save migration or state-version change is needed, and old saves remain readable. No history is inferred for older contacts because their middle contact decision cannot be recovered reliably.
+Action IDs are validated against the static civilization catalog before mutation, so persisting their strings adds no new source of truth. Newly discovered contacts start with `actionHistory: []`; only those contacts append IDs. The field is optional: no save migration or state-version change is needed, and older saves remain readable. Older in-progress and completed contacts keep an absent field rather than accumulating a partial history, because their earlier decisions cannot be recovered reliably.
 
 ## UI
 
@@ -23,4 +23,4 @@ The existing local-contact card remains the only surface. It receives compact co
 
 ## Verification
 
-The focused civilization script will prove that three successful actions persist their IDs in order and that invalid actions do not append history. It will also ensure the card source includes the summary and legacy-history paths. Type-check and lint remain required.
+The focused civilization script will prove that discovery initializes a new history, three successful actions persist IDs in order, and invalid or legacy actions do not append history. It will also ensure the card source includes the summary and legacy-history paths. Type-check and lint remain required.

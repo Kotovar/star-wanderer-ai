@@ -5790,6 +5790,12 @@
             "assisted": "The civilization receives limited assistance.",
             "partnered": "The civilization becomes a local partner."
         },
+        "summary_title": "CONTACT SUMMARY",
+        "summary_spent": "Spent: {{value}}",
+        "summary_received": "Received: {{value}}",
+        "summary_turns": "Turns spent: {{count}}",
+        "summary_permanent_effect": "Permanent effect: choices grant only their already received one-time resources; a base cannot be built on this planet.",
+        "legacy_history_unavailable": "This contact was completed before decision history was recorded. Its earlier rewards cannot be reconstructed exactly.",
         "blocked": {
             "wrong_location": "Return to this planet to continue contact.",
             "no_contact": "No local contact is recorded here.",
