@@ -477,8 +477,17 @@ assert.deepEqual(
   { price: 300, discount: 200 },
 );
 assert.deepEqual(
+  getFrontierSubsidyPrice(
+    targetState,
+    { ...weaponBay, price: 300 },
+    targetStationId,
+  ),
+  { price: 300, discount: 0 },
+  "a station discount tied with the subsidy must not display a voucher discount",
+);
+assert.deepEqual(
   getFrontierSubsidyPrice(targetState, laser, targetStationId),
-  { price: 0, discount: 300 },
+  { price: 0, discount: 255 },
 );
 assert.equal(
   getFrontierSubsidyPrice(targetState, laser, wrongStationId).discount,

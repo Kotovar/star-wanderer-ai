@@ -156,7 +156,7 @@ const subsidizedShopMarkup = renderToStaticMarkup(
   }),
 );
 assert.ok(
-  subsidizedShopMarkup.includes("Субсидия дальнего рубежа: −300₢"),
+  subsidizedShopMarkup.includes("Субсидия дальнего рубежа: −255₢"),
   "магазин обязан показывать применённую субсидию",
 );
 assert.ok(

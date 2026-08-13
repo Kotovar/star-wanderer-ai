@@ -44,7 +44,7 @@ export const getFrontierSubsidyPrice = (
 
   const subsidizedPrice = Math.max(0, (item.basePrice ?? item.price) - amount);
   const price = Math.min(item.price, subsidizedPrice);
-  return { price, discount: price === subsidizedPrice ? amount : 0 };
+  return { price, discount: item.price - price };
 };
 
 type StationCandidate = {
