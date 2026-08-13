@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -166,11 +167,26 @@ assert.deepEqual(
     [
       {
         id: "valid",
+        type: "delivery",
         factionDelivery: { localRace: "synthetic", context: "relief" },
       },
     ],
   ),
   { contractId: "valid" },
+);
+assert.equal(
+  getValidPendingContractDecision(
+    { contractId: "wrong-type" },
+    [
+      {
+        id: "wrong-type",
+        type: "combat",
+        factionDelivery: { localRace: "synthetic", context: "relief" },
+      },
+    ],
+  ),
+  null,
+  "metadata on a non-delivery contract must not reopen a faction decision",
 );
 assert.equal(
   getValidPendingContractDecision({ contractId: "stale" }, []),
@@ -363,5 +379,33 @@ assert.equal(
   null,
   "a stale decision must be cleared when loading a manual slot",
 );
+
+const modalSource = readFileSync(
+  new URL("../src/game/components/FactionDeliveryDecisionModal.tsx", import.meta.url),
+  "utf8",
+);
+const pageSource = readFileSync(
+  new URL("../src/app/page.tsx", import.meta.url),
+  "utf8",
+);
+const ru = JSON.parse(
+  readFileSync(new URL("../src/lib/locales/ru.json", import.meta.url), "utf8"),
+);
+const en = JSON.parse(
+  readFileSync(new URL("../src/lib/locales/en.json", import.meta.url), "utf8"),
+);
+
+assert.match(modalSource, /showCloseButton={false}/);
+assert.match(modalSource, /onEscapeKeyDown={[\s\S]*preventDefault/);
+assert.match(modalSource, /onInteractOutside={[\s\S]*preventDefault/);
+assert.match(modalSource, /resolveFactionDeliveryDecision\("issuer"/);
+assert.match(modalSource, /resolveFactionDeliveryDecision\("local"/);
+assert.match(pageSource, /FactionDeliveryDecisionModal/);
+assert.equal(ru.contracts.faction_delivery.issuer_action, "Выполнить хартию");
+assert.equal(ru.contracts.faction_delivery.local_action, "Передать местным");
+assert.equal(en.contracts.faction_delivery.issuer_action, "Honor the charter");
+assert.equal(en.contracts.faction_delivery.local_action, "Hand it to the locals");
+assert.match(ru.contracts.faction_delivery.local_outcome, /65%[\s\S]*\+4[\s\S]*-4/);
+assert.match(en.contracts.faction_delivery.local_outcome, /65%[\s\S]*\+4[\s\S]*-4/);
 
 console.log("faction delivery choice checks passed");

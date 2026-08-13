@@ -1028,6 +1028,22 @@
         "completion_reputation_row": "{{race}}: {{change}}",
         "completion_experience": "Опыт экипажа",
         "completion_experience_row": "{{name}}: +{{amount}} опыта",
+        "faction_delivery": {
+            "title": "Спор о грузе",
+            "description": "{{localRace}} требуют передать {{cargo}} им, а не {{sourceRace}}. Решите, кому достанется груз.",
+            "context": {
+                "relief": "Аварийные службы поселения запрашивают {{cargo}} немедленно.",
+                "reconstruction": "Местные инженеры просят {{cargo}} для восстановления после прежних потерь.",
+                "research_access": "Научный совет считает {{cargo}} общим достоянием системы.",
+                "diplomatic_claim": "Местные власти оспаривают право {{sourceRace}} распоряжаться этим грузом."
+            },
+            "issuer_title": "Исходному заказчику",
+            "local_title": "Местным жителям",
+            "issuer_outcome": "Полная выплата: {{reward}}₢ · +2 {{sourceRace}}",
+            "local_outcome": "65% выплаты: {{reward}}₢ · +4 {{localRace}} · -4 {{sourceRace}}",
+            "issuer_action": "Выполнить хартию",
+            "local_action": "Передать местным"
+        },
         "frontier": {
             "title": "Контракты дальнего рубежа",
             "progress": "Прогресс: {{current}}/2",
@@ -5883,6 +5899,8 @@
         "cancelContract_1": "Задача отменёна: {{value}}",
         "checkContractExpiry_1": "⌛ Задание провалено: {{value}} — время истекло",
         "completeDeliveryContract_1": "Задача выполнена! +{{reward}}₢",
+        "faction_delivery_issuer": "Хартия исполнена: груз передан {{sourceRace}}. +{{reward}}₢",
+        "faction_delivery_local": "Груз передан местным: {{localRace}} получают его вместо {{sourceRace}}. +{{reward}}₢",
         "completeScanContracts_1": "📡 Контракт выполнен: {{desc}} +{{reward}}₢",
         "handleDiplomacyContracts_1": "Дипломатическая миссия выполнена! +{{reward}}₢",
         "handleExpeditionSurveyContracts_1": "🗺️ Контракт выполнен: планетарное исследование сдано +{{reward}}₢",

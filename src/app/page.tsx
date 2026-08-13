@@ -27,6 +27,13 @@ const ContractCompletionModal = dynamic(
     ),
   { ssr: false },
 );
+const FactionDeliveryDecisionModal = dynamic(
+  () =>
+    import("@/game/components/FactionDeliveryDecisionModal").then(
+      (m) => m.FactionDeliveryDecisionModal,
+    ),
+  { ssr: false },
+);
 const CrewLevelUpModal = dynamic(
   () => import("@/game/components/CrewLevelUpModal").then((m) => m.CrewLevelUpModal),
   { ssr: false },
@@ -578,6 +585,7 @@ export default function Home() {
           <RaceDiscoveryModal />
           <TechnologyDiscoveryModal />
           <SurvivorModal />
+          <FactionDeliveryDecisionModal />
           <ContractCompletionModal />
           <CrewLevelUpModal />
           <WelcomeTutorial

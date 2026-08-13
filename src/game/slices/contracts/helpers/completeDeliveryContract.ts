@@ -98,7 +98,7 @@ export const completeDeliveryContract = (
 ): void => {
     const state = get();
     const contract = state.activeContracts.find((c) => c.id === contractId);
-    if (!contract) return;
+    if (!contract || contract.type !== "delivery") return;
 
     if (contract.factionDelivery) {
         if (!isDeliveryReady(state, contract) || state.pendingContractDecision) {
@@ -125,6 +125,7 @@ export const resolveFactionDeliveryDecision = (
     );
     if (
         !contract ||
+        contract.type !== "delivery" ||
         !contract.factionDelivery ||
         !contract.sourceDominantRace ||
         !isDeliveryReady(state, contract)

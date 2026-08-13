@@ -1028,6 +1028,22 @@
         "completion_reputation_row": "{{race}}: {{change}}",
         "completion_experience": "Crew experience",
         "completion_experience_row": "{{name}}: +{{amount}} XP",
+        "faction_delivery": {
+            "title": "Cargo dispute",
+            "description": "{{localRace}} demand that {{cargo}} be handed to them instead of {{sourceRace}}. Decide who receives the cargo.",
+            "context": {
+                "relief": "The settlement's emergency services need {{cargo}} immediately.",
+                "reconstruction": "Local engineers need {{cargo}} to rebuild after earlier losses.",
+                "research_access": "The science council considers {{cargo}} a common resource of the system.",
+                "diplomatic_claim": "Local authorities dispute {{sourceRace}}'s right to direct this cargo."
+            },
+            "issuer_title": "Original issuer",
+            "local_title": "Local residents",
+            "issuer_outcome": "Full payment: {{reward}}₢ · +2 {{sourceRace}}",
+            "local_outcome": "65% payment: {{reward}}₢ · +4 {{localRace}} · -4 {{sourceRace}}",
+            "issuer_action": "Honor the charter",
+            "local_action": "Hand it to the locals"
+        },
         "frontier": {
             "title": "Frontier contracts",
             "progress": "Progress: {{current}}/2",
@@ -5883,6 +5899,8 @@
         "cancelContract_1": "Task cancelled: {{value}}",
         "checkContractExpiry_1": "⌛ Contract failed: {{value}} — time has run out",
         "completeDeliveryContract_1": "Task complete! +{{reward}}₢",
+        "faction_delivery_issuer": "Charter honored: cargo delivered to {{sourceRace}}. +{{reward}}₢",
+        "faction_delivery_local": "Cargo given to locals: {{localRace}} receive it instead of {{sourceRace}}. +{{reward}}₢",
         "completeScanContracts_1": "📡 Contract complete: {{desc}} +{{reward}}₢",
         "handleDiplomacyContracts_1": "Diplomatic mission complete! +{{reward}}₢",
         "handleExpeditionSurveyContracts_1": "🗺️ Contract complete: planetary survey delivered +{{reward}}₢",

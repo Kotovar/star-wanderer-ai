@@ -26,7 +26,9 @@ export const getValidPendingContractDecision = (
 ): PendingContractDecision | null =>
     pending && activeContracts?.some(
         (contract) =>
-            contract.id === pending.contractId && contract.factionDelivery,
+            contract.id === pending.contractId &&
+            contract.type === "delivery" &&
+            contract.factionDelivery,
     )
         ? pending
         : null;
