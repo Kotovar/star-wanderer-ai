@@ -1039,7 +1039,7 @@
             "subsidy_remaining": "−{{amount}}₢ доступно",
             "subsidy_completed": "получено",
             "bounty_friendly": "ДРУЖЕСКАЯ НАГРАДА · +{{reputation}} репутации",
-            "step_badge": "Шаг к военной станции"
+            "step_badge": "Поручение дальнего рубежа"
         },
         "completed_count": "ВЫПОЛНЕНО",
         "location_planet": "планете",

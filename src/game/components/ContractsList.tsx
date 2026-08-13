@@ -1147,16 +1147,16 @@ export function ContractsList() {
                                         <div className="text-ring font-bold text-xs leading-tight truncate">
                                             {contractName}
                                         </div>
-                                        <div className="flex flex-wrap items-center gap-1 text-[#556655] text-[9px] uppercase tracking-wider leading-tight">
-                                            <span>
-                                                {typeLabel[contract.type] ?? contract.type}
-                                            </span>
-                                            {contract.progressionTrack === "frontier" && (
-                                                <span className="border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-1 py-0.5 text-[#00d4ff]">
+                                        <div className="text-[#556655] text-[9px] uppercase tracking-wider leading-tight">
+                                            {typeLabel[contract.type] ?? contract.type}
+                                        </div>
+                                        {contract.progressionTrack === "frontier" && (
+                                            <div className="mt-1">
+                                                <span className="inline-flex border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#00d4ff]">
                                                     {t("contracts.frontier.step_badge")}
                                                 </span>
-                                            )}
-                                        </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex shrink-0 flex-wrap justify-end gap-1">

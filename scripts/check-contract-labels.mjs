@@ -407,7 +407,7 @@ setUiState({
 });
 const frontierOfferMarkup = renderToStaticMarkup(createElement(PlanetPanel));
 assert.equal(
-  frontierOfferMarkup.split("Шаг к военной станции").length - 1,
+  frontierOfferMarkup.split("Поручение дальнего рубежа").length - 1,
   1,
   "на доске только контракт дальнего рубежа должен быть явно отмечен",
 );
@@ -415,16 +415,21 @@ assert.equal(
 patchUiState({ activeContracts: [FRONTIER_DELIVERY, ORDINARY_DELIVERY] });
 const frontierActiveMarkup = renderToStaticMarkup(createElement(ContractsList));
 assert.equal(
-  frontierActiveMarkup.split("Шаг к военной станции").length - 1,
+  frontierActiveMarkup.split("Поручение дальнего рубежа").length - 1,
   1,
   "после принятия метка должна остаться только у контракта дальнего рубежа",
+);
+assert.match(
+  frontierActiveMarkup,
+  /<div class="mt-1"><span[^>]*>Поручение дальнего рубежа<\/span><\/div>/,
+  "метка дальнего рубежа должна располагаться отдельной строкой под типом задания",
 );
 
 i18nStore.changeLanguage("en");
 await new Promise((done) => setTimeout(done, 0));
 const frontierEnglishMarkup = renderToStaticMarkup(createElement(ContractsList));
 assert.equal(
-  frontierEnglishMarkup.split("Step toward the military station").length - 1,
+  frontierEnglishMarkup.split("Frontier Assignment").length - 1,
   1,
   "английская метка контракта дальнего рубежа должна быть локализована",
 );

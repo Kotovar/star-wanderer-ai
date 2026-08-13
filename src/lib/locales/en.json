@@ -1039,7 +1039,7 @@
             "subsidy_remaining": "−{{amount}}₢ available",
             "subsidy_completed": "redeemed",
             "bounty_friendly": "FRIENDLY BOUNTY · +{{reputation}} reputation",
-            "step_badge": "Step toward the military station"
+            "step_badge": "Frontier Assignment"
         },
         "completed_count": "COMPLETED",
         "location_planet": "planet",
