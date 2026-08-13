@@ -26,7 +26,7 @@ const {
 const { getBaseBlocker } = await import(
   "../src/game/slices/outposts/helpers/canBuildBase.ts"
 );
-const { getModuleBlocker } = await import(
+const { buildBase, getModuleBlocker } = await import(
   "../src/game/slices/outposts/helpers/buildBase.ts"
 );
 const { accrueOutposts } = await import(
@@ -133,6 +133,19 @@ const rich = {
 
 assert.equal(getBaseBlocker(rich, planet()), null);
 assert.equal(
+  getBaseBlocker(
+    rich,
+    planet({
+      preSpacefaringContact: {
+        civilizationId: "river_clans",
+        development: "primitive",
+        step: 0,
+      },
+    }),
+  ),
+  "settlement_discovered",
+);
+assert.equal(
   getBaseBlocker(rich, planet({ explored: false })),
   "not_explored",
   "базу можно заложить на неисследованной планете — тогда изыскания снова ни при чём",
@@ -158,6 +171,54 @@ assert.equal(
   getBaseBlocker({ ...rich, credits: 1 }, planet()),
   "not_enough_credits",
 );
+
+const basePlanet = {
+  id: "contact-base-planet",
+  name: "planet.contact_base",
+  type: "planet",
+  isEmpty: true,
+  explored: true,
+  preSpacefaringContact: {
+    civilizationId: "river_clans",
+    development: "primitive",
+    step: 0,
+  },
+};
+const baseSector = { id: 1, locations: [basePlanet] };
+const baseBuildState = {
+  turn: 30,
+  credits: BASE_COST.credits + 100,
+  research: {
+    researchedTechs: [OUTPOST_TECH_ID],
+    resources: Object.fromEntries(
+      Object.keys(RESEARCH_RESOURCES).map((key) => [key, 99]),
+    ),
+  },
+  outposts: [],
+  currentLocation: basePlanet,
+  currentSector: baseSector,
+  galaxy: { sectors: [baseSector] },
+};
+const baseSet = (update) => {
+  const next =
+    typeof update === "function" ? update(baseBuildState) : update;
+  if (next) Object.assign(baseBuildState, next);
+};
+const baseGet = () => ({
+  ...baseBuildState,
+  addLog: () => {},
+  updateShipStats: () => {},
+});
+const turnBefore = baseBuildState.turn;
+const creditsBefore = baseBuildState.credits;
+const resourcesBefore = structuredClone(baseBuildState.research.resources);
+const outpostsBefore = structuredClone(baseBuildState.outposts);
+
+buildBase(baseBuildState.currentLocation.id, baseSet, baseGet);
+assert.equal(baseBuildState.turn, turnBefore);
+assert.equal(baseBuildState.credits, creditsBefore);
+assert.deepEqual(baseBuildState.research.resources, resourcesBefore);
+assert.deepEqual(baseBuildState.outposts, outpostsBefore);
 
 // ── Модули в слотах ────────────────────────────────────────────────────────
 // Планета, у которой нет ледяных шапок — крекеру там нечего перерабатывать

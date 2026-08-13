@@ -528,6 +528,14 @@ for (const { language, catalog } of translations) {
     catalog.game_logs.pre_spacefaring_action_done,
     `${language}: completion log`,
   );
+  assert.ok(
+    catalog.outposts.blocked_settlement_discovered,
+    `${language}: base settlement blocker`,
+  );
+  assert.ok(
+    catalog.game_logs.outpost_blocked_settlement_discovered,
+    `${language}: base settlement blocker log`,
+  );
 }
 
 const emptyPlanetPanelSource = readFileSync(

@@ -110,6 +110,7 @@ export type OutpostBuildBlocker =
     | "already_built"
     | "no_deep_dive"
     | "not_explored"
+    | "settlement_discovered"
     | "wrong_location"
     | "not_enough_credits"
     | "not_enough_resources";

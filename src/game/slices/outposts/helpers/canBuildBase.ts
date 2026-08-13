@@ -25,6 +25,9 @@ export function getBaseBlocker(
         return "tech_missing";
     }
     if (!location.explored) return "not_explored";
+    if (location.preSpacefaringContact) {
+        return "settlement_discovered";
+    }
     if (state.outposts.some((outpost) => outpost.locationId === location.id)) {
         return "already_built";
     }
