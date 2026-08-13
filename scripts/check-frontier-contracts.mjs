@@ -565,6 +565,105 @@ assert.equal(frontierContactState.frontierSubsidy.weaponBayAvailable, false);
 assert.equal(frontierLogs.length, 1);
 assert.equal(getFrontierContactPatch(frontierContactState), null);
 
+const protectedShipyardSector = {
+  id: 21,
+  name: "Protected shipyard",
+  tier: 1,
+  mapAngle: 0,
+  locations: [{
+    id: "protected-shipyard",
+    stationId: "protected-shipyard",
+    type: "station",
+    name: "Protected shipyard",
+    stationType: "shipyard",
+    stationConfig: STATION_CONFIG.shipyard,
+  }],
+};
+const protectedMedicalSector = {
+  id: 22,
+  name: "Protected medical",
+  tier: 1,
+  mapAngle: 0.1,
+  locations: [{
+    id: "protected-medical",
+    stationId: "protected-medical",
+    type: "station",
+    name: "Protected medical",
+    stationType: "medical",
+    stationConfig: STATION_CONFIG.medical,
+  }],
+};
+const eligibleFallbackSector = {
+  id: 23,
+  name: "Eligible fallback",
+  tier: 1,
+  mapAngle: 1,
+  locations: [{
+    id: "eligible-fallback",
+    stationId: "eligible-fallback",
+    type: "station",
+    name: "Eligible fallback",
+    stationType: "trade",
+    stationConfig: STATION_CONFIG.trade,
+  }],
+};
+const preservedIntel = {
+  sectorId: 23,
+  locationId: "eligible-fallback",
+  highestScanRange: 4,
+  visited: true,
+};
+const serviceSafeContactPatch = getFrontierContactPatch({
+  ...frontierContactState,
+  galaxy: {
+    sectors: [
+      protectedShipyardSector,
+      protectedMedicalSector,
+      eligibleFallbackSector,
+    ],
+  },
+  currentSector: protectedShipyardSector,
+  frontierContractsCompleted: 2,
+  frontierSubsidy: null,
+  navigatorTargets: [],
+  knownLocationIntel: { "23:eligible-fallback": preservedIntel },
+});
+assert.ok(serviceSafeContactPatch);
+assert.equal(serviceSafeContactPatch.frontierSubsidy?.targetStationId, "eligible-fallback");
+assert.equal(
+  serviceSafeContactPatch.galaxy.sectors[0].locations[0].stationType,
+  "shipyard",
+  "legacy contact must not convert the nearest shipyard",
+);
+assert.equal(
+  serviceSafeContactPatch.galaxy.sectors[1].locations[0].stationType,
+  "medical",
+  "legacy contact must not convert the nearest medical station",
+);
+assert.equal(
+  serviceSafeContactPatch.galaxy.sectors[2].locations[0].stationType,
+  "military",
+);
+assert.deepEqual(
+  serviceSafeContactPatch.knownLocationIntel["23:eligible-fallback"],
+  preservedIntel,
+  "legacy contact must not downgrade already known station intel",
+);
+const noSafeFallbackPatch = getFrontierContactPatch({
+  ...frontierContactState,
+  galaxy: { sectors: [protectedShipyardSector, protectedMedicalSector] },
+  currentSector: protectedShipyardSector,
+  frontierContractsCompleted: 2,
+  frontierSubsidy: null,
+  navigatorTargets: [],
+  knownLocationIntel: {},
+});
+assert.equal(
+  noSafeFallbackPatch,
+  null,
+  "legacy contact must not replace its only shipyard or medical station",
+);
+
 for (let run = 0; run < 16; run += 1) {
   const militaryStations = generateGalaxy()
     .filter((sector) => sector.tier === 1)

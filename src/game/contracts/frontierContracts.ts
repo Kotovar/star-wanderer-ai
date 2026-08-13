@@ -64,8 +64,13 @@ export const getFrontierContactPatch = (
   const militaryCandidates = candidates.filter(
     ({ location }) => location.stationType === "military",
   );
-  const target = (militaryCandidates.length ? militaryCandidates : candidates)
-    .sort(byFuelThenSector(state))[0];
+  const fallbackCandidates = candidates.filter(
+    ({ location }) =>
+      location.stationType !== "shipyard" && location.stationType !== "medical",
+  );
+  const target = (
+    militaryCandidates.length ? militaryCandidates : fallbackCandidates
+  ).sort(byFuelThenSector(state))[0];
   if (!target) return null;
 
   const converted = militaryCandidates.length === 0;
@@ -111,12 +116,13 @@ export const getFrontierContactPatch = (
         : state.currentSector,
     knownLocationIntel: {
       ...state.knownLocationIntel,
-      [key]: {
-        sectorId: target.sector.id,
-        locationId: targetLocation.id,
-        highestScanRange: 0,
-        visited: false,
-      },
+      [key]:
+        state.knownLocationIntel[key] ?? {
+          sectorId: target.sector.id,
+          locationId: targetLocation.id,
+          highestScanRange: 0,
+          visited: false,
+        },
     },
     navigatorTargets,
     frontierSubsidy: {
