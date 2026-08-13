@@ -102,7 +102,7 @@ export const refreshVisitedPlanetContracts = (
                 (contract) =>
                     contract.type === "combat" || contract.type === "bounty",
             );
-            const combatOffer =
+            const generatedCombatOffer =
                 ensureCombatOffer && armed && !hasCombatOffer
                     ? generateCombatContract(
                           sector,
@@ -110,6 +110,13 @@ export const refreshVisitedPlanetContracts = (
                           state.galaxy.sectors,
                       )
                     : null;
+            const combatOffer =
+                generatedCombatOffer && location.dominantRace
+                    ? {
+                          ...generatedCombatOffer,
+                          sourceDominantRace: location.dominantRace,
+                      }
+                    : generatedCombatOffer;
             const replaceIndex =
                 combatOffer && remainingCapacity <= 0
                     ? openContracts.findIndex(

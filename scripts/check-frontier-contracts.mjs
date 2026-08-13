@@ -331,6 +331,11 @@ const refreshedEmptyPlanet = refreshedLocations.find((location) => location.id =
 const refreshedNoEnemyBoard = refreshedLocations.find((location) => location.id === noEnemyBoard.id);
 const refreshedExistingCombatBoard = refreshedLocations.find((location) => location.id === existingCombatBoard.id);
 assert.equal(refreshedTargetBoard.contracts.filter(isCombatOffer).length, 1);
+assert.equal(
+  refreshedTargetBoard.contracts.find(isCombatOffer).sourceDominantRace,
+  "human",
+  "forced combat offer preserves its issuer race",
+);
 assert.equal(refreshedFullBoard.contracts.length, 5);
 assert.ok(refreshedFullBoard.contracts.some((contract) => contract.isRaceQuest));
 assert.ok(refreshedFullBoard.contracts.some((contract) => contract.type === "crisis_response"));
@@ -339,6 +344,73 @@ assert.deepEqual(refreshedUnvisited.contracts, originalUnvisitedContracts);
 assert.deepEqual(refreshedEmptyPlanet.contracts, originalEmptyContracts);
 assert.deepEqual(refreshedNoEnemyBoard.contracts, originalNoEnemyContracts);
 assert.equal(refreshedExistingCombatBoard.contracts.filter(isCombatOffer).length, 1);
+
+const unarmedRefreshState = structuredClone(refreshState);
+unarmedRefreshState.ship.modules = [];
+const unarmedCombatOfferCount = unarmedRefreshState.galaxy.sectors
+  .flatMap((sector) => sector.locations)
+  .flatMap((location) => location.contracts ?? [])
+  .filter(isCombatOffer).length;
+const unarmedScheduledSectors = withRandomSequence([0.99, 0.99, 0.99], () =>
+  refreshVisitedPlanetContracts(unarmedRefreshState),
+);
+assert.ok(unarmedScheduledSectors, "scheduled refresh still rotates unarmed boards");
+assert.equal(
+  unarmedScheduledSectors
+    .flatMap((sector) => sector.locations)
+    .flatMap((location) => location.contracts ?? [])
+    .filter(isCombatOffer).length,
+  unarmedCombatOfferCount,
+  "unarmed scheduled refresh must not create combat or bounty offers",
+);
+
+const friendlyRefreshState = {
+  activeContracts: [],
+  activeCrisis: null,
+  artifacts: [],
+  completedContractIds: [],
+  completedLocations: [],
+  galaxy: {
+    sectors: [
+      {
+        id: 11,
+        name: "Friendly source sector",
+        tier: 1,
+        locations: [{
+          id: "friendly-source",
+          type: "planet",
+          name: "Friendly source",
+          planetType: "Пустынная",
+          dominantRace: "human",
+          visited: true,
+          contracts: [],
+        }],
+      },
+      {
+        id: 12,
+        name: "Friendly bounty target",
+        tier: 1,
+        locations: [{ id: "friendly-enemy", type: "enemy", threat: 2 }],
+      },
+    ],
+  },
+  raceReputation: { human: 11 },
+  research: { researchedTechs: [], unlockedRecipes: [] },
+  runProfileId: null,
+  ship: { modules: armedModules },
+  frontierChainClosed: true,
+  frontierCombatOffersSeeded: true,
+};
+const friendlyRefreshSectors = withRandomSequence([0.99, 0, 0.99, 0.55, 0, 0, 0], () =>
+  refreshVisitedPlanetContracts(friendlyRefreshState),
+);
+const friendlyRefreshBounty = friendlyRefreshSectors
+  .flatMap((sector) => sector.locations)
+  .find((location) => location.id === "friendly-source")
+  .contracts
+  .find((contract) => contract.type === "bounty");
+assert.equal(friendlyRefreshBounty?.bountyTier, "friendly");
+assert.equal(friendlyRefreshBounty?.reputationReward, 4);
 
 const makeStoreStub = (state) => {
   let syncCalls = 0;
