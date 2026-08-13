@@ -82,6 +82,39 @@ const locales = [
   JSON.parse(readFileSync(path.join(root, "src/lib/locales/ru.json"), "utf8")),
   JSON.parse(readFileSync(path.join(root, "src/lib/locales/en.json"), "utf8")),
 ];
+const { setUiState } = await import("./register-ui-loader.mjs");
+setUiState({
+  currentSector: {
+    id: 1,
+    name: "Астерион-1",
+    ruleId: "trade_lane",
+    locations: [],
+  },
+  selectLocation: () => {},
+  travelThroughBlackHole: () => {},
+  completedLocations: [],
+  getEffectiveScanRange: () => 0,
+  canScanObject: () => false,
+  syncNavigatorIntel: () => {},
+  navigatorTargets: [],
+  knownLocationIntel: {},
+  outposts: [],
+  crew: [],
+  settings: { animationsEnabled: false },
+  sectorZoom: 1,
+  sectorOffset: { x: 0, y: 0 },
+  setSectorZoom: () => {},
+  setSectorOffset: () => {},
+});
+const { createElement } = await import("react");
+const { renderToStaticMarkup } = await import("react-dom/server");
+const { SectorMap } = await import("../src/game/components/SectorMap.tsx");
+const sectorMapMarkup = renderToStaticMarkup(createElement(SectorMap));
+assert.match(
+  sectorMapMarkup,
+  /flex min-w-0 flex-col gap-1 lg:flex-row/,
+  "desktop sector overlay must put the system feature beside the sector name",
+);
 
 assert.deepEqual(Object.keys(SECTOR_RULES), ruleIds);
 // Бейдж на карте — это глиф и цвет: два одинаковых правила не отличить.

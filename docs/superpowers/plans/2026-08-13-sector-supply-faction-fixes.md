@@ -34,7 +34,7 @@
 - Produces: `GameReputation.changeReputation(raceId, amount, options?)`, where `options` is `{ excludeRippleRaceIds?: readonly RaceId[] }`.
 - Consumed later: `resolveFactionDeliveryDecision` calls the action twice with the other direct party excluded from ripple.
 
-- [ ] **Step 1: Write failing choice-regression checks**
+- [x] **Step 1: Write failing choice-regression checks**
 
   In `scripts/check-faction-delivery-choices.mjs`, add a fixture for a local human / issuer crystalline delivery that composes the real `createReputationSlice` with `createContractsSlice`. Assert these exact final values after `resolveFactionDeliveryDecision("local")`:
 
@@ -62,13 +62,13 @@
   );
   ```
 
-- [ ] **Step 2: Run the focused check and confirm RED**
+- [x] **Step 2: Run the focused check and confirm RED**
 
   Run: `npm run check:faction-delivery-choices`
 
   Expected: failure because the current two sequential reputation changes reduce people and crystalloids to `+3` and `−3`, and the pure context formatter is not exported yet.
 
-- [ ] **Step 3: Implement the minimal ripple exclusion**
+- [x] **Step 3: Implement the minimal ripple exclusion**
 
   In `src/game/types/game.ts`, define the option before `GameReputation` and make it optional:
 
@@ -106,13 +106,13 @@
 
   Export `getFactionDeliveryContextText(t, context, cargoName, sourceRaceName)` from the modal, have the modal render its return value, and pass both `cargo` and `sourceRace` to the translation. Update the two campaign/reputation documents to say that direct parties stay exact and ripple reaches only third races.
 
-- [ ] **Step 4: Run the focused check and confirm GREEN**
+- [x] **Step 4: Run the focused check and confirm GREEN**
 
   Run: `npm run check:faction-delivery-choices`
 
   Expected: `faction delivery choice checks passed` with the human/crystalline direct values exactly `+4` and `−4` and the third-race ripple assertion passing.
 
-- [ ] **Step 5: Commit Task 1**
+- [x] **Step 5: Commit Task 1**
 
   ```bash
   git add src/game/types/game.ts src/game/slices/reputation/createReputationSlice.ts src/game/slices/contracts/helpers/completeDeliveryContract.ts src/game/components/FactionDeliveryDecisionModal.tsx scripts/check-faction-delivery-choices.mjs docs/CAMPAIGN_PROGRESSION.md docs/REPUTATION_TRADEOFFS.md
@@ -130,7 +130,7 @@
 - Produces: `getSupplyRunTurnInLocation(contract, t)` and the `supply_run` details row `Где сдать`, containing only the named receiving location.
 - Consumed later: no new interface; contract detail modal renders the returned task values unchanged.
 
-- [ ] **Step 1: Write a failing turn-in formatter regression**
+- [x] **Step 1: Write a failing turn-in formatter regression**
 
   Import `getSupplyRunTurnInLocation` alongside `ContractsList` in `scripts/check-contract-labels.mjs`, then add an observable location assertion:
 
@@ -155,13 +155,13 @@
   );
   ```
 
-- [ ] **Step 2: Run the focused check and confirm RED**
+- [x] **Step 2: Run the focused check and confirm RED**
 
   Run: `npm run check:contract-labels`
 
   Expected: failure because `getSupplyRunTurnInLocation` is not exported yet.
 
-- [ ] **Step 3: Replace the mixed value with only the receiving location**
+- [x] **Step 3: Replace the mixed value with only the receiving location**
 
   Export this pure formatter near `TFunction` in `ContractsList.tsx`:
 
@@ -182,13 +182,13 @@
 
   Use it as the `task_where` value in `supply_run`. Do not add a second purchase hint or a new translation key.
 
-- [ ] **Step 4: Run the focused check and confirm GREEN**
+- [x] **Step 4: Run the focused check and confirm GREEN**
 
   Run: `npm run check:contract-labels`
 
   Expected: `Contract label checks passed`.
 
-- [ ] **Step 5: Commit Task 2**
+- [x] **Step 5: Commit Task 2**
 
   ```bash
   git add src/game/components/ContractsList.tsx scripts/check-contract-labels.mjs
@@ -206,7 +206,7 @@
 - Produces: the same sector-rule content in a responsive `lg` horizontal row and a narrow-screen vertical stack.
 - Consumed later: none; the canvas and scanner indicators retain their existing state and event handling.
 
-- [ ] **Step 1: Write a failing layout regression**
+- [x] **Step 1: Write a failing layout regression**
 
   In `scripts/check-sector-rules.mjs`, register the UI loader, render the real `SectorMap` with a `trade_lane` sector, then assert the emitted overlay markup:
 
@@ -229,13 +229,13 @@
   );
   ```
 
-- [ ] **Step 2: Run the focused check and confirm RED**
+- [x] **Step 2: Run the focused check and confirm RED**
 
   Run: `npm run check:sector-rules`
 
   Expected: failure at `desktop sector overlay must put the system feature beside the sector name`, because the current class is vertical at every breakpoint.
 
-- [ ] **Step 3: Make the existing cards responsive**
+- [x] **Step 3: Make the existing cards responsive**
 
   Change only the existing wrapper classes in `SectorMap.tsx`:
 
@@ -245,13 +245,13 @@
 
   Keep both child cards, their copy, colors, pointer-event behavior and scanner sibling intact. Add `lg:shrink-0` to the sector-name card if its width otherwise stretches the entire row.
 
-- [ ] **Step 4: Run the focused check and confirm GREEN**
+- [x] **Step 4: Run the focused check and confirm GREEN**
 
   Run: `npm run check:sector-rules`
 
   Expected: `Sector rule contract checks passed`.
 
-- [ ] **Step 5: Run the complete affected suite**
+- [x] **Step 5: Run the complete affected suite**
 
   Run:
 
@@ -261,7 +261,7 @@
 
   Expected: every command exits `0`; the build completes TypeScript checking without `ignoreBuildErrors`.
 
-- [ ] **Step 6: Commit Task 3**
+- [x] **Step 6: Commit Task 3**
 
   ```bash
   git add src/game/components/SectorMap.tsx scripts/check-sector-rules.mjs
