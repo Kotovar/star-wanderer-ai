@@ -354,4 +354,80 @@ assert.ok(
   "анализ данных Древних не должен показывать срок",
 );
 
+// ── Контракт дальнего рубежа должен быть отличим до и после принятия ───────
+const FRONTIER_DELIVERY = {
+  id: "frontier-delivery",
+  type: "delivery",
+  desc: "contracts.name_delivery",
+  reward: 100,
+  cargo: "fuel",
+  quantity: 1,
+  targetSectorName: "Меридиан-1",
+  targetLocationName: "Гелиос",
+  targetLocationType: "planet",
+  progressionTrack: "frontier",
+};
+const ORDINARY_DELIVERY = {
+  ...FRONTIER_DELIVERY,
+  id: "ordinary-delivery",
+  progressionTrack: undefined,
+};
+
+setUiState({
+  currentLocation: {
+    id: "frontier-planet",
+    type: "planet",
+    name: "Фронтир",
+    dominantRace: "human",
+    contracts: [FRONTIER_DELIVERY, ORDINARY_DELIVERY],
+  },
+  credits: 0,
+  activeContracts: [],
+  completedContractIds: [],
+  raceReputation: { human: 0 },
+  galaxy: { sectors: [] },
+  completedLocations: [],
+  artifacts: [],
+  research: { researchedTechs: [], unlockedRecipes: [] },
+  activeCrisis: null,
+  acceptContract: () => {},
+  completeDeliveryContract: () => {},
+  showSectorMap: () => {},
+  discoverRace: () => {},
+  knownRaces: ["human"],
+  ship: { cargo: [], tradeGoods: [] },
+  activeExpedition: null,
+  planetCooldowns: {},
+  frontierChainClosed: true,
+  frontierContractsCompleted: 0,
+  frontierSubsidy: null,
+  cancelContract: () => {},
+  turn: 5,
+  addLog: () => {},
+});
+const frontierOfferMarkup = renderToStaticMarkup(createElement(PlanetPanel));
+assert.equal(
+  frontierOfferMarkup.split("Шаг к военной станции").length - 1,
+  1,
+  "на доске только контракт дальнего рубежа должен быть явно отмечен",
+);
+
+patchUiState({ activeContracts: [FRONTIER_DELIVERY, ORDINARY_DELIVERY] });
+const frontierActiveMarkup = renderToStaticMarkup(createElement(ContractsList));
+assert.equal(
+  frontierActiveMarkup.split("Шаг к военной станции").length - 1,
+  1,
+  "после принятия метка должна остаться только у контракта дальнего рубежа",
+);
+
+i18nStore.changeLanguage("en");
+await new Promise((done) => setTimeout(done, 0));
+const frontierEnglishMarkup = renderToStaticMarkup(createElement(ContractsList));
+assert.equal(
+  frontierEnglishMarkup.split("Step toward the military station").length - 1,
+  1,
+  "английская метка контракта дальнего рубежа должна быть локализована",
+);
+i18nStore.changeLanguage("ru");
+
 console.log("Contract label checks passed");

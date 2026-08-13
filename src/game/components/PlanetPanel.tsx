@@ -284,6 +284,11 @@ function AvailableContractCard({
                                 {t(`races.${c.requiredRace}.plural`)}
                             </span>
                         )}
+                        {c.progressionTrack === "frontier" && (
+                            <span className="inline-flex border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#00d4ff]">
+                                {t("contracts.frontier.step_badge")}
+                            </span>
+                        )}
                     </div>
                 </div>
                 <Button

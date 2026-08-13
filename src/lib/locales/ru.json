@@ -1038,7 +1038,8 @@
             "subsidy_weapon": "Оружие: {{status}}",
             "subsidy_remaining": "−{{amount}}₢ доступно",
             "subsidy_completed": "получено",
-            "bounty_friendly": "ДРУЖЕСКАЯ НАГРАДА · +{{reputation}} репутации"
+            "bounty_friendly": "ДРУЖЕСКАЯ НАГРАДА · +{{reputation}} репутации",
+            "step_badge": "Шаг к военной станции"
         },
         "completed_count": "ВЫПОЛНЕНО",
         "location_planet": "планете",

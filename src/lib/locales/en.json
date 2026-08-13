@@ -1038,7 +1038,8 @@
             "subsidy_weapon": "Weapon: {{status}}",
             "subsidy_remaining": "−{{amount}}₢ available",
             "subsidy_completed": "redeemed",
-            "bounty_friendly": "FRIENDLY BOUNTY · +{{reputation}} reputation"
+            "bounty_friendly": "FRIENDLY BOUNTY · +{{reputation}} reputation",
+            "step_badge": "Step toward the military station"
         },
         "completed_count": "COMPLETED",
         "location_planet": "planet",

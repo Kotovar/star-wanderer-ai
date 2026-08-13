@@ -1147,8 +1147,15 @@ export function ContractsList() {
                                         <div className="text-ring font-bold text-xs leading-tight truncate">
                                             {contractName}
                                         </div>
-                                        <div className="text-[#556655] text-[9px] uppercase tracking-wider leading-tight">
-                                            {typeLabel[contract.type] ?? contract.type}
+                                        <div className="flex flex-wrap items-center gap-1 text-[#556655] text-[9px] uppercase tracking-wider leading-tight">
+                                            <span>
+                                                {typeLabel[contract.type] ?? contract.type}
+                                            </span>
+                                            {contract.progressionTrack === "frontier" && (
+                                                <span className="border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-1 py-0.5 text-[#00d4ff]">
+                                                    {t("contracts.frontier.step_badge")}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -1264,6 +1271,12 @@ export function ContractsList() {
                                             {details.type}
                                         </span>
                                     </div>
+
+                                    {selectedContract.progressionTrack === "frontier" && (
+                                        <div className="inline-flex border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-2 py-1 text-xs font-bold uppercase tracking-wide text-[#00d4ff]">
+                                            {t("contracts.frontier.step_badge")}
+                                        </div>
+                                    )}
 
                                     <div className="space-y-1.5">
                                         {details.tasks.map((task, index) => (
