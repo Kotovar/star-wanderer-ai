@@ -311,6 +311,7 @@ for (const civilization of PRE_SPACEFARING_CIVILIZATIONS) {
     nextTurn: () => {
       nextTurnCalls += 1;
       contactState.turn += 1;
+      saveCalls += 1;
     },
     saveGame: () => {
       saveCalls += 1;
@@ -396,6 +397,7 @@ const makeHarness = (harnessState) => {
     nextTurn: () => {
       nextTurnCalls += 1;
       harnessState.turn += 1;
+      saveCalls += 1;
     },
     saveGame: () => {
       saveCalls += 1;

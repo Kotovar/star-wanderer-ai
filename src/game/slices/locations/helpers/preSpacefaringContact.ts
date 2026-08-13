@@ -145,5 +145,4 @@ export function advancePreSpacefaringContact(
     }));
     get().addLog(i18nStore.t("game_logs.pre_spacefaring_action_done"), "info");
     get().nextTurn();
-    get().saveGame();
 }
