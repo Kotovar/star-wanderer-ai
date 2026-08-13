@@ -2,11 +2,19 @@ import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { STATION_CONFIG } from "@/game/galaxy/config";
 import { getNavigatorLocationKey } from "@/game/types/navigator";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers/calculateFuelCost";
-import type { GameState, Location, Module, Sector, ShopItem } from "@/game/types";
+import type { Contract, GameState, Location, Module, Sector, ShopItem } from "@/game/types";
 
 export const FRONTIER_CONTRACT_TARGET = 2;
 export const FRONTIER_WEAPON_BAY_DISCOUNT = 200;
 export const FRONTIER_WEAPON_DISCOUNT = 300;
+export const FRONTIER_CONTRACT_TYPES: readonly Contract["type"][] = [
+  "delivery",
+  "supply_run",
+  "scan_planet",
+  "research",
+  "rescue",
+  "derelict_recovery",
+];
 
 export type ContractGenerationContext = {
   canOfferCombat: boolean;
@@ -74,7 +82,12 @@ export const getFrontierContactPatch = (
   state: GameState,
 ): Pick<
   GameState,
-  "galaxy" | "currentSector" | "knownLocationIntel" | "navigatorTargets" | "frontierSubsidy"
+  | "galaxy"
+  | "currentSector"
+  | "currentLocation"
+  | "knownLocationIntel"
+  | "navigatorTargets"
+  | "frontierSubsidy"
 > | null => {
   if (
     state.frontierContractsCompleted !== FRONTIER_CONTRACT_TARGET ||
@@ -154,6 +167,12 @@ export const getFrontierContactPatch = (
       converted && state.currentSector?.id === target.sector.id
         ? patchedSector
         : state.currentSector,
+    currentLocation:
+      converted &&
+      state.currentSector?.id === target.sector.id &&
+      state.currentLocation?.id === target.location.id
+        ? targetLocation
+        : state.currentLocation,
     knownLocationIntel: {
       ...state.knownLocationIntel,
       [key]:

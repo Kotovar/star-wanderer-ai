@@ -8,6 +8,7 @@ const scriptPath = fileURLToPath(import.meta.url);
 const root = path.resolve(path.dirname(scriptPath), "..");
 const jiti = require("jiti")(scriptPath, { alias: { "@": path.join(root, "src") } });
 const {
+  FRONTIER_CONTRACT_TYPES,
   hasCombatArmament,
   getFrontierContactPatch,
   getFrontierSubsidyPrice,
@@ -24,6 +25,8 @@ const { refreshVisitedPlanetContracts } = await import("../src/game/contracts/re
 const { createShopSlice } = await import("../src/game/slices/shop/createShopSlice.ts");
 const { createCraftingSlice } = await import("../src/game/slices/crafting/craftingSlice.ts");
 const { createContractsSlice } = await import("../src/game/slices/contracts/contractsSlice.ts");
+const { createServicesSlice } = await import("../src/game/slices/services/createServicesSlice.ts");
+const { createShipSlice } = await import("../src/game/slices/ship/shipSlice.ts");
 
 const armedModules = [{ type: "weaponbay", weapons: [{ type: "laser" }], health: 100 }];
 
@@ -152,6 +155,85 @@ assert.ok(
       !["combat", "bounty"].includes(contract.type),
   ),
 );
+
+const frontierEligibilitySectors = [
+  {
+    id: 101,
+    name: "Frontier eligibility source",
+    tier: 1,
+    locations: [{
+      id: "frontier-eligibility-source",
+      type: "planet",
+      name: "Frontier eligibility source",
+      planetType: "Пустынная",
+    }],
+  },
+  {
+    id: 102,
+    name: "Frontier eligibility targets",
+    tier: 1,
+    locations: [
+      { id: "frontier-delivery", type: "station", name: "Delivery target" },
+      { id: "frontier-scan", type: "planet", name: "Scan target", planetType: "Ледяная" },
+      { id: "frontier-anomaly", type: "anomaly", name: "Research target" },
+      { id: "frontier-expedition", type: "planet", name: "Expedition target", planetType: "Океаническая" },
+      { id: "frontier-derelict", type: "derelict_ship", name: "Derelict target" },
+      { id: "frontier-hydra", type: "space_monster", spaceMonsterType: "crystal_hydra" },
+      { id: "frontier-gas", type: "gas_giant", name: "Gas target" },
+    ],
+  },
+];
+const forceFrontierOffer = (selectionRoll) =>
+  withRandomSequence([0, selectionRoll, 0, 0, 0, 0], () =>
+    generatePlanetContracts(
+      "Пустынная",
+      frontierEligibilitySectors[0],
+      "frontier-eligibility-source",
+      0,
+      frontierEligibilitySectors,
+      undefined,
+      null,
+      { canOfferCombat: false, allowFrontier: true },
+    )[0],
+  );
+
+for (const [type, roll] of [
+  ["expedition_survey", 0.55],
+  ["cleanse_curse", 0.8],
+  ["gas_dive", 0.95],
+]) {
+  const offer = forceFrontierOffer(roll);
+  assert.equal(offer?.type, type, `${type} fixture must select the intended offer`);
+  assert.equal(
+    offer?.progressionTrack,
+    undefined,
+    `${type} must never be tagged as a Frontier contract`,
+  );
+}
+
+for (const [type, roll] of [
+  ["scan_planet", 0],
+  ["supply_run", 0.15],
+  ["delivery", 0.3],
+  ["research", 0.4],
+  ["derelict_recovery", 0.68],
+]) {
+  const offer = forceFrontierOffer(roll);
+  assert.equal(offer?.type, type, `${type} fixture must select the intended offer`);
+  assert.equal(
+    offer?.progressionTrack,
+    "frontier",
+    `${type} remains eligible for Frontier progression`,
+  );
+}
+assert.deepEqual(FRONTIER_CONTRACT_TYPES, [
+  "delivery",
+  "supply_run",
+  "scan_planet",
+  "research",
+  "rescue",
+  "derelict_recovery",
+]);
 
 const bountySequence = [0.1, 0.9, 0.55, 0, 0, 0, 0.4];
 const normalBounty = withRandomSequence(bountySequence, () =>
@@ -419,11 +501,163 @@ const friendlyRefreshBounty = friendlyRefreshSectors
 assert.equal(friendlyRefreshBounty?.bountyTier, "friendly");
 assert.equal(friendlyRefreshBounty?.reputationReward, 4);
 
+const makeArmamentTransitionStore = (weaponBay) => {
+  const sourcePlanet = {
+    id: "transition-source",
+    type: "planet",
+    name: "Transition source",
+    planetType: "Пустынная",
+    dominantRace: "human",
+    visited: true,
+    contracts: [],
+  };
+  const state = {
+    activeContracts: [],
+    activeCrisis: null,
+    activeEffects: [],
+    artifacts: [],
+    completedContractIds: [],
+    completedLocations: [],
+    crew: [],
+    credits: 1_000,
+    currentLocation: { id: "repair-station", type: "station", stationId: "repair-station" },
+    currentSector: null,
+    discoveredWeaponTypes: [],
+    frontierChainClosed: false,
+    frontierCombatOffersSeeded: false,
+    frontierContractsCompleted: 0,
+    frontierSubsidy: null,
+    gases: {},
+    galaxy: {
+      sectors: [
+        { id: 201, name: "Transition source", tier: 1, locations: [sourcePlanet] },
+        {
+          id: 202,
+          name: "Transition target",
+          tier: 1,
+          locations: [
+            { id: "transition-enemy", type: "enemy", threat: 2 },
+            { id: "transition-scan", type: "planet", planetType: "Ледяная" },
+          ],
+        },
+      ],
+    },
+    pendingContractCompletions: [],
+    raceReputation: { human: 0 },
+    research: { researchedTechs: [], unlockedRecipes: [] },
+    runProfileId: null,
+    ship: {
+      armor: 0,
+      bonusShields: 0,
+      crewCapacity: 0,
+      fuel: 0,
+      maxFuel: 0,
+      maxShields: 0,
+      modules: [weaponBay],
+      shields: 0,
+    },
+    startModifierIds: [],
+    addLog: () => {},
+  };
+  const set = (update) => {
+    const next = typeof update === "function" ? update(state) : update;
+    if (next && next !== state) Object.assign(state, next);
+  };
+  const get = () => state;
+  Object.assign(
+    state,
+    createContractsSlice(set, get),
+    createShipSlice(set, get),
+    createServicesSlice(set, get),
+  );
+  return state;
+};
+const getTransitionContracts = (state) =>
+  state.galaxy.sectors[0].locations[0].contracts;
+
+const reactivatedBayState = makeArmamentTransitionStore({
+  id: 301,
+  name: "Disabled weapon bay",
+  type: "weaponbay",
+  health: 100,
+  maxHealth: 100,
+  manualDisabled: true,
+  weapons: [{ type: "laser" }],
+});
+withRandomSequence([0, 0, 0, 0, 0, 0, 0, 0], () =>
+  reactivatedBayState.toggleModule(301),
+);
+assert.equal(hasCombatArmament(reactivatedBayState.ship.modules), true);
+assert.equal(reactivatedBayState.frontierChainClosed, true);
+assert.equal(reactivatedBayState.frontierCombatOffersSeeded, true);
+assert.equal(getTransitionContracts(reactivatedBayState).filter(isCombatOffer).length, 1);
+const reactivatedOfferCount = getTransitionContracts(reactivatedBayState).length;
+reactivatedBayState.updateShipStats();
+assert.equal(
+  getTransitionContracts(reactivatedBayState).length,
+  reactivatedOfferCount,
+  "reactivation refresh must run once",
+);
+const scheduledAfterReactivation = withRandomSequence([0, 0, 0, 0], () =>
+  refreshVisitedPlanetContracts(reactivatedBayState),
+);
+assert.equal(
+  scheduledAfterReactivation
+    ?.flatMap((sector) => sector.locations)
+    .flatMap((location) => location.contracts ?? [])
+    .some((contract) => contract.progressionTrack === "frontier"),
+  false,
+  "scheduled refresh after reactivation must not reopen Frontier progression",
+);
+
+const repairedBayState = makeArmamentTransitionStore({
+  id: 302,
+  name: "Destroyed weapon bay",
+  type: "weaponbay",
+  health: 0,
+  maxHealth: 100,
+  weapons: [{ type: "laser" }],
+});
+withRandomSequence([0, 0, 0, 0, 0, 0, 0, 0], () =>
+  repairedBayState.repairShip(),
+);
+assert.equal(hasCombatArmament(repairedBayState.ship.modules), true);
+assert.equal(repairedBayState.frontierChainClosed, true);
+assert.equal(repairedBayState.frontierCombatOffersSeeded, true);
+assert.equal(getTransitionContracts(repairedBayState).filter(isCombatOffer).length, 1);
+const repairedOfferCount = getTransitionContracts(repairedBayState).length;
+repairedBayState.updateShipStats();
+assert.equal(
+  getTransitionContracts(repairedBayState).length,
+  repairedOfferCount,
+  "repair refresh must run once",
+);
+const scheduledAfterRepair = withRandomSequence([0, 0, 0, 0], () =>
+  refreshVisitedPlanetContracts(repairedBayState),
+);
+assert.equal(
+  scheduledAfterRepair
+    ?.flatMap((sector) => sector.locations)
+    .flatMap((location) => location.contracts ?? [])
+    .some((contract) => contract.progressionTrack === "frontier"),
+  false,
+  "scheduled refresh after repair must not reopen Frontier progression",
+);
+
 const makeStoreStub = (state) => {
   let syncCalls = 0;
   state.addLog = () => {};
-  state.updateShipStats = () => {};
-  state.syncCombatContractOffers = () => { syncCalls += 1; };
+  state.frontierCombatOffersSeeded ??= hasCombatArmament(state.ship?.modules ?? []);
+  state.syncCombatContractOffers = () => {
+    if (
+      hasCombatArmament(state.ship?.modules ?? []) &&
+      !state.frontierCombatOffersSeeded
+    ) {
+      state.frontierCombatOffersSeeded = true;
+      syncCalls += 1;
+    }
+  };
+  state.updateShipStats = () => state.syncCombatContractOffers();
   const set = (update) => Object.assign(state, typeof update === "function" ? update(state) : update);
   return { state, set, get: () => state, syncCalls: () => syncCalls };
 };
@@ -635,6 +869,7 @@ const frontierFarSector = {
 Object.assign(frontierContactState, {
   galaxy: { sectors: [frontierSourceSector, frontierFarSector] },
   currentSector: frontierSourceSector,
+  currentLocation: { ...frontierSourceSector.locations[0] },
   knownLocationIntel: {},
   navigatorTargets: [],
   frontierContractsCompleted: 0,
@@ -685,10 +920,20 @@ const contactedStation = frontierContactState.galaxy.sectors
   .find((location) => location.id === "legacy-station");
 assert.equal(contactedStation?.stationType, "military");
 assert.deepEqual(contactedStation?.stationConfig, STATION_CONFIG.military);
+assert.equal(
+  frontierContactState.currentLocation?.stationType,
+  "military",
+  "a docked legacy station must expose its converted type immediately",
+);
+assert.deepEqual(
+  frontierContactState.currentLocation?.stationConfig,
+  STATION_CONFIG.military,
+  "a docked legacy station must expose military inventory configuration immediately",
+);
 const contactInventory = generateStationItems(
-  contactedStation.stationId,
+  frontierContactState.currentLocation.stationId,
   1,
-  contactedStation.stationConfig,
+  frontierContactState.currentLocation.stationConfig,
 );
 assert.ok(contactInventory.some((item) => item.moduleType === "weaponbay"));
 assert.ok(contactInventory.some((item) => item.weaponType === "kinetic"));
@@ -697,6 +942,22 @@ assert.ok(
   contactInventory.every((item) => item.basePrice !== undefined),
   "station items must preserve their base price before station discounts",
 );
+const dockedWeaponBay = contactInventory.find(
+  (item) => item.type === "module" && item.moduleType === "weaponbay",
+);
+assert.ok(dockedWeaponBay, "converted docked station must sell a weapon bay");
+const dockedCheckout = makeStoreStub({
+  credits: 300,
+  currentLocation: frontierContactState.currentLocation,
+  stationInventory: { [frontierContactState.currentLocation.stationId]: {} },
+  frontierSubsidy: { ...frontierContactState.frontierSubsidy },
+  research: { researchedTechs: [] },
+  canPlaceModule: () => true,
+  ship: { gridSize: 1, modules: [] },
+});
+createShopSlice(dockedCheckout.set, dockedCheckout.get).buyItem(dockedWeaponBay);
+assert.equal(dockedCheckout.state.ship.modules[0]?.type, "weaponbay");
+assert.equal(dockedCheckout.state.frontierSubsidy.weaponBayAvailable, false);
 frontierContactState.frontierSubsidy.weaponBayAvailable = false;
 frontierContactState.showContractCompletion(frontierCompletion("frontier-2"));
 assert.equal(frontierContactState.navigatorTargets.length, 1);

@@ -201,6 +201,7 @@ export const createShipSlice = (
             updateShipStats(state);
             return state;
         });
+        get().syncCombatContractOffers();
     },
 
     getTotalPower: () => {

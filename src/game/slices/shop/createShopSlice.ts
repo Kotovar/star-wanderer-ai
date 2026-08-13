@@ -63,9 +63,6 @@ export const createShopSlice = (
             purchased = buyModule(set, get, effectiveItem, stationId, inv, bought);
         } else if (effectiveItem.type === "weapon") {
             purchased = buyWeapon(set, get, effectiveItem, stationId, inv, bought);
-            if (purchased) {
-                get().syncCombatContractOffers();
-            }
         } else {
             get().addLog( i18nStore.t("game_logs.createShopSlice_3"), "error");
             return;

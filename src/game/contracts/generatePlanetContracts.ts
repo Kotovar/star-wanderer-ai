@@ -8,7 +8,10 @@ import { DELIVERY_GOODS } from "../constants/contracts";
 import { CONTRACT_REWARDS as REWARD } from "./rewards";
 import { getGeneratedContractTimeLimit } from "./contractDeadline";
 import type { RunProfile } from "../galaxy/runProfiles";
-import type { ContractGenerationContext } from "./frontierContracts";
+import {
+    FRONTIER_CONTRACT_TYPES,
+    type ContractGenerationContext,
+} from "./frontierContracts";
 import { getReputationLevel } from "@/game/types/reputation";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -745,8 +748,7 @@ export const generatePlanetContracts = (
         const frontierOffer = contracts.find(
             (contract) =>
                 !contract.isRaceQuest &&
-                contract.type !== "combat" &&
-                contract.type !== "bounty",
+                FRONTIER_CONTRACT_TYPES.includes(contract.type),
         );
         if (frontierOffer) frontierOffer.progressionTrack = "frontier";
     }
