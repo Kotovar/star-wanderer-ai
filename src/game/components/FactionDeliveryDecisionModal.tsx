@@ -10,8 +10,25 @@ import {
 import { getFactionDeliveryReward } from "@/game/contracts/factionDelivery";
 import { RACES } from "@/game/constants/races";
 import { useGameStore } from "@/game/store";
+import type { FactionDeliveryContext } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
 import { GameDialogContent } from "./GameDialog";
+
+type Translate = (
+    key: string,
+    params?: Record<string, string | number>,
+) => string;
+
+export const getFactionDeliveryContextText = (
+    t: Translate,
+    context: FactionDeliveryContext,
+    cargoName: string,
+    sourceRaceName: string,
+): string =>
+    t(`contracts.faction_delivery.context.${context}`, {
+        cargo: cargoName,
+        sourceRace: sourceRaceName,
+    });
 
 export function FactionDeliveryDecisionModal() {
     const pendingContractDecision = useGameStore(
@@ -62,9 +79,12 @@ export function FactionDeliveryDecisionModal() {
                 </DialogHeader>
 
                 <div className="border-y border-[#ffb00055] bg-[rgba(255,176,0,0.05)] px-3 py-2 text-sm text-[#e6c27a]">
-                    {t(`contracts.faction_delivery.context.${context}`, {
-                        cargo: cargoName,
-                    })}
+                    {getFactionDeliveryContextText(
+                        t,
+                        context,
+                        cargoName,
+                        sourceRaceName,
+                    )}
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">

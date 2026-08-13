@@ -1,5 +1,10 @@
 import { store as i18nStore } from "@/lib/useTranslation";
-import type { GameState, GameStore, RaceId } from "@/game/types";
+import type {
+    GameState,
+    GameStore,
+    RaceId,
+    ReputationChangeOptions,
+} from "@/game/types";
 import type { ReputationLevel } from "@/game/types/reputation";
 import {
     changeReputation,
@@ -16,12 +21,21 @@ export const createReputationSlice = (
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
 ) => ({
-    changeReputation: (raceId: RaceId, amount: number) => {
+    changeReputation: (
+        raceId: RaceId,
+        amount: number,
+        options?: ReputationChangeOptions,
+    ) => {
         const currentState = get();
         const result = changeReputation(
             currentState.raceReputation,
             raceId,
             amount,
+        );
+        const excludedRippleRaceIds = new Set(options?.excludeRippleRaceIds);
+        const affectedRaces = result.affectedRaces.filter(
+            ({ raceId: affectedRaceId }) =>
+                !excludedRippleRaceIds.has(affectedRaceId),
         );
 
         set((state) => {
@@ -32,7 +46,7 @@ export const createReputationSlice = (
             for (const {
                 raceId: affectedRaceId,
                 change,
-            } of result.affectedRaces) {
+            } of affectedRaces) {
                 const currentRep = state.raceReputation[affectedRaceId] ?? 0;
                 state.raceReputation[affectedRaceId] = Math.max(
                     -100,
@@ -65,7 +79,7 @@ export const createReputationSlice = (
             for (const {
                 raceId: affectedRaceId,
                 change,
-            } of result.affectedRaces) {
+            } of affectedRaces) {
                 const affectedRaceName =
                     affectedRaceId.charAt(0).toUpperCase() +
                     affectedRaceId.slice(1);

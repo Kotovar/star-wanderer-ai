@@ -444,8 +444,16 @@ export interface GameRaces {
   discoverWeaponTypes: (weaponTypes: WeaponType[]) => void;
 }
 
+export interface ReputationChangeOptions {
+  excludeRippleRaceIds?: readonly RaceId[];
+}
+
 export interface GameReputation {
-  changeReputation: (raceId: RaceId, amount: number) => void;
+  changeReputation: (
+    raceId: RaceId,
+    amount: number,
+    options?: ReputationChangeOptions,
+  ) => void;
   setReputation: (raceId: RaceId, value: number) => void;
   getReputation: (raceId: RaceId) => number;
   getReputationLevel: (raceId: RaceId) => ReputationLevel;

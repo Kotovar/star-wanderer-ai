@@ -67,8 +67,12 @@ const settleDeliveryContract = (
 
     const reputationBefore = { ...get().raceReputation };
     if (choice === "local" && contract.sourceDominantRace && contract.factionDelivery) {
-        get().changeReputation(contract.sourceDominantRace, -4);
-        get().changeReputation(contract.factionDelivery.localRace, 4);
+        get().changeReputation(contract.sourceDominantRace, -4, {
+            excludeRippleRaceIds: [contract.factionDelivery.localRace],
+        });
+        get().changeReputation(contract.factionDelivery.localRace, 4, {
+            excludeRippleRaceIds: [contract.sourceDominantRace],
+        });
     } else if (contract.sourceDominantRace) {
         get().changeReputation(contract.sourceDominantRace, 2);
     }

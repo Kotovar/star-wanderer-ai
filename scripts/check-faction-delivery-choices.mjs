@@ -198,6 +198,9 @@ const { setUiState } = await import("./register-ui-loader.mjs");
 const { createContractsSlice } = await import(
   "../src/game/slices/contracts/contractsSlice.ts"
 );
+const { createReputationSlice } = await import(
+  "../src/game/slices/reputation/createReputationSlice.ts"
+);
 
 const makeDecisionState = () => {
   const contract = {
@@ -302,6 +305,61 @@ assert.equal(ordinary.state.credits, 1100);
 assert.deepEqual(ordinary.reputationCalls, [{ raceId: "human", amount: 2 }]);
 assert.equal(ordinary.state.pendingContractCompletions[0].credits, 1000);
 
+const makeReciprocalDecisionState = () => {
+  const contract = {
+    id: "reciprocal-choice-delivery",
+    type: "delivery",
+    reward: 1000,
+    cargo: "fuel",
+    targetLocationId: "human-target",
+    sourceDominantRace: "crystalline",
+    factionDelivery: { localRace: "human", context: "diplomatic_claim" },
+  };
+  const state = {
+    activeContracts: [contract],
+    completedContractIds: [],
+    pendingContractCompletions: [],
+    pendingContractDecision: null,
+    currentLocation: { id: "human-target", type: "planet" },
+    ship: { cargo: [{ item: "fuel", quantity: 10, contractId: contract.id }] },
+    credits: 100,
+    crew: [],
+    raceReputation: { human: 0, crystalline: 0, xenosymbiont: 0 },
+    frontierChainClosed: false,
+    frontierContractsCompleted: 0,
+    addLog: () => {},
+    gainExp: () => undefined,
+  };
+  const set = (update) => {
+    const patch = typeof update === "function" ? update(state) : update;
+    if (patch) Object.assign(state, patch);
+    setUiState(state);
+  };
+  Object.assign(state, createReputationSlice(set, () => state));
+  Object.assign(state, createContractsSlice(set, () => state));
+  setUiState(state);
+  return { contract, state };
+};
+
+const reciprocal = makeReciprocalDecisionState();
+reciprocal.state.completeDeliveryContract(reciprocal.contract.id);
+reciprocal.state.resolveFactionDeliveryDecision("local");
+assert.equal(
+  reciprocal.state.raceReputation.human,
+  4,
+  "local choice must give the local race the advertised +4",
+);
+assert.equal(
+  reciprocal.state.raceReputation.crystalline,
+  -4,
+  "local choice must give the issuer the advertised -4",
+);
+assert.equal(
+  reciprocal.state.raceReputation.xenosymbiont,
+  -1,
+  "third races must retain the issuer's normal diplomatic ripple",
+);
+
 const storage = new Map();
 globalThis.window = {};
 globalThis.localStorage = {
@@ -384,6 +442,9 @@ const modalSource = readFileSync(
   new URL("../src/game/components/FactionDeliveryDecisionModal.tsx", import.meta.url),
   "utf8",
 );
+const { getFactionDeliveryContextText } = await import(
+  "../src/game/components/FactionDeliveryDecisionModal.tsx"
+);
 const pageSource = readFileSync(
   new URL("../src/app/page.tsx", import.meta.url),
   "utf8",
@@ -407,5 +468,23 @@ assert.equal(en.contracts.faction_delivery.issuer_action, "Honor the charter");
 assert.equal(en.contracts.faction_delivery.local_action, "Hand it to the locals");
 assert.match(ru.contracts.faction_delivery.local_outcome, /65%[\s\S]*\+4[\s\S]*-4/);
 assert.match(en.contracts.faction_delivery.local_outcome, /65%[\s\S]*\+4[\s\S]*-4/);
+assert.equal(
+  getFactionDeliveryContextText(
+    (key, params) => {
+      const value = key
+        .split(".")
+        .reduce((entry, part) => entry?.[part], ru);
+      return Object.entries(params ?? {}).reduce(
+        (text, [name, parameter]) =>
+          text.replaceAll(`{{${name}}}`, String(parameter)),
+        value,
+      );
+    },
+    "diplomatic_claim",
+    "Дипломатический груз",
+    "Кристаллоиды",
+  ),
+  "Местные власти оспаривают право Кристаллоиды распоряжаться этим грузом.",
+);
 
 console.log("faction delivery choice checks passed");
