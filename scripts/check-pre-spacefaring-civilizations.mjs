@@ -134,6 +134,10 @@ registerHooks({
   },
 });
 
+const { advancePreSpacefaringContact } = await import(
+  "../src/game/slices/locations/helpers/preSpacefaringContact.ts",
+);
+
 const { generateExpeditionGrid } = await import(
   "../src/game/slices/locations/helpers/expedition/generateExpeditionGrid.ts"
 );
@@ -261,5 +265,281 @@ assert.equal(state.currentLocation.preSpacefaringContact.step, 0);
 const staleBase = makeDiscoveryHarness(true);
 revealExpeditionTile(7, staleBase.set, staleBase.get);
 assert.equal(staleBase.state.currentLocation.preSpacefaringContact, undefined);
+
+const makeContactState = (civilization) => {
+  const contactPlanet = {
+    id: "contact-" + civilization.id,
+    type: "planet",
+    isEmpty: true,
+    explored: true,
+    preSpacefaringContact: {
+      civilizationId: civilization.id,
+      development: civilization.development,
+      step: 0,
+    },
+  };
+  const sector = { id: 1, locations: [contactPlanet] };
+  return {
+    turn: 20,
+    currentLocation: contactPlanet,
+    currentSector: sector,
+    galaxy: { sectors: [sector] },
+    outposts: [],
+    ship: {
+      tradeGoods: [
+        { item: "food", quantity: 4, buyPrice: 1 },
+        { item: "medicine", quantity: 4, buyPrice: 1 },
+        { item: "spares", quantity: 4, buyPrice: 1 },
+      ],
+    },
+    research: { resources: {} },
+  };
+};
+
+for (const civilization of PRE_SPACEFARING_CIVILIZATIONS) {
+  const contactState = makeContactState(civilization);
+  let nextTurnCalls = 0;
+  let saveCalls = 0;
+  const contactSet = (update) => {
+    const next =
+      typeof update === "function" ? update(contactState) : update;
+    if (next) Object.assign(contactState, next);
+  };
+  const contactGet = () => ({
+    ...contactState,
+    addLog: () => {},
+    nextTurn: () => {
+      nextTurnCalls += 1;
+      contactState.turn += 1;
+    },
+    saveGame: () => {
+      saveCalls += 1;
+    },
+  });
+
+  const observation = civilization.actions.find((action) => action.step === 0);
+  const help = civilization.actions.find(
+    (action) => action.step === 1 && action.requiredGood,
+  );
+  const boundary = civilization.actions.find(
+    (action) => action.step === 2 && action.outcome === "protected",
+  );
+  assert.ok(observation);
+  assert.ok(help);
+  assert.ok(boundary);
+
+  advancePreSpacefaringContact(
+    contactState.currentLocation.id,
+    observation.id,
+    0,
+    contactSet,
+    contactGet,
+  );
+  advancePreSpacefaringContact(
+    contactState.currentLocation.id,
+    help.id,
+    1,
+    contactSet,
+    contactGet,
+  );
+  advancePreSpacefaringContact(
+    contactState.currentLocation.id,
+    boundary.id,
+    2,
+    contactSet,
+    contactGet,
+  );
+
+  assert.equal(contactState.currentLocation.preSpacefaringContact.step, 3);
+  assert.equal(
+    contactState.currentLocation.preSpacefaringContact.outcome,
+    "protected",
+  );
+  assert.equal(nextTurnCalls, 3);
+  assert.equal(saveCalls, 3);
+
+  const completedSnapshot = JSON.stringify({
+    turn: contactState.turn,
+    contact: contactState.currentLocation.preSpacefaringContact,
+    goods: contactState.ship.tradeGoods,
+    research: contactState.research.resources,
+  });
+  advancePreSpacefaringContact(
+    contactState.currentLocation.id,
+    boundary.id,
+    2,
+    contactSet,
+    contactGet,
+  );
+  assert.equal(
+    JSON.stringify({
+      turn: contactState.turn,
+      contact: contactState.currentLocation.preSpacefaringContact,
+      goods: contactState.ship.tradeGoods,
+      research: contactState.research.resources,
+    }),
+    completedSnapshot,
+  );
+}
+
+const makeHarness = (harnessState) => {
+  let nextTurnCalls = 0;
+  let saveCalls = 0;
+  const harnessSet = (update) => {
+    const next =
+      typeof update === "function" ? update(harnessState) : update;
+    if (next) Object.assign(harnessState, next);
+  };
+  const harnessGet = () => ({
+    ...harnessState,
+    addLog: () => {},
+    nextTurn: () => {
+      nextTurnCalls += 1;
+      harnessState.turn += 1;
+    },
+    saveGame: () => {
+      saveCalls += 1;
+    },
+  });
+  return {
+    set: harnessSet,
+    get: harnessGet,
+    nextTurnCalls: () => nextTurnCalls,
+    saveCalls: () => saveCalls,
+  };
+};
+
+const contactSnapshot = (contactState) =>
+  JSON.stringify({
+    turn: contactState.turn,
+    contact: contactState.currentLocation.preSpacefaringContact,
+    goods: contactState.ship.tradeGoods,
+    research: contactState.research.resources,
+  });
+
+const firstCulture = PRE_SPACEFARING_CIVILIZATIONS[0];
+const firstHelp = firstCulture.actions.find(
+  (action) => action.step === 1 && action.requiredGood,
+);
+const firstObservation = firstCulture.actions.find(
+  (action) => action.step === 0,
+);
+const otherObservation = PRE_SPACEFARING_CIVILIZATIONS[1].actions.find(
+  (action) => action.step === 0,
+);
+assert.ok(firstHelp);
+assert.ok(firstObservation);
+assert.ok(otherObservation);
+
+const assertBlockedActionIsNoop = (
+  blockedState,
+  action,
+  expectedStep = blockedState.currentLocation.preSpacefaringContact.step,
+) => {
+  const harness = makeHarness(blockedState);
+  const before = contactSnapshot(blockedState);
+  advancePreSpacefaringContact(
+    blockedState.currentLocation.id,
+    action.id,
+    expectedStep,
+    harness.set,
+    harness.get,
+  );
+  assert.equal(contactSnapshot(blockedState), before);
+  assert.equal(harness.nextTurnCalls(), 0);
+  assert.equal(harness.saveCalls(), 0);
+};
+
+const missingCargoState = makeContactState(firstCulture);
+missingCargoState.currentLocation.preSpacefaringContact.step = 1;
+missingCargoState.ship.tradeGoods = [];
+assertBlockedActionIsNoop(missingCargoState, firstHelp);
+
+const wrongCultureState = makeContactState(firstCulture);
+assertBlockedActionIsNoop(wrongCultureState, otherObservation);
+
+const staleStepState = makeContactState(firstCulture);
+staleStepState.currentLocation.preSpacefaringContact.step = 1;
+assertBlockedActionIsNoop(staleStepState, firstObservation, 0);
+
+const baseState = makeContactState(firstCulture);
+baseState.outposts = [
+  { id: "base-1", kind: "base", locationId: baseState.currentLocation.id },
+];
+assertBlockedActionIsNoop(baseState, firstObservation);
+
+const linkedBaseState = makeContactState(firstCulture);
+linkedBaseState.currentLocation.outpostId = "base-2";
+assertBlockedActionIsNoop(linkedBaseState, firstObservation);
+
+const translations = ["ru", "en"].map((language) => ({
+  language,
+  catalog: JSON.parse(
+    readFileSync(resolve("src/lib/locales", `${language}.json`), "utf8"),
+  ),
+}));
+const contactBlockers = [
+  "wrong_location",
+  "no_contact",
+  "already_complete",
+  "step_mismatch",
+  "invalid_action",
+  "base_present",
+  "missing_goods",
+];
+
+for (const { language, catalog } of translations) {
+  assert.ok(catalog.pre_spacefaring.title, `${language}: contact title`);
+  for (const civilization of PRE_SPACEFARING_CIVILIZATIONS) {
+    assert.ok(
+      catalog.pre_spacefaring.development[civilization.development],
+      `${language}: development ${civilization.development}`,
+    );
+    assert.ok(
+      catalog.pre_spacefaring.civilizations[civilization.id].name,
+      `${language}: civilization ${civilization.id}`,
+    );
+    for (const action of civilization.actions) {
+      assert.ok(
+        catalog.pre_spacefaring.actions[action.id],
+        `${language}: action ${action.id}`,
+      );
+    }
+  }
+  for (const outcome of ["protected", "assisted", "partnered"]) {
+    assert.ok(
+      catalog.pre_spacefaring.outcomes[outcome],
+      `${language}: outcome ${outcome}`,
+    );
+  }
+  for (const blocker of contactBlockers) {
+    assert.ok(
+      catalog.pre_spacefaring.blocked[blocker],
+      `${language}: blocker ${blocker}`,
+    );
+    assert.ok(
+      catalog.game_logs[`pre_spacefaring_action_${blocker}`],
+      `${language}: blocker log ${blocker}`,
+    );
+  }
+  assert.ok(
+    catalog.game_logs.pre_spacefaring_action_done,
+    `${language}: completion log`,
+  );
+}
+
+const emptyPlanetPanelSource = readFileSync(
+  resolve("src/game/components/EmptyPlanetPanel.tsx"),
+  "utf8",
+);
+assert.match(emptyPlanetPanelSource, /PreSpacefaringContactCard/);
+assert.match(emptyPlanetPanelSource, /currentLocation\.preSpacefaringContact/);
+
+const explorationPanelSource = readFileSync(
+  resolve("src/game/components/PlanetExplorationPanel.tsx"),
+  "utf8",
+);
+assert.match(explorationPanelSource, /pendingPreSpacefaringDiscovery/);
+assert.match(explorationPanelSource, /pre_spacefaring\.discovery_title/);
 
 console.log("Pre-spacefaring civilization checks passed");

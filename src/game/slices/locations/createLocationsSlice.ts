@@ -11,6 +11,7 @@ import type {
     DistressApproach,
     ExpeditionScanMode,
     SurfaceLogEntry,
+    PreSpacefaringActionStep,
     WreckApproach,
     WeaponType,
 } from "@/game/types";
@@ -49,6 +50,7 @@ import {
 import { salvageWreckField as salvageWreckFieldHelper } from "./helpers/salvageWreckField";
 import { resonateWithSpaceMonster as resonateWithSpaceMonsterHelper } from "./helpers/spaceMonster";
 import { cleanseCursedArtifact as cleanseCursedArtifactHelper } from "./helpers/cleanseCursedArtifact";
+import { advancePreSpacefaringContact as advancePreSpacefaringContactHelper } from "./helpers";
 
 /**
  * Интерфейс LocationsSlice
@@ -154,6 +156,13 @@ export interface LocationsSlice {
 
     /** Закрывает уведомление об обнаруженном поселении. */
     dismissPreSpacefaringDiscovery: () => void;
+
+    /** Выполняет текущий шаг контакта с местной цивилизацией. */
+    advancePreSpacefaringContact: (
+        planetId: string,
+        actionId: string,
+        expectedStep: PreSpacefaringActionStep,
+    ) => void;
 
     /** Начинает погружение зонда в газовый гигант */
     startDive: (locationId: string) => void;
@@ -283,6 +292,16 @@ export const createLocationsSlice = (
                   }
                 : null,
         }));
+    },
+
+    advancePreSpacefaringContact: (planetId, actionId, expectedStep) => {
+        advancePreSpacefaringContactHelper(
+            planetId,
+            actionId,
+            expectedStep,
+            set,
+            get,
+        );
     },
 
     startDive: (locationId) => {

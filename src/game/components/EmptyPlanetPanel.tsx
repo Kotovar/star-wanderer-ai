@@ -9,6 +9,7 @@ import { RESEARCH_RESOURCES } from "@/game/constants";
 import { getMaxExtraScoutAttempts } from "@/game/constants/augmentations";
 import { Button } from "@/components/ui/button";
 import { PlanetExpeditionSetup } from "./PlanetExpeditionSetup";
+import { PreSpacefaringContactCard } from "./PreSpacefaringContactCard";
 import {
     getPlanetBackgroundClass,
     getPlanetFeatures,
@@ -585,40 +586,48 @@ export function EmptyPlanetPanel() {
 
                     {/* Точка интереса: скрыта до полной разведки */}
                     {currentLocation.explored ? (
-                        <div className="border border-[#00d4ff66] bg-[rgba(0,212,255,0.04)] p-3">
-                            <div className="text-ring font-bold text-sm font-['Orbitron']">
-                                ◈ {t("planet_panel.point_of_interest_title")}
-                            </div>
-                            {pointOfInterest && (
-                                <div className="text-[#aaa] text-xs mt-1">
-                                    {t(
-                                        `planet_panel.point_of_interest_types.${pointOfInterest}`,
+                        currentLocation.preSpacefaringContact ? (
+                            <PreSpacefaringContactCard
+                                location={currentLocation}
+                            />
+                        ) : (
+                            <div className="border border-[#00d4ff66] bg-[rgba(0,212,255,0.04)] p-3">
+                                <div className="text-ring font-bold text-sm font-['Orbitron']">
+                                    ◈ {t("planet_panel.point_of_interest_title")}
+                                </div>
+                                {pointOfInterest && (
+                                    <div className="text-[#aaa] text-xs mt-1">
+                                        {t(
+                                            `planet_panel.point_of_interest_types.${pointOfInterest}`,
+                                        )}
+                                    </div>
+                                )}
+                                <div className="text-xs mt-2">
+                                    {currentLocation.expeditionCompleted ? (
+                                        <span className="text-[#555]">
+                                            {t(
+                                                "planet_panel.expedition_finished",
+                                            )}
+                                        </span>
+                                    ) : hasExpeditionKits ? (
+                                        <Button
+                                            onClick={() =>
+                                                setShowExpeditionSetup(true)
+                                            }
+                                            className="cursor-pointer bg-transparent border-2 border-ring text-ring hover:bg-ring hover:text-[#050810] uppercase tracking-wider text-xs px-3 py-1"
+                                        >
+                                            🗺️ {t("planet_panel.explore_planet")}
+                                        </Button>
+                                    ) : (
+                                        <span className="text-destructive">
+                                            {t(
+                                                "planet_panel.expedition_requires_kits",
+                                            )}
+                                        </span>
                                     )}
                                 </div>
-                            )}
-                            <div className="text-xs mt-2">
-                                {currentLocation.expeditionCompleted ? (
-                                    <span className="text-[#555]">
-                                        {t("planet_panel.expedition_finished")}
-                                    </span>
-                                ) : hasExpeditionKits ? (
-                                    <Button
-                                        onClick={() =>
-                                            setShowExpeditionSetup(true)
-                                        }
-                                        className="cursor-pointer bg-transparent border-2 border-ring text-ring hover:bg-ring hover:text-[#050810] uppercase tracking-wider text-xs px-3 py-1"
-                                    >
-                                        🗺️ {t("planet_panel.explore_planet")}
-                                    </Button>
-                                ) : (
-                                    <span className="text-destructive">
-                                        {t(
-                                            "planet_panel.expedition_requires_kits",
-                                        )}
-                                    </span>
-                                )}
                             </div>
-                        </div>
+                        )
                     ) : poiRevealed && pointOfInterest ? (
                         <div className="border border-[#00d4ff44] border-dashed bg-[rgba(0,212,255,0.03)] p-3">
                             <div className="text-ring font-bold text-sm font-['Orbitron']">

@@ -27,6 +27,7 @@ import type {
 } from "./locations/locations";
 import type { LogEntry } from "./logs";
 import type { GasType, Outpost } from "./outposts";
+import type { PreSpacefaringActionStep } from "./planets";
 import type { JettisonTarget } from "@/game/slices/ship/helpers/jettison";
 import type { OutpostsSlice } from "@/game/slices/outposts/createOutpostsSlice";
 import type { Module, WeaponCounts, WeaponType } from "./modules";
@@ -415,6 +416,11 @@ export interface GameScouting {
   endExpedition: () => void;
   abortExpedition: () => void;
   dismissPreSpacefaringDiscovery: () => void;
+  advancePreSpacefaringContact: (
+    planetId: string,
+    actionId: string,
+    expectedStep: PreSpacefaringActionStep,
+  ) => void;
   startDive: (locationId: string) => void;
   resolveDiveEvent: (choiceIndex: number) => void;
   diveDeeper: () => void;

@@ -5745,11 +5745,72 @@
         }
     },
     "pre_spacefaring": {
+        "title": "LOCAL CONTACT",
+        "development": {
+            "primitive": "Primitive society",
+            "agrarian": "Agrarian society",
+            "industrial": "Industrial society",
+            "modern": "Modern society"
+        },
+        "civilizations": {
+            "river_clans": { "name": "River Clans" },
+            "delta_league": { "name": "Delta League" },
+            "forge_cities": { "name": "Forge Cities" },
+            "coastal_network": { "name": "Coastal Network" }
+        },
+        "actions": {
+            "observe_starlight": "Observe the starlight rites",
+            "leave_food": "Leave food (2 units of food)",
+            "keep_distance": "Keep a safe distance",
+            "protect_clans": "Protect the clans",
+            "support_clans": "Support the clans",
+            "partner_with_clans": "Form a partnership with the clans",
+            "survey_fields": "Survey the fields",
+            "send_medicine": "Send medicine (1 unit of medicine)",
+            "respect_borders": "Respect their borders",
+            "protect_delta": "Protect the league",
+            "assist_delta": "Assist the league",
+            "partner_delta": "Form a partnership with the league",
+            "review_factories": "Review the factories",
+            "send_spares": "Send spare parts (2 units of spares)",
+            "limit_exchange": "Limit the exchange",
+            "protect_forges": "Protect the forge cities",
+            "assist_forges": "Assist the forge cities",
+            "partner_forges": "Form a partnership with the forge cities",
+            "listen_radio": "Listen to their radio",
+            "radio_exchange": "Open a radio exchange (1 unit of spares)",
+            "radio_silence": "Maintain radio silence",
+            "protect_network": "Protect the network",
+            "assist_network": "Assist the network",
+            "partner_network": "Form a partnership with the network"
+        },
+        "outcomes": {
+            "protected": "The civilization remains under your protection.",
+            "assisted": "The civilization receives limited assistance.",
+            "partnered": "The civilization becomes a local partner."
+        },
+        "blocked": {
+            "wrong_location": "Return to this planet to continue contact.",
+            "no_contact": "No local contact is recorded here.",
+            "already_complete": "This contact has already been resolved.",
+            "step_mismatch": "This choice is no longer available.",
+            "invalid_action": "This choice does not belong to this civilization.",
+            "base_present": "A player base prevents local contact decisions.",
+            "missing_goods": "The required goods are not in the cargo hold."
+        },
         "discovery_title": "Settlement Discovered",
         "discovery_desc": "The expedition found signs of a local civilization on the surface. The contact is recorded for future decisions.",
         "discovery_continue": "CONTINUE"
     },
     "game_logs": {
+        "pre_spacefaring_action_done": "Local contact has advanced. One turn passed.",
+        "pre_spacefaring_action_wrong_location": "Return to the contact planet first.",
+        "pre_spacefaring_action_no_contact": "No local civilization contact was found.",
+        "pre_spacefaring_action_already_complete": "This local contact is already complete.",
+        "pre_spacefaring_action_step_mismatch": "The local contact choice is stale.",
+        "pre_spacefaring_action_invalid_action": "The local contact choice is invalid.",
+        "pre_spacefaring_action_base_present": "Local contact is blocked by a player base.",
+        "pre_spacefaring_action_missing_goods": "The cargo hold lacks the goods required for this contact choice.",
         "frontier_military_contact": "Military contact established. The station is marked in the navigator; the armament subsidy is available.",
         "cargo_jettisoned": "🗑 Jettisoned: {{name}} ×{{qty}}",
         "nebula_front_started": "🌀 The Veil of Ancient Beacons created {{count}} new nebulae. Research stations are activating a stabilizer network.",
