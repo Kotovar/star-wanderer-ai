@@ -12,6 +12,10 @@ import {
     FRONTIER_CONTRACT_TYPES,
     type ContractGenerationContext,
 } from "./frontierContracts";
+import {
+    FACTION_DELIVERY_CHANCE,
+    getFactionDeliveryContext,
+} from "./factionDelivery";
 import { getReputationLevel } from "@/game/types/reputation";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -472,6 +476,21 @@ export const generatePlanetContracts = (
                         : dest.type === "station"
                           ? "station"
                           : "ship";
+                const localRace =
+                    dest.type === "planet" ? dest.dominantRace : undefined;
+                const factionDelivery =
+                    !context.allowFrontier &&
+                    dominantRace !== undefined &&
+                    dest.type === "planet" &&
+                    !dest.isEmpty &&
+                    localRace !== undefined &&
+                    localRace !== dominantRace &&
+                    Math.random() < FACTION_DELIVERY_CHANCE
+                        ? {
+                              localRace,
+                              context: getFactionDeliveryContext(cargoKey),
+                          }
+                        : undefined;
 
                 const tier = sector.tier ?? 1;
                 const quantity = DELIVERY_QTY_BY_TIER[tier - 1];
@@ -495,6 +514,7 @@ export const generatePlanetContracts = (
                     sourcePlanetId: planetId,
                     sourceSectorName: sector.name,
                     sourceType: "planet",
+                    ...(factionDelivery ? { factionDelivery } : {}),
                     timeLimit: getGeneratedContractTimeLimit(
                         "delivery",
                         tier,

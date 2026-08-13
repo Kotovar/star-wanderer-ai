@@ -11,12 +11,27 @@ export type FrontierSubsidy = {
     weaponAvailable: boolean;
 };
 
+export type FactionDeliveryContext =
+    | "relief"
+    | "reconstruction"
+    | "research_access"
+    | "diplomatic_claim";
+
+export type FactionDelivery = {
+    localRace: RaceId;
+    context: FactionDeliveryContext;
+};
+
+export type PendingContractDecision = { contractId: string };
+export type FactionDeliveryChoice = "issuer" | "local";
+
 export interface Contract {
     id: string;
     type: ContractType;
     desc: string;
     reward: number;
     progressionTrack?: "frontier";
+    factionDelivery?: FactionDelivery;
     bountyTier?: "friendly";
     reputationReward?: number;
     cargo?: string;

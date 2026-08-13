@@ -2,7 +2,7 @@ import type { Artifact } from "./artifacts";
 import type { CargoItem } from "./cargo";
 import type { CombatState } from "./combat";
 import type { CombatTurnTimeline } from "./combatCinematics";
-import type { BattleResult, Contract, ContractCompletionResult, FrontierSubsidy, StormResult } from "./contracts";
+import type { BattleResult, Contract, ContractCompletionResult, FrontierSubsidy, PendingContractDecision, StormResult } from "./contracts";
 import type { GainExpResult } from "@/game/slices/crew/helpers/calculateGainExpResult";
 import type {
   CrewMember,
@@ -145,6 +145,7 @@ export interface GameState {
   activeContracts: Contract[];
   completedContractIds: string[]; // IDs of completed contracts to prevent retaking
   pendingContractCompletions: ContractCompletionResult[]; // Очередь результатов успешно выполненных контрактов
+  pendingContractDecision: PendingContractDecision | null;
   pendingCrewLevelUps: CrewLevelUpResult[];
   shipQuestsTaken: string[]; // IDs of ships where quest was taken
   hiredCrewFromShips: string[]; // IDs of friendly ships where crew was hired

@@ -418,6 +418,11 @@ const migrations: Record<number, Migration> = {
       frontierSubsidy: null,
     };
   },
+  25: (raw) => ({
+    ...(raw as GameState),
+    stateVersion: 26,
+    pendingContractDecision: null,
+  }),
 };
 
 /**

@@ -35,6 +35,7 @@
     "check:assignments": "node --no-warnings --experimental-strip-types scripts/check-assignment-fatigue.mjs",
     "check:crew-automation": "node --no-warnings --experimental-strip-types scripts/check-crew-automation.mjs",
     "check:profession-levels": "node --no-warnings --experimental-strip-types scripts/check-profession-levels.mjs",
+    "check:faction-delivery-choices": "node --no-warnings scripts/check-faction-delivery-choices.mjs",
     "check:events": "node --no-warnings --experimental-strip-types scripts/check-random-event-chains.mjs",
     "check:market": "node --no-warnings --experimental-strip-types scripts/check-market-tick.mjs",
     "check:contract-targets": "node --no-warnings --experimental-strip-types scripts/check-contract-targets.mjs",
