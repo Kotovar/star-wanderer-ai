@@ -414,6 +414,7 @@ export interface GameScouting {
   confirmRuinsOutcome: () => void;
   endExpedition: () => void;
   abortExpedition: () => void;
+  dismissPreSpacefaringDiscovery: () => void;
   startDive: (locationId: string) => void;
   resolveDiveEvent: (choiceIndex: number) => void;
   diveDeeper: () => void;

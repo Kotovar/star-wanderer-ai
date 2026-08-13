@@ -70,6 +70,11 @@ const TILE_COLORS: Record<
     bg: "rgba(0,212,255,0.15)",
     glow: "rgba(0,212,255,0.4)",
   },
+  settlement: {
+    border: "#00d4ff",
+    bg: "rgba(0,212,255,0.15)",
+    glow: "rgba(0,212,255,0.4)",
+  },
 };
 
 const EXPEDITION_LOCATION_SPRITE = "/assets/expedition_locations.webp";
@@ -603,6 +608,30 @@ function drawSignalIcon(
   ctx.restore();
 }
 
+function drawSettlementIcon(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  size: number,
+) {
+  const scale = size / 50;
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = "#00d4ff";
+  ctx.beginPath();
+  ctx.moveTo(-18, -3);
+  ctx.lineTo(0, -17);
+  ctx.lineTo(18, -3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillRect(-15, -3, 12, 17);
+  ctx.fillRect(3, -3, 12, 17);
+  ctx.fillStyle = "#ffb000";
+  ctx.fillRect(-2, 5, 4, 5);
+  ctx.restore();
+}
+
 function drawTileIcon(
   ctx: CanvasRenderingContext2D,
   type: ExploreTileType,
@@ -637,6 +666,9 @@ function drawTileIcon(
       break;
     case "signal":
       drawSignalIcon(ctx, centerX, centerY, size);
+      break;
+    case "settlement":
+      drawSettlementIcon(ctx, centerX, centerY, size);
       break;
   }
 }

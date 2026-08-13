@@ -152,6 +152,9 @@ export interface LocationsSlice {
     /** Прерывает экспедицию без наград и позволяет запустить её повторно */
     abortExpedition: () => void;
 
+    /** Закрывает уведомление об обнаруженном поселении. */
+    dismissPreSpacefaringDiscovery: () => void;
+
     /** Начинает погружение зонда в газовый гигант */
     startDive: (locationId: string) => void;
 
@@ -269,6 +272,17 @@ export const createLocationsSlice = (
 
     abortExpedition: () => {
         abortExpeditionHelper(set, get);
+    },
+
+    dismissPreSpacefaringDiscovery: () => {
+        set((state) => ({
+            activeExpedition: state.activeExpedition
+                ? {
+                      ...state.activeExpedition,
+                      pendingPreSpacefaringDiscovery: null,
+                  }
+                : null,
+        }));
     },
 
     startDive: (locationId) => {

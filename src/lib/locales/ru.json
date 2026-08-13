@@ -2336,6 +2336,7 @@
         "tile_ruins": "Руины",
         "tile_incident": "Инцидент",
         "tile_artifact": "Артефакт",
+        "tile_settlement": "Поселение",
         "tile_hidden": "?",
         "ruins_event_title": "Событие",
         "incident_crew_damage": "{{name}} получил -{{damage}} HP",
@@ -5743,6 +5744,11 @@
             "scan": "Просканировать содержимое"
         }
     },
+    "pre_spacefaring": {
+        "discovery_title": "Обнаружено поселение",
+        "discovery_desc": "Экспедиция обнаружила на поверхности следы местной цивилизации. Контакт сохранён для дальнейших решений.",
+        "discovery_continue": "ПРОДОЛЖИТЬ"
+    },
     "game_logs": {
         "frontier_military_contact": "Военный контакт установлен. Станция отмечена в навигаторе; субсидия на вооружение доступна.",
         "cargo_jettisoned": "🗑 Выброшено за борт: {{name}} ×{{qty}}",
@@ -6088,6 +6094,8 @@
         "expedition_tile_hazard": "☣️ {{target_name}} попал под выброс: −{{damage}} HP, −{{moraleLoss}} морали",
         "expedition_tile_signal": "📡 Источник сигнала запеленгован: подсвечено клеток — {{count}}",
         "expedition_tile_signal_empty": "📡 Источник сигнала запеленгован, но подсвечивать уже нечего",
+        "pre_spacefaring_discovered": "🏘️ Обнаружено поселение до-космической цивилизации.",
+        "pre_spacefaring_discovery_unavailable": "🏘️ Поселение больше недоступно для обнаружения.",
         "revealExpeditionTile_3": "🔬 Лаборатория: {{value}} {{resType}} x{{qty}}",
         "revealExpeditionTile_4": "⚠️ Инцидент! {{target_name}} получил {{damage}} урона и -{{moraleLoss}} морали{{mitigation}}.",
         "revealExpeditionTile_5": "✨ Найден артефакт: {{artifact_name}}!",

@@ -96,7 +96,7 @@ const declaredTypes = explorationSource
   .split(";")[0]
   .match(/"([a-z_]+)"/g)
   .map((quoted) => quoted.replaceAll('"', ""));
-assert.equal(declaredTypes.length, 9, "ожидалось девять типов клеток");
+assert.equal(declaredTypes.length, 10, "ожидалось десять типов клеток");
 
 const revealSource = source(
   "game/slices/locations/helpers/expedition/revealExpeditionTile.ts",
@@ -147,16 +147,29 @@ const spriteIndices = [
     .matchAll(/(\w+): (\d+)/g),
 ].map(([, type, index]) => [type, Number(index)]);
 
+const SPRITED_TILE_TYPES = [
+  "market",
+  "lab",
+  "ruins",
+  "incident",
+  "artifact",
+  "cache",
+  "core_sample",
+  "hazard",
+  "signal",
+];
 assert.deepEqual(
   spriteIndices.map(([type]) => type).sort(),
-  [...declaredTypes].sort(),
-  "у какого-то типа клетки нет кадра в спрайт-листе",
+  [...SPRITED_TILE_TYPES].sort(),
+  "спрайт-лист должен содержать только девять существующих кадров",
 );
 assert.deepEqual(
   spriteIndices.map(([, index]) => index).sort((a, b) => a - b),
   [...Array(spriteCount).keys()],
   "индексы кадров не покрывают лист без дыр и повторов",
 );
+assert.match(canvasSource, /case "settlement"/);
+assert.match(canvasSource, /drawSettlementIcon/);
 
 // Файл на диске обязан содержать ровно столько кадров, сколько обещает код,
 // и каждая ячейка — что-то видимое. Иначе клетка отрисуется пустой.

@@ -15,6 +15,7 @@ import {
     RUINED_SETTLEMENT_RUINS_WEIGHT,
 } from "@/game/planets";
 import { applyPrepPeeks, countPrepPeeks } from "./prepPeeks";
+import { getPreSpacefaringSettlementCandidate } from "./preSpacefaringSettlement";
 
 /**
  * Начинает экспедицию на поверхность планеты.
@@ -119,6 +120,10 @@ export function startExpedition(
     const featureWeights = planetHasFeature(planetId, "ruined_settlement")
         ? { ruins: RUINED_SETTLEMENT_RUINS_WEIGHT }
         : undefined;
+    const hasBase =
+        Boolean(planet.outpostId) ||
+        state.outposts.some((outpost) => outpost.locationId === planet.id);
+    const settlement = getPreSpacefaringSettlementCandidate(planet, hasBase);
     const prepPeeks = countPrepPeeks(planet);
     const grid = applyPrepPeeks(
         generateExpeditionGrid(
@@ -126,6 +131,7 @@ export function startExpedition(
             pointOfInterest,
             planet.planetType,
             featureWeights,
+            settlement ?? undefined,
         ),
         prepPeeks,
     );
@@ -144,6 +150,7 @@ export function startExpedition(
         ruinsDepth: 0,
         pendingTileIndex: null,
         emptyArtifactTileIndex: null,
+        pendingPreSpacefaringDiscovery: null,
         rewards: {
             credits: 0,
             tradeGoods: [],

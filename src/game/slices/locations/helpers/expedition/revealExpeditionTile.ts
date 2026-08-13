@@ -36,6 +36,7 @@ import { RACES } from "@/game/constants/races";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { ResearchResourceType } from "@/game/types/research";
 import type { RaceId } from "@/game/types";
+import { patchLocation } from "@/game/utils/patchLocation";
 
 const r = (min: number, max: number) =>
     Math.floor(Math.random() * (max - min + 1)) + min;
@@ -188,6 +189,49 @@ export function revealExpeditionTile(
 
     // Apply tile effect
     switch (tile.type) {
+        case "settlement": {
+            const site = tile.settlement;
+            const hasBase =
+                Boolean(planet?.outpostId) ||
+                state.outposts.some(
+                    (outpost) => outpost.locationId === expedition.planetId,
+                );
+            if (
+                !site ||
+                !planet?.isEmpty ||
+                planet.preSpacefaringContact ||
+                hasBase
+            ) {
+                get().addLog(
+                    i18nStore.t("game_logs.pre_spacefaring_discovery_unavailable"),
+                    "warning",
+                );
+                break;
+            }
+
+            const contact = {
+                civilizationId: site.civilizationId,
+                development: site.development,
+                step: 0 as const,
+            };
+            set((draft) => ({
+                ...patchLocation(draft, expedition.planetId, {
+                    preSpacefaringContact: contact,
+                }),
+                activeExpedition: draft.activeExpedition
+                    ? {
+                          ...draft.activeExpedition,
+                          pendingPreSpacefaringDiscovery: contact,
+                      }
+                    : null,
+            }));
+            get().addLog(
+                i18nStore.t("game_logs.pre_spacefaring_discovered"),
+                "info",
+            );
+            break;
+        }
+
         case "market": {
             const credits = r(
                 EXPEDITION_MARKET_CREDITS_MIN,

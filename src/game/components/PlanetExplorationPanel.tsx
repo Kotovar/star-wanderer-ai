@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Close as DialogClose } from "@radix-ui/react-dialog";
 import { useTranslation } from "@/lib/useTranslation";
 import type {
   ExpeditionScanMode,
@@ -38,6 +40,7 @@ const TILE_COLORS: Record<ExploreTileType, { border: string; bg: string; glow: s
   core_sample: { border: "#c9a227", bg: "rgba(201,162,39,0.08)", glow: "rgba(201,162,39,0.25)" },
   hazard: { border: "#ff0040", bg: "rgba(255,0,64,0.08)", glow: "rgba(255,0,64,0.25)" },
   signal: { border: "#00d4ff", bg: "rgba(0,212,255,0.08)", glow: "rgba(0,212,255,0.25)" },
+  settlement: { border: "#00d4ff", bg: "rgba(0,212,255,0.15)", glow: "rgba(0,212,255,0.4)" },
 };
 
 const TILE_ICONS: Record<ExploreTileType, string> = {
@@ -50,6 +53,7 @@ const TILE_ICONS: Record<ExploreTileType, string> = {
   core_sample: "🪨",
   hazard: "☣️",
   signal: "📡",
+  settlement: "🏘️",
 };
 
 export function PlanetExplorationPanel() {
@@ -64,6 +68,9 @@ export function PlanetExplorationPanel() {
   const confirmRuinsOutcome = useGameStore((s) => s.confirmRuinsOutcome);
   const endExpedition = useGameStore((s) => s.endExpedition);
   const abortExpedition = useGameStore((s) => s.abortExpedition);
+  const dismissPreSpacefaringDiscovery = useGameStore(
+    (s) => s.dismissPreSpacefaringDiscovery,
+  );
   const { t } = useTranslation();
   const { cargoFull } = useCargoStatus();
 
@@ -134,6 +141,14 @@ export function PlanetExplorationPanel() {
     foundArtifact.id !== dismissedArtifactId &&
     !activeRuinsEvent;
   const emptyArtifactTileIndex = expedition.emptyArtifactTileIndex ?? null;
+  const pendingDiscovery = expedition.pendingPreSpacefaringDiscovery ?? null;
+  const showSettlementDiscovery =
+    pendingDiscovery !== null && !activeRuinsEvent && !showArtifactFound;
+  const legendTileTypes: readonly ExploreTileType[] = grid.some(
+    (tile) => tile.type === "settlement",
+  )
+    ? [...getTileTypesFor(isEmptyPlanet), "settlement"]
+    : getTileTypesFor(isEmptyPlanet);
 
   const handleAbort = () => {
     setShowAbortConfirm(false);
@@ -377,6 +392,36 @@ export function PlanetExplorationPanel() {
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={showSettlementDiscovery}
+        onOpenChange={(open) => {
+          if (!open) dismissPreSpacefaringDiscovery();
+        }}
+      >
+        <DialogContent
+          className="max-w-xs bg-[#050810] p-0"
+          style={{ border: "2px solid #00d4ff88" }}
+          showCloseButton={false}
+        >
+          <div className="border-b border-[#00d4ff44] bg-[rgba(0,212,255,0.08)] px-4 pb-3 pt-4 text-center">
+            <div className="mb-2 text-3xl">🏘️</div>
+            <DialogTitle className="font-['Orbitron'] text-sm font-bold uppercase tracking-wider text-[#00d4ff]">
+              {t("pre_spacefaring.discovery_title")}
+            </DialogTitle>
+          </div>
+          <div className="flex flex-col gap-3 p-4 text-center">
+            <DialogDescription className="text-xs leading-relaxed text-[#aaa]">
+              {t("pre_spacefaring.discovery_desc")}
+            </DialogDescription>
+            <DialogClose asChild>
+              <Button className="cursor-pointer border border-[#00d4ff88] bg-transparent py-2 text-xs font-bold uppercase tracking-wider text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810]">
+                {t("pre_spacefaring.discovery_continue")}
+              </Button>
+            </DialogClose>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Ruins event modal */}
       <Dialog open={!!activeRuinsEvent}>
         <DialogContent
@@ -491,7 +536,7 @@ export function PlanetExplorationPanel() {
         </div>
 
         <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 xl:w-36 xl:flex-col xl:items-start xl:justify-start">
-        {getTileTypesFor(isEmptyPlanet).map((type) => {
+        {legendTileTypes.map((type) => {
           const style = TILE_COLORS[type];
           return (
             <span

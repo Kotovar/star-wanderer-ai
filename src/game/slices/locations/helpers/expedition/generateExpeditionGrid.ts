@@ -1,6 +1,7 @@
 import type { PlanetPointOfInterest, RaceId } from "@/game/types";
 import type { ExploreTile, ExploreTileType } from "@/game/types/exploration";
 import type { PlanetType } from "@/game/types/planets";
+import type { PreSpacefaringSettlementCandidate } from "@/game/types/planets";
 import {
     EXPEDITION_GRID_SIZE,
     EXPEDITION_TILE_COUNT,
@@ -13,6 +14,7 @@ export function generateExpeditionGrid(
     pointOfInterest?: PlanetPointOfInterest,
     planetType?: PlanetType,
     featureWeights?: Partial<Record<ExploreTileType, number>>,
+    settlement?: PreSpacefaringSettlementCandidate,
 ): ExploreTile[] {
     const weights = getWeightsForRace(
         raceId,
@@ -32,11 +34,19 @@ export function generateExpeditionGrid(
         if (type === "artifact") artifactCount++;
         types.push(type);
     }
+    if (settlement) types[settlement.tileIndex] = "settlement";
 
     // Build grid
     return types.map((type, i) => ({
         type,
         revealed: false,
+        settlement:
+            type === "settlement" && settlement
+                ? {
+                      civilizationId: settlement.civilizationId,
+                      development: settlement.development,
+                  }
+                : undefined,
         x: i % EXPEDITION_GRID_SIZE,
         y: Math.floor(i / EXPEDITION_GRID_SIZE),
     }));

@@ -2336,6 +2336,7 @@
         "tile_ruins": "Ancient Ruins",
         "tile_incident": "Incident",
         "tile_artifact": "Artifact Site",
+        "tile_settlement": "Settlement",
         "tile_hidden": "?",
         "ruins_event_title": "Event",
         "incident_crew_damage": "{{name}} took -{{damage}} HP",
@@ -5743,6 +5744,11 @@
             "scan": "Scan the contents"
         }
     },
+    "pre_spacefaring": {
+        "discovery_title": "Settlement Discovered",
+        "discovery_desc": "The expedition found signs of a local civilization on the surface. The contact is recorded for future decisions.",
+        "discovery_continue": "CONTINUE"
+    },
     "game_logs": {
         "frontier_military_contact": "Military contact established. The station is marked in the navigator; the armament subsidy is available.",
         "cargo_jettisoned": "🗑 Jettisoned: {{name}} ×{{qty}}",
@@ -6088,6 +6094,8 @@
         "expedition_tile_hazard": "☣️ {{target_name}} caught in an eruption: −{{damage}} HP, −{{moraleLoss}} morale",
         "expedition_tile_signal": "📡 Signal source pinpointed: {{count}} tile(s) lit up",
         "expedition_tile_signal_empty": "📡 Signal source pinpointed, but there is nothing left to light up",
+        "pre_spacefaring_discovered": "🏘️ A pre-spacefaring settlement has been discovered.",
+        "pre_spacefaring_discovery_unavailable": "🏘️ This settlement can no longer be discovered.",
         "revealExpeditionTile_3": "🔬 Laboratory: {{value}} {{resType}} x{{qty}}",
         "revealExpeditionTile_4": "⚠️ Incident! {{target_name}} took {{damage}} damage and -{{moraleLoss}} morale{{mitigation}}.",
         "revealExpeditionTile_5": "✨ Artifact found: {{artifact_name}}!",

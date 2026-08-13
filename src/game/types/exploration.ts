@@ -1,4 +1,8 @@
 import type { Goods } from "./goods";
+import type {
+    PreSpacefaringContact,
+    PreSpacefaringSettlementSite,
+} from "./planets";
 import type { ResearchResourceType } from "./research";
 
 // ─── Gas Giant Dive ───────────────────────────────────────────────────────────
@@ -49,12 +53,14 @@ export type ExploreTileType =
     | "cache"
     | "core_sample"
     | "hazard"
-    | "signal";
+    | "signal"
+    | "settlement";
 
 export interface ExploreTile {
     type: ExploreTileType;
     revealed: boolean;
     peeked?: boolean; // подсмотрен через сканирование (тип виден, эффект не применён)
+    settlement?: PreSpacefaringSettlementSite;
     x: number; // 0–4
     y: number; // 0–4
 }
@@ -110,6 +116,7 @@ export interface ExpeditionState {
     ruinsDepth: RuinsDepth; // дополнительные камеры в текущих руинах
     pendingTileIndex: number | null; // tile waiting for ruins choice resolution
     emptyArtifactTileIndex?: number | null; // latest artifact tile that yielded no artifact
+    pendingPreSpacefaringDiscovery?: PreSpacefaringContact | null;
     rewards: ExpeditionReward;
     finished: boolean;
     crewIds: number[]; // crew members sent on expedition
