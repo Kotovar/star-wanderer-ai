@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { store as i18nStore } from "@/lib/useTranslation";
-import type { GameStore, SetState, Contract, ContractCompletionResult } from "@/game/types";
+import type { GameStore, SetState, Contract, ContractCompletionResult, FactionDeliveryChoice } from "@/game/types";
 import {
     processScanContracts as processScanContractsFn,
     completeScanContracts as completeScanContractsFn,
@@ -12,6 +12,7 @@ import {
     handleFabricationContracts as handleFabricationContractsFn,
     acceptContract as acceptContractFn,
     completeDeliveryContract as completeDeliveryContractFn,
+    resolveFactionDeliveryDecision as resolveFactionDeliveryDecisionFn,
     cancelContract as cancelContractFn,
 } from "./helpers";
 import { refreshVisitedPlanetContracts } from "@/game/contracts/refreshPlanetContracts";
@@ -37,6 +38,8 @@ export interface ContractsSlice {
      * @param contractId - ID контракта
      */
     completeDeliveryContract: (contractId: string) => void;
+
+    resolveFactionDeliveryDecision: (choice: FactionDeliveryChoice) => void;
 
     /**
      * Отменяет контракт
@@ -247,6 +250,10 @@ export const createContractsSlice = (
 
     completeDeliveryContract: (contractId) => {
         completeDeliveryContractFn(contractId, set, get);
+    },
+
+    resolveFactionDeliveryDecision: (choice) => {
+        resolveFactionDeliveryDecisionFn(choice, set, get);
     },
 
     cancelContract: (contractId) => {

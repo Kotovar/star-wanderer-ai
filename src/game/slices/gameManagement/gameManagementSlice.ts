@@ -21,6 +21,7 @@ import {
 } from "@/sounds";
 import { resetMetaProgress } from "@/game/metaProgress/store";
 import type { RunProfileId } from "@/game/galaxy/runProfiles";
+import { getValidPendingContractDecision } from "@/game/contracts/factionDelivery";
 import { loadPlayerSettings } from "../settings/playerSettings";
 
 const normalizeAudioSettings = (
@@ -121,6 +122,10 @@ export const createGameManagementSlice = (
         saved.knownTradeStations ??= [];
         saved.discoveredStationTypes ??= [];
         saved.pendingScoutEvent ??= null;
+        saved.pendingContractDecision = getValidPendingContractDecision(
+            saved.pendingContractDecision,
+            saved.activeContracts,
+        );
         saved.pendingContractCompletions = [];
         saved.pendingCrewLevelUps = [];
 
@@ -185,6 +190,10 @@ export const createGameManagementSlice = (
         saved.knownTradeStations ??= [];
         saved.discoveredStationTypes ??= [];
         saved.pendingScoutEvent ??= null;
+        saved.pendingContractDecision = getValidPendingContractDecision(
+            saved.pendingContractDecision,
+            saved.activeContracts,
+        );
         saved.pendingContractCompletions = [];
         saved.pendingCrewLevelUps = [];
 

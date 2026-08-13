@@ -178,4 +178,190 @@ assert.equal(
   "a missing delivery must not reopen a stale decision",
 );
 
+const { setUiState } = await import("./register-ui-loader.mjs");
+const { createContractsSlice } = await import(
+  "../src/game/slices/contracts/contractsSlice.ts"
+);
+
+const makeDecisionState = () => {
+  const contract = {
+    id: "choice-delivery",
+    type: "delivery",
+    reward: 1000,
+    cargo: "fuel",
+    targetLocationId: "synthetic-target",
+    sourceDominantRace: "human",
+    factionDelivery: { localRace: "synthetic", context: "relief" },
+  };
+  const reputationCalls = [];
+  const state = {
+    activeContracts: [contract],
+    completedContractIds: [],
+    pendingContractCompletions: [],
+    pendingContractDecision: null,
+    currentLocation: { id: "synthetic-target", type: "planet" },
+    ship: { cargo: [{ item: "fuel", quantity: 10, contractId: contract.id }] },
+    credits: 100,
+    crew: [],
+    raceReputation: { human: 0, synthetic: 0 },
+    frontierChainClosed: false,
+    frontierContractsCompleted: 0,
+    addLog: () => {},
+    gainExp: () => undefined,
+    changeReputation: (raceId, amount) => {
+      reputationCalls.push({ raceId, amount });
+      state.raceReputation[raceId] = (state.raceReputation[raceId] ?? 0) + amount;
+    },
+  };
+  const set = (update) => {
+    const patch = typeof update === "function" ? update(state) : update;
+    if (patch) Object.assign(state, patch);
+    setUiState(state);
+  };
+  Object.assign(state, createContractsSlice(set, () => state));
+  setUiState(state);
+  return { contract, reputationCalls, state };
+};
+
+const issuer = makeDecisionState();
+issuer.state.completeDeliveryContract(issuer.contract.id);
+assert.deepEqual(
+  issuer.state.pendingContractDecision,
+  { contractId: issuer.contract.id },
+  "reaching a faction delivery should wait for the player's choice",
+);
+assert.equal(issuer.state.credits, 100);
+assert.equal(issuer.state.ship.cargo.length, 1);
+assert.equal(issuer.state.activeContracts.length, 1);
+
+issuer.state.resolveFactionDeliveryDecision("issuer");
+assert.equal(issuer.state.credits, 1100);
+assert.deepEqual(issuer.reputationCalls, [{ raceId: "human", amount: 2 }]);
+assert.equal(issuer.state.ship.cargo.length, 0);
+assert.equal(issuer.state.pendingContractDecision, null);
+assert.equal(issuer.state.pendingContractCompletions[0].credits, 1000);
+
+const local = makeDecisionState();
+local.state.completeDeliveryContract(local.contract.id);
+local.state.resolveFactionDeliveryDecision("local");
+assert.equal(local.state.credits, 750);
+assert.deepEqual(local.reputationCalls, [
+  { raceId: "human", amount: -4 },
+  { raceId: "synthetic", amount: 4 },
+]);
+assert.equal(local.state.pendingContractCompletions[0].credits, 650);
+
+const localSnapshot = {
+  credits: local.state.credits,
+  cargo: local.state.ship.cargo.length,
+  completions: local.state.pendingContractCompletions.length,
+  reputationCalls: local.reputationCalls.length,
+};
+local.state.resolveFactionDeliveryDecision("local");
+assert.deepEqual(
+  {
+    credits: local.state.credits,
+    cargo: local.state.ship.cargo.length,
+    completions: local.state.pendingContractCompletions.length,
+    reputationCalls: local.reputationCalls.length,
+  },
+  localSnapshot,
+  "resolving a delivery twice must not award it twice",
+);
+
+const mismatched = makeDecisionState();
+mismatched.state.completeDeliveryContract(mismatched.contract.id);
+mismatched.state.currentLocation = { id: "other-planet", type: "planet" };
+mismatched.state.resolveFactionDeliveryDecision("issuer");
+assert.equal(mismatched.state.pendingContractDecision, null);
+assert.equal(mismatched.state.credits, 100);
+assert.equal(mismatched.state.ship.cargo.length, 1);
+assert.equal(mismatched.state.activeContracts.length, 1);
+
+const ordinary = makeDecisionState();
+delete ordinary.contract.factionDelivery;
+ordinary.state.completeDeliveryContract(ordinary.contract.id);
+assert.equal(ordinary.state.pendingContractDecision, null);
+assert.equal(ordinary.state.credits, 1100);
+assert.deepEqual(ordinary.reputationCalls, [{ raceId: "human", amount: 2 }]);
+assert.equal(ordinary.state.pendingContractCompletions[0].credits, 1000);
+
+const storage = new Map();
+globalThis.window = {};
+globalThis.localStorage = {
+  getItem: (key) => storage.get(key) ?? null,
+  setItem: (key, value) => storage.set(key, String(value)),
+  removeItem: (key) => storage.delete(key),
+};
+
+const [{ initialState }, { createGameManagementSlice }] = await Promise.all([
+  import("../src/game/initial/initialState.ts"),
+  import("../src/game/slices/gameManagement/gameManagementSlice.ts"),
+]);
+const savedDelivery = {
+  id: "saved-choice-delivery",
+  type: "delivery",
+  reward: 1000,
+  cargo: "fuel",
+  targetLocationId: "saved-target",
+  sourceDominantRace: "human",
+  factionDelivery: { localRace: "synthetic", context: "relief" },
+};
+const makeSavedGame = (activeContracts, pendingContractDecision) => {
+  const saved = structuredClone(initialState);
+  saved.activeContracts = activeContracts;
+  saved.pendingContractDecision = pendingContractDecision;
+  saved.currentLocation = {
+    id: "saved-target",
+    type: "planet",
+    name: "Saved target",
+  };
+  saved.ship = {
+    ...saved.ship,
+    cargo: [{ item: "fuel", quantity: 10, contractId: "saved-choice-delivery" }],
+  };
+  return saved;
+};
+const makeManagementState = () => {
+  const state = structuredClone(initialState);
+  state.addLog = () => {};
+  state.updateShipStats = () => {};
+  const set = (update) => {
+    const patch = typeof update === "function" ? update(state) : update;
+    if (patch) Object.assign(state, patch);
+  };
+  Object.assign(state, createGameManagementSlice(set, () => state));
+  return state;
+};
+const saveState = (state) =>
+  JSON.stringify({ version: 26, state });
+
+storage.set(
+  "star-wanderer-save",
+  saveState(
+    makeSavedGame([savedDelivery], { contractId: "saved-choice-delivery" }),
+  ),
+);
+const autoLoad = makeManagementState();
+assert.equal(autoLoad.loadGame(), true);
+assert.deepEqual(
+  autoLoad.pendingContractDecision,
+  { contractId: "saved-choice-delivery" },
+  "a valid decision must reopen after loading the auto save",
+);
+
+storage.set(
+  "star-wanderer-save-1",
+  saveState(
+    makeSavedGame([], { contractId: "missing-choice-delivery" }),
+  ),
+);
+const slotLoad = makeManagementState();
+slotLoad.loadFromSlot("manual1");
+assert.equal(
+  slotLoad.pendingContractDecision,
+  null,
+  "a stale decision must be cleared when loading a manual slot",
+);
+
 console.log("faction delivery choice checks passed");

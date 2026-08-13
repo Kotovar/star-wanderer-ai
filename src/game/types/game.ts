@@ -2,7 +2,7 @@ import type { Artifact } from "./artifacts";
 import type { CargoItem } from "./cargo";
 import type { CombatState } from "./combat";
 import type { CombatTurnTimeline } from "./combatCinematics";
-import type { BattleResult, Contract, ContractCompletionResult, FrontierSubsidy, PendingContractDecision, StormResult } from "./contracts";
+import type { BattleResult, Contract, ContractCompletionResult, FactionDeliveryChoice, FrontierSubsidy, PendingContractDecision, StormResult } from "./contracts";
 import type { GainExpResult } from "@/game/slices/crew/helpers/calculateGainExpResult";
 import type {
   CrewMember,
@@ -372,6 +372,7 @@ export interface GameCrew {
 export interface GameContracts {
   acceptContract: (contract: Contract) => boolean;
   completeDeliveryContract: (contractId: string) => void;
+  resolveFactionDeliveryDecision: (choice: FactionDeliveryChoice) => void;
   cancelContract: (contractId: string) => void;
   showContractCompletion: (completion: ContractCompletionResult) => void;
   dismissContractCompletion: () => void;
