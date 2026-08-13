@@ -78,7 +78,7 @@ const TILE_COLORS: Record<
 };
 
 const EXPEDITION_LOCATION_SPRITE = "/assets/expedition_locations.webp";
-const EXPEDITION_LOCATION_SPRITE_COUNT = 9;
+const EXPEDITION_LOCATION_SPRITE_COUNT = 10;
 
 /**
  * Карта намеренно частичная: тип клетки может появиться раньше своей
@@ -95,6 +95,7 @@ const TILE_SPRITE_INDEX: Partial<Record<ExploreTileType, number>> = {
   core_sample: 6,
   hazard: 7,
   signal: 8,
+  settlement: 9,
 };
 
 // Drawing functions for each tile type
