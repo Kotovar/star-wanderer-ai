@@ -6094,7 +6094,7 @@
         "expedition_tile_hazard": "☣️ {{target_name}} попал под выброс: −{{damage}} HP, −{{moraleLoss}} морали",
         "expedition_tile_signal": "📡 Источник сигнала запеленгован: подсвечено клеток — {{count}}",
         "expedition_tile_signal_empty": "📡 Источник сигнала запеленгован, но подсвечивать уже нечего",
-        "pre_spacefaring_discovered": "🏘️ Обнаружено поселение до-космической цивилизации.",
+        "pre_spacefaring_discovered": "🏘️ Обнаружено поселение докосмической цивилизации.",
         "pre_spacefaring_discovery_unavailable": "🏘️ Поселение больше недоступно для обнаружения.",
         "revealExpeditionTile_3": "🔬 Лаборатория: {{value}} {{resType}} x{{qty}}",
         "revealExpeditionTile_4": "⚠️ Инцидент! {{target_name}} получил {{damage}} урона и -{{moraleLoss}} морали{{mitigation}}.",
