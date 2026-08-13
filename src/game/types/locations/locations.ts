@@ -1,5 +1,9 @@
 import type { Contract } from "../contracts";
-import type { PlanetPointOfInterest, PlanetType } from "../planets";
+import type {
+    PlanetPointOfInterest,
+    PlanetType,
+    PreSpacefaringContact,
+} from "../planets";
 import type { RaceId } from "../races";
 import type { StationConfig, StationName } from "../stations";
 import type { EnemyShip } from "../enemy";
@@ -176,6 +180,7 @@ export interface Location {
 
     // Expedition fields
     expeditionCompleted?: boolean; // Surface expedition has been completed (once per planet)
+    preSpacefaringContact?: PreSpacefaringContact;
 
     // Gas giant fields
     gasGiantAtmosphere?: "hydrogen" | "methane" | "ammonia" | "nitrogen";
