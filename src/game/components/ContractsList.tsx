@@ -36,6 +36,27 @@ type TFunction = (
     params?: Record<string, string | number>,
 ) => string;
 
+export function getSupplyRunTurnInLocation(
+    contract: Pick<
+        Contract,
+        "sourceName" | "sourceSectorName" | "sourceType"
+    >,
+    t: TFunction,
+): string {
+    if (!contract.sourceName || !contract.sourceSectorName) {
+        return getLocationName(
+            contract.sourceSectorName ?? t("contracts.unknown"),
+            t,
+        );
+    }
+
+    const locationType =
+        contract.sourceType === "planet"
+            ? t("events.planet")
+            : t("events.friendly_ship");
+    return `${locationType} "${getLocationName(contract.sourceName, t)}" (${getLocationName(contract.sourceSectorName, t)})`;
+}
+
 function stripLeadingEmoji(text: string): string {
     return text.replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, "");
 }
@@ -542,10 +563,7 @@ export function ContractsList() {
                         },
                         {
                             label: t("contracts.task_where"),
-                            value:
-                                contract.sourceName && contract.sourceSectorName
-                                    ? `${t("contracts.supply_find_location")}. ${contract.sourceType === "planet" ? t("events.planet") : t("events.friendly_ship")} "${getLocationName(contract.sourceName, t)}" (${getLocationName(contract.sourceSectorName, t)})`
-                                    : t("contracts.supply_find_location"),
+                            value: getSupplyRunTurnInLocation(contract, t),
                         },
                     ],
                 };

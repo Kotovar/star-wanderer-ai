@@ -11,12 +11,32 @@ import { setUiState, patchUiState } from "./register-ui-loader.mjs";
 
 const { createElement } = await import("react");
 const { renderToStaticMarkup } = await import("react-dom/server");
-const { ContractsList } = await import(
+const { ContractsList, getSupplyRunTurnInLocation } = await import(
   "../src/game/components/ContractsList.tsx"
 );
 const { ShopTab } = await import("../src/game/components/station/ShopTab.tsx");
 const { PlanetPanel } = await import(
   "../src/game/components/PlanetPanel.tsx"
+);
+const { store: i18nStore } = await import("../src/lib/useTranslation.ts");
+
+const supplyTurnIn = getSupplyRunTurnInLocation(
+  {
+    sourceName: "Таласса",
+    sourceSectorName: "Гелиос-1",
+    sourceType: "planet",
+  },
+  i18nStore.t.bind(i18nStore),
+);
+assert.equal(
+  supplyTurnIn,
+  'Планета "Таласса" (Гелиос-1)',
+  "where-to-turn-in must name only the receiving location",
+);
+assert.doesNotMatch(
+  supplyTurnIn,
+  /Купить|найти в другом месте/,
+  "where-to-turn-in must not repeat the goods-acquisition hint",
 );
 
 const FABRICATION = {
@@ -178,7 +198,6 @@ patchUiState({
 });
 
 // ── И то же самое на английском: имена не должны застревать по-русски ───────
-const { store: i18nStore } = await import("../src/lib/useTranslation.ts");
 i18nStore.changeLanguage("en");
 // Английский каталог грузится отдельным чанком — дождёмся его
 await new Promise((done) => setTimeout(done, 0));
