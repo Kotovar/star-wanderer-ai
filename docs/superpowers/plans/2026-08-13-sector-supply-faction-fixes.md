@@ -48,13 +48,17 @@
   );
   ```
 
-  Also add a source assertion for the modal context call:
+  Import a pure formatter from the modal and assert its real RU output:
 
   ```js
-  assert.match(
-    modalSource,
-    /contracts\.faction_delivery\.context\.\$\{context\}[\s\S]*sourceRace:\s*sourceRaceName/,
-    "diplomatic-claim copy must receive the issuer race",
+  assert.equal(
+    getFactionDeliveryContextText(
+      i18nStore.t.bind(i18nStore),
+      "diplomatic_claim",
+      "Дипломатический груз",
+      "Кристаллоиды",
+    ),
+    "Местные власти оспаривают право Кристаллоиды распоряжаться этим грузом.",
   );
   ```
 
@@ -62,7 +66,7 @@
 
   Run: `npm run check:faction-delivery-choices`
 
-  Expected: failure because the current two sequential reputation changes reduce people and crystalloids to `+3` and `−3`, and because `sourceRace` is absent from the context interpolation.
+  Expected: failure because the current two sequential reputation changes reduce people and crystalloids to `+3` and `−3`, and the pure context formatter is not exported yet.
 
 - [ ] **Step 3: Implement the minimal ripple exclusion**
 
@@ -100,7 +104,7 @@
   });
   ```
 
-  Pass `sourceRace: sourceRaceName` alongside `cargo` to the modal context translation. Update the two campaign/reputation documents to say that direct parties stay exact and ripple reaches only third races.
+  Export `getFactionDeliveryContextText(t, context, cargoName, sourceRaceName)` from the modal, have the modal render its return value, and pass both `cargo` and `sourceRace` to the translation. Update the two campaign/reputation documents to say that direct parties stay exact and ripple reaches only third races.
 
 - [ ] **Step 4: Run the focused check and confirm GREEN**
 
@@ -118,32 +122,36 @@
 ### Task 2: Точка сдачи в поставке ресурсов
 
 **Files:**
-- Modify: `src/game/components/ContractsList.tsx:509-550`
-- Modify: `scripts/check-contract-labels.mjs:292-310`
+- Modify: `src/game/components/ContractsList.tsx:30-60, 509-550`
+- Modify: `scripts/check-contract-labels.mjs:10-20, 292-310`
 
 **Interfaces:**
 - Consumes: `Contract.sourceName`, `sourceSectorName`, `sourceType`, `getLocationName`, and existing `contracts.task_where` / `events.*` translation keys.
-- Produces: the `supply_run` details row `Где сдать`, containing only the named receiving location.
+- Produces: `getSupplyRunTurnInLocation(contract, t)` and the `supply_run` details row `Где сдать`, containing only the named receiving location.
 - Consumed later: no new interface; contract detail modal renders the returned task values unchanged.
 
-- [ ] **Step 1: Write a failing details-source regression**
+- [ ] **Step 1: Write a failing turn-in formatter regression**
 
-  In `scripts/check-contract-labels.mjs`, isolate the text between `case "supply_run":` and the next `case "combat":`, then assert:
+  Import `getSupplyRunTurnInLocation` alongside `ContractsList` in `scripts/check-contract-labels.mjs`, then add an observable location assertion:
 
   ```js
-  const supplyRunBranch = listSource.slice(
-    listSource.indexOf('case "supply_run":'),
-    listSource.indexOf('case "combat":'),
+  const supplyTurnIn = getSupplyRunTurnInLocation(
+    {
+      sourceName: "Таласса",
+      sourceSectorName: "Гелиос-1",
+      sourceType: "planet",
+    },
+    i18nStore.t.bind(i18nStore),
+  );
+  assert.equal(
+    supplyTurnIn,
+    'Планета "Таласса" (Гелиос-1)',
+    "where-to-turn-in must name only the receiving location",
   );
   assert.doesNotMatch(
-    supplyRunBranch,
-    /supply_find_location/,
+    supplyTurnIn,
+    /Купить|найти в другом месте/,
     "where-to-turn-in must not repeat the goods-acquisition hint",
-  );
-  assert.match(
-    supplyRunBranch,
-    /getLocationName\(contract\.sourceName, t\)/,
-    "where-to-turn-in must name the receiving location",
   );
   ```
 
@@ -151,19 +159,28 @@
 
   Run: `npm run check:contract-labels`
 
-  Expected: failure at `where-to-turn-in must not repeat the goods-acquisition hint`, because the branch currently combines `supply_find_location` and the destination into one `task_where` value.
+  Expected: failure because `getSupplyRunTurnInLocation` is not exported yet.
 
 - [ ] **Step 3: Replace the mixed value with only the receiving location**
 
-  In the `supply_run` branch of `getContractDetails`, retain the existing `task_what` and progress rows. Replace the `task_where` value with only:
+  Export this pure formatter near `TFunction` in `ContractsList.tsx`:
 
   ```ts
-  contract.sourceName && contract.sourceSectorName
-    ? `${contract.sourceType === "planet" ? t("events.planet") : t("events.friendly_ship")} "${getLocationName(contract.sourceName, t)}" (${getLocationName(contract.sourceSectorName, t)})`
-    : getLocationName(contract.sourceSectorName ?? t("contracts.unknown"), t)
+  export function getSupplyRunTurnInLocation(
+    contract: Pick<Contract, "sourceName" | "sourceSectorName" | "sourceType">,
+    t: TFunction,
+  ): string {
+    if (!contract.sourceName || !contract.sourceSectorName) {
+      return getLocationName(contract.sourceSectorName ?? t("contracts.unknown"), t);
+    }
+    const type = contract.sourceType === "planet"
+      ? t("events.planet")
+      : t("events.friendly_ship");
+    return `${type} "${getLocationName(contract.sourceName, t)}" (${getLocationName(contract.sourceSectorName, t)})`;
+  }
   ```
 
-  Do not add a second purchase hint or a new translation key.
+  Use it as the `task_where` value in `supply_run`. Do not add a second purchase hint or a new translation key.
 
 - [ ] **Step 4: Run the focused check and confirm GREEN**
 
@@ -182,7 +199,7 @@
 
 **Files:**
 - Modify: `src/game/components/SectorMap.tsx:1337-1368`
-- Modify: `scripts/check-sector-rules.mjs:20-100`
+- Modify: `scripts/check-sector-rules.mjs:1-100`
 
 **Interfaces:**
 - Consumes: existing `currentSectorRule`, rule name/description translations and scanner overlay.
@@ -191,11 +208,22 @@
 
 - [ ] **Step 1: Write a failing layout regression**
 
-  In `scripts/check-sector-rules.mjs`, read `src/game/components/SectorMap.tsx` into `sectorMapSource` and add:
+  In `scripts/check-sector-rules.mjs`, register the UI loader, render the real `SectorMap` with a `trade_lane` sector, then assert the emitted overlay markup:
 
   ```js
+  const { setUiState } = await import("./register-ui-loader.mjs");
+  setUiState({
+    currentSector: { id: 1, name: "Астерион-1", ruleId: "trade_lane", locations: [] },
+    selectLocation: () => {}, travelThroughBlackHole: () => {}, completedLocations: [],
+    getEffectiveScanRange: () => 0, canScanObject: () => false,
+    syncNavigatorIntel: () => {}, navigatorTargets: [], knownLocationIntel: {}, outposts: [],
+    crew: [], settings: { animationsEnabled: false }, sectorZoom: 1,
+    sectorOffset: { x: 0, y: 0 }, setSectorZoom: () => {}, setSectorOffset: () => {},
+  });
+  const { SectorMap } = await import("../src/game/components/SectorMap.tsx");
+  const sectorMapMarkup = renderToStaticMarkup(createElement(SectorMap));
   assert.match(
-    sectorMapSource,
+    sectorMapMarkup,
     /flex min-w-0 flex-col gap-1 lg:flex-row/,
     "desktop sector overlay must put the system feature beside the sector name",
   );
