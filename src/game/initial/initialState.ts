@@ -8,6 +8,7 @@ import { initialModules, STARTING_FUEL } from "@/game/modules/initial";
 import { initializeStationData } from "@/game/stations/initialize";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import { applyResearchedTechs } from "@/game/research/applyResearchedTechs";
+import { hasCombatArmament } from "@/game/contracts/frontierContracts";
 import type { GameState, CrewMember, TechnologyId, RaceId } from "@/game/types";
 
 /** Начальный номер хода */
@@ -50,7 +51,11 @@ const INITIAL_DISCOVERED_TECHS: TechnologyId[] = Object.values(RESEARCH_TREE)
 /** Счётчик загрузок игры (для предотвращения показа модалок после загрузки) */
 const INITIAL_GAME_LOADED_COUNT = 0;
 
-const sectors = generateGalaxy();
+const initialArmed = hasCombatArmament(initialModules);
+const sectors = generateGalaxy(null, {
+  canOfferCombat: initialArmed,
+  allowFrontier: !initialArmed,
+});
 const nebulae = generateNebulae(sectors);
 const { prices, stock } = initializeStationData(sectors);
 
@@ -257,6 +262,10 @@ const baseState: GameState = {
   runProfileId: null,
   runProfileArcRewardClaimed: false,
   runProfileArcTarget: null,
+  frontierContractsCompleted: 0,
+  frontierChainClosed: initialArmed,
+  frontierCombatOffersSeeded: initialArmed,
+  frontierSubsidy: null,
   activeCrisis: null,
   discoveredCrisisIds: [],
   discoveredEnemyCodexIds: [],

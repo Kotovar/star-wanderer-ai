@@ -200,9 +200,10 @@ export const ensureStationTypes = (
             !shouldSkipSectorEnsure(sector, "station"),
     );
 
-    const requiredTypes: Array<"shipyard" | "medical"> = [
+    const requiredTypes: Array<"shipyard" | "medical" | "military"> = [
         "shipyard",
         "medical",
+        ...(tier === 1 ? ["military" as const] : []),
     ];
     const stationTypes = tierSectors
         .flatMap((sector) => sector.locations)
@@ -291,7 +292,8 @@ export const ensureDiplomaticStation = (sectors: Sector[]): void => {
             (l) =>
                 l.type === "station" &&
                 l.stationType !== "shipyard" &&
-                l.stationType !== "medical",
+                l.stationType !== "medical" &&
+                l.stationType !== "military",
         );
 
         if (stationIdx >= 0) {

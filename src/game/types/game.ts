@@ -2,7 +2,7 @@ import type { Artifact } from "./artifacts";
 import type { CargoItem } from "./cargo";
 import type { CombatState } from "./combat";
 import type { CombatTurnTimeline } from "./combatCinematics";
-import type { BattleResult, Contract, ContractCompletionResult, StormResult } from "./contracts";
+import type { BattleResult, Contract, ContractCompletionResult, FrontierSubsidy, StormResult } from "./contracts";
 import type { GainExpResult } from "@/game/slices/crew/helpers/calculateGainExpResult";
 import type {
   CrewMember,
@@ -211,6 +211,10 @@ export interface GameState {
   runProfileId: RunProfileId | null;
   runProfileArcRewardClaimed: boolean;
   runProfileArcTarget: RunProfileArcTarget | null;
+  frontierContractsCompleted: number;
+  frontierChainClosed: boolean;
+  frontierCombatOffersSeeded: boolean;
+  frontierSubsidy: FrontierSubsidy | null;
   activeCrisis: ActiveCrisisState | null; // Currently active global crisis
   discoveredCrisisIds: string[]; // Crises already encountered by the player
   discoveredEnemyCodexIds: string[]; // Enemy types already encountered by the player

@@ -33,6 +33,7 @@ import {
     planSectorRules,
     shouldSkipSectorEnsure,
 } from "./sectorRules";
+import type { ContractGenerationContext } from "../contracts/frontierContracts";
 
 // ============================================================================
 // Основная функция генерации
@@ -52,7 +53,13 @@ import {
  *
  * @returns Массив секторов галактики с назначенными локациями и координатами
  */
-export const generateGalaxy = (profile: RunProfile | null = null): Sector[] => {
+export const generateGalaxy = (
+    profile: RunProfile | null = null,
+    context: ContractGenerationContext = {
+        canOfferCombat: true,
+        allowFrontier: false,
+    },
+): Sector[] => {
     // Reset boss distribution for new game
     bossDistribution.reset();
     bossDistribution.reserveBosses("void_oracle", "the_eternal");
@@ -210,7 +217,7 @@ export const generateGalaxy = (profile: RunProfile | null = null): Sector[] => {
     sectors.forEach((sector) => assignGridPositions(sector.locations, true));
 
     // Постобработка
-    populateContracts(sectors, profile);
+    populateContracts(sectors, profile, context);
     populateShipQuests(sectors);
     return sectors;
 };

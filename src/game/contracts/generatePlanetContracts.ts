@@ -8,6 +8,7 @@ import { DELIVERY_GOODS } from "../constants/contracts";
 import { CONTRACT_REWARDS as REWARD } from "./rewards";
 import { getGeneratedContractTimeLimit } from "./contractDeadline";
 import type { RunProfile } from "../galaxy/runProfiles";
+import type { ContractGenerationContext } from "./frontierContracts";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Reward scaling constants (index = tier - 1)
@@ -54,7 +55,9 @@ export const generatePlanetContracts = (
     allSectors: Sector[],
     dominantRace?: RaceId,
     profile?: RunProfile | null,
+    _context: ContractGenerationContext = { canOfferCombat: true, allowFrontier: false },
 ): Contract[] => {
+    void _context;
     const contracts: Contract[] = [];
     const numContracts = Math.floor(Math.random() * 2) + 1;
 

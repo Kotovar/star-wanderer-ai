@@ -30,6 +30,7 @@ import {
 } from "@/game/galaxy/runProfiles";
 import { addTradeGoodWithinCapacity } from "@/game/slices/ship/helpers/addTradeGood";
 import { getFreeCargoSpace } from "@/game/slices/ship/helpers/getCargoCapacity";
+import { hasCombatArmament } from "@/game/contracts/frontierContracts";
 import type {
   GameStore,
   Goods,
@@ -64,6 +65,7 @@ export const restartGame = (
   setSoundPlaybackEnabled(settings.soundEnabled);
   setAudioVolumes(settings);
   const patch = buildStartingState(templateId, modifierIds);
+  const armed = hasCombatArmament(patch.ship.modules);
   clearLocalStorage();
 
   // Модификаторы запуска могут смещать состав галактики («В розыске» — охотники)
@@ -81,7 +83,10 @@ export const restartGame = (
       }
     : profile;
 
-  const newSectors = generateGalaxy(runProfile);
+  const newSectors = generateGalaxy(runProfile, {
+    canOfferCombat: armed,
+    allowFrontier: !armed,
+  });
   const nebulae = generateNebulae(newSectors);
   newSectors[STARTING_SECTOR_INDEX].visited = true;
 
@@ -125,6 +130,10 @@ export const restartGame = (
     startTemplateId: templateId,
     startModifierIds: modifierIds,
     runProfileId: profile.id,
+    frontierContractsCompleted: 0,
+    frontierChainClosed: armed,
+    frontierCombatOffersSeeded: armed,
+    frontierSubsidy: null,
     // initialState — модульный синглтон, вычисляется один раз при импорте,
     // поэтому его runId нельзя переиспользовать между забегами — иначе все
     // рестарты, которые не проходят через loadFromSlot, получили бы один и

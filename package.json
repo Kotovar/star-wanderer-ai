@@ -20,6 +20,7 @@
     "check:combat-cinematics": "node scripts/check-combat-cinematics.mjs",
     "check:boss-generation": "node --no-warnings --experimental-strip-types scripts/check-galaxy-boss-generation.mjs",
     "check:run-profiles": "node --no-warnings scripts/check-run-profiles.mjs",
+    "check:frontier-contracts": "node --no-warnings --experimental-strip-types scripts/check-frontier-contracts.mjs",
     "check:launch-modifiers": "node --no-warnings scripts/check-launch-modifiers.mjs",
     "check:asteroid-belt": "node --no-warnings scripts/check-asteroid-belt.mjs",
     "check:response-contracts": "node --no-warnings scripts/check-response-contracts.mjs",

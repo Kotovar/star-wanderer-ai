@@ -5,11 +5,20 @@ import type { WeaponType } from "./modules";
 
 export type ContactSourceType = "planet" | "station" | "ship";
 
+export type FrontierSubsidy = {
+    targetStationId: string;
+    weaponBayAvailable: boolean;
+    weaponAvailable: boolean;
+};
+
 export interface Contract {
     id: string;
     type: ContractType;
     desc: string;
     reward: number;
+    progressionTrack?: "frontier";
+    bountyTier?: "friendly";
+    reputationReward?: number;
     cargo?: string;
     quantity?: number; // For supply_run contracts
     targetSector?: number;
