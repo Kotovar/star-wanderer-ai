@@ -47,6 +47,83 @@ const RESEARCH_ANOMALIES = {
     range: [2, 2, 2],
 } as const;
 
+const getEnemyTargetSectors = (
+    sector: Sector,
+    allSectors: Sector[],
+): Sector[] =>
+    allSectors.filter(
+        (candidate) =>
+            candidate.id !== sector.id &&
+            candidate.tier < 4 &&
+            candidate.locations.some(
+                (location) => location.type === "enemy" && !location.defeated,
+            ),
+    );
+
+export const generateCombatContract = (
+    sector: Sector,
+    planetId: string,
+    allSectors: Sector[],
+): Contract | null => {
+    const targets = getEnemyTargetSectors(sector, allSectors);
+    if (targets.length === 0) return null;
+    const target = targets[Math.floor(Math.random() * targets.length)];
+
+    return {
+        id: `c-${planetId}-${Date.now()}-${Math.random()}`,
+        type: "combat",
+        desc: "contracts.desc_combat_generic",
+        sectorId: target.id,
+        sectorName: target.name,
+        sourcePlanetId: planetId,
+        sourceSectorName: sector.name,
+        reward: REWARD.combat.base + Math.floor(Math.random() * REWARD.combat.range),
+    };
+};
+
+export const generateBountyContract = (
+    sector: Sector,
+    planetId: string,
+    allSectors: Sector[],
+    sourceReputation = 0,
+): Contract | null => {
+    const targets = getEnemyTargetSectors(sector, allSectors);
+    if (targets.length === 0) return null;
+    const target = targets[Math.floor(Math.random() * targets.length)];
+    const enemies = target.locations.filter(
+        (location) => location.type === "enemy" && !location.defeated,
+    );
+    const enemy = enemies[Math.floor(Math.random() * enemies.length)];
+    const threat = enemy.threat ?? 1;
+    const normalReward =
+        REWARD.bounty.baseFlat +
+        threat * REWARD.bounty.threatMult +
+        Math.floor(Math.random() * (threat * REWARD.bounty.threatMult));
+    const isFriendlySource = ["friendly", "allied"].includes(
+        getReputationLevel(sourceReputation),
+    );
+
+    return {
+        id: `c-${planetId}-${Date.now()}-${Math.random()}`,
+        type: "bounty",
+        desc: "contracts.desc_bounty_generic",
+        targetThreat: threat,
+        sourcePlanetId: planetId,
+        sourceSectorName: sector.name,
+        targetSector: target.id,
+        targetSectorName: target.name,
+        timeLimit: getGeneratedContractTimeLimit(
+            "bounty",
+            sector.tier ?? 1,
+            target.tier ?? sector.tier ?? 1,
+        ),
+        reward: isFriendlySource ? Math.floor(normalReward * 1.25) : normalReward,
+        ...(isFriendlySource
+            ? { bountyTier: "friendly" as const, reputationReward: 4 }
+            : {}),
+    };
+};
+
 // Generate planet contracts with race-specific quests
 export const generatePlanetContracts = (
     planetType: string,
@@ -426,27 +503,8 @@ export const generatePlanetContracts = (
         },
         {
             type: "combat" as const,
-            gen: (): Contract | null => {
-                // Find a sector that actually has enemies
-                const sectorsWithEnemies = availableSectors.filter((s) =>
-                    s.locations.some((l) => l.type === "enemy"),
-                );
-                if (sectorsWithEnemies.length === 0) return null;
-                const tgt =
-                    sectorsWithEnemies[
-                        Math.floor(Math.random() * sectorsWithEnemies.length)
-                    ];
-                return {
-                    id: `c-${planetId}-${Date.now()}-${Math.random()}`,
-                    type: "combat",
-                    desc: "contracts.desc_combat_generic",
-                    sectorId: tgt.id,
-                    sectorName: tgt.name,
-                    sourcePlanetId: planetId,
-                    sourceSectorName: sector.name,
-                    reward: REWARD.combat.base + Math.floor(Math.random() * REWARD.combat.range),
-                };
-            },
+            gen: (): Contract | null =>
+                generateCombatContract(sector, planetId, allSectors),
         },
         {
             type: "research" as const,
@@ -478,53 +536,13 @@ export const generatePlanetContracts = (
         },
         {
             type: "bounty" as const,
-            gen: (): Contract | null => {
-                // Find a sector with enemies
-                const sectorsWithEnemies = availableSectors.filter((s) =>
-                    s.locations.some((l) => l.type === "enemy"),
-                );
-                if (sectorsWithEnemies.length === 0) return null;
-                const tgt =
-                    sectorsWithEnemies[
-                        Math.floor(Math.random() * sectorsWithEnemies.length)
-                    ];
-                // Pick an actual enemy from the sector and use its real threat
-                const enemies = tgt.locations.filter(
-                    (l) => l.type === "enemy",
-                );
-                const pickedEnemy =
-                    enemies[Math.floor(Math.random() * enemies.length)];
-                const threat = pickedEnemy.threat ?? 1;
-                const id = `c-${planetId}-${Date.now()}-${Math.random()}`;
-                const normalReward =
-                    REWARD.bounty.baseFlat +
-                    threat * REWARD.bounty.threatMult +
-                    Math.floor(Math.random() * (threat * REWARD.bounty.threatMult));
-                const isFriendlySource = ["friendly", "allied"].includes(
-                    getReputationLevel(context.sourceReputation ?? 0),
-                );
-                return {
-                    id,
-                    type: "bounty",
-                    desc: "contracts.desc_bounty_generic",
-                    targetThreat: threat,
-                    sourcePlanetId: planetId,
-                    sourceSectorName: sector.name,
-                    targetSector: tgt.id,
-                    targetSectorName: tgt.name,
-                    timeLimit: getGeneratedContractTimeLimit(
-                        "bounty",
-                        sector.tier ?? 1,
-                        tgt.tier ?? sector.tier ?? 1,
-                    ),
-                    reward: isFriendlySource
-                        ? Math.floor(normalReward * 1.25)
-                        : normalReward,
-                    ...(isFriendlySource
-                        ? { bountyTier: "friendly" as const, reputationReward: 4 }
-                        : {}),
-                };
-            },
+            gen: (): Contract | null =>
+                generateBountyContract(
+                    sector,
+                    planetId,
+                    allSectors,
+                    context.sourceReputation,
+                ),
         },
         {
             type: "expedition_survey" as const,

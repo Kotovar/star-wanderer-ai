@@ -143,6 +143,7 @@ export const createCraftingSlice = (
             "info",
         );
         get().updateShipStats();
+        get().syncCombatContractOffers();
     },
 
     craftModule: (recipeId) => {

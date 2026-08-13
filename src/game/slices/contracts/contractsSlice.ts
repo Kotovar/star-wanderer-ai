@@ -14,6 +14,11 @@ import {
     completeDeliveryContract as completeDeliveryContractFn,
     cancelContract as cancelContractFn,
 } from "./helpers";
+import { refreshVisitedPlanetContracts } from "@/game/contracts/refreshPlanetContracts";
+import {
+    FRONTIER_CONTRACT_TARGET,
+    hasCombatArmament,
+} from "@/game/contracts/frontierContracts";
 
 /**
  * Интерфейс ContractsSlice
@@ -74,6 +79,7 @@ export interface ContractsSlice {
     handleExpeditionSurveyContracts: (locationIdx: number) => void;
     handleCrisisResponseContracts: (locationIdx: number) => void;
     handleFabricationContracts: (locationIdx: number) => void;
+    syncCombatContractOffers: () => void;
 }
 
 /**
@@ -100,6 +106,32 @@ export const createContractsSlice = (
             pendingContractCompletions:
                 state.pendingContractCompletions.slice(1),
         }));
+    },
+
+    syncCombatContractOffers: () => {
+        const state = get();
+        if (
+            !hasCombatArmament(state.ship.modules) ||
+            state.frontierCombatOffersSeeded
+        ) {
+            return;
+        }
+
+        set((current) => ({
+            frontierCombatOffersSeeded: true,
+            ...(current.frontierContractsCompleted < FRONTIER_CONTRACT_TARGET
+                ? { frontierChainClosed: true }
+                : {}),
+        }));
+
+        const refreshed = refreshVisitedPlanetContracts(get(), {
+            ensureCombatOffer: true,
+        });
+        if (refreshed) {
+            set((current) => ({
+                galaxy: { ...current.galaxy, sectors: refreshed },
+            }));
+        }
     },
 
     processScanContracts: () => {

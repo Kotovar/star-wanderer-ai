@@ -1,4 +1,7 @@
-import { generatePlanetContracts } from "./generatePlanetContracts";
+import {
+    generateCombatContract,
+    generatePlanetContracts,
+} from "./generatePlanetContracts";
 import {
     generateCrisisResponseContract,
     generateFabricationContract,
@@ -6,10 +9,14 @@ import {
 import { FABRICATION_OFFER_CHANCE } from "./seedResponseContracts";
 import { isContractTargetAvailable } from "./targetAvailability";
 import { getRunProfile } from "@/game/galaxy/runProfiles";
+import { hasCombatArmament } from "./frontierContracts";
 import type { Contract, GameState, Sector } from "@/game/types";
 
 const MAX_OPEN_CONTRACTS = 5;
 
+type RefreshOptions = {
+    ensureCombatOffer?: boolean;
+};
 
 export const refreshVisitedPlanetContracts = (
     state: Pick<
@@ -20,9 +27,14 @@ export const refreshVisitedPlanetContracts = (
         | "completedContractIds"
         | "completedLocations"
         | "galaxy"
+        | "frontierChainClosed"
+        | "frontierCombatOffersSeeded"
+        | "raceReputation"
         | "research"
         | "runProfileId"
+        | "ship"
     >,
+    { ensureCombatOffer = false }: RefreshOptions = {},
 ): Sector[] | null => {
     const ignoredIds = new Set([
         ...state.activeContracts.map((contract) => contract.id),
@@ -35,6 +47,7 @@ export const refreshVisitedPlanetContracts = (
         unlockedRecipes: state.research.unlockedRecipes,
     };
     const profile = getRunProfile(state.runProfileId);
+    const armed = hasCombatArmament(state.ship?.modules ?? []);
     let changed = false;
     const sectors = state.galaxy.sectors.map((sector) => ({
         ...sector,
@@ -85,6 +98,34 @@ export const refreshVisitedPlanetContracts = (
             }
 
             const remainingCapacity = capacity - dynamicContracts.length;
+            const hasCombatOffer = openContracts.some(
+                (contract) =>
+                    contract.type === "combat" || contract.type === "bounty",
+            );
+            const combatOffer =
+                ensureCombatOffer && armed && !hasCombatOffer
+                    ? generateCombatContract(
+                          sector,
+                          location.id,
+                          state.galaxy.sectors,
+                      )
+                    : null;
+            const replaceIndex =
+                combatOffer && remainingCapacity <= 0
+                    ? openContracts.findIndex(
+                          (contract) =>
+                              !contract.isRaceQuest &&
+                              contract.type !== "crisis_response" &&
+                              contract.type !== "fabrication",
+                      )
+                    : -1;
+            const generationContext = {
+                canOfferCombat: armed,
+                allowFrontier: !state.frontierChainClosed,
+                sourceReputation: location.dominantRace
+                    ? state.raceReputation?.[location.dominantRace] ?? 0
+                    : undefined,
+            };
             const freshContracts =
                 remainingCapacity > 0
                     ? generatePlanetContracts(
@@ -95,13 +136,26 @@ export const refreshVisitedPlanetContracts = (
                           state.galaxy.sectors,
                           location.dominantRace,
                           profile,
-                      ).slice(0, remainingCapacity)
+                          generationContext,
+                      ).slice(
+                          0,
+                          Math.max(
+                              0,
+                              remainingCapacity - (combatOffer ? 1 : 0),
+                          ),
+                      )
                     : [];
-            const contracts = [
+            let contracts = [
                 ...openContracts,
                 ...dynamicContracts.slice(0, Math.max(0, capacity)),
+                ...(combatOffer && remainingCapacity > 0 ? [combatOffer] : []),
                 ...freshContracts,
             ];
+            if (combatOffer && replaceIndex >= 0) {
+                contracts = contracts.map((contract, index) =>
+                    index === replaceIndex ? combatOffer : contract,
+                );
+            }
             if (
                 contracts.length !== (location.contracts ?? []).length ||
                 contracts.some((contract, index) => contract !== location.contracts?.[index])

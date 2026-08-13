@@ -56,7 +56,9 @@ export const createShopSlice = (
         } else if (item.type === "module") {
             buyModule(set, get, item, stationId, inv, bought);
         } else if (item.type === "weapon") {
-            buyWeapon(set, get, item, stationId, inv, bought);
+            if (buyWeapon(set, get, item, stationId, inv, bought)) {
+                get().syncCombatContractOffers();
+            }
         } else {
             get().addLog( i18nStore.t("game_logs.createShopSlice_3"), "error");
             return;

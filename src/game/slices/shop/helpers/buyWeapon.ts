@@ -59,7 +59,7 @@ export const buyWeapon = (
     stationId: string,
     inv: Record<string, number>,
     bought: number,
-): void => {
+): boolean => {
     const state = get();
 
     // Проверка наличия оружейной палубы
@@ -67,7 +67,7 @@ export const buyWeapon = (
 
     if (!weaponBayCount) {
         get().addLog( i18nStore.t("game_logs.buyWeapon_1"), "error");
-        return;
+        return false;
     }
 
     // Поиск свободного слота
@@ -75,13 +75,13 @@ export const buyWeapon = (
 
     if (!slot) {
         get().addLog( i18nStore.t("game_logs.buyWeapon_2"), "error");
-        return;
+        return false;
     }
 
     const weaponType = item.weaponType;
     if (!weaponType) {
         get().addLog( i18nStore.t("game_logs.buyWeapon_3"), "error");
-        return;
+        return false;
     }
 
     set((s) => ({
@@ -110,4 +110,5 @@ export const buyWeapon = (
 
     get().addLog( i18nStore.t("game_logs.buyWeapon_4", { name: WEAPON_TYPES[weaponType].name }), "info");
     playSound("ui_purchase");
+    return true;
 };

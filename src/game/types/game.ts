@@ -268,6 +268,7 @@ export interface GameActions {
   setSectorZoom: (zoom: number) => void;
   setGalaxyOffset: (offset: { x: number; y: number }) => void;
   setSectorOffset: (offset: { x: number; y: number }) => void;
+  syncCombatContractOffers: () => void;
 }
 
 export interface GameActionsClick {
