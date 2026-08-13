@@ -1073,6 +1073,9 @@ export function ContractsList() {
                 {activeContracts.map((contract) => {
                     const progress = getProgress(contract);
                     const ready = isContractReady(contract);
+                    const showFrontierBadge =
+                        !frontierChainClosed &&
+                        contract.progressionTrack === "frontier";
                     const raceInfo = contract.requiredRace
                         ? RACES[contract.requiredRace]
                         : null;
@@ -1150,7 +1153,7 @@ export function ContractsList() {
                                         <div className="text-[#556655] text-[9px] uppercase tracking-wider leading-tight">
                                             {typeLabel[contract.type] ?? contract.type}
                                         </div>
-                                        {contract.progressionTrack === "frontier" && (
+                                        {showFrontierBadge && (
                                             <div className="mt-1">
                                                 <span className="inline-flex border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#00d4ff]">
                                                     {t("contracts.frontier.step_badge")}
@@ -1272,11 +1275,15 @@ export function ContractsList() {
                                         </span>
                                     </div>
 
-                                    {selectedContract.progressionTrack === "frontier" && (
-                                        <div className="inline-flex border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-2 py-1 text-xs font-bold uppercase tracking-wide text-[#00d4ff]">
-                                            {t("contracts.frontier.step_badge")}
-                                        </div>
-                                    )}
+                                    {!frontierChainClosed &&
+                                        selectedContract.progressionTrack ===
+                                            "frontier" && (
+                                                <div className="inline-flex border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-2 py-1 text-xs font-bold uppercase tracking-wide text-[#00d4ff]">
+                                                    {t(
+                                                        "contracts.frontier.step_badge",
+                                                    )}
+                                                </div>
+                                            )}
 
                                     <div className="space-y-1.5">
                                         {details.tasks.map((task, index) => (

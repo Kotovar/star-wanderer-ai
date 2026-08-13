@@ -398,7 +398,7 @@ setUiState({
   ship: { cargo: [], tradeGoods: [] },
   activeExpedition: null,
   planetCooldowns: {},
-  frontierChainClosed: true,
+  frontierChainClosed: false,
   frontierContractsCompleted: 0,
   frontierSubsidy: null,
   cancelContract: () => {},
@@ -434,5 +434,21 @@ assert.equal(
   "английская метка контракта дальнего рубежа должна быть локализована",
 );
 i18nStore.changeLanguage("ru");
+
+patchUiState({ frontierChainClosed: true });
+const closedFrontierActiveMarkup = renderToStaticMarkup(createElement(ContractsList));
+assert.doesNotMatch(
+  closedFrontierActiveMarkup,
+  /Поручение дальнего рубежа/,
+  "после закрытия цепочки активный контракт не должен выглядеть как следующее поручение",
+);
+
+patchUiState({ activeContracts: [] });
+const closedFrontierOfferMarkup = renderToStaticMarkup(createElement(PlanetPanel));
+assert.doesNotMatch(
+  closedFrontierOfferMarkup,
+  /Поручение дальнего рубежа/,
+  "после закрытия цепочки оставшееся предложение не должно выглядеть как следующее поручение",
+);
 
 console.log("Contract label checks passed");

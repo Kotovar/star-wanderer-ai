@@ -231,6 +231,7 @@ function AvailableContractCard({
     isActive,
     raceBg,
     raceBorder,
+    frontierChainClosed,
     onAccept,
     get,
     t,
@@ -239,6 +240,7 @@ function AvailableContractCard({
     isActive: boolean;
     raceBg: string;
     raceBorder: string;
+    frontierChainClosed: boolean;
     onAccept: (contract: Contract) => void;
     get: () => GameStore;
     t: TFn;
@@ -284,11 +286,12 @@ function AvailableContractCard({
                                 {t(`races.${c.requiredRace}.plural`)}
                             </span>
                         )}
-                        {c.progressionTrack === "frontier" && (
-                            <span className="inline-flex border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#00d4ff]">
-                                {t("contracts.frontier.step_badge")}
-                            </span>
-                        )}
+                        {!frontierChainClosed &&
+                            c.progressionTrack === "frontier" && (
+                                <span className="inline-flex border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#00d4ff]">
+                                    {t("contracts.frontier.step_badge")}
+                                </span>
+                            )}
                     </div>
                 </div>
                 <Button
@@ -328,6 +331,7 @@ export function preloadRacePlanetBackgrounds() {
 export function PlanetPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
     const activeContracts = useGameStore((s) => s.activeContracts);
+    const frontierChainClosed = useGameStore((s) => s.frontierChainClosed);
     const completedContractIds = useGameStore((s) => s.completedContractIds);
     const raceReputation = useGameStore((s) => s.raceReputation);
     const sectors = useGameStore((s) => s.galaxy.sectors);
@@ -701,6 +705,7 @@ export function PlanetPanel() {
                                         isActive={isActive}
                                         raceBg={raceBg}
                                         raceBorder={raceBorder}
+                                        frontierChainClosed={frontierChainClosed}
                                         onAccept={acceptContract}
                                         get={get}
                                         t={t}
