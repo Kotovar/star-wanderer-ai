@@ -71,7 +71,7 @@ const withConstantRandom = (value, callback) => {
     Math.random = originalRandom;
   }
 };
-const makeTier1Anchors = (stationType) => [0, 1, 2].map((id) => ({
+const makeTier1Anchors = (stationType) => [0, 1, 2, 3].map((id) => ({
   id,
   tier: 1,
   star: { type: "red_dwarf", name: "star_types.red_dwarf" },
@@ -106,7 +106,7 @@ for (const stationType of ["shipyard", "medical"]) {
   ensureDiplomaticStation(sectors);
   assert.deepEqual(
     sectors.flatMap((sector) => sector.locations).map((location) => location.stationType).sort(),
-    ["diplomatic", "medical", "shipyard"],
+    ["diplomatic", "medical", "military", "shipyard"],
     `broken_trade_lanes: ${stationType}-only anchors must provide all tier-1 services`,
   );
 }

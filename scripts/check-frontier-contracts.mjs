@@ -10,6 +10,8 @@ const jiti = require("jiti")(scriptPath, { alias: { "@": path.join(root, "src") 
 const { hasCombatArmament } = jiti("../src/game/contracts/frontierContracts.ts");
 const { generateGalaxy } = jiti("../src/game/galaxy/generateGalaxy.ts");
 const { loadWithMigrations } = jiti("../src/game/saves/migrations.ts");
+await import("./register-ts-loader.mjs");
+const { generateStationItems } = await import("../src/game/components/station/station-data.ts");
 
 const armedModules = [{ type: "weaponbay", weapons: [{ type: "laser" }], health: 100 }];
 
@@ -40,10 +42,14 @@ for (let run = 0; run < 16; run += 1) {
 
   assert.ok(militaryStations.length, "each tier-1 galaxy needs a military station");
   assert.ok(militaryStations.some((station) => {
-    const inventory = station.stationConfig;
-    return inventory?.guaranteedModules.includes("weaponbay") &&
-      inventory.guaranteedWeapons.includes("kinetic") &&
-      inventory.guaranteedWeapons.includes("laser");
+    const inventory = generateStationItems(
+      station.stationId ?? station.id,
+      1,
+      station.stationConfig,
+    );
+    return inventory.some((item) => item.moduleType === "weaponbay") &&
+      inventory.some((item) => item.weaponType === "kinetic") &&
+      inventory.some((item) => item.weaponType === "laser");
   }), "tier-1 military station needs a weapon bay, kinetic weapon, and laser weapon");
 }
 
