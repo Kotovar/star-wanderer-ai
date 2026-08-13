@@ -68,8 +68,25 @@ export const getFrontierContactPatch = (
     ({ location }) =>
       location.stationType !== "shipyard" && location.stationType !== "medical",
   );
+  const serviceCounts = candidates.reduce<Record<string, number>>(
+    (counts, { location }) => ({
+      ...counts,
+      [location.stationType ?? ""]:
+        (counts[location.stationType ?? ""] ?? 0) + 1,
+    }),
+    {},
+  );
+  const redundantServiceCandidates = candidates.filter(
+    ({ location }) =>
+      (location.stationType === "shipyard" || location.stationType === "medical") &&
+      serviceCounts[location.stationType] > 1,
+  );
   const target = (
-    militaryCandidates.length ? militaryCandidates : fallbackCandidates
+    militaryCandidates.length
+      ? militaryCandidates
+      : fallbackCandidates.length
+        ? fallbackCandidates
+        : redundantServiceCandidates
   ).sort(byFuelThenSector(state))[0];
   if (!target) return null;
 

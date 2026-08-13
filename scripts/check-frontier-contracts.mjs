@@ -649,6 +649,73 @@ assert.deepEqual(
   preservedIntel,
   "legacy contact must not downgrade already known station intel",
 );
+const redundantShipyardSector = {
+  ...protectedShipyardSector,
+  id: 24,
+  locations: [{
+    ...protectedShipyardSector.locations[0],
+    id: "redundant-shipyard-1",
+    stationId: "redundant-shipyard-1",
+  }],
+};
+const redundantShipyardBackupSector = {
+  ...protectedShipyardSector,
+  id: 25,
+  locations: [{
+    ...protectedShipyardSector.locations[0],
+    id: "redundant-shipyard-2",
+    stationId: "redundant-shipyard-2",
+  }],
+};
+const redundantMedicalSector = {
+  ...protectedMedicalSector,
+  id: 26,
+  locations: [{
+    ...protectedMedicalSector.locations[0],
+    id: "redundant-medical-1",
+    stationId: "redundant-medical-1",
+  }],
+};
+const redundantMedicalBackupSector = {
+  ...protectedMedicalSector,
+  id: 27,
+  locations: [{
+    ...protectedMedicalSector.locations[0],
+    id: "redundant-medical-2",
+    stationId: "redundant-medical-2",
+  }],
+};
+const redundantServiceContactPatch = getFrontierContactPatch({
+  ...frontierContactState,
+  galaxy: {
+    sectors: [
+      redundantShipyardSector,
+      redundantShipyardBackupSector,
+      redundantMedicalSector,
+      redundantMedicalBackupSector,
+    ],
+  },
+  currentSector: redundantShipyardSector,
+  frontierContractsCompleted: 2,
+  frontierSubsidy: null,
+  navigatorTargets: [],
+  knownLocationIntel: {},
+});
+assert.ok(
+  redundantServiceContactPatch,
+  "legacy contact must use a redundant service station when no non-service fallback exists",
+);
+assert.equal(
+  redundantServiceContactPatch.frontierSubsidy?.targetStationId,
+  "redundant-shipyard-1",
+);
+assert.equal(
+  redundantServiceContactPatch.galaxy.sectors
+    .flatMap((sector) => sector.locations)
+    .filter((location) => location.stationType === "shipyard").length,
+  1,
+  "converting a duplicate shipyard must leave one shipyard behind",
+);
 const noSafeFallbackPatch = getFrontierContactPatch({
   ...frontierContactState,
   galaxy: { sectors: [protectedShipyardSector, protectedMedicalSector] },
