@@ -87,13 +87,13 @@ function getReputationRippleEffects(
 export function getContractReputationImpact(
     contract: Pick<
         Contract,
-        "isRaceQuest" | "requiredRace" | "sourceDominantRace"
+        "isRaceQuest" | "requiredRace" | "sourceDominantRace" | "reputationReward"
     >,
 ): Array<{ raceId: RaceId; change: number }> {
     const raceId = contract.requiredRace ?? contract.sourceDominantRace;
     if (!raceId) return [];
 
-    const amount = contract.isRaceQuest ? 10 : 2;
+    const amount = contract.reputationReward ?? (contract.isRaceQuest ? 10 : 2);
     return [
         { raceId, change: amount },
         ...getReputationRippleEffects(raceId, amount),

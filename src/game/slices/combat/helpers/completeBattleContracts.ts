@@ -32,7 +32,7 @@ export function completeBattleContracts(
         const experience = giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
         const reputationBefore = { ...get().raceReputation };
         if (c.sourceDominantRace) {
-            get().changeReputation(c.sourceDominantRace, 2);
+            get().changeReputation(c.sourceDominantRace, c.reputationReward ?? 2);
         }
         set((s) => ({
             completedContractIds: [...s.completedContractIds, c.id],
@@ -116,7 +116,7 @@ export function completeBattleContracts(
         const experience = giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
         const reputationBefore = { ...get().raceReputation };
         if (c.sourceDominantRace) {
-            get().changeReputation(c.sourceDominantRace, 2);
+            get().changeReputation(c.sourceDominantRace, c.reputationReward ?? 2);
         }
         set((s) => ({
             completedContractIds: [...s.completedContractIds, c.id],

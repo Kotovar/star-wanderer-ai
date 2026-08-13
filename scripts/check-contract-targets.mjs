@@ -47,7 +47,14 @@ const { refreshVisitedPlanetContracts } = jiti(
 const { processScanContracts } = jiti(
   "../src/game/slices/contracts/helpers/processScanContracts.ts",
 );
+const { changeReputation: calculateReputationChange } = jiti(
+  "../src/game/reputation/utils.ts",
+);
 const { loadWithMigrations } = jiti("../src/game/saves/migrations.ts");
+await import("./register-ts-loader.mjs");
+const { completeBattleContracts } = await import(
+  "../src/game/slices/combat/helpers/completeBattleContracts.ts"
+);
 
 const legacySyntheticResearch = {
   type: "research",
@@ -998,5 +1005,59 @@ assert.ok(
   ),
   "известный Оракул Пустоты не отмечен на карте",
 );
+
+let friendlyBountyState = {
+  credits: 0,
+  raceReputation: {
+    human: 11,
+    synthetic: 0,
+    xenosymbiont: 0,
+    krylorian: 0,
+    voidborn: 0,
+    crystalline: 0,
+  },
+  completedContractIds: [],
+  activeContracts: [
+    {
+      id: "friendly-bounty",
+      type: "bounty",
+      reward: 50,
+      targetSector: 7,
+      targetThreat: 2,
+      sourceDominantRace: "human",
+      bountyTier: "friendly",
+      reputationReward: 4,
+    },
+  ],
+  currentSector: { id: 7, locations: [] },
+};
+const friendlyBountySet = (updater) => {
+  friendlyBountyState = { ...friendlyBountyState, ...updater(friendlyBountyState) };
+};
+const friendlyBountyGet = () => ({
+  ...friendlyBountyState,
+  addLog: () => undefined,
+  showContractCompletion: () => undefined,
+  changeReputation: (raceId, amount) => {
+    const result = calculateReputationChange(friendlyBountyState.raceReputation, raceId, amount);
+    friendlyBountyState = {
+      ...friendlyBountyState,
+      raceReputation: {
+        ...friendlyBountyState.raceReputation,
+        [raceId]: result.newValue,
+        ...Object.fromEntries(
+          result.affectedRaces.map(({ raceId: affectedRaceId, change }) => [
+            affectedRaceId,
+            (friendlyBountyState.raceReputation[affectedRaceId] ?? 0) + change,
+          ]),
+        ),
+      },
+    };
+  },
+});
+
+completeBattleContracts(friendlyBountySet, friendlyBountyGet, 2, false);
+assert.equal(friendlyBountyState.raceReputation.human, 15, "friendly bounty must add +4 primary reputation");
+assert.equal(friendlyBountyState.raceReputation.synthetic, -1, "friendly bounty must keep the existing reputation ripple");
 
 console.log("✅ check-contract-targets: валидация целей контрактов в порядке");

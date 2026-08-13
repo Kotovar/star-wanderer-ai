@@ -9,6 +9,7 @@ import { CONTRACT_REWARDS as REWARD } from "./rewards";
 import { getGeneratedContractTimeLimit } from "./contractDeadline";
 import type { RunProfile } from "../galaxy/runProfiles";
 import type { ContractGenerationContext } from "./frontierContracts";
+import { getReputationLevel } from "@/game/types/reputation";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Reward scaling constants (index = tier - 1)
@@ -55,9 +56,9 @@ export const generatePlanetContracts = (
     allSectors: Sector[],
     dominantRace?: RaceId,
     profile?: RunProfile | null,
-    _context: ContractGenerationContext = { canOfferCombat: true, allowFrontier: false },
+    _context?: ContractGenerationContext,
 ): Contract[] => {
-    void _context;
+    const context = _context ?? { canOfferCombat: true, allowFrontier: false };
     const contracts: Contract[] = [];
     const numContracts = Math.floor(Math.random() * 2) + 1;
 
@@ -265,7 +266,13 @@ export const generatePlanetContracts = (
     // Add race-specific quest (30% chance, but guaranteed if no other contracts)
     if (dominantRace && Math.random() < 0.3) {
         const raceQuest = raceQuests[dominantRace]?.();
-        if (raceQuest) contracts.push(raceQuest);
+        if (
+            raceQuest &&
+            (context.canOfferCombat ||
+                (raceQuest.type !== "combat" && raceQuest.type !== "bounty"))
+        ) {
+            contracts.push(raceQuest);
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -488,8 +495,16 @@ export const generatePlanetContracts = (
                 const pickedEnemy =
                     enemies[Math.floor(Math.random() * enemies.length)];
                 const threat = pickedEnemy.threat ?? 1;
+                const id = `c-${planetId}-${Date.now()}-${Math.random()}`;
+                const normalReward =
+                    REWARD.bounty.baseFlat +
+                    threat * REWARD.bounty.threatMult +
+                    Math.floor(Math.random() * (threat * REWARD.bounty.threatMult));
+                const isFriendlySource = ["friendly", "allied"].includes(
+                    getReputationLevel(context.sourceReputation ?? 0),
+                );
                 return {
-                    id: `c-${planetId}-${Date.now()}-${Math.random()}`,
+                    id,
                     type: "bounty",
                     desc: "contracts.desc_bounty_generic",
                     targetThreat: threat,
@@ -502,10 +517,12 @@ export const generatePlanetContracts = (
                         sector.tier ?? 1,
                         tgt.tier ?? sector.tier ?? 1,
                     ),
-                    reward:
-                        REWARD.bounty.baseFlat +
-                        threat * REWARD.bounty.threatMult +
-                        Math.floor(Math.random() * (threat * REWARD.bounty.threatMult)),
+                    reward: isFriendlySource
+                        ? Math.floor(normalReward * 1.25)
+                        : normalReward,
+                    ...(isFriendlySource
+                        ? { bountyTier: "friendly" as const, reputationReward: 4 }
+                        : {}),
                 };
             },
         },
@@ -682,7 +699,11 @@ export const generatePlanetContracts = (
                 };
             },
         },
-    ];
+    ].filter(
+        (quest) =>
+            context.canOfferCombat ||
+            (quest.type !== "combat" && quest.type !== "bounty"),
+    );
 
     const remaining = [...standardQuests];
     const numNeeded = Math.max(1, numContracts - contracts.length);
@@ -700,6 +721,16 @@ export const generatePlanetContracts = (
         const contract = quest.gen();
         if (contract) contracts.push(dominantRace ? { ...contract, sourceDominantRace: dominantRace } : contract);
         selections += 1;
+    }
+
+    if (context.allowFrontier && (sector.tier ?? 1) === 1) {
+        const frontierOffer = contracts.find(
+            (contract) =>
+                !contract.isRaceQuest &&
+                contract.type !== "combat" &&
+                contract.type !== "bounty",
+        );
+        if (frontierOffer) frontierOffer.progressionTrack = "frontier";
     }
 
     return contracts;
