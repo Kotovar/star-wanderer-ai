@@ -14,6 +14,7 @@ const { renderToStaticMarkup } = await import("react-dom/server");
 const { ContractsList } = await import(
   "../src/game/components/ContractsList.tsx"
 );
+const { ShopTab } = await import("../src/game/components/station/ShopTab.tsx");
 const { PlanetPanel } = await import(
   "../src/game/components/PlanetPanel.tsx"
 );
@@ -57,7 +58,7 @@ const SYNTHETIC_RESEARCH = {
   timeLimit: 15,
 };
 
-setUiState({
+patchUiState({
   activeContracts: [FABRICATION, CRISIS_RESPONSE],
   completedContractIds: [],
   cancelContract: () => {},
@@ -96,6 +97,85 @@ assert.ok(
   markup.includes("Медикаменты"),
   "отклик на кризис обязан называть нужный груз",
 );
+
+setUiState({
+  activeContracts: [{
+    id: "friendly-bounty",
+    type: "bounty",
+    desc: "contracts.desc_bounty_generic",
+    reward: 500,
+    bountyTier: "friendly",
+    reputationReward: 4,
+    sourceDominantRace: "human",
+  }],
+  completedContractIds: [],
+  ship: { cargo: [], tradeGoods: [] },
+  raceReputation: {},
+  artifacts: [],
+  research: { researchedTechs: [], unlockedRecipes: [] },
+  galaxy: { sectors: [] },
+  activeCrisis: null,
+  completedLocations: [],
+  frontierSubsidy: null,
+});
+const friendlyBountyMarkup = renderToStaticMarkup(createElement(ContractsList));
+assert.ok(
+  friendlyBountyMarkup.includes("ДРУЖЕСКАЯ НАГРАДА · +4 репутации"),
+  "дружественная награда обязана явно показывать её уровень и +4 репутации",
+);
+
+patchUiState({
+  frontierSubsidy: {
+    targetStationId: "frontier-military",
+    weaponBayAvailable: true,
+    weaponAvailable: true,
+  },
+  research: { researchedTechs: [] },
+  ship: { modules: [{ id: 1, type: "weaponbay", weapons: [null] }] },
+});
+const subsidizedShopMarkup = renderToStaticMarkup(
+  createElement(ShopTab, {
+    stationId: "frontier-military",
+    stationItems: [{
+      id: "frontier-laser",
+      type: "weapon",
+      weaponType: "laser",
+      moduleType: "weaponbay",
+      price: 255,
+      basePrice: 300,
+      stock: 1,
+      name: "Laser",
+      description: "Laser",
+      requiresWeaponBay: true,
+    }],
+    stationInventory: { "frontier-military": {} },
+    credits: 0,
+    ship: { modules: [{ id: 1, type: "weaponbay", weapons: [null] }] },
+    buyItem: () => {},
+    onUpgradeClick: () => {},
+  }),
+);
+assert.ok(
+  subsidizedShopMarkup.includes("Субсидия дальнего рубежа: −300₢"),
+  "магазин обязан показывать применённую субсидию",
+);
+assert.ok(
+  subsidizedShopMarkup.includes("💰 0 ₢"),
+  "магазин обязан показывать итоговую цену",
+);
+assert.doesNotMatch(
+  subsidizedShopMarkup,
+  /<button[^>]*disabled=""/,
+  "нулевой итог должен быть доступен с нулевыми кредитами",
+);
+
+patchUiState({
+  activeContracts: [FABRICATION, CRISIS_RESPONSE],
+  ship: { cargo: [], tradeGoods: [] },
+  research: { researchedTechs: [], unlockedRecipes: ["drones"] },
+  activeCrisis: { id: "epidemic", turnsRemaining: 20 },
+  frontierSubsidy: null,
+});
 
 // ── И то же самое на английском: имена не должны застревать по-русски ───────
 const { store: i18nStore } = await import("../src/lib/useTranslation.ts");

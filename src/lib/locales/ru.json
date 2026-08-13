@@ -1031,8 +1031,14 @@
         "frontier": {
             "title": "Контракты дальнего рубежа",
             "progress": "Прогресс: {{current}}/2",
+            "station": "Целевая военная станция: {{station}}",
             "route": "Военный контакт: 1 прыжок · {{fuel}} топлива",
-            "subsidy": "Остаток субсидии: оружейная палуба {{weaponBay}}₢ · оружие {{weapon}}₢"
+            "subsidy": "Остаток субсидии: оружейная палуба {{weaponBay}}₢ · оружие {{weapon}}₢",
+            "subsidy_weapon_bay": "Оружейная палуба: {{status}}",
+            "subsidy_weapon": "Оружие: {{status}}",
+            "subsidy_remaining": "−{{amount}}₢ доступно",
+            "subsidy_completed": "получено",
+            "bounty_friendly": "ДРУЖЕСКАЯ НАГРАДА · +{{reputation}} репутации"
         },
         "completed_count": "ВЫПОЛНЕНО",
         "location_planet": "планете",
@@ -2951,6 +2957,7 @@
         "consumption": "Потребление",
         "energy_deficit_after": "После улучшения не хватит энергии: {{value}}",
         "energy_deficit_after_installation": "После установки не хватит энергии: {{value}}",
+        "frontier_subsidy": "Субсидия дальнего рубежа: −{{discount}}₢",
         "max": "MAX",
         "unavailable": "НЕДОСТУПНО",
         "no_modules": "Нет модулей типа",

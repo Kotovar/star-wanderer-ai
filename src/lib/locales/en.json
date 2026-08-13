@@ -1031,8 +1031,14 @@
         "frontier": {
             "title": "Frontier contracts",
             "progress": "Progress: {{current}}/2",
+            "station": "Target military station: {{station}}",
             "route": "Military contact: 1 jump · {{fuel}} fuel",
-            "subsidy": "Subsidy remaining: weapon bay {{weaponBay}}₢ · weapon {{weapon}}₢"
+            "subsidy": "Subsidy remaining: weapon bay {{weaponBay}}₢ · weapon {{weapon}}₢",
+            "subsidy_weapon_bay": "Weapon bay: {{status}}",
+            "subsidy_weapon": "Weapon: {{status}}",
+            "subsidy_remaining": "−{{amount}}₢ available",
+            "subsidy_completed": "redeemed",
+            "bounty_friendly": "FRIENDLY BOUNTY · +{{reputation}} reputation"
         },
         "completed_count": "COMPLETED",
         "location_planet": "planet",
@@ -2951,6 +2957,7 @@
         "consumption": "Consumption",
         "energy_deficit_after": "Energy deficit after upgrade: {{value}}",
         "energy_deficit_after_installation": "Energy deficit after installation: {{value}}",
+        "frontier_subsidy": "Frontier subsidy: −{{discount}}₢",
         "max": "MAX",
         "unavailable": "UNAVAILABLE",
         "no_modules": "No modules of type",

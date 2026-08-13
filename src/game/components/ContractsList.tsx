@@ -1043,7 +1043,9 @@ export function ContractsList() {
                         ) : frontierStation ? (
                             <div className="mt-1 space-y-1 text-[#99aa99]">
                                 <div className="text-[#00ff41]">
-                                    {getLocationName(frontierStation.location.name, t)} · {getLocationName(frontierStation.sector.name, t)}
+                                    {t("contracts.frontier.station", {
+                                        station: getLocationName(frontierStation.location.name, t),
+                                    })} · {getLocationName(frontierStation.sector.name, t)}
                                 </div>
                                 <div>
                                     {t("contracts.frontier.route", {
@@ -1051,9 +1053,17 @@ export function ContractsList() {
                                     })}
                                 </div>
                                 <div>
-                                    {t("contracts.frontier.subsidy", {
-                                        weaponBay: frontierSubsidy.weaponBayAvailable ? 200 : 0,
-                                        weapon: frontierSubsidy.weaponAvailable ? 300 : 0,
+                                    {t("contracts.frontier.subsidy_weapon_bay", {
+                                        status: frontierSubsidy.weaponBayAvailable
+                                            ? t("contracts.frontier.subsidy_remaining", { amount: 200 })
+                                            : t("contracts.frontier.subsidy_completed"),
+                                    })}
+                                </div>
+                                <div>
+                                    {t("contracts.frontier.subsidy_weapon", {
+                                        status: frontierSubsidy.weaponAvailable
+                                            ? t("contracts.frontier.subsidy_remaining", { amount: 300 })
+                                            : t("contracts.frontier.subsidy_completed"),
                                     })}
                                 </div>
                             </div>
@@ -1075,6 +1085,10 @@ export function ContractsList() {
                         contract.isRaceQuest,
                     );
                     const repImpact = getContractReputationImpact(contract);
+                    const friendlyBountyReputation =
+                        contract.bountyTier === "friendly"
+                            ? repImpact.find(({ change }) => change > 0)?.change
+                            : undefined;
                     const typeLabel: Record<string, string> = {
                         delivery: t("contracts.type_delivery"),
                         scan_planet: t("contracts.type_scan"),
@@ -1161,11 +1175,20 @@ export function ContractsList() {
                                 />
                             )}
                             <div className="pl-1 mt-2 flex items-center justify-between">
-                                <span className="inline-flex border border-[#ffb00055] bg-[rgba(255,176,0,0.08)] px-1.5 py-0.5 text-accent text-[11px]">
-                                    {t("contracts.reward_short", {
-                                        reward: contract.reward,
-                                    })}
-                                </span>
+                                <div className="flex flex-wrap gap-1">
+                                    <span className="inline-flex border border-[#ffb00055] bg-[rgba(255,176,0,0.08)] px-1.5 py-0.5 text-accent text-[11px]">
+                                        {t("contracts.reward_short", {
+                                            reward: contract.reward,
+                                        })}
+                                    </span>
+                                    {friendlyBountyReputation !== undefined && (
+                                        <span className="inline-flex border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-1.5 py-0.5 text-[#00d4ff] text-[10px]">
+                                            {t("contracts.frontier.bounty_friendly", {
+                                                reputation: friendlyBountyReputation,
+                                            })}
+                                        </span>
+                                    )}
+                                </div>
                                 {repImpact.length > 0 && (
                                     <div className="flex flex-wrap gap-x-2 justify-end">
                                         {repImpact.map(({ raceId, change }) => (

@@ -139,13 +139,13 @@ export const buyModule = (
     stationId: string,
     inv: Record<string, number>,
     bought: number,
-): void => {
+): boolean => {
     const state = get();
 
     // Проверка уникальности модуля
     if (isUniqueModuleRestricted(item, state)) {
         get().addLog( i18nStore.t("game_logs.buyModule_1"), "error");
-        return;
+        return false;
     }
 
     // Получение бонуса станции
@@ -165,7 +165,7 @@ export const buyModule = (
 
     if (!bestPosition) {
         get().addLog( i18nStore.t("game_logs.buyModule_2"), "error");
-        return;
+        return false;
     }
 
     newMod.x = bestPosition.x;
@@ -191,4 +191,5 @@ export const buyModule = (
     }
 
     playSound("world_upgrade");
+    return true;
 };

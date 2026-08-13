@@ -13,6 +13,7 @@ import { useGameStore } from "@/game/store";
 import {
     getProjectedModulePurchaseEnergyBalance,
 } from "@/game/slices/shop/helpers/getProjectedModuleEnergyBalance";
+import { getFrontierSubsidyPrice } from "@/game/contracts/frontierContracts";
 
 // Helper to get translated module name
 function getTranslatedModuleName(
@@ -198,9 +199,18 @@ export function ShopTab({
                         !item.id.includes("ancient");
                     const alreadyOwned =
                         (isScanner && hasScanner) || (isDrill && hasDrill);
+                    const subsidyPrice = getFrontierSubsidyPrice(
+                        gameState,
+                        item,
+                        stationId,
+                    );
+                    const effectiveItem = {
+                        ...item,
+                        price: subsidyPrice.price,
+                    };
 
                     const disabled = Boolean(
-                        soldOut || noWB || credits < item.price || alreadyOwned,
+                        soldOut || noWB || credits < effectiveItem.price || alreadyOwned,
                     );
 
                     const isUnique =
@@ -221,7 +231,7 @@ export function ShopTab({
                     return (
                         <ShopItemCard
                             key={item.id}
-                            item={item}
+                            item={effectiveItem}
                             stockLeft={stockLeft}
                             credits={credits}
                             disabled={disabled}
@@ -231,6 +241,7 @@ export function ShopTab({
                             isUnique={isUnique}
                             isUpgrade={isUpgrade}
                             energyDeficit={energyDeficit}
+                            subsidyDiscount={subsidyPrice.discount}
                             onViewDetails={() =>
                                 item.type === "upgrade"
                                     ? onUpgradeClick(item)
@@ -306,6 +317,7 @@ interface ShopItemCardProps {
     isUnique: boolean;
     isUpgrade: boolean;
     energyDeficit: number;
+    subsidyDiscount: number;
     onViewDetails: () => void;
     onBuy: () => void;
 }
@@ -320,6 +332,7 @@ function ShopItemCard({
     isUnique,
     isUpgrade,
     energyDeficit,
+    subsidyDiscount,
     onViewDetails,
     onBuy,
 }: ShopItemCardProps) {
@@ -402,6 +415,7 @@ function ShopItemCard({
                     noWB={noWB}
                     alreadyOwned={alreadyOwned}
                     isUpgrade={isUpgrade}
+                    subsidyDiscount={subsidyDiscount}
                 />
                 <ItemDescription item={item} />
                 {energyDeficit > 0 && (
@@ -434,6 +448,7 @@ function ItemPriceAndStock({
     noWB,
     alreadyOwned,
     isUpgrade,
+    subsidyDiscount,
 }: {
     price: number;
     stockLeft: number;
@@ -441,12 +456,18 @@ function ItemPriceAndStock({
     noWB: boolean;
     alreadyOwned: boolean;
     isUpgrade: boolean;
+    subsidyDiscount: number;
 }) {
     const { t } = useTranslation();
 
     return (
         <div className="text-accent mt-1 text-xs">
             💰 {isUpgrade ? "" : price + " ₢"}
+            {subsidyDiscount > 0 && (
+                <div className="mt-1 text-[#00d4ff]">
+                    {t("station_upgrades.frontier_subsidy", { discount: subsidyDiscount })}
+                </div>
+            )}
             <span
                 className={`${isUpgrade ? "" : "ml-4"} ${
                     soldOut || noWB || (alreadyOwned && !isUpgrade)

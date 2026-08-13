@@ -7,7 +7,11 @@ const require = createRequire(import.meta.url);
 const scriptPath = fileURLToPath(import.meta.url);
 const root = path.resolve(path.dirname(scriptPath), "..");
 const jiti = require("jiti")(scriptPath, { alias: { "@": path.join(root, "src") } });
-const { hasCombatArmament, getFrontierContactPatch } = jiti("../src/game/contracts/frontierContracts.ts");
+const {
+  hasCombatArmament,
+  getFrontierContactPatch,
+  getFrontierSubsidyPrice,
+} = jiti("../src/game/contracts/frontierContracts.ts");
 const { isKnownNavigatorTarget } = jiti("../src/game/navigator/intel.ts");
 const { STATION_CONFIG } = jiti("../src/game/galaxy/config.ts");
 const { generatePlanetContracts } = jiti("../src/game/contracts/generatePlanetContracts.ts");
@@ -440,6 +444,128 @@ const noSlotPurchase = makeStoreStub({
 });
 createShopSlice(noSlotPurchase.set, noSlotPurchase.get).buyItem(weaponItem);
 assert.equal(noSlotPurchase.syncCalls(), 0, "full weapon bay must not sync");
+
+const targetStationId = "frontier-military";
+const wrongStationId = "other-station";
+const targetState = {
+  frontierSubsidy: {
+    targetStationId,
+    weaponBayAvailable: true,
+    weaponAvailable: true,
+  },
+};
+const weaponBay = {
+  id: "weaponbay",
+  type: "module",
+  moduleType: "weaponbay",
+  price: 500,
+  basePrice: 500,
+  stock: 1,
+  name: "Weapon bay",
+};
+const laser = {
+  id: "frontier-laser",
+  type: "weapon",
+  weaponType: "laser",
+  price: 255,
+  basePrice: 300,
+  stock: 1,
+  name: "Laser",
+};
+assert.deepEqual(
+  getFrontierSubsidyPrice(targetState, weaponBay, targetStationId),
+  { price: 300, discount: 200 },
+);
+assert.deepEqual(
+  getFrontierSubsidyPrice(targetState, laser, targetStationId),
+  { price: 0, discount: 300 },
+);
+assert.equal(
+  getFrontierSubsidyPrice(targetState, laser, wrongStationId).discount,
+  0,
+);
+
+const discountedWeaponItem = { ...laser, price: 255 };
+const insufficientSubsidyPurchase = makeStoreStub({
+  credits: 0,
+  currentLocation: { stationId: targetStationId },
+  stationInventory: { [targetStationId]: {} },
+  frontierSubsidy: { ...targetState.frontierSubsidy },
+  ship: { modules: [{ id: 1, type: "weaponbay", health: 100, weapons: [null] }] },
+});
+createShopSlice(insufficientSubsidyPurchase.set, insufficientSubsidyPurchase.get)
+  .buyItem({ ...discountedWeaponItem, price: 600, basePrice: 600 });
+assert.equal(insufficientSubsidyPurchase.state.frontierSubsidy.weaponAvailable, true);
+assert.equal(insufficientSubsidyPurchase.state.frontierSubsidy.weaponBayAvailable, true);
+
+const noSlotSubsidyPurchase = makeStoreStub({
+  credits: 0,
+  currentLocation: { stationId: targetStationId },
+  stationInventory: { [targetStationId]: {} },
+  frontierSubsidy: { ...targetState.frontierSubsidy },
+  ship: { modules: [{ id: 1, type: "weaponbay", health: 100, weapons: [{ type: "laser" }] }] },
+});
+createShopSlice(noSlotSubsidyPurchase.set, noSlotSubsidyPurchase.get)
+  .buyItem(discountedWeaponItem);
+assert.equal(noSlotSubsidyPurchase.state.frontierSubsidy.weaponAvailable, true);
+assert.equal(noSlotSubsidyPurchase.state.frontierSubsidy.weaponBayAvailable, true);
+
+const noPlacementSubsidyPurchase = makeStoreStub({
+  credits: 1_000,
+  currentLocation: { stationId: targetStationId },
+  stationInventory: { [targetStationId]: {} },
+  frontierSubsidy: { ...targetState.frontierSubsidy },
+  research: { researchedTechs: [] },
+  canPlaceModule: () => false,
+  ship: { gridSize: 1, modules: [] },
+});
+createShopSlice(noPlacementSubsidyPurchase.set, noPlacementSubsidyPurchase.get)
+  .buyItem({ ...weaponBay, width: 1, height: 1 });
+assert.equal(noPlacementSubsidyPurchase.state.frontierSubsidy.weaponBayAvailable, true);
+assert.equal(noPlacementSubsidyPurchase.state.frontierSubsidy.weaponAvailable, true);
+
+const successfulSubsidizedBay = makeStoreStub({
+  credits: 300,
+  currentLocation: { stationId: targetStationId },
+  stationInventory: { [targetStationId]: {} },
+  frontierSubsidy: { ...targetState.frontierSubsidy },
+  research: { researchedTechs: [] },
+  canPlaceModule: () => true,
+  ship: { gridSize: 1, modules: [] },
+});
+createShopSlice(successfulSubsidizedBay.set, successfulSubsidizedBay.get)
+  .buyItem({ ...weaponBay, width: 1, height: 1 });
+assert.equal(successfulSubsidizedBay.state.credits, 0);
+assert.equal(successfulSubsidizedBay.state.frontierSubsidy.weaponBayAvailable, false);
+assert.equal(successfulSubsidizedBay.state.frontierSubsidy.weaponAvailable, true);
+
+const successfulSubsidizedWeapon = makeStoreStub({
+  credits: 0,
+  currentLocation: { stationId: targetStationId },
+  stationInventory: { [targetStationId]: {} },
+  frontierSubsidy: { ...targetState.frontierSubsidy },
+  ship: { modules: [{ id: 1, type: "weaponbay", health: 100, weapons: [null, null] }] },
+});
+const subsidizedWeaponPurchase = createShopSlice(
+  successfulSubsidizedWeapon.set,
+  successfulSubsidizedWeapon.get,
+);
+subsidizedWeaponPurchase.buyItem({ ...discountedWeaponItem, id: "frontier-laser-2" });
+assert.equal(successfulSubsidizedWeapon.state.credits, 0);
+assert.equal(successfulSubsidizedWeapon.state.frontierSubsidy.weaponBayAvailable, true);
+assert.equal(successfulSubsidizedWeapon.state.frontierSubsidy.weaponAvailable, false);
+subsidizedWeaponPurchase.buyItem(discountedWeaponItem);
+assert.equal(successfulSubsidizedWeapon.state.credits, 0);
+assert.equal(
+  successfulSubsidizedWeapon.state.frontierSubsidy.weaponAvailable,
+  false,
+  "second weapon gets no subsidy",
+);
+assert.deepEqual(
+  getFrontierSubsidyPrice(targetState, { ...weaponBay, price: 250 }, targetStationId),
+  { price: 250, discount: 0 },
+  "the stronger station discount must win without stacking",
+);
 const successfulCraft = makeStoreStub({
   ship: {
     cargo: [{ item: "crafted_weapon_plasma", quantity: 1, isCraftedWeapon: true, weaponType: "plasma" }],
@@ -558,6 +684,10 @@ const contactInventory = generateStationItems(
 assert.ok(contactInventory.some((item) => item.moduleType === "weaponbay"));
 assert.ok(contactInventory.some((item) => item.weaponType === "kinetic"));
 assert.ok(contactInventory.some((item) => item.weaponType === "laser"));
+assert.ok(
+  contactInventory.every((item) => item.basePrice !== undefined),
+  "station items must preserve their base price before station discounts",
+);
 frontierContactState.frontierSubsidy.weaponBayAvailable = false;
 frontierContactState.showContractCompletion(frontierCompletion("frontier-2"));
 assert.equal(frontierContactState.navigatorTargets.length, 1);

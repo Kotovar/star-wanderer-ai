@@ -1008,6 +1008,10 @@ export function generateStationItems(
   }
 
   const items: ShopItem[] = [];
+  const withBasePrice = (item: ShopItem): ShopItem => ({
+    ...item,
+    basePrice: item.price,
+  });
 
   // Available module levels by station tier:
   // - Tier 1: levels 1-2
@@ -1040,7 +1044,7 @@ export function generateStationItems(
   }
 
   upgradesToAdd.forEach((upgrade) => {
-    items.push({ ...upgrade, id: `${upgrade.id}-${stationId}` });
+    items.push({ ...withBasePrice(upgrade), id: `${upgrade.id}-${stationId}` });
   });
 
   // Add guaranteed modules directly to items
@@ -1057,7 +1061,7 @@ export function generateStationItems(
         const itemId = `${moduleItem.id}-${stationId}`;
         if (!guaranteedModuleIds.has(itemId)) {
           items.push({
-            ...moduleItem,
+            ...withBasePrice(moduleItem),
             id: itemId,
           });
           guaranteedModuleIds.add(itemId);
@@ -1088,7 +1092,7 @@ export function generateStationItems(
     const itemId = `${baseItem.id}-${stationId}`;
     // Skip if already added as guaranteed module
     if (!guaranteedModuleIds.has(itemId)) {
-      items.push({ ...baseItem, id: itemId });
+      items.push({ ...withBasePrice(baseItem), id: itemId });
     }
   }
 
@@ -1101,7 +1105,7 @@ export function generateStationItems(
     guaranteedWeapons.forEach((weaponType) => {
       const weapon = WEAPONS.find((w) => w.weaponType === weaponType);
       if (weapon) {
-        items.push({ ...weapon, id: `${weapon.id}-${stationId}` });
+        items.push({ ...withBasePrice(weapon), id: `${weapon.id}-${stationId}` });
       }
     });
   } else {
@@ -1113,7 +1117,7 @@ export function generateStationItems(
     });
     for (let i = 0; i < numWeapons; i++) {
       const weapon = shuffledWeapons[i];
-      items.push({ ...weapon, id: `${weapon.id}-${stationId}` });
+      items.push({ ...withBasePrice(weapon), id: `${weapon.id}-${stationId}` });
     }
   }
 

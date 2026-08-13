@@ -2,7 +2,7 @@ import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { STATION_CONFIG } from "@/game/galaxy/config";
 import { getNavigatorLocationKey } from "@/game/types/navigator";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers/calculateFuelCost";
-import type { GameState, Location, Module, Sector } from "@/game/types";
+import type { GameState, Location, Module, Sector, ShopItem } from "@/game/types";
 
 export const FRONTIER_CONTRACT_TARGET = 2;
 export const FRONTIER_WEAPON_BAY_DISCOUNT = 200;
@@ -23,6 +23,29 @@ export const hasCombatArmament = (modules: Module[]): boolean =>
       !module.manualDisabled &&
       module.health > 0,
   );
+
+export const getFrontierSubsidyPrice = (
+  state: Pick<GameState, "frontierSubsidy">,
+  item: ShopItem,
+  stationId: string,
+): { price: number; discount: number } => {
+  const subsidy = state.frontierSubsidy;
+  if (!subsidy || subsidy.targetStationId !== stationId) {
+    return { price: item.price, discount: 0 };
+  }
+
+  const amount =
+    item.type === "module" && item.moduleType === "weaponbay" && subsidy.weaponBayAvailable
+      ? FRONTIER_WEAPON_BAY_DISCOUNT
+      : item.type === "weapon" && subsidy.weaponAvailable
+        ? FRONTIER_WEAPON_DISCOUNT
+        : 0;
+  if (!amount) return { price: item.price, discount: 0 };
+
+  const subsidizedPrice = Math.max(0, (item.basePrice ?? item.price) - amount);
+  const price = Math.min(item.price, subsidizedPrice);
+  return { price, discount: price === subsidizedPrice ? amount : 0 };
+};
 
 type StationCandidate = {
   sector: Sector;
