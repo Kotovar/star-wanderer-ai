@@ -29,6 +29,15 @@ export function buildRunSummary(
     0,
   );
   const outposts = state.outposts ?? [];
+  const gasCollectorCollected = outposts.some(
+    (outpost) =>
+      outpost.kind === "gas_collector" && outpost.lastCollectedAtTurn !== undefined,
+  );
+  const preSpacefaringContactResolved = state.galaxy.sectors.some((sector) =>
+    sector.locations.some(
+      (location) => location.preSpacefaringContact?.resolvedAtTurn !== undefined,
+    ),
+  );
   const hostileReputationRaceCount = Object.values(
     state.raceReputation,
   ).filter((rep) => rep <= HOSTILE_REPUTATION_THRESHOLD).length;
@@ -68,5 +77,8 @@ export function buildRunSummary(
     baseMaxedOut: outposts.some(
       (outpost) => outpost.kind === "base" && (outpost.level ?? 1) >= BASE_MAX_LEVEL,
     ),
+    gasCollectorCollected,
+    preSpacefaringContactResolved,
+    frontierSubsidyGranted: state.frontierSubsidy !== null,
   };
 }

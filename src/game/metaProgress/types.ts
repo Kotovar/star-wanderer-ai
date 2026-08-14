@@ -57,4 +57,10 @@ export interface RunSummary {
   outpostsBuilt: number;
   /** Дошла ли база до максимального уровня */
   baseMaxedOut: boolean;
+  /** С газосборника хотя бы раз забрали добычу */
+  gasCollectorCollected: boolean;
+  /** Контакт с докосмической цивилизацией завершён любым финальным решением */
+  preSpacefaringContactResolved: boolean;
+  /** После двух контрактов Frontier появилась оружейная субсидия */
+  frontierSubsidyGranted: boolean;
 }

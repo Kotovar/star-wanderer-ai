@@ -23,7 +23,10 @@ import {
 import { useTranslation } from "@/lib/useTranslation";
 import type { Module, ModuleType, ResearchResourceType } from "@/game/types";
 import { useMetaProgress } from "@/game/metaProgress/useMetaProgress";
-import { ACHIEVEMENTS } from "@/game/metaProgress/achievements";
+import {
+  ACHIEVEMENTS,
+  isLaunchModifierVisible,
+} from "@/game/metaProgress/achievements";
 import {
   ALWAYS_UNLOCKED_SHIP_IDS,
   SHIP_UNLOCK_RULES,
@@ -341,6 +344,12 @@ export function NewGameSetupModal({
   const selectedModifierItems = useMemo(
     () => LAUNCH_MODIFIERS.filter((mod) => selectedModifiers.includes(mod.id)),
     [selectedModifiers],
+  );
+  const visibleDoctrineModifiers = DOCTRINE_MODIFIERS.filter((modifier) =>
+    isLaunchModifierVisible(modifier.id, meta.unlockedAchievementIds),
+  );
+  const visibleRegularModifiers = REGULAR_MODIFIERS.filter((modifier) =>
+    isLaunchModifierVisible(modifier.id, meta.unlockedAchievementIds),
   );
   const runProfile = getRunProfile(runProfileId);
 
@@ -895,14 +904,14 @@ export function NewGameSetupModal({
                     {t("new_game_setup.doctrine_section")}
                   </div>
                   <div className="grid min-w-0 gap-2 min-[1180px]:grid-cols-2">
-                    {DOCTRINE_MODIFIERS.map(renderModifierButton)}
+                    {visibleDoctrineModifiers.map(renderModifierButton)}
                   </div>
 
                   <div className="mb-2 mt-4 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                     {t("new_game_setup.regular_modifiers_section")}
                   </div>
                   <div className="grid min-w-0 gap-2 min-[1180px]:grid-cols-2">
-                    {REGULAR_MODIFIERS.map(renderModifierButton)}
+                    {visibleRegularModifiers.map(renderModifierButton)}
                   </div>
 
                   {selectedModifierItems.length > 0 && (

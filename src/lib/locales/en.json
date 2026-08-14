@@ -4685,6 +4685,22 @@
         "salvaged_parts": {
             "name": "Salvaged Parts",
             "description": "Ship cobbled together from scraps: modules damaged 20%, but +10 tech salvage in the hold for research."
+        },
+        "base_founder": {
+            "name": "Pioneer Reserve",
+            "description": "+2 tech salvage for research at launch; preparation costs ₢300."
+        },
+        "gas_harvester": {
+            "name": "Refinery Reserve",
+            "description":"+25 starting fuel and tank capacity; preparation costs ₢250."
+        },
+        "first_contact": {
+            "name": "First Contact Protocol",
+            "description": "Every known alien race starts at +10 reputation; preparation costs ₢250."
+        },
+        "frontier_arsenal": {
+            "name": "Arms Subsidy",
+            "description": "Sets your starting budget to ₢1600 for the first armed contract."
         }
     },
     "crisis_reserve": {
@@ -4765,6 +4781,22 @@
         "salvaged_parts": {
             "name": "Master of Improvisation",
             "description": "Complete 10 contracts total across your career."
+        },
+        "base_founder": {
+            "name": "Forward Base",
+            "description": "Upgrade a base to its maximum level in one completed run."
+        },
+        "gas_harvester": {
+            "name": "Gas Harvest",
+            "description": "Build a gas collector and collect from it at least once."
+        },
+        "first_contact": {
+            "name": "First Contact",
+            "description": "Conclude contact with a pre-spacefaring civilization through any final decision."
+        },
+        "frontier_arsenal": {
+            "name": "Contract Arsenal",
+            "description": "Complete both Frontier contracts and receive the arms subsidy."
         }
     },
     "crew_perk_choice": {

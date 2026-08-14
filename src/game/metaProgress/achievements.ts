@@ -10,6 +10,8 @@ export interface AchievementDef {
   id: string;
   nameKey: string;
   descriptionKey: string;
+  /** До разблокировки не показывается ни в списке ачивок, ни в настройке забега. */
+  secret?: true;
   /**
    * Проверяется при каждом завершённом забеге, пока ачивка ещё не в
    * unlockedAchievementIds. `lifetime` — уже обновлённые счётчики этого
@@ -171,6 +173,59 @@ export const ACHIEVEMENTS: AchievementDef[] = [
       target: CONTRACTS_TARGET,
     }),
   },
+  // ── Секретные модификаторы ────────────────────────────────────────────────
+  {
+    id: "base_founder",
+    nameKey: "achievements.base_founder.name",
+    descriptionKey: "achievements.base_founder.description",
+    secret: true,
+    isSatisfied: (_lifetime, summary) => summary.baseMaxedOut,
+  },
+  {
+    id: "gas_harvester",
+    nameKey: "achievements.gas_harvester.name",
+    descriptionKey: "achievements.gas_harvester.description",
+    secret: true,
+    isSatisfied: (_lifetime, summary) => summary.gasCollectorCollected,
+  },
+  {
+    id: "first_contact",
+    nameKey: "achievements.first_contact.name",
+    descriptionKey: "achievements.first_contact.description",
+    secret: true,
+    isSatisfied: (_lifetime, summary) => summary.preSpacefaringContactResolved,
+  },
+  {
+    id: "frontier_arsenal",
+    nameKey: "achievements.frontier_arsenal.name",
+    descriptionKey: "achievements.frontier_arsenal.description",
+    secret: true,
+    isSatisfied: (_lifetime, summary) => summary.frontierSubsidyGranted,
+  },
 ];
 
+export const ACHIEVEMENTS_BY_ID = new Map(
+  ACHIEVEMENTS.map((achievement) => [achievement.id, achievement]),
+);
+
 export const ACHIEVEMENT_IDS = new Set(ACHIEVEMENTS.map((a) => a.id));
+
+export function isAchievementVisible(
+  achievement: AchievementDef,
+  unlockedAchievementIds: readonly string[],
+): boolean {
+  return (
+    achievement.secret !== true || unlockedAchievementIds.includes(achievement.id)
+  );
+}
+
+export function isLaunchModifierVisible(
+  id: string,
+  unlockedAchievementIds: readonly string[],
+): boolean {
+  const achievement = ACHIEVEMENTS_BY_ID.get(id);
+  return (
+    achievement === undefined ||
+    isAchievementVisible(achievement, unlockedAchievementIds)
+  );
+}

@@ -2,7 +2,10 @@
 
 import { useTranslation } from "@/lib/useTranslation";
 import { useMetaProgress } from "@/game/metaProgress/useMetaProgress";
-import { ACHIEVEMENTS } from "@/game/metaProgress/achievements";
+import {
+  ACHIEVEMENTS,
+  isAchievementVisible,
+} from "@/game/metaProgress/achievements";
 import {
   ALWAYS_UNLOCKED_SHIP_IDS,
   SHIP_UNLOCK_RULES,
@@ -111,14 +114,17 @@ function AchievementCard({
 export function AchievementsPanel() {
   const { t } = useTranslation();
   const meta = useMetaProgress();
+  const visibleAchievements = ACHIEVEMENTS.filter((achievement) =>
+    isAchievementVisible(achievement, meta.unlockedAchievementIds),
+  );
 
-  const doctrineAchievements = ACHIEVEMENTS.filter((a) =>
+  const doctrineAchievements = visibleAchievements.filter((a) =>
     DOCTRINE_IDS.has(a.id),
   );
-  const modifierAchievements = ACHIEVEMENTS.filter(
+  const modifierAchievements = visibleAchievements.filter(
     (a) => !DOCTRINE_IDS.has(a.id),
   );
-  const unlockedAchievementCount = ACHIEVEMENTS.filter((a) =>
+  const unlockedAchievementCount = visibleAchievements.filter((a) =>
     meta.unlockedAchievementIds.includes(a.id),
   ).length;
 
@@ -138,7 +144,7 @@ export function AchievementsPanel() {
         <div className="text-xs leading-relaxed text-muted-foreground">
           {t("achievements.panel_summary", {
             unlocked: unlockedAchievementCount,
-            total: ACHIEVEMENTS.length,
+            total: visibleAchievements.length,
             ships: unlockedShipCount,
             shipsTotal: progressionShips.length,
           })}

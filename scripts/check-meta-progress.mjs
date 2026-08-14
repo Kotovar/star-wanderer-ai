@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { normalizeMetaProgress } from "../src/game/metaProgress/storage.ts";
 import {
   getMetaProgressSnapshot,
@@ -7,9 +10,18 @@ import {
   unlockSyntheticDroneIfEligible,
 } from "../src/game/metaProgress/store.ts";
 import { mergeUnique } from "../src/game/metaProgress/utils.ts";
-import { ACHIEVEMENTS } from "../src/game/metaProgress/achievements.ts";
+import * as achievementsModule from "../src/game/metaProgress/achievements.ts";
 import { SHIP_UNLOCK_RULES } from "../src/game/metaProgress/shipUnlocks.ts";
 import { SHIP_TEMPLATES } from "../src/game/constants/shipTemplates.ts";
+import { LAUNCH_MODIFIERS } from "../src/game/constants/launchModifiers.ts";
+
+const { ACHIEVEMENTS } = achievementsModule;
+const require = createRequire(import.meta.url);
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const jiti = require("jiti")(import.meta.url, {
+  alias: { "@": path.join(root, "src") },
+});
+const { buildRunSummary } = jiti("../src/game/metaProgress/runSummary.ts");
 
 // ── mergeUnique: dedup, no mutation of inputs ──
 assert.deepEqual(mergeUnique(["a", "b"], ["b", "c"]), ["a", "b", "c"]);
@@ -85,7 +97,7 @@ assert.ok(
   "synthetic drone does not need life support",
 );
 
-// ── ACHIEVEMENTS: every one of the 16 must be present exactly once ──
+// ── ACHIEVEMENTS: every defined achievement must be present exactly once ──
 const EXPECTED_ACHIEVEMENT_IDS = [
   "doctrine_explorer",
   "doctrine_boss_hunter",
@@ -103,6 +115,10 @@ const EXPECTED_ACHIEVEMENT_IDS = [
   "damaged_ship",
   "wanted",
   "salvaged_parts",
+  "base_founder",
+  "gas_harvester",
+  "first_contact",
+  "frontier_arsenal",
 ];
 assert.deepEqual(
   ACHIEVEMENTS.map((a) => a.id).sort(),
@@ -150,6 +166,11 @@ function baseSummary(overrides) {
     maxEnemyThreatDefeatedThisRun: 0,
     discoveredCrisisIds: [],
     hostileReputationRaceCount: 0,
+    outpostsBuilt: 0,
+    baseMaxedOut: false,
+    gasCollectorCollected: false,
+    preSpacefaringContactResolved: false,
+    frontierSubsidyGranted: false,
     ...overrides,
   };
 }
@@ -157,6 +178,22 @@ function achievementById(id) {
   const found = ACHIEVEMENTS.find((a) => a.id === id);
   assert.ok(found, `missing achievement definition: ${id}`);
   return found;
+}
+
+const SECRET_ACHIEVEMENT_IDS = [
+  "base_founder",
+  "gas_harvester",
+  "first_contact",
+  "frontier_arsenal",
+];
+for (const id of SECRET_ACHIEVEMENT_IDS) {
+  const achievement = achievementById(id);
+  assert.equal(achievement.secret, true, `${id} must stay secret before discovery`);
+  assert.equal(
+    LAUNCH_MODIFIERS.filter((modifier) => modifier.id === id).length,
+    1,
+    `${id} must unlock exactly one launch modifier`,
+  );
 }
 
 // Career-counter achievements: below vs at threshold, summary irrelevant.
@@ -238,6 +275,22 @@ const perRunCases = [
     { maxEnemyThreatDefeatedThisRun: 5 },
   ],
   ["wanted", { hostileReputationRaceCount: 1 }, { hostileReputationRaceCount: 2 }],
+  ["base_founder", { baseMaxedOut: false }, { baseMaxedOut: true }],
+  [
+    "gas_harvester",
+    { gasCollectorCollected: false },
+    { gasCollectorCollected: true },
+  ],
+  [
+    "first_contact",
+    { preSpacefaringContactResolved: false },
+    { preSpacefaringContactResolved: true },
+  ],
+  [
+    "frontier_arsenal",
+    { frontierSubsidyGranted: false },
+    { frontierSubsidyGranted: true },
+  ],
 ];
 for (const [id, belowOverrides, atOverrides] of perRunCases) {
   const achievement = achievementById(id);
@@ -257,6 +310,96 @@ for (const [id, belowOverrides, atOverrides] of perRunCases) {
     `${id} is per-run, must not expose getProgress`,
   );
 }
+
+// ── Secret achievements: no card, count, or launch modifier before discovery ──
+const { isAchievementVisible, isLaunchModifierVisible } = achievementsModule;
+assert.equal(
+  typeof isAchievementVisible,
+  "function",
+  "secret-achievement visibility helper must exist",
+);
+assert.equal(
+  typeof isLaunchModifierVisible,
+  "function",
+  "secret-launch-modifier visibility helper must exist",
+);
+if (
+  typeof isAchievementVisible === "function" &&
+  typeof isLaunchModifierVisible === "function"
+) {
+  for (const id of SECRET_ACHIEVEMENT_IDS) {
+    const achievement = achievementById(id);
+    assert.equal(isAchievementVisible(achievement, []), false, `${id} must be hidden`);
+    assert.equal(
+      isLaunchModifierVisible(id, []),
+      false,
+      `${id} modifier must be hidden`,
+    );
+    assert.equal(
+      isAchievementVisible(achievement, [id]),
+      true,
+      `${id} must appear after discovery`,
+    );
+    assert.equal(
+      isLaunchModifierVisible(id, [id]),
+      true,
+      `${id} modifier must appear after discovery`,
+    );
+  }
+  assert.equal(
+    isLaunchModifierVisible("veteran_crew", []),
+    true,
+    "regular locked modifiers remain visible",
+  );
+}
+
+// ── Run summary: derive secret-achievement facts from real game state ──
+const secretAchievementSummary = buildRunSummary(
+  {
+    runId: "secret-achievement-summary",
+    turn: 10,
+    credits: 0,
+    creditsEarnedThisRun: 0,
+    galaxy: {
+      sectors: [
+        {
+          visited: true,
+          tier: 1,
+          locations: [
+            {
+              preSpacefaringContact: { resolvedAtTurn: 9 },
+            },
+          ],
+        },
+      ],
+    },
+    outposts: [
+      { kind: "base", level: 3 },
+      { kind: "gas_collector", lastCollectedAtTurn: 7 },
+    ],
+    raceReputation: {},
+    ship: { maxFuel: 80 },
+    crew: [],
+    maxLevel10CrewCountThisRun: 0,
+    research: { researchedTechs: [] },
+    completedContractIds: [],
+    artifacts: [],
+    emergencyFuelStationIds: [],
+    bossesDefeatedThisRun: 0,
+    maxEnemyThreatDefeatedThisRun: 0,
+    discoveredCrisisIds: [],
+    frontierSubsidy: {
+      targetStationId: "military-1",
+      weaponBayAvailable: true,
+      weaponAvailable: true,
+    },
+  },
+  "victory",
+);
+assert.equal(secretAchievementSummary.baseMaxedOut, true);
+assert.equal(secretAchievementSummary.gasCollectorCollected, true);
+assert.equal(secretAchievementSummary.preSpacefaringContactResolved, true);
+assert.equal(secretAchievementSummary.frontierSubsidyGranted, true);
 
 // Per-run achievements that also require a victory outcome.
 {

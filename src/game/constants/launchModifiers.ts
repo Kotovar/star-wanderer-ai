@@ -433,4 +433,48 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     moduleDamagePercent: 20,
     researchResources: { tech_salvage: 10 },
   },
+
+  // ── Секретные разблокировки ───────────────────────────────────────────────
+  {
+    id: "base_founder",
+    nameKey: "launch_modifiers.base_founder.name",
+    descriptionKey: "launch_modifiers.base_founder.description",
+    icon: "🏗️",
+    type: "bonus",
+    creditDelta: -300,
+    researchResources: { tech_salvage: 2 },
+  },
+  {
+    id: "gas_harvester",
+    nameKey: "launch_modifiers.gas_harvester.name",
+    descriptionKey: "launch_modifiers.gas_harvester.description",
+    icon: "⛽",
+    type: "bonus",
+    creditDelta: -250,
+    fuelDelta: 25,
+    maxFuelDelta: 25,
+  },
+  {
+    id: "first_contact",
+    nameKey: "launch_modifiers.first_contact.name",
+    descriptionKey: "launch_modifiers.first_contact.description",
+    icon: "🕊️",
+    type: "bonus",
+    creditDelta: -250,
+    startRaceReputation: {
+      synthetic: 10,
+      krylorian: 10,
+      voidborn: 10,
+      crystalline: 10,
+    },
+  },
+  {
+    id: "frontier_arsenal",
+    nameKey: "launch_modifiers.frontier_arsenal.name",
+    descriptionKey: "launch_modifiers.frontier_arsenal.description",
+    icon: "🎟️",
+    type: "bonus",
+    creditDelta: 0,
+    startingCredits: 1600,
+  },
 ];
