@@ -637,7 +637,7 @@ assert.match(
 // в нём, а не в отдельной панели
 assert.match(
   source("game/components/OutpostGarrison.tsx"),
-  /\{member\.name\} ·\{" "\}\n\s*\{t\(`professions\./,
+  /\{getCrewDisplayName\(member\)\} ·\{" "\}\n\s*\{t\(`professions\./,
   "в списке кандидатов не видно профессии и уровня",
 );
 
