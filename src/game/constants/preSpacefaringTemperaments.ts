@@ -48,7 +48,8 @@ export const TEMPERAMENT_OUTCOME_MULTIPLIER: Record<
     waning: { protected: null, assisted: 2.0, partnered: 0.5, exploited: 1.5 },
 };
 
-/** Насколько развитый мир щедрее первобытного */
+/** Насколько развитый мир щедрее первобытного: рост ограничен ×2, чтобы
+ * контакт оставался заметным источником, но не вытеснял добывающую цепочку. */
 export const DEVELOPMENT_MULTIPLIER: Record<PreSpacefaringDevelopment, number> =
     {
         primitive: 1,
@@ -57,7 +58,8 @@ export const DEVELOPMENT_MULTIPLIER: Record<PreSpacefaringDevelopment, number> =
         modern: 2,
     };
 
-/** Чем мир вообще способен поделиться на своём уровне */
+/** Чем мир вообще способен поделиться на своём уровне: развитие открывает
+ * максимум две тематические категории, сохраняя разницу между уровнями. */
 export const DEVELOPMENT_RESOURCES: Record<
     PreSpacefaringDevelopment,
     readonly ResearchResourceType[]
@@ -68,7 +70,12 @@ export const DEVELOPMENT_RESOURCES: Record<
     modern: ["energy_samples", "tech_salvage"],
 };
 
-/** Базовые величины до множителей. */
+/**
+ * Базовые величины до множителей. Порядок сверен с газосборщиком (3800 ₢ и
+ * 30 единиц ресурсов на постройку): контакт остаётся заметным источником,
+ * но не заменяет добывающую цепочку. У партнёрства база — размер одной доли,
+ * а не итог: итог зависит от того, как часто игрок возвращается.
+ */
 export const OUTCOME_BASE_UNITS: Record<PreSpacefaringOutcome, number> = {
     protected: 10,
     assisted: 5,
@@ -85,9 +92,16 @@ export const GIFT_MULTIPLIER = 1.25;
 /** Кредиты за эксплуатацию — до множителей уровня и характера */
 export const EXPLOIT_BASE_CREDITS = 1500;
 
-/** Сроки одинаковы для всех характеров и уровней. */
+/**
+ * Сроки одинаковы для всех характеров и уровней: сильная комбинация должна
+ * вознаграждаться размером выплаты, а не растягиванием ожидания.
+ */
 export const PROTECTED_MATURATION_TURNS = 28;
 export const PARTNER_SHARE_INTERVAL_TURNS = 6;
 
-/** Потолок накопления долей. */
+/**
+ * Потолок накопления долей: 6 долей × 6 ходов = 36 ходов до полного
+ * наполнения, чтобы постоянный доход оставался точкой на карте, а не фоновым
+ * числом.
+ */
 export const PARTNER_SHARE_CAP = 6;
