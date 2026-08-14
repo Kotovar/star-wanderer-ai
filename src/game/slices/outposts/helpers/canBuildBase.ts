@@ -25,7 +25,12 @@ export function getBaseBlocker(
         return "tech_missing";
     }
     if (!location.explored) return "not_explored";
-    if (location.preSpacefaringContact) {
+    // Погибший мир больше не занимает планету. Эксплуатация — единственный
+    // способ вернуть себе слот под базу, и в этом её настоящая цена.
+    if (
+        location.preSpacefaringContact &&
+        location.preSpacefaringContact.outcome !== "exploited"
+    ) {
         return "settlement_discovered";
     }
     if (state.outposts.some((outpost) => outpost.locationId === location.id)) {

@@ -13,6 +13,10 @@ const {
 const { getPreSpacefaringSettlementCandidate } = await import(
   "../src/game/slices/locations/helpers/expedition/preSpacefaringSettlement.ts",
 );
+const { getBaseBlocker } = await import(
+  "../src/game/slices/outposts/helpers/canBuildBase.ts",
+);
+const { BASE_COST } = await import("../src/game/constants/baseModules.ts");
 
 const planet = (id, over = {}) => ({
   id,
@@ -21,6 +25,45 @@ const planet = (id, over = {}) => ({
   explored: true,
   ...over,
 });
+
+// Право на базу
+const baseState = {
+  credits: BASE_COST.credits + 1,
+  outposts: [],
+  research: {
+    researchedTechs: ["autonomous_systems"],
+    resources: Object.fromEntries(
+      Object.entries(BASE_COST.resources).map(([k, v]) => [k, v + 5]),
+    ),
+  },
+};
+const basePlanet = (contactOver) => ({
+  id: "planet-base",
+  type: "planet",
+  isEmpty: true,
+  explored: true,
+  preSpacefaringContact: contactOver && {
+    civilizationId: "river_clans",
+    development: "primitive",
+    temperament: "insular",
+    step: 3,
+    ...contactOver,
+  },
+});
+
+assert.equal(getBaseBlocker(baseState, basePlanet(null)), null);
+for (const outcome of ["protected", "assisted", "partnered"]) {
+  assert.equal(
+    getBaseBlocker(baseState, basePlanet({ outcome })),
+    "settlement_discovered",
+    outcome,
+  );
+}
+assert.equal(
+  getBaseBlocker(baseState, basePlanet({ step: 1, outcome: undefined })),
+  "settlement_discovered",
+);
+assert.equal(getBaseBlocker(baseState, basePlanet({ outcome: "exploited" })), null);
 
 const probes = Array.from({ length: 250 }, (_, index) =>
   planet("civilization-probe-" + index),
