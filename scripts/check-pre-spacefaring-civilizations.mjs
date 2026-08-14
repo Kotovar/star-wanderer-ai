@@ -705,6 +705,12 @@ const claimHarness = (contactOver, turn) => {
   assert.deepEqual(h.state.research.resources, {});
 }
 
+const gameTypesSource = readFileSync(resolve("src/game/types/game.ts"), "utf8");
+assert.match(
+  gameTypesSource,
+  /export interface GameScouting \{[\s\S]*?claimPreSpacefaringYield: \(planetId: string\) => void;/,
+);
+
 // ─── Каталог цивилизаций ─────────────────────────────────────────────────────
 
 const { getPreSpacefaringActions, getUnavailableOutcomes } = await import(

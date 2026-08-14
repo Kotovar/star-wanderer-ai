@@ -421,6 +421,7 @@ export interface GameScouting {
     actionId: string,
     expectedStep: PreSpacefaringActionStep,
   ) => void;
+  claimPreSpacefaringYield: (planetId: string) => void;
   startDive: (locationId: string) => void;
   resolveDiveEvent: (choiceIndex: number) => void;
   diveDeeper: () => void;
