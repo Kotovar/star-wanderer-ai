@@ -5811,6 +5811,7 @@
     },
     "game_logs": {
         "pre_spacefaring_action_done": "Local contact has advanced. One turn passed.",
+        "pre_spacefaring_yield_claimed": "📦 Collected the local civilization's accumulated yield.",
         "pre_spacefaring_action_wrong_location": "Return to the contact planet first.",
         "pre_spacefaring_action_no_contact": "No local civilization contact was found.",
         "pre_spacefaring_action_already_complete": "This local contact is already complete.",

@@ -51,6 +51,7 @@ import { salvageWreckField as salvageWreckFieldHelper } from "./helpers/salvageW
 import { resonateWithSpaceMonster as resonateWithSpaceMonsterHelper } from "./helpers/spaceMonster";
 import { cleanseCursedArtifact as cleanseCursedArtifactHelper } from "./helpers/cleanseCursedArtifact";
 import { advancePreSpacefaringContact as advancePreSpacefaringContactHelper } from "./helpers";
+import { claimPreSpacefaringYield as claimPreSpacefaringYieldHelper } from "./helpers";
 
 /**
  * Интерфейс LocationsSlice
@@ -163,6 +164,9 @@ export interface LocationsSlice {
         actionId: string,
         expectedStep: PreSpacefaringActionStep,
     ) => void;
+
+    /** Забирает накопленную долю у партнёра или созревший заповедник. Ход не тратит. */
+    claimPreSpacefaringYield: (planetId: string) => void;
 
     /** Начинает погружение зонда в газовый гигант */
     startDive: (locationId: string) => void;
@@ -302,6 +306,10 @@ export const createLocationsSlice = (
             set,
             get,
         );
+    },
+
+    claimPreSpacefaringYield: (planetId) => {
+        claimPreSpacefaringYieldHelper(planetId, set, get);
     },
 
     startDive: (locationId) => {

@@ -5811,6 +5811,7 @@
     },
     "game_logs": {
         "pre_spacefaring_action_done": "Локальный контакт развивается. Прошёл один ход.",
+        "pre_spacefaring_yield_claimed": "📦 Собрана накопленная доля местной цивилизации.",
         "pre_spacefaring_action_wrong_location": "Сначала вернитесь на планету контакта.",
         "pre_spacefaring_action_no_contact": "Контакт с местной цивилизацией не найден.",
         "pre_spacefaring_action_already_complete": "Этот локальный контакт уже завершён.",

@@ -606,6 +606,105 @@ for (const outcome of ALL_OUTCOMES) {
 assert.equal(PARTNER_SHARE_INTERVAL_TURNS, 6);
 assert.equal(PARTNER_SHARE_CAP, 6);
 
+// ─── Забор доли ──────────────────────────────────────────────────────────────
+
+const { claimPreSpacefaringYield } = await import(
+  "../src/game/slices/locations/helpers/preSpacefaringState.ts"
+);
+
+const claimHarness = (contactOver, turn) => {
+  const location = {
+    id: "planet-claim",
+    type: "planet",
+    isEmpty: true,
+    explored: true,
+    preSpacefaringContact: {
+      civilizationId: "delta_league",
+      development: "agrarian",
+      temperament: "curious",
+      step: 3,
+      actionHistory: [],
+      ...contactOver,
+    },
+  };
+  const claimState = {
+    turn,
+    turnsAdvanced: 0,
+    currentLocation: location,
+    galaxy: { sectors: [{ id: 1, locations: [location] }] },
+    currentSector: { id: 1, locations: [location] },
+    research: { resources: {} },
+  };
+  const claimSet = (update) => {
+    Object.assign(
+      claimState,
+      typeof update === "function" ? update(claimState) : update,
+    );
+    claimState.currentLocation =
+      claimState.galaxy.sectors[0].locations.find((l) => l.id === "planet-claim") ??
+      claimState.currentLocation;
+  };
+  const claimGet = () => ({
+    ...claimState,
+    addLog: () => {},
+    saveGame: () => {},
+    nextTurn: () => {
+      claimState.turnsAdvanced += 1;
+    },
+  });
+  return { state: claimState, set: claimSet, get: claimGet };
+};
+
+// Забор переносит накопленное и не тратит ход
+{
+  const h = claimHarness({ outcome: "partnered", resolvedAtTurn: 0 }, 18);
+  claimPreSpacefaringYield("planet-claim", h.set, h.get);
+  assert.equal(h.state.research.resources.alien_biology, 3);
+  assert.equal(h.state.research.resources.ancient_data, 3);
+  assert.equal(h.state.turnsAdvanced, 0, "забор доли не должен тратить ход");
+  assert.equal(h.state.currentLocation.preSpacefaringContact.lastClaimTurn, 18);
+}
+
+// Повторный забор без прошедших ходов ничего не даёт
+{
+  const h = claimHarness({ outcome: "partnered", resolvedAtTurn: 0 }, 18);
+  claimPreSpacefaringYield("planet-claim", h.set, h.get);
+  const after = { ...h.state.research.resources };
+  claimPreSpacefaringYield("planet-claim", h.set, h.get);
+  assert.deepEqual(h.state.research.resources, after);
+}
+
+// Заповедник отдаёт разовую выплату и больше никогда
+{
+  const h = claimHarness({ outcome: "protected", resolvedAtTurn: 0 }, 30);
+  claimPreSpacefaringYield("planet-claim", h.set, h.get);
+  const total = Object.values(h.state.research.resources).reduce((a, b) => a + b, 0);
+  assert.ok(total > 0);
+  claimPreSpacefaringYield("planet-claim", h.set, h.get);
+  assert.equal(
+    Object.values(h.state.research.resources).reduce((a, b) => a + b, 0),
+    total,
+  );
+}
+
+// До созревания забирать нечего
+{
+  const h = claimHarness({ outcome: "protected", resolvedAtTurn: 0 }, 10);
+  claimPreSpacefaringYield("planet-claim", h.set, h.get);
+  assert.deepEqual(h.state.research.resources, {});
+  assert.equal(
+    h.state.currentLocation.preSpacefaringContact.lastClaimTurn,
+    undefined,
+  );
+}
+
+// Старое сохранение без resolvedAtTurn не выдаёт ничего
+{
+  const h = claimHarness({ outcome: "partnered" }, 9999);
+  claimPreSpacefaringYield("planet-claim", h.set, h.get);
+  assert.deepEqual(h.state.research.resources, {});
+}
+
 // ─── Каталог цивилизаций ─────────────────────────────────────────────────────
 
 const { getPreSpacefaringActions, getUnavailableOutcomes } = await import(

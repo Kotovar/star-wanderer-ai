@@ -9,12 +9,16 @@ import {
     PROTECTED_MATURATION_TURNS,
     TEMPERAMENT_OUTCOME_MULTIPLIER,
 } from "@/game/constants/preSpacefaringTemperaments";
+import { patchLocation } from "@/game/utils/patchLocation";
+import { store as i18nStore } from "@/lib/useTranslation";
 import type {
+    GameStore,
     PreSpacefaringContact,
     PreSpacefaringDevelopment,
     PreSpacefaringOutcome,
     PreSpacefaringTemperament,
     ResearchResourceType,
+    SetState,
 } from "@/game/types";
 
 export type PreSpacefaringWorldStatus =
@@ -141,4 +145,43 @@ export function resolvePreSpacefaringState(
         claimable:
             shares > 0 ? splitPayoutUnits(development, perPayout * shares) : [],
     };
+}
+
+/**
+ * Переносит накопленное в ресурсы. Ход не тратится: это вывоз, а не
+ * решение, — так же устроен сбор с аутпоста (`collectOutpost.ts`).
+ */
+export function claimPreSpacefaringYield(
+    planetId: string,
+    set: SetState,
+    get: () => GameStore,
+): void {
+    const state = get();
+    const location = state.currentLocation;
+    if (!location || location.id !== planetId) return;
+    const contact = location.preSpacefaringContact;
+    if (!contact) return;
+
+    const world = resolvePreSpacefaringState(contact, state.turn);
+    if (world.claimable.length === 0) return;
+
+    set((draft) => ({
+        research: {
+            ...draft.research,
+            resources: world.claimable.reduce(
+                (resources, entry) => ({
+                    ...resources,
+                    [entry.type]: (resources[entry.type] ?? 0) + entry.quantity,
+                }),
+                draft.research.resources,
+            ),
+        },
+        ...patchLocation(draft, planetId, {
+            preSpacefaringContact: {
+                ...contact,
+                lastClaimTurn: draft.turn,
+            },
+        }),
+    }));
+    get().addLog(i18nStore.t("game_logs.pre_spacefaring_yield_claimed"), "info");
 }
