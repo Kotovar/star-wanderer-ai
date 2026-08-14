@@ -526,6 +526,7 @@ assert.equal(CURRENT_STATE_VERSION, 27);
 const legacyContact = {
   civilizationId: "forge_cities",
   development: "industrial",
+  temperament: "curious",
   step: 3,
   outcome: "partnered",
   actionHistory: ["review_factories"],

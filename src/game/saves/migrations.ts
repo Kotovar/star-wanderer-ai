@@ -437,7 +437,6 @@ const migrations: Record<number, Migration> = {
         delete cleaned.preSpacefaringContact;
         return cleaned;
       }
-      if (contact.temperament) return location;
       return {
         ...location,
         preSpacefaringContact: {
