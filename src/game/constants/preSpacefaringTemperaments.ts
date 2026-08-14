@@ -1,5 +1,7 @@
 import type { Goods } from "@/game/types/goods";
 import type {
+    PreSpacefaringAction,
+    PreSpacefaringActionStep,
     PreSpacefaringDevelopment,
     PreSpacefaringOutcome,
     PreSpacefaringTemperament,
@@ -105,3 +107,96 @@ export const PARTNER_SHARE_INTERVAL_TURNS = 6;
  * числом.
  */
 export const PARTNER_SHARE_CAP = 6;
+
+/**
+ * Действия шагов 0 и 1. Шаг 2 здесь не описан намеренно: он выводится из
+ * `TEMPERAMENT_OUTCOME_MULTIPLIER`, поэтому показанный вариант и вариант,
+ * который что-то даёт, не могут разойтись.
+ *
+ * У замкнутых шаг 1 состоит из одного действия. Второй бесплатный вариант
+ * был бы неотличим от первого — ложный выбор хуже, чем его отсутствие.
+ */
+export const TEMPERAMENT_STEP_ACTIONS: Record<
+    PreSpacefaringTemperament,
+    readonly PreSpacefaringAction[]
+> = {
+    insular: [
+        { id: "insular_observe", step: 0 },
+        { id: "insular_withdraw", step: 1 },
+    ],
+    curious: [
+        { id: "curious_observe", step: 0 },
+        {
+            id: "curious_gift",
+            step: 1,
+            requiredGood: TEMPERAMENT_GIFT.curious ?? undefined,
+            grantsGiftBonus: true,
+        },
+        { id: "curious_abstain", step: 1 },
+    ],
+    devout: [
+        { id: "devout_observe", step: 0 },
+        {
+            id: "devout_gift",
+            step: 1,
+            requiredGood: TEMPERAMENT_GIFT.devout ?? undefined,
+            grantsGiftBonus: true,
+        },
+        { id: "devout_abstain", step: 1 },
+    ],
+    martial: [
+        { id: "martial_observe", step: 0 },
+        {
+            id: "martial_gift",
+            step: 1,
+            requiredGood: TEMPERAMENT_GIFT.martial ?? undefined,
+            grantsGiftBonus: true,
+        },
+        { id: "martial_abstain", step: 1 },
+    ],
+    waning: [
+        { id: "waning_observe", step: 0 },
+        {
+            id: "waning_gift",
+            step: 1,
+            requiredGood: TEMPERAMENT_GIFT.waning ?? undefined,
+            grantsGiftBonus: true,
+        },
+        { id: "waning_abstain", step: 1 },
+    ],
+};
+
+const OUTCOME_ORDER: readonly PreSpacefaringOutcome[] = [
+    "protected",
+    "assisted",
+    "partnered",
+    "exploited",
+];
+
+export function getPreSpacefaringActions(
+    temperament: PreSpacefaringTemperament,
+    step: PreSpacefaringActionStep,
+): PreSpacefaringAction[] {
+    if (step === 2) {
+        return OUTCOME_ORDER.filter(
+            (outcome) =>
+                TEMPERAMENT_OUTCOME_MULTIPLIER[temperament][outcome] !== null,
+        ).map((outcome) => ({
+            id: `contact_${outcome}`,
+            step: 2 as const,
+            outcome,
+        }));
+    }
+    return TEMPERAMENT_STEP_ACTIONS[temperament].filter(
+        (action) => action.step === step,
+    );
+}
+
+export function getUnavailableOutcomes(
+    temperament: PreSpacefaringTemperament,
+): PreSpacefaringOutcome[] {
+    return OUTCOME_ORDER.filter(
+        (outcome) =>
+            TEMPERAMENT_OUTCOME_MULTIPLIER[temperament][outcome] === null,
+    );
+}

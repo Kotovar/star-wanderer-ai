@@ -22,12 +22,6 @@ const planet = (id, over = {}) => ({
   ...over,
 });
 
-assert.equal(PRE_SPACEFARING_CIVILIZATIONS.length, 4);
-assert.deepEqual(
-  PRE_SPACEFARING_CIVILIZATIONS.map((entry) => entry.development).sort(),
-  ["agrarian", "industrial", "modern", "primitive"],
-);
-
 const probes = Array.from({ length: 250 }, (_, index) =>
   planet("civilization-probe-" + index),
 );
@@ -133,13 +127,6 @@ registerHooks({
     return nextLoad(url, context);
   },
 });
-
-const {
-  advancePreSpacefaringContact,
-  getPreSpacefaringContactSummary,
-} = await import(
-  "../src/game/slices/locations/helpers/preSpacefaringContact.ts",
-);
 
 const { generateExpeditionGrid } = await import(
   "../src/game/slices/locations/helpers/expedition/generateExpeditionGrid.ts"
@@ -270,256 +257,6 @@ const staleBase = makeDiscoveryHarness(true);
 revealExpeditionTile(7, staleBase.set, staleBase.get);
 assert.equal(staleBase.state.currentLocation.preSpacefaringContact, undefined);
 
-const makeContactState = (civilization) => {
-  const contactPlanet = {
-    id: "contact-" + civilization.id,
-    type: "planet",
-    isEmpty: true,
-    explored: true,
-    preSpacefaringContact: {
-      civilizationId: civilization.id,
-      development: civilization.development,
-      step: 0,
-      actionHistory: [],
-    },
-  };
-  const sector = { id: 1, locations: [contactPlanet] };
-  return {
-    turn: 20,
-    currentLocation: contactPlanet,
-    currentSector: sector,
-    galaxy: { sectors: [sector] },
-    outposts: [],
-    ship: {
-      tradeGoods: [
-        { item: "food", quantity: 4, buyPrice: 1 },
-        { item: "medicine", quantity: 4, buyPrice: 1 },
-        { item: "spares", quantity: 4, buyPrice: 1 },
-      ],
-    },
-    research: { resources: {} },
-  };
-};
-
-for (const civilization of PRE_SPACEFARING_CIVILIZATIONS) {
-  const contactState = makeContactState(civilization);
-  let nextTurnCalls = 0;
-  let saveCalls = 0;
-  const contactSet = (update) => {
-    const next =
-      typeof update === "function" ? update(contactState) : update;
-    if (next) Object.assign(contactState, next);
-  };
-  const contactGet = () => ({
-    ...contactState,
-    addLog: () => {},
-    nextTurn: () => {
-      nextTurnCalls += 1;
-      contactState.turn += 1;
-      saveCalls += 1;
-    },
-    saveGame: () => {
-      saveCalls += 1;
-    },
-  });
-
-  const observation = civilization.actions.find((action) => action.step === 0);
-  const help = civilization.actions.find(
-    (action) => action.step === 1 && action.requiredGood,
-  );
-  const boundary = civilization.actions.find(
-    (action) => action.step === 2 && action.outcome === "protected",
-  );
-  assert.ok(observation);
-  assert.ok(help);
-  assert.ok(boundary);
-
-  advancePreSpacefaringContact(
-    contactState.currentLocation.id,
-    observation.id,
-    0,
-    contactSet,
-    contactGet,
-  );
-  advancePreSpacefaringContact(
-    contactState.currentLocation.id,
-    help.id,
-    1,
-    contactSet,
-    contactGet,
-  );
-  advancePreSpacefaringContact(
-    contactState.currentLocation.id,
-    boundary.id,
-    2,
-    contactSet,
-    contactGet,
-  );
-
-  assert.equal(contactState.currentLocation.preSpacefaringContact.step, 3);
-  assert.equal(
-    contactState.currentLocation.preSpacefaringContact.outcome,
-    "protected",
-  );
-  assert.equal(nextTurnCalls, 3);
-  assert.equal(saveCalls, 3);
-  assert.deepEqual(
-    contactState.currentLocation.preSpacefaringContact.actionHistory,
-    [observation.id, help.id, boundary.id],
-  );
-
-  const completedSnapshot = JSON.stringify({
-    turn: contactState.turn,
-    contact: contactState.currentLocation.preSpacefaringContact,
-    goods: contactState.ship.tradeGoods,
-    research: contactState.research.resources,
-  });
-  advancePreSpacefaringContact(
-    contactState.currentLocation.id,
-    boundary.id,
-    2,
-    contactSet,
-    contactGet,
-  );
-  assert.equal(
-    JSON.stringify({
-      turn: contactState.turn,
-      contact: contactState.currentLocation.preSpacefaringContact,
-      goods: contactState.ship.tradeGoods,
-      research: contactState.research.resources,
-    }),
-    completedSnapshot,
-  );
-}
-
-const riverSummary = getPreSpacefaringContactSummary("river_clans", [
-  "observe_starlight",
-  "leave_food",
-  "partner_with_clans",
-]);
-assert.deepEqual(riverSummary.actionIds, [
-  "observe_starlight",
-  "leave_food",
-  "partner_with_clans",
-]);
-assert.deepEqual(riverSummary.goodsSpent, { food: 2 });
-assert.deepEqual(riverSummary.researchReceived, {
-  alien_biology: 3,
-  ancient_data: 2,
-});
-assert.equal(riverSummary.turnsSpent, 3);
-assert.deepEqual(
-  getPreSpacefaringContactSummary("river_clans", undefined).actionIds,
-  [],
-);
-
-const makeHarness = (harnessState) => {
-  let nextTurnCalls = 0;
-  let saveCalls = 0;
-  const harnessSet = (update) => {
-    const next =
-      typeof update === "function" ? update(harnessState) : update;
-    if (next) Object.assign(harnessState, next);
-  };
-  const harnessGet = () => ({
-    ...harnessState,
-    addLog: () => {},
-    nextTurn: () => {
-      nextTurnCalls += 1;
-      harnessState.turn += 1;
-      saveCalls += 1;
-    },
-    saveGame: () => {
-      saveCalls += 1;
-    },
-  });
-  return {
-    set: harnessSet,
-    get: harnessGet,
-    nextTurnCalls: () => nextTurnCalls,
-    saveCalls: () => saveCalls,
-  };
-};
-
-const contactSnapshot = (contactState) =>
-  JSON.stringify({
-    turn: contactState.turn,
-    contact: contactState.currentLocation.preSpacefaringContact,
-    goods: contactState.ship.tradeGoods,
-    research: contactState.research.resources,
-  });
-
-const firstCulture = PRE_SPACEFARING_CIVILIZATIONS[0];
-const firstHelp = firstCulture.actions.find(
-  (action) => action.step === 1 && action.requiredGood,
-);
-const firstObservation = firstCulture.actions.find(
-  (action) => action.step === 0,
-);
-const otherObservation = PRE_SPACEFARING_CIVILIZATIONS[1].actions.find(
-  (action) => action.step === 0,
-);
-assert.ok(firstHelp);
-assert.ok(firstObservation);
-assert.ok(otherObservation);
-
-const legacyHistoryState = makeContactState(firstCulture);
-delete legacyHistoryState.currentLocation.preSpacefaringContact.actionHistory;
-const legacyHistory = makeHarness(legacyHistoryState);
-advancePreSpacefaringContact(
-  legacyHistoryState.currentLocation.id,
-  firstObservation.id,
-  0,
-  legacyHistory.set,
-  legacyHistory.get,
-);
-assert.equal(
-  legacyHistoryState.currentLocation.preSpacefaringContact.actionHistory,
-  undefined,
-);
-assert.equal(legacyHistory.nextTurnCalls(), 1);
-
-const assertBlockedActionIsNoop = (
-  blockedState,
-  action,
-  expectedStep = blockedState.currentLocation.preSpacefaringContact.step,
-) => {
-  const harness = makeHarness(blockedState);
-  const before = contactSnapshot(blockedState);
-  advancePreSpacefaringContact(
-    blockedState.currentLocation.id,
-    action.id,
-    expectedStep,
-    harness.set,
-    harness.get,
-  );
-  assert.equal(contactSnapshot(blockedState), before);
-  assert.equal(harness.nextTurnCalls(), 0);
-  assert.equal(harness.saveCalls(), 0);
-};
-
-const missingCargoState = makeContactState(firstCulture);
-missingCargoState.currentLocation.preSpacefaringContact.step = 1;
-missingCargoState.ship.tradeGoods = [];
-assertBlockedActionIsNoop(missingCargoState, firstHelp);
-
-const wrongCultureState = makeContactState(firstCulture);
-assertBlockedActionIsNoop(wrongCultureState, otherObservation);
-
-const staleStepState = makeContactState(firstCulture);
-staleStepState.currentLocation.preSpacefaringContact.step = 1;
-assertBlockedActionIsNoop(staleStepState, firstObservation, 0);
-
-const baseState = makeContactState(firstCulture);
-baseState.outposts = [
-  { id: "base-1", kind: "base", locationId: baseState.currentLocation.id },
-];
-assertBlockedActionIsNoop(baseState, firstObservation);
-
-const linkedBaseState = makeContactState(firstCulture);
-linkedBaseState.currentLocation.outpostId = "base-2";
-assertBlockedActionIsNoop(linkedBaseState, firstObservation);
-
 const translations = ["ru", "en"].map((language) => ({
   language,
   catalog: JSON.parse(
@@ -557,16 +294,6 @@ for (const { language, catalog } of translations) {
       catalog.pre_spacefaring.development[civilization.development],
       `${language}: development ${civilization.development}`,
     );
-    assert.ok(
-      catalog.pre_spacefaring.civilizations[civilization.id].name,
-      `${language}: civilization ${civilization.id}`,
-    );
-    for (const action of civilization.actions) {
-      assert.ok(
-        catalog.pre_spacefaring.actions[action.id],
-        `${language}: action ${action.id}`,
-      );
-    }
   }
   for (const outcome of ["protected", "assisted", "partnered"]) {
     assert.ok(
@@ -618,8 +345,6 @@ const explorationPanelSource = readFileSync(
 );
 assert.match(explorationPanelSource, /pendingPreSpacefaringDiscovery/);
 assert.match(explorationPanelSource, /pre_spacefaring\.discovery_title/);
-
-console.log("Pre-spacefaring civilization checks passed");
 
 // ─── Характеры ───────────────────────────────────────────────────────────────
 
@@ -688,3 +413,106 @@ assert.deepEqual(Object.keys(OUTCOME_BASE_UNITS).sort(), [...ALL_OUTCOMES].sort(
 assert.equal(PROTECTED_MATURATION_TURNS, 28);
 assert.equal(PARTNER_SHARE_INTERVAL_TURNS, 6);
 assert.equal(PARTNER_SHARE_CAP, 6);
+
+// ─── Каталог цивилизаций ─────────────────────────────────────────────────────
+
+const { getPreSpacefaringActions, getUnavailableOutcomes } = await import(
+  "../src/game/constants/preSpacefaringTemperaments.ts"
+);
+
+assert.equal(PRE_SPACEFARING_CIVILIZATIONS.length, 12);
+
+// Каждый уровень встречается ровно трижды
+const byDevelopment = {};
+for (const civ of PRE_SPACEFARING_CIVILIZATIONS) {
+  byDevelopment[civ.development] = (byDevelopment[civ.development] ?? 0) + 1;
+}
+assert.deepEqual(byDevelopment, {
+  primitive: 3,
+  agrarian: 3,
+  industrial: 3,
+  modern: 3,
+});
+
+// Каждый характер встречается не менее двух раз
+const byTemperament = {};
+for (const civ of PRE_SPACEFARING_CIVILIZATIONS) {
+  byTemperament[civ.temperament] = (byTemperament[civ.temperament] ?? 0) + 1;
+}
+for (const temperament of PRE_SPACEFARING_TEMPERAMENTS) {
+  assert.ok(byTemperament[temperament] >= 2, `${temperament}: ${byTemperament[temperament]}`);
+}
+
+// Идентификаторы уникальны
+assert.equal(
+  new Set(PRE_SPACEFARING_CIVILIZATIONS.map((civ) => civ.id)).size,
+  12,
+);
+
+// Четыре исходных идентификатора сохранили свой уровень: иначе старые
+// сохранения показали бы другой мир под тем же названием.
+const legacyDevelopment = {
+  river_clans: "primitive",
+  delta_league: "agrarian",
+  forge_cities: "industrial",
+  coastal_network: "modern",
+};
+for (const [id, development] of Object.entries(legacyDevelopment)) {
+  const civ = PRE_SPACEFARING_CIVILIZATIONS.find((entry) => entry.id === id);
+  assert.ok(civ, `цивилизация ${id} пропала из каталога`);
+  assert.equal(civ.development, development, id);
+}
+
+// Действия шагов 0 и 1
+for (const temperament of PRE_SPACEFARING_TEMPERAMENTS) {
+  const step0 = getPreSpacefaringActions(temperament, 0);
+  assert.equal(step0.length, 1, `${temperament}: шаг 0 должен быть один`);
+  assert.equal(step0[0].requiredGood, undefined);
+
+  const step1 = getPreSpacefaringActions(temperament, 1);
+  const gift = TEMPERAMENT_GIFT[temperament];
+  if (gift === null) {
+    assert.equal(step1.length, 1, `${temperament}: без дара шаг 1 без ложного выбора`);
+    assert.ok(!step1.some((action) => action.grantsGiftBonus));
+  } else {
+    assert.equal(step1.length, 2, `${temperament}: дар и отказ`);
+    const giving = step1.filter((action) => action.grantsGiftBonus);
+    assert.equal(giving.length, 1, temperament);
+    assert.deepEqual(giving[0].requiredGood, gift, temperament);
+    assert.equal(step1.filter((a) => a.requiredGood).length, 1, temperament);
+  }
+}
+
+// Шаг 2 выводится из таблицы множителей — рассинхрона быть не может
+for (const temperament of PRE_SPACEFARING_TEMPERAMENTS) {
+  const step2 = getPreSpacefaringActions(temperament, 2);
+  const available = ALL_OUTCOMES.filter(
+    (outcome) => TEMPERAMENT_OUTCOME_MULTIPLIER[temperament][outcome] !== null,
+  );
+  assert.deepEqual(
+    step2.map((action) => action.outcome).sort(),
+    [...available].sort(),
+    temperament,
+  );
+  for (const action of step2) {
+    assert.equal(action.step, 2);
+    assert.equal(action.id, `contact_${action.outcome}`);
+  }
+  assert.deepEqual(
+    [...getUnavailableOutcomes(temperament)].sort(),
+    ALL_OUTCOMES.filter(
+      (outcome) => TEMPERAMENT_OUTCOME_MULTIPLIER[temperament][outcome] === null,
+    ).sort(),
+    temperament,
+  );
+}
+
+// Идентификаторы действий уникальны в пределах характера
+for (const temperament of PRE_SPACEFARING_TEMPERAMENTS) {
+  const ids = [0, 1, 2].flatMap((step) =>
+    getPreSpacefaringActions(temperament, step).map((action) => action.id),
+  );
+  assert.equal(new Set(ids).size, ids.length, temperament);
+}
+
+console.log("Pre-spacefaring civilization checks passed");

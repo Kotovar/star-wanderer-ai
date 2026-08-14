@@ -1,7 +1,6 @@
 import type { RaceId } from "./races";
 import type { PlanetEffectType } from "./effects";
 import type { Goods } from "./goods";
-import type { ResearchResourceType } from "./research";
 
 export type PreSpacefaringDevelopment =
     | "primitive"
@@ -29,6 +28,7 @@ export type PreSpacefaringOutcome =
 export interface PreSpacefaringSettlementSite {
     civilizationId: string;
     development: PreSpacefaringDevelopment;
+    temperament: PreSpacefaringTemperament;
 }
 
 export interface PreSpacefaringSettlementCandidate
@@ -46,19 +46,14 @@ export interface PreSpacefaringAction {
     id: string;
     step: PreSpacefaringActionStep;
     requiredGood?: { id: Goods; quantity: number };
+    /** Дар шага 1: ресурсов не даёт, повышает финальную выплату */
+    grantsGiftBonus?: boolean;
     outcome?: PreSpacefaringOutcome;
-    reward: {
-        researchResources: {
-            type: ResearchResourceType;
-            quantity: number;
-        }[];
-    };
 }
 
 export interface PreSpacefaringCivilization
     extends PreSpacefaringSettlementSite {
     id: string;
-    actions: readonly PreSpacefaringAction[];
 }
 
 export type PlanetType =
