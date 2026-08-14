@@ -99,6 +99,7 @@ export interface ExpeditionReward {
     tradeGoods: { id: Goods; quantity: number }[];
     researchResources: { type: ResearchResourceType; quantity: number }[];
     artifactFound: string | null; // artifact id
+    artifactIds: string[]; // выдаются только при успешном завершении
 }
 
 export interface ExpeditionState {

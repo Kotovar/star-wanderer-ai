@@ -777,6 +777,7 @@ const claimHarness = (contactOver, turn) => {
   const claimState = {
     turn,
     turnsAdvanced: 0,
+    saveCalls: 0,
     currentLocation: location,
     galaxy: { sectors: [{ id: 1, locations: [location] }] },
     currentSector: { id: 1, locations: [location] },
@@ -794,7 +795,9 @@ const claimHarness = (contactOver, turn) => {
   const claimGet = () => ({
     ...claimState,
     addLog: () => {},
-    saveGame: () => {},
+    saveGame: () => {
+      claimState.saveCalls += 1;
+    },
     nextTurn: () => {
       claimState.turnsAdvanced += 1;
     },
@@ -810,6 +813,7 @@ const claimHarness = (contactOver, turn) => {
   assert.equal(h.state.research.resources.ancient_data, 3);
   assert.equal(h.state.turnsAdvanced, 0, "забор доли не должен тратить ход");
   assert.equal(h.state.currentLocation.preSpacefaringContact.lastClaimTurn, 18);
+  assert.equal(h.state.saveCalls, 1, "забор доли должен сохранять игру");
 }
 
 // Повторный забор без прошедших ходов ничего не даёт

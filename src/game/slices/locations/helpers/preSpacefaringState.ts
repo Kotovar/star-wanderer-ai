@@ -184,4 +184,5 @@ export function claimPreSpacefaringYield(
         }),
     }));
     get().addLog(i18nStore.t("game_logs.pre_spacefaring_yield_claimed"), "info");
+    get().saveGame();
 }

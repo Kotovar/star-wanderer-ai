@@ -37,6 +37,8 @@ import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { ResearchResourceType } from "@/game/types/research";
 import type { RaceId } from "@/game/types";
 import { patchLocation } from "@/game/utils/patchLocation";
+import { rollArtifactFind } from "@/game/slices/artifacts/helpers/tryFindArtifact";
+import { playSound } from "@/sounds";
 
 const r = (min: number, max: number) =>
     Math.floor(Math.random() * (max - min + 1)) + min;
@@ -504,7 +506,10 @@ export function revealExpeditionTile(
         }
 
         case "artifact": {
-            const artifact = get().tryFindArtifact();
+            const artifact = rollArtifactFind(
+                state,
+                expedition.rewards.artifactIds ?? [],
+            );
             if (artifact) {
                 set((s) => ({
                     activeExpedition: s.activeExpedition
@@ -514,11 +519,17 @@ export function revealExpeditionTile(
                               rewards: {
                                   ...s.activeExpedition.rewards,
                                   artifactFound: artifact.id,
+                                  artifactIds: [
+                                      ...(s.activeExpedition.rewards
+                                          .artifactIds ?? []),
+                                      artifact.id,
+                                  ],
                               },
                           }
                         : null,
                 }));
                 boostExpeditionMorale(EXPEDITION_GOOD_FIND_MORALE_BOOST * 2);
+                playSound("world_artifact");
                 get().addLog( i18nStore.t("game_logs.revealExpeditionTile_5", { artifact_name: artifact.name }), "info");
             } else {
                 get().addLog( i18nStore.t("game_logs.revealExpeditionTile_6"), "info");
@@ -549,6 +560,7 @@ export function revealExpeditionTile(
                 : null,
         }));
     }
+    get().saveGame();
 }
 
 // Used internally when applying ruins choice trade goods

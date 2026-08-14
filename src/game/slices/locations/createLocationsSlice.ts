@@ -296,6 +296,7 @@ export const createLocationsSlice = (
                   }
                 : null,
         }));
+        get().saveGame();
     },
 
     advancePreSpacefaringContact: (planetId, actionId, expectedStep) => {

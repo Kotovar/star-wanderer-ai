@@ -6,6 +6,7 @@ import {
     addTradeGoodWithinCapacity,
     getFreeCargoSpace,
 } from "@/game/slices/ship/helpers";
+import { discoverArtifact } from "@/game/slices/artifacts/helpers/tryFindArtifact";
 
 /**
  * Применяет накопленные награды экспедиции к состоянию игры
@@ -106,6 +107,13 @@ export function collectExpeditionRewards(
             get().addLog( i18nStore.t("game_logs.collectExpeditionRewards_3", { value: rd?.icon ?? "", type: rd?.name ?? res.type, quantity }),
                 "info",
             );
+        }
+    }
+
+    for (const artifactId of rewards.artifactIds ?? []) {
+        const artifact = get().artifacts.find((entry) => entry.id === artifactId);
+        if (artifact && !artifact.discovered) {
+            discoverArtifact(artifact, set, get);
         }
     }
 }

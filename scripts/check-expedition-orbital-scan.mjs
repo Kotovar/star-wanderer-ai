@@ -33,17 +33,29 @@ const state = {
   },
 };
 const set = (updater) => Object.assign(state, updater(state));
-const get = () => state;
+let saveCalls = 0;
+const get = () => ({
+  ...state,
+  saveGame: () => {
+    saveCalls += 1;
+  },
+});
 
 scanExpeditionTile(0, "scientist", set, get);
 assert.equal(state.activeExpedition.grid[0].peeked, undefined);
 assert.equal(state.activeExpedition.scansRemaining, 1);
 
+const savesBeforeOrbitalScan = saveCalls;
 scanExpeditionTile(0, "orbital", set, get);
 assert.equal(state.activeExpedition.grid[0].peeked, true);
 assert.equal(state.activeExpedition.orbitalScanAvailable, false);
 assert.equal(state.activeExpedition.scansRemaining, 1);
 assert.equal(state.activeExpedition.apRemaining, 4);
+assert.equal(
+  saveCalls,
+  savesBeforeOrbitalScan + 1,
+  "успешное сканирование экспедиции должно сохранять игру",
+);
 
 scanExpeditionTile(1, "orbital", set, get);
 assert.equal(state.activeExpedition.grid[1].peeked, undefined);

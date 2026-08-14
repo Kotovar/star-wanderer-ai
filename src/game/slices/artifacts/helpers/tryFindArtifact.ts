@@ -9,32 +9,28 @@ import { RACES } from "@/game/constants/races";
 import { ARTIFACT_FIND_BASE_CHANCE, ARTIFACT_BOOST_BONUS } from "../constants";
 import { getTechBonusSum } from "@/game/research";
 
-/**
- * Пытается найти артефакт (шанс зависит от тира сектора и бонусов)
- *
- * @param state - Текущее состояние игры
- * @param set - Функция обновления состояния
- * @param get - Функция получения состояния
- * @returns Найденный артефакт или null
- */
-export const tryFindArtifact = (
+export const rollArtifactFind = (
     state: GameStore,
-    set: SetState,
-    get: () => GameStore,
+    excludedArtifactIds: readonly string[] = [],
 ): Artifact | null => {
-    // Проверяем бонус к поиску артефактов
     const artifactFinderBonus = calculateArtifactFinderBonus(state);
-
-    // Базовый шанс зависит от тира сектора и бонусов
     const tier = state.currentSector?.tier ?? 1;
     const baseChance = ARTIFACT_FIND_BASE_CHANCE * tier * artifactFinderBonus;
 
     if (Math.random() > baseChance) return null;
 
-    const artifact = getRandomUndiscoveredArtifact(state.artifacts);
-    if (!artifact) return null;
+    return getRandomUndiscoveredArtifact(
+        state.artifacts.filter(
+            (artifact) => !excludedArtifactIds.includes(artifact.id),
+        ),
+    );
+};
 
-    // Помечаем артефакт как обнаруженный
+export const discoverArtifact = (
+    artifact: Artifact,
+    set: SetState,
+    get: () => GameStore,
+): void => {
     set((s) => ({
         artifacts: s.artifacts.map((a) =>
             a.id === artifact.id
@@ -49,9 +45,26 @@ export const tryFindArtifact = (
         ),
     }));
 
-    // Завершаем контракт на добычу (кристаллический квест)
     completeMiningContracts(set, get, artifact);
+};
 
+/**
+ * Пытается найти артефакт (шанс зависит от тира сектора и бонусов)
+ *
+ * @param state - Текущее состояние игры
+ * @param set - Функция обновления состояния
+ * @param get - Функция получения состояния
+ * @returns Найденный артефакт или null
+ */
+export const tryFindArtifact = (
+    state: GameStore,
+    set: SetState,
+    get: () => GameStore,
+): Artifact | null => {
+    const artifact = rollArtifactFind(state);
+    if (!artifact) return null;
+
+    discoverArtifact(artifact, set, get);
     playSound("world_artifact");
     return artifact;
 };

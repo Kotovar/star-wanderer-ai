@@ -9,23 +9,22 @@ const sourceFile = (base) =>
   [base, `${base}.ts`, `${base}.tsx`, resolve(base, "index.ts")].find(
     (candidate) => existsSync(candidate) && statSync(candidate).isFile(),
   );
-const rewardsFixture = `
-export const collectExpeditionRewards = (rewards, set) => {
-  set((state) => ({ credits: state.credits + rewards.credits }));
-};`;
-const soundsFixture = `export const playSound = () => {};`;
+const soundsFixture = `
+export const DEFAULT_AUDIO_VOLUMES = {};
+export const MUSIC_REGISTRY = {};
+export const SOUND_REGISTRY = {};
+export const playSound = () => {};
+export const playUi = () => {};
+export const setAudioVolume = () => {};
+export const setAudioVolumes = () => {};
+export const setSoundPlaybackEnabled = () => {};
+export const startMusic = () => {};
+export const stopMusic = () => {};
+export const unlockAudio = () => {};
+`;
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
-    if (
-      specifier === "./collectExpeditionRewards" &&
-      context.parentURL?.endsWith("/endExpedition.ts")
-    ) {
-      return {
-        url: `data:text/javascript,${encodeURIComponent(rewardsFixture)}`,
-        shortCircuit: true,
-      };
-    }
     if (specifier === "@/sounds") {
       return {
         url: `data:text/javascript,${encodeURIComponent(soundsFixture)}`,
@@ -74,6 +73,12 @@ registerHooks({
 const { abortExpedition, endExpedition } = await import(
   "../src/game/slices/locations/helpers/expedition/endExpedition.ts"
 );
+const { revealExpeditionTile } = await import(
+  "../src/game/slices/locations/helpers/expedition/revealExpeditionTile.ts"
+);
+const { tryFindArtifact } = await import(
+  "../src/game/slices/artifacts/helpers/tryFindArtifact.ts"
+);
 assert.equal(typeof abortExpedition, "function");
 
 const createState = () => {
@@ -105,6 +110,9 @@ const createState = () => {
     currentLocation: planet,
     currentSector: sector,
     galaxy: { sectors: [sector] },
+    artifacts: [],
+    activeContracts: [],
+    completedContractIds: [],
   };
 };
 
@@ -185,5 +193,94 @@ const en = JSON.parse(
 );
 assert.equal(aborted.logs.at(-1)?.message, ru.game_logs.abortExpedition_1);
 assert.equal(typeof en.game_logs.abortExpedition_1, "string");
+
+const runArtifactExpedition = (finishExpedition) => {
+  const planet = { id: "artifact-planet", isEmpty: true, expeditionCompleted: false };
+  const sector = { id: 1, tier: 1, locations: [planet] };
+  const grid = Array.from({ length: 25 }, (_, index) => ({
+    type: index === 12 ? "artifact" : "market",
+    revealed: false,
+    x: index % 5,
+    y: Math.floor(index / 5),
+  }));
+  const state = {
+    turn: 12,
+    credits: 0,
+    activeExpedition: {
+      planetId: planet.id,
+      crewIds: [],
+      apRemaining: 1,
+      stepApCost: 1,
+      grid,
+      activeRuinsEvent: null,
+      finished: false,
+      rewards: {
+        credits: 0,
+        tradeGoods: [],
+        researchResources: [],
+        artifactFound: null,
+        artifactIds: [],
+      },
+    },
+    artifacts: [
+      {
+        id: "artifact-probe",
+        name: "Probe",
+        rarity: "rare",
+        discovered: false,
+        hinted: false,
+        effect: { type: "probe", active: false },
+      },
+    ],
+    crew: [],
+    research: { researchedTechs: {}, resources: {} },
+    activeEffects: [],
+    activeContracts: [],
+    completedContractIds: [],
+    outposts: [],
+    currentLocation: planet,
+    currentSector: sector,
+    galaxy: { sectors: [sector] },
+  };
+  const set = (update) => {
+    const next = typeof update === "function" ? update(state) : update;
+    if (next) Object.assign(state, next);
+  };
+  const get = () => ({
+    ...state,
+    addLog: () => {},
+    tryFindArtifact: () => tryFindArtifact(state, set, get),
+    gainExp: () => {},
+    updateShipStats: () => {},
+    nextTurn: () => {
+      state.turn += 1;
+    },
+    saveGame: () => {},
+  });
+
+  revealExpeditionTile(12, set, get);
+  finishExpedition(set, get);
+  return state;
+};
+
+const originalRandom = Math.random;
+Math.random = () => 0;
+try {
+  const artifactAborted = runArtifactExpedition(abortExpedition);
+  assert.equal(
+    artifactAborted.artifacts[0].discovered,
+    false,
+    "прерванная экспедиция не должна открывать найденный артефакт",
+  );
+
+  const artifactCompleted = runArtifactExpedition(endExpedition);
+  assert.equal(
+    artifactCompleted.artifacts[0].discovered,
+    true,
+    "артефакт должен открываться только после успешного завершения экспедиции",
+  );
+} finally {
+  Math.random = originalRandom;
+}
 
 console.log("Expedition abort checks passed");

@@ -157,11 +157,12 @@ const SPRITED_TILE_TYPES = [
   "core_sample",
   "hazard",
   "signal",
+  "settlement",
 ];
 assert.deepEqual(
   spriteIndices.map(([type]) => type).sort(),
   [...SPRITED_TILE_TYPES].sort(),
-  "спрайт-лист должен содержать только девять существующих кадров",
+  "спрайт-лист должен содержать все десять существующих кадров",
 );
 assert.deepEqual(
   spriteIndices.map(([, index]) => index).sort((a, b) => a - b),

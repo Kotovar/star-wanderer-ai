@@ -50,5 +50,6 @@ export function scanExpeditionTile(
               }
             : null,
     }));
+    get().saveGame();
     playSound("world_discovery");
 }

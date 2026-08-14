@@ -156,6 +156,7 @@ export function startExpedition(
             tradeGoods: [],
             researchResources: [],
             artifactFound: null,
+            artifactIds: [],
         },
         finished: false,
         crewIds: validCrewIds,
@@ -192,4 +193,5 @@ export function startExpedition(
         }),
         "info",
     );
+    get().saveGame();
 }

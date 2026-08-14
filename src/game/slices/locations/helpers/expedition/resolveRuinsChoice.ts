@@ -14,6 +14,7 @@ import {
 } from "./revealExpeditionTile";
 import { pickRuinsEvent } from "./ruinsEvents";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
+import { rollArtifactFind } from "@/game/slices/artifacts/helpers/tryFindArtifact";
 
 const r = (min: number, max: number) =>
     Math.floor(Math.random() * (max - min + 1)) + min;
@@ -125,12 +126,17 @@ export function resolveRuinsChoice(
             break;
         }
         case "artifact": {
-            const artifact = get().tryFindArtifact();
+            const artifact = rollArtifactFind(state, rewards.artifactIds ?? []);
             if (artifact) {
-                rewards = { ...rewards, artifactFound: artifact.id };
+                rewards = {
+                    ...rewards,
+                    artifactFound: artifact.id,
+                    artifactIds: [...(rewards.artifactIds ?? []), artifact.id],
+                };
                 parts.push(`✨ ${artifact.name}`);
                 gained = true;
                 artifactFound = true;
+                playSound("world_artifact");
                 get().addLog( i18nStore.t("game_logs.resolveRuinsChoice_5", { artifact_name: artifact.name }), "info");
             } else {
                 parts.push("🗿 Артефакт не обнаружен");
@@ -163,6 +169,7 @@ export function resolveRuinsChoice(
               }
             : null,
     }));
+    get().saveGame();
     if (!artifactFound && (riskApplied || gained)) {
         playSound(riskApplied ? "world_danger" : "world_discovery");
     }
@@ -198,6 +205,7 @@ export function diveDeeperIntoRuins(
               }
             : null,
     }));
+    get().saveGame();
 }
 
 /**
@@ -226,4 +234,5 @@ export function confirmRuinsOutcome(
               }
             : null,
     }));
+    get().saveGame();
 }
