@@ -8,9 +8,23 @@ export type PreSpacefaringDevelopment =
     | "agrarian"
     | "industrial"
     | "modern";
+/**
+ * Вторая ось цивилизации, ортогональная уровню развития. Уровень задаёт,
+ * сколько мир может дать; характер — какая сделка с ним вообще работает.
+ */
+export type PreSpacefaringTemperament =
+    | "insular"
+    | "curious"
+    | "devout"
+    | "martial"
+    | "waning";
 export type PreSpacefaringContactStep = 0 | 1 | 2 | 3;
 export type PreSpacefaringActionStep = 0 | 1 | 2;
-export type PreSpacefaringOutcome = "protected" | "assisted" | "partnered";
+export type PreSpacefaringOutcome =
+    | "protected"
+    | "assisted"
+    | "partnered"
+    | "exploited";
 
 export interface PreSpacefaringSettlementSite {
     civilizationId: string;

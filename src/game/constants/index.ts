@@ -19,3 +19,4 @@ export * from "./mutationChances";
 export * from "./spaceMonsters";
 export * from "./starHazards";
 export * from "./preSpacefaringCivilizations";
+export * from "./preSpacefaringTemperaments";

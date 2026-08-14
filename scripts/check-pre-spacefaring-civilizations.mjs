@@ -620,3 +620,71 @@ assert.match(explorationPanelSource, /pendingPreSpacefaringDiscovery/);
 assert.match(explorationPanelSource, /pre_spacefaring\.discovery_title/);
 
 console.log("Pre-spacefaring civilization checks passed");
+
+// ─── Характеры ───────────────────────────────────────────────────────────────
+
+const {
+  PRE_SPACEFARING_TEMPERAMENTS,
+  TEMPERAMENT_GIFT,
+  TEMPERAMENT_OUTCOME_MULTIPLIER,
+  DEVELOPMENT_MULTIPLIER,
+  DEVELOPMENT_RESOURCES,
+  OUTCOME_BASE_UNITS,
+  PROTECTED_MATURATION_TURNS,
+  PARTNER_SHARE_INTERVAL_TURNS,
+  PARTNER_SHARE_CAP,
+} = await import("../src/game/constants/preSpacefaringTemperaments.ts");
+
+const ALL_OUTCOMES = ["protected", "assisted", "partnered", "exploited"];
+
+assert.deepEqual([...PRE_SPACEFARING_TEMPERAMENTS].sort(), [
+  "curious",
+  "devout",
+  "insular",
+  "martial",
+  "waning",
+]);
+
+// У каждого характера множитель задан для всех четырёх исходов,
+// и недоступных исходов не больше одного: иначе выбор схлопывается.
+for (const temperament of PRE_SPACEFARING_TEMPERAMENTS) {
+  const row = TEMPERAMENT_OUTCOME_MULTIPLIER[temperament];
+  assert.deepEqual(Object.keys(row).sort(), [...ALL_OUTCOMES].sort(), temperament);
+  const unavailable = ALL_OUTCOMES.filter((outcome) => row[outcome] === null);
+  assert.ok(unavailable.length <= 1, `${temperament}: ${unavailable.length} недоступных исходов`);
+  for (const outcome of ALL_OUTCOMES) {
+    if (row[outcome] !== null) {
+      assert.ok(row[outcome] > 0, `${temperament}.${outcome} должен быть положительным`);
+    }
+  }
+  // Дар определён для каждого характера: null означает «не принимают».
+  assert.ok(temperament in TEMPERAMENT_GIFT);
+}
+
+// Ровно один явно лучший исход у каждого характера — иначе характер
+// не задаёт правильного решения и вторая ось не работает.
+for (const temperament of PRE_SPACEFARING_TEMPERAMENTS) {
+  const row = TEMPERAMENT_OUTCOME_MULTIPLIER[temperament];
+  const values = ALL_OUTCOMES.map((outcome) => row[outcome]).filter((v) => v !== null);
+  const best = Math.max(...values);
+  assert.equal(
+    values.filter((v) => v === best).length,
+    1,
+    `${temperament}: лучший исход не единственный`,
+  );
+}
+
+assert.deepEqual(Object.keys(DEVELOPMENT_MULTIPLIER).sort(), [
+  "agrarian",
+  "industrial",
+  "modern",
+  "primitive",
+]);
+for (const development of Object.keys(DEVELOPMENT_MULTIPLIER)) {
+  assert.ok(DEVELOPMENT_RESOURCES[development].length >= 1, development);
+  assert.ok(DEVELOPMENT_RESOURCES[development].length <= 2, development);
+}
+assert.deepEqual(Object.keys(OUTCOME_BASE_UNITS).sort(), [...ALL_OUTCOMES].sort());
+assert.equal(PROTECTED_MATURATION_TURNS, 28);
+assert.equal(PARTNER_SHARE_INTERVAL_TURNS, 6);
+assert.equal(PARTNER_SHARE_CAP, 6);
