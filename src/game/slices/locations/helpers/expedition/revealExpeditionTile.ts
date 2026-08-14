@@ -212,6 +212,7 @@ export function revealExpeditionTile(
             const contact = {
                 civilizationId: site.civilizationId,
                 development: site.development,
+                temperament: site.temperament,
                 step: 0 as const,
                 actionHistory: [],
             };

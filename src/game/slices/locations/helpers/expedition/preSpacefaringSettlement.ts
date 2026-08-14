@@ -48,6 +48,7 @@ export function getPreSpacefaringSettlementCandidate(
     return {
         civilizationId: civilization.id,
         development: civilization.development,
+        temperament: civilization.temperament,
         tileIndex,
     };
 }

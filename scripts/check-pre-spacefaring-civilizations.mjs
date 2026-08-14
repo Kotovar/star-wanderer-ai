@@ -141,6 +141,7 @@ const { abortExpedition } = await import(
 const site = {
   civilizationId: "river_clans",
   development: "primitive",
+  temperament: "insular",
   tileIndex: 7,
 };
 const grid = generateExpeditionGrid(
@@ -154,6 +155,7 @@ assert.equal(grid[7].type, "settlement");
 assert.deepEqual(grid[7].settlement, {
   civilizationId: "river_clans",
   development: "primitive",
+  temperament: "insular",
 });
 assert.notEqual(grid[12].type, "settlement");
 
@@ -170,7 +172,11 @@ const makeDiscoveryHarness = (hasBase = false) => {
     revealed: index === 12,
     settlement:
       index === 7
-        ? { civilizationId: "river_clans", development: "primitive" }
+        ? {
+            civilizationId: "river_clans",
+            development: "primitive",
+            temperament: "insular",
+          }
         : undefined,
     x: index % 5,
     y: Math.floor(index / 5),
@@ -236,6 +242,7 @@ assert.equal(state.activeExpedition.apRemaining, 1);
 assert.deepEqual(state.currentLocation.preSpacefaringContact, {
   civilizationId: "river_clans",
   development: "primitive",
+  temperament: "insular",
   step: 0,
   actionHistory: [],
 });
@@ -361,6 +368,46 @@ const {
 } = await import("../src/game/constants/preSpacefaringTemperaments.ts");
 
 const ALL_OUTCOMES = ["protected", "assisted", "partnered", "exploited"];
+
+// ─── Характер в сгенерированном поселении ────────────────────────────────────
+
+const temperamentProbes = Array.from({ length: 400 }, (_, index) =>
+  planet("temperament-probe-" + index),
+);
+const candidates = temperamentProbes
+  .map((entry) => getPreSpacefaringSettlementCandidate(entry, false))
+  .filter((entry) => entry !== null);
+assert.ok(candidates.length > 20, `кандидатов слишком мало: ${candidates.length}`);
+
+for (const candidate of candidates) {
+  assert.ok(
+    PRE_SPACEFARING_TEMPERAMENTS.includes(candidate.temperament),
+    JSON.stringify(candidate),
+  );
+  // Характер не разыгрывается отдельно: он всегда согласован с каталогом,
+  // иначе одна и та же цивилизация была бы разной на разных планетах.
+  const civ = PRE_SPACEFARING_CIVILIZATIONS.find(
+    (entry) => entry.id === candidate.civilizationId,
+  );
+  assert.ok(civ);
+  assert.equal(candidate.temperament, civ.temperament, candidate.civilizationId);
+  assert.equal(candidate.development, civ.development, candidate.civilizationId);
+}
+
+// Детерминированность сохраняется
+const temperamentPlanet = temperamentProbes.find(
+  (entry) => getPreSpacefaringSettlementCandidate(entry, false) !== null,
+);
+assert.deepEqual(
+  getPreSpacefaringSettlementCandidate(temperamentPlanet, false),
+  getPreSpacefaringSettlementCandidate(temperamentPlanet, false),
+);
+
+// В каталоге из 12 записей встречаются разные характеры
+assert.ok(
+  new Set(candidates.map((entry) => entry.temperament)).size >= 4,
+  "генерация не покрывает характеры",
+);
 
 assert.deepEqual([...PRE_SPACEFARING_TEMPERAMENTS].sort(), [
   "curious",

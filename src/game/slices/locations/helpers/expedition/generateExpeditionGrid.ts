@@ -45,6 +45,7 @@ export function generateExpeditionGrid(
                 ? {
                       civilizationId: settlement.civilizationId,
                       development: settlement.development,
+                      temperament: settlement.temperament,
                   }
                 : undefined,
         x: i % EXPEDITION_GRID_SIZE,
