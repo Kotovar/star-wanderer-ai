@@ -5754,42 +5754,37 @@
             "modern": "Modern society"
         },
         "civilizations": {
-            "river_clans": { "name": "River Clans" },
-            "delta_league": { "name": "Delta League" },
-            "forge_cities": { "name": "Forge Cities" },
-            "coastal_network": { "name": "Coastal Network" }
+            "river_clans": { "name": "River Clans", "lore": "The clans move along the floodplain and recognise nothing beyond it. Strangers are not driven off — they simply stop being noticed, the way weather stops being noticed.", "discovery": "Scouts found an abandoned camp. The fires were still warm: they were seen, and the clans left." },
+            "ash_walkers": { "name": "Ash Walkers", "lore": "Volcanic ash has been burying their world for a generation. They march south toward the last clean valleys, and they know they will not arrive.", "discovery": "A column of tracks runs through the ash from horizon to horizon. Beside it lie those who could walk no further." },
+            "sky_watchers": { "name": "Sky Watchers", "lore": "Their entire body of knowledge is a calendar of falling stars. They saw your descent, and they appear to have been expecting it.", "discovery": "A ring of stones lies on the plateau. At its centre is fresh earth, aligned exactly with your entry point." },
+            "delta_league": { "name": "Delta League", "lore": "A dozen cities trading grain and blueprints. They argue about everything except one point: a foreign object must first be taken apart.", "discovery": "The expedition was met by scribes rather than guards. Their first question was what the suit was made of." },
+            "thorn_holds": { "name": "Thorn Holds", "lore": "Seven fortified valleys, three generations of war over water. Every hold is certain it will win by next spring.", "discovery": "Watchtowers on both banks face each other across a burned strip a day's walk wide." },
+            "salt_pilgrims": { "name": "Salt Pilgrims", "lore": "Twice a year the whole population crosses the salt flat to the place where, they say, the sky once touched the ground.", "discovery": "The path through the salt is marked with bones. Those walking it saw the ship and knelt." },
+            "forge_cities": { "name": "Forge Cities", "lore": "The foundries run three shifts for a war nobody remembers starting. Stopping them is more frightening than continuing.", "discovery": "The sky over the valley is rust-red with furnace light. The factory whistles turned to sirens the moment the ship broke cloud." },
+            "glass_combine": { "name": "Glass Combine", "lore": "A factory-state where a scientific council replaced both government and courts. Anything unexplained is sent to a laboratory.", "discovery": "Measuring carts are already rolling toward the landing site. There will be more questions than answers." },
+            "lantern_orders": { "name": "Lantern Orders", "lore": "Closed guilds that pass their craft down only within the family. To them, trade with outsiders is a form of desecration.", "discovery": "The city gates closed an hour before touchdown. Lanterns were lit along the walls — a warning, not a welcome." },
+            "coastal_network": { "name": "Coastal Network", "lore": "Shoreline republics bound together by cable and radio. They argue on air around the clock, and that is what holds them together.", "discovery": "Every frequency carries the same question, asked in nine languages." },
+            "deep_quorum": { "name": "Deep Quorum", "lore": "They went underground after their nuclear age and have voted on every question since. Deciding whether to answer you took twelve years.", "discovery": "Ventilation shafts run kilometres into the rock. The reply came a day later: no." },
+            "last_broadcast": { "name": "The Last Broadcast", "lore": "Their biosphere collapsed in a single decade. The survivors keep one station on the air so that somebody will know they existed.", "discovery": "The receiver caught a looping recording. The voice states the number of survivors; the number has not been updated in four years." }
         },
+        "temperaments": {
+            "insular": { "name": "Insular", "hint": "They accept no gifts. The best you can do is leave and declare the world closed.", "blocked_partnered": "They will not accept a partnership: trade with outsiders is desecration to them." },
+            "curious": { "name": "Curious", "hint": "Hungry for foreign technology. Ready for a long exchange — and the easiest of all to spoil with generosity." },
+            "devout": { "name": "Devout", "hint": "They have taken the crew for heavenly messengers. Leaving as their patron will found a cult that outlives you." },
+            "martial": { "name": "Martial", "hint": "Fractured and at war. Left to themselves, they will not survive." },
+            "waning": { "name": "Waning", "hint": "The world is running out. A preserve will not help them — only intervention will.", "blocked_protected": "They will not live to flourish: a preserve over a dying world is only a slow funeral." }
+        },
+        "temperament_unknown": "Temperament unknown. Begin with observation.",
         "actions": {
-            "observe_starlight": "Observe the starlight rites",
-            "leave_food": "Leave food (2 units of food)",
-            "keep_distance": "Keep a safe distance",
-            "protect_clans": "Protect the clans",
-            "support_clans": "Support the clans",
-            "partner_with_clans": "Form a partnership with the clans",
-            "survey_fields": "Survey the fields",
-            "send_medicine": "Send medicine (1 unit of medicine)",
-            "respect_borders": "Respect their borders",
-            "protect_delta": "Protect the league",
-            "assist_delta": "Assist the league",
-            "partner_delta": "Form a partnership with the league",
-            "review_factories": "Review the factories",
-            "send_spares": "Send spare parts (2 units of spares)",
-            "limit_exchange": "Limit the exchange",
-            "protect_forges": "Protect the forge cities",
-            "assist_forges": "Assist the forge cities",
-            "partner_forges": "Form a partnership with the forge cities",
-            "listen_radio": "Listen to their radio",
-            "radio_exchange": "Open a radio exchange (1 unit of spares)",
-            "radio_silence": "Maintain radio silence",
-            "protect_network": "Protect the network",
-            "assist_network": "Assist the network",
-            "partner_network": "Form a partnership with the network"
+            "insular_observe": "Observe from a distance, unseen", "insular_withdraw": "End the observation and withdraw", "curious_observe": "Study their workshops and records", "curious_gift": "Hand over an electronics sample (1 electronics)", "curious_abstain": "Hand over nothing", "devout_observe": "Attend the rite", "devout_gift": "Accept the offering and answer with a gift (1 rare minerals)", "devout_abstain": "Refuse the role of messenger", "martial_observe": "Scout the lines of the conflict", "martial_gift": "Hand tools to one of the sides (2 spares)", "martial_abstain": "Stay out of their war", "waning_observe": "Assess how long they have left", "waning_gift": "Hand over medicine (2 medicine)", "waning_abstain": "Give them no false hope", "contact_protected": "Declare the world a preserve and leave", "contact_assisted": "Step in and solve their present crisis", "contact_partnered": "Arrange a standing exchange", "contact_exploited": "Take everything the world can give"
         },
         "outcomes": {
-            "protected": "The civilization remains under your protection.",
-            "assisted": "The civilization receives limited assistance.",
-            "partnered": "The civilization becomes a local partner."
+            "protected": "The world is a preserve now. It grows on its own, and one day it will have something to share.", "assisted": "Their crisis was solved by your hands. From here they get by on you rather than on themselves.", "partnered": "A standing exchange is in place. Come back — your share accumulates and waits.", "exploited": "The world has been stripped. What was here is gone."
         },
+        "status": { "growing": "The civilization is developing without your involvement.", "matured": "The civilization has reached a new stage.", "dependent": "The civilization lives on your aid and produces nothing further.", "partner": "Your partner accumulates your share between visits.", "collapsed": "Only ruins remain. The planet is free for a base." },
+        "growing_countdown": "Until it flourishes: {{count}} turns",
+        "claim_button": "Collect share: {{value}}",
+        "claim_nothing": "Nothing to collect yet.",
         "summary_title": "CONTACT SUMMARY",
         "summary_spent": "Spent: {{value}}",
         "summary_received": "Received: {{value}}",
@@ -5811,7 +5806,7 @@
     },
     "game_logs": {
         "pre_spacefaring_action_done": "Local contact has advanced. One turn passed.",
-        "pre_spacefaring_yield_claimed": "📦 Collected the local civilization's accumulated yield.",
+        "pre_spacefaring_yield_claimed": "The local civilization's share is aboard.",
         "pre_spacefaring_action_wrong_location": "Return to the contact planet first.",
         "pre_spacefaring_action_no_contact": "No local civilization contact was found.",
         "pre_spacefaring_action_already_complete": "This local contact is already complete.",

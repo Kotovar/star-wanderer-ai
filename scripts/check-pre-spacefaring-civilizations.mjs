@@ -1155,4 +1155,57 @@ const contactHarness = (over = {}) => {
   );
 }
 
+// ─── Локализация ─────────────────────────────────────────────────────────────
+
+const ru = JSON.parse(readFileSync(new URL("../src/lib/locales/ru.json", import.meta.url), "utf8"));
+const en = JSON.parse(readFileSync(new URL("../src/lib/locales/en.json", import.meta.url), "utf8"));
+
+const flatten = (value, prefix = "") =>
+  typeof value === "object" && value !== null
+    ? Object.entries(value).flatMap(([key, child]) =>
+        flatten(child, prefix ? `${prefix}.${key}` : key),
+      )
+    : [prefix];
+
+const requiredKeys = [
+  ...PRE_SPACEFARING_CIVILIZATIONS.flatMap((civ) => [
+    `pre_spacefaring.civilizations.${civ.id}.name`,
+    `pre_spacefaring.civilizations.${civ.id}.lore`,
+    `pre_spacefaring.civilizations.${civ.id}.discovery`,
+  ]),
+  ...PRE_SPACEFARING_TEMPERAMENTS.flatMap((temperament) => [
+    `pre_spacefaring.temperaments.${temperament}.name`,
+    `pre_spacefaring.temperaments.${temperament}.hint`,
+    ...getUnavailableOutcomes(temperament).map(
+      (outcome) => `pre_spacefaring.temperaments.${temperament}.blocked_${outcome}`,
+    ),
+    ...[0, 1, 2].flatMap((step) =>
+      getPreSpacefaringActions(temperament, step).map(
+        (action) => `pre_spacefaring.actions.${action.id}`,
+      ),
+    ),
+  ]),
+  ...ALL_OUTCOMES.map((outcome) => `pre_spacefaring.outcomes.${outcome}`),
+  ...["growing", "matured", "dependent", "partner", "collapsed"].map(
+    (status) => `pre_spacefaring.status.${status}`,
+  ),
+  "pre_spacefaring.temperament_unknown",
+  "pre_spacefaring.claim_button",
+  "pre_spacefaring.claim_nothing",
+  "pre_spacefaring.growing_countdown",
+  "game_logs.pre_spacefaring_yield_claimed",
+];
+
+const ruKeys = new Set(flatten(ru));
+const enKeys = new Set(flatten(en));
+for (const key of new Set(requiredKeys)) {
+  assert.ok(ruKeys.has(key), `ru.json: нет ключа ${key}`);
+  assert.ok(enKeys.has(key), `en.json: нет ключа ${key}`);
+}
+
+// Ключи pre_spacefaring не должны расходиться между языками
+const ruContact = [...ruKeys].filter((key) => key.startsWith("pre_spacefaring."));
+const enContact = [...enKeys].filter((key) => key.startsWith("pre_spacefaring."));
+assert.deepEqual(ruContact.sort(), enContact.sort());
+
 console.log("Pre-spacefaring civilization checks passed");
