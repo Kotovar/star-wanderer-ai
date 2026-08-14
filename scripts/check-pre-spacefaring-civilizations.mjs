@@ -396,6 +396,10 @@ const explorationPanelSource = readFileSync(
 );
 assert.match(explorationPanelSource, /pendingPreSpacefaringDiscovery/);
 assert.match(explorationPanelSource, /pre_spacefaring\.discovery_title/);
+assert.match(
+  explorationPanelSource,
+  /pre_spacefaring\.civilizations\.\$\{pendingDiscovery\.civilizationId\}\.discovery/,
+);
 
 // ─── Характеры ───────────────────────────────────────────────────────────────
 
@@ -557,6 +561,11 @@ const migratedContact =
   migrated.galaxy.sectors[0].locations[0].preSpacefaringContact;
 assert.equal(migratedContact.temperament, "martial");
 assert.equal(migratedContact.resolvedAtTurn, undefined);
+assert.equal(
+  migratedContact.actionHistory,
+  undefined,
+  "legacy action IDs cannot be reconstructed as temperament actions",
+);
 assert.deepEqual(
   resolvePreSpacefaringState(migratedContact, 999999).claimable,
   [],
@@ -566,8 +575,16 @@ assert.equal(
   "martial",
 );
 assert.equal(
+  migrated.currentSector.locations[0].preSpacefaringContact.actionHistory,
+  undefined,
+);
+assert.equal(
   migrated.currentLocation.preSpacefaringContact.temperament,
   "martial",
+);
+assert.equal(
+  migrated.currentLocation.preSpacefaringContact.actionHistory,
+  undefined,
 );
 
 const unknownLocation = {

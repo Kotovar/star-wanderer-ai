@@ -5789,7 +5789,7 @@
         "summary_spent": "Spent: {{value}}",
         "summary_received": "Received: {{value}}",
         "summary_turns": "Turns spent: {{count}}",
-        "summary_permanent_effect": "Permanent effect: choices grant only their already received one-time resources; a base cannot be built on this planet.",
+        "summary_permanent_effect": "Permanent effect depends on the outcome: exploitation lifts the base restriction, while protection and partnership change the world's future.",
         "legacy_history_unavailable": "This contact was completed before decision history was recorded. Its earlier rewards cannot be reconstructed exactly.",
         "blocked": {
             "wrong_location": "Return to this planet to continue contact.",

@@ -442,6 +442,9 @@ const migrations: Record<number, Migration> = {
         preSpacefaringContact: {
           ...contact,
           temperament: civilization.temperament,
+          // IDs from v26 belong to the retired action table and cannot be
+          // replayed as temperament actions. Keep the history unavailable.
+          actionHistory: undefined,
         },
       };
     };

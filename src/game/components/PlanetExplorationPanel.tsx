@@ -18,6 +18,7 @@ import type {
 } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
 import { PLANET_POINT_OF_INTERESTS } from "@/game/constants/planets";
+import { getPreSpacefaringCivilization } from "@/game/constants/preSpacefaringCivilizations";
 import {
   EXPEDITION_RUINS_MAX_DEPTH,
   getExpeditionEnvironment,
@@ -142,6 +143,13 @@ export function PlanetExplorationPanel() {
     !activeRuinsEvent;
   const emptyArtifactTileIndex = expedition.emptyArtifactTileIndex ?? null;
   const pendingDiscovery = expedition.pendingPreSpacefaringDiscovery ?? null;
+  const discoveryDescription =
+    pendingDiscovery &&
+    getPreSpacefaringCivilization(pendingDiscovery.civilizationId)
+      ? t(
+          `pre_spacefaring.civilizations.${pendingDiscovery.civilizationId}.discovery`,
+        )
+      : t("pre_spacefaring.discovery_desc");
   const showSettlementDiscovery =
     pendingDiscovery !== null && !activeRuinsEvent && !showArtifactFound;
   const legendTileTypes: readonly ExploreTileType[] = grid.some(
@@ -411,7 +419,7 @@ export function PlanetExplorationPanel() {
           </div>
           <div className="flex flex-col gap-3 p-4 text-center">
             <DialogDescription className="text-xs leading-relaxed text-[#aaa]">
-              {t("pre_spacefaring.discovery_desc")}
+              {discoveryDescription}
             </DialogDescription>
             <DialogClose asChild>
               <Button className="cursor-pointer border border-[#00d4ff88] bg-transparent py-2 text-xs font-bold uppercase tracking-wider text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810]">
