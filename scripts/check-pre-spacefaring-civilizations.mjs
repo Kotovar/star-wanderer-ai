@@ -113,7 +113,8 @@ const sourceFile = (base) =>
   );
 const rewardsFixture =
   "export const collectExpeditionRewards = (rewards, set) => set((state) => ({ credits: state.credits + rewards.credits }));";
-const soundsFixture = "export const playSound = () => {};";
+const soundsFixture =
+  "export const playSound = () => {}; export const DEFAULT_AUDIO_VOLUMES = {};";
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
@@ -511,6 +512,91 @@ const {
   resolvePreSpacefaringState,
 } = await import(
   "../src/game/slices/locations/helpers/preSpacefaringState.ts"
+);
+
+// ─── Миграция сохранений ─────────────────────────────────────────────────────
+
+const { loadWithMigrations } = await import("../src/game/saves/migrations.ts");
+const { CURRENT_STATE_VERSION } = await import(
+  "../src/game/constants/version.ts"
+);
+
+assert.equal(CURRENT_STATE_VERSION, 27);
+
+const legacyContact = {
+  civilizationId: "forge_cities",
+  development: "industrial",
+  step: 3,
+  outcome: "partnered",
+  actionHistory: ["review_factories"],
+};
+const legacyLocation = {
+  id: "planet-legacy",
+  type: "planet",
+  isEmpty: true,
+  explored: true,
+  preSpacefaringContact: legacyContact,
+};
+const legacySave = JSON.stringify({
+  version: 26,
+  state: {
+    stateVersion: 26,
+    turn: 120,
+    galaxy: { sectors: [{ id: 1, locations: [legacyLocation] }] },
+    currentSector: { id: 1, locations: [legacyLocation] },
+    currentLocation: legacyLocation,
+  },
+});
+
+const migrated = loadWithMigrations(legacySave);
+assert.ok(migrated);
+assert.equal(migrated.stateVersion, 27);
+
+const migratedContact =
+  migrated.galaxy.sectors[0].locations[0].preSpacefaringContact;
+assert.equal(migratedContact.temperament, "martial");
+assert.equal(migratedContact.resolvedAtTurn, undefined);
+assert.deepEqual(
+  resolvePreSpacefaringState(migratedContact, 999999).claimable,
+  [],
+);
+assert.equal(
+  migrated.currentSector.locations[0].preSpacefaringContact.temperament,
+  "martial",
+);
+assert.equal(
+  migrated.currentLocation.preSpacefaringContact.temperament,
+  "martial",
+);
+
+const unknownLocation = {
+  id: "planet-unknown",
+  type: "planet",
+  isEmpty: true,
+  explored: true,
+  preSpacefaringContact: {
+    civilizationId: "gone_forever",
+    development: "modern",
+    temperament: "curious",
+    step: 1,
+  },
+};
+const unknownSave = JSON.stringify({
+  version: 26,
+  state: {
+    stateVersion: 26,
+    turn: 5,
+    galaxy: { sectors: [{ id: 1, locations: [unknownLocation] }] },
+    currentSector: { id: 1, locations: [unknownLocation] },
+    currentLocation: unknownLocation,
+  },
+});
+const unknownMigrated = loadWithMigrations(unknownSave);
+assert.ok(unknownMigrated);
+assert.equal(
+  unknownMigrated.galaxy.sectors[0].locations[0].preSpacefaringContact,
+  undefined,
+  "контакт исчезнувшей цивилизации должен сниматься, а не ломать планету",
 );
 
 assert.equal(

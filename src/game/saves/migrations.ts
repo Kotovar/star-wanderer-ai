@@ -9,6 +9,7 @@ import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import { DEFAULT_AUDIO_VOLUMES } from "@/sounds";
 import { hydrateNavigatorIntelFromLegacyState } from "@/game/navigator/intel";
 import { hasCombatArmament } from "@/game/contracts/frontierContracts";
+import { PRE_SPACEFARING_CIVILIZATIONS } from "@/game/constants/preSpacefaringCivilizations";
 import type { GameState, Location, Sector } from "@/game/types";
 
 interface PersistedState {
@@ -423,6 +424,47 @@ const migrations: Record<number, Migration> = {
     stateVersion: 26,
     pendingContractDecision: null,
   }),
+  26: (raw) => {
+    const state = raw as GameState;
+    const withTemperament = (location: Location) => {
+      const contact = location.preSpacefaringContact;
+      if (!contact) return location;
+      const civilization = PRE_SPACEFARING_CIVILIZATIONS.find(
+        (entry) => entry.id === contact.civilizationId,
+      );
+      if (!civilization) {
+        const cleaned = { ...location };
+        delete cleaned.preSpacefaringContact;
+        return cleaned;
+      }
+      if (contact.temperament) return location;
+      return {
+        ...location,
+        preSpacefaringContact: {
+          ...contact,
+          temperament: civilization.temperament,
+        },
+      };
+    };
+    const sectors = (state.galaxy?.sectors ?? []).map((sector) => ({
+      ...sector,
+      locations: sector.locations.map(withTemperament),
+    }));
+    return {
+      ...state,
+      stateVersion: 27,
+      galaxy: { ...state.galaxy, sectors },
+      currentSector: state.currentSector
+        ? (sectors.find((sector) => sector.id === state.currentSector?.id) ?? {
+            ...state.currentSector,
+            locations: state.currentSector.locations.map(withTemperament),
+          })
+        : null,
+      currentLocation: state.currentLocation
+        ? withTemperament(state.currentLocation)
+        : null,
+    };
+  },
 };
 
 /**
