@@ -109,6 +109,7 @@ export const completeDeliveryContract = (
             return;
         }
         set({ pendingContractDecision: { contractId } });
+        get().saveGame();
         return;
     }
 

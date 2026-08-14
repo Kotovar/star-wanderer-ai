@@ -133,6 +133,7 @@ export const createContractsSlice = (
                 completion,
             ],
         }));
+        get().saveGame();
     },
 
     dismissContractCompletion: () => {
@@ -140,6 +141,7 @@ export const createContractsSlice = (
             pendingContractCompletions:
                 state.pendingContractCompletions.slice(1),
         }));
+        get().saveGame();
     },
 
     syncCombatContractOffers: () => {
@@ -184,6 +186,7 @@ export const createContractsSlice = (
         // Обновляем контракты если есть изменения
         if (result.contracts !== state.activeContracts) {
             set(() => ({ activeContracts: result.contracts }));
+            get().saveGame();
         }
 
         return result.contracts;
@@ -245,7 +248,9 @@ export const createContractsSlice = (
     },
 
     acceptContract: (contract) => {
-        return acceptContractFn(contract, set, get);
+        const accepted = acceptContractFn(contract, set, get);
+        if (accepted) get().saveGame();
+        return accepted;
     },
 
     completeDeliveryContract: (contractId) => {
@@ -257,6 +262,10 @@ export const createContractsSlice = (
     },
 
     cancelContract: (contractId) => {
+        const exists = get().activeContracts.some(
+            (contract) => contract.id === contractId,
+        );
         cancelContractFn(contractId, set, get);
+        if (exists) get().saveGame();
     },
 });

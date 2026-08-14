@@ -55,6 +55,9 @@ await import("./register-ts-loader.mjs");
 const { completeBattleContracts } = await import(
   "../src/game/slices/combat/helpers/completeBattleContracts.ts"
 );
+const { createContractsSlice } = await import(
+  "../src/game/slices/contracts/contractsSlice.ts"
+);
 
 const legacySyntheticResearch = {
   type: "research",
@@ -329,6 +332,51 @@ assert.equal(
   emptyPlanetScan.contracts[0].visited,
   1,
   "scan_planet: пустая планета не засчитана",
+);
+const scanPersistenceSnapshots = [];
+const scanPersistenceState = {
+  activeContracts: [
+    {
+      id: "saved-empty-scan-contract",
+      type: "scan_planet",
+      planetType: "Ледяная",
+      requiresVisit: 1,
+      visited: 0,
+    },
+  ],
+  currentLocation: {
+    id: "saved-empty-scan-target",
+    type: "planet",
+    planetType: "Ледяная",
+    isEmpty: true,
+  },
+  ship: {
+    modules: [
+      { type: "scanner", disabled: false, manualDisabled: false, health: 100 },
+    ],
+  },
+  addLog: () => undefined,
+  saveGame: () => {
+    scanPersistenceSnapshots.push(
+      scanPersistenceState.activeContracts[0].visited,
+    );
+  },
+};
+const setScanPersistenceState = (update) => {
+  const next = typeof update === "function"
+    ? update(scanPersistenceState)
+    : update;
+  if (next) Object.assign(scanPersistenceState, next);
+};
+Object.assign(
+  scanPersistenceState,
+  createContractsSlice(setScanPersistenceState, () => scanPersistenceState),
+);
+scanPersistenceState.processScanContracts();
+assert.deepEqual(
+  scanPersistenceSnapshots,
+  [1],
+  "scan progress must be saved after visiting the planet",
 );
 
 // expedition_survey: завершённую экспедицию нельзя выдать повторно
@@ -843,10 +891,14 @@ let surveyState = {
   currentSector: { locations: [{ id: "survey-target", type: "planet" }] },
   crew: [],
 };
+let surveySaveCalls = 0;
 const surveyGet = () => ({
   ...surveyState,
   addLog: () => undefined,
   tryFindArtifact: () => null,
+  saveGame: () => {
+    surveySaveCalls += 1;
+  },
 });
 const surveySet = (updater) => {
   surveyState = { ...surveyState, ...updater(surveyState) };
@@ -864,6 +916,11 @@ assert.deepEqual(
     ["survey-other-contract", 0, false],
   ],
   "любая открытая клетка должна засчитываться только в контракт целевой планеты",
+);
+assert.equal(
+  surveySaveCalls,
+  1,
+  "открытие клетки экспедиции должно сохранять прогресс",
 );
 
 const migratedSurvey = loadWithMigrations(

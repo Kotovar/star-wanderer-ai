@@ -834,6 +834,7 @@ const frontierContactState = {
   ship: { modules: [] },
 };
 const frontierLogs = [];
+const frontierSaveSnapshots = [];
 const frontierSourceSector = {
   id: 1,
   name: "Frontier source",
@@ -877,6 +878,15 @@ Object.assign(frontierContactState, {
   frontierSubsidy: null,
   pendingContractCompletions: [],
   addLog: (message) => frontierLogs.push(message),
+  saveGame: () => {
+    frontierSaveSnapshots.push({
+      completed: frontierContactState.frontierContractsCompleted,
+      subsidized: frontierContactState.frontierSubsidy?.weaponBayAvailable ?? false,
+      completionIds: frontierContactState.pendingContractCompletions.map(
+        (completion) => completion.contract.id,
+      ),
+    });
+  },
 });
 const setFrontierContactState = (update) => {
   const next = typeof update === "function"
@@ -902,6 +912,15 @@ const frontierCompletion = (id) => ({
 });
 frontierContactState.showContractCompletion(frontierCompletion("frontier-1"));
 frontierContactState.showContractCompletion(frontierCompletion("frontier-2"));
+assert.deepEqual(
+  frontierSaveSnapshots.at(-1),
+  {
+    completed: 2,
+    subsidized: true,
+    completionIds: ["frontier-1", "frontier-2"],
+  },
+  "Frontier reward must be saved after the contact and completion queue change",
+);
 assert.equal(frontierContactState.frontierContractsCompleted, 2);
 assert.equal(frontierContactState.frontierChainClosed, true);
 assert.equal(frontierContactState.frontierSubsidy?.weaponBayAvailable, true);
@@ -964,6 +983,62 @@ assert.equal(frontierContactState.navigatorTargets.length, 1);
 assert.equal(frontierContactState.frontierSubsidy.weaponBayAvailable, false);
 assert.equal(frontierLogs.length, 1);
 assert.equal(getFrontierContactPatch(frontierContactState), null);
+frontierContactState.dismissContractCompletion();
+assert.deepEqual(
+  frontierSaveSnapshots.at(-1)?.completionIds,
+  ["frontier-2", "frontier-2"],
+  "dismissing a completion must save the remaining queue",
+);
+
+const contractTransitionSnapshots = [];
+const contractTransitionState = {
+  activeContracts: [],
+  activeCrisis: null,
+  artifacts: [],
+  completedLocations: [],
+  galaxy: { sectors: [] },
+  raceReputation: {},
+  research: { researchedTechs: [], unlockedRecipes: [] },
+  ship: { cargo: [], modules: [] },
+  turn: 1,
+  addLog: () => undefined,
+  saveGame: () => {
+    contractTransitionSnapshots.push(
+      contractTransitionState.activeContracts.map((contract) => contract.id),
+    );
+  },
+};
+const setContractTransitionState = (update) => {
+  const next = typeof update === "function"
+    ? update(contractTransitionState)
+    : update;
+  if (next) Object.assign(contractTransitionState, next);
+};
+Object.assign(
+  contractTransitionState,
+  createContractsSlice(
+    setContractTransitionState,
+    () => contractTransitionState,
+  ),
+);
+const durableContract = {
+  id: "durable-combat-contract",
+  type: "combat",
+  desc: "contracts.desc_combat",
+  reward: 1,
+};
+assert.equal(contractTransitionState.acceptContract(durableContract), true);
+assert.deepEqual(
+  contractTransitionSnapshots,
+  [["durable-combat-contract"]],
+  "accepting a contract must save the accepted contract",
+);
+contractTransitionState.cancelContract(durableContract.id);
+assert.deepEqual(
+  contractTransitionSnapshots,
+  [["durable-combat-contract"], []],
+  "cancelling a contract must save the removal",
+);
 
 const protectedShipyardSector = {
   id: 21,

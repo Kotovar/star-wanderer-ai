@@ -213,6 +213,7 @@ const makeDecisionState = () => {
     factionDelivery: { localRace: "synthetic", context: "relief" },
   };
   const reputationCalls = [];
+  const saveSnapshots = [];
   const state = {
     activeContracts: [contract],
     completedContractIds: [],
@@ -227,6 +228,15 @@ const makeDecisionState = () => {
     frontierContractsCompleted: 0,
     addLog: () => {},
     gainExp: () => undefined,
+    saveGame: () => {
+      saveSnapshots.push({
+        pendingDecision: state.pendingContractDecision,
+        activeContractIds: state.activeContracts.map((active) => active.id),
+        completionIds: state.pendingContractCompletions.map(
+          (completion) => completion.contract.id,
+        ),
+      });
+    },
     changeReputation: (raceId, amount) => {
       reputationCalls.push({ raceId, amount });
       state.raceReputation[raceId] = (state.raceReputation[raceId] ?? 0) + amount;
@@ -239,7 +249,7 @@ const makeDecisionState = () => {
   };
   Object.assign(state, createContractsSlice(set, () => state));
   setUiState(state);
-  return { contract, reputationCalls, state };
+  return { contract, reputationCalls, saveSnapshots, state };
 };
 
 const issuer = makeDecisionState();
@@ -252,6 +262,15 @@ assert.deepEqual(
 assert.equal(issuer.state.credits, 100);
 assert.equal(issuer.state.ship.cargo.length, 1);
 assert.equal(issuer.state.activeContracts.length, 1);
+assert.deepEqual(
+  issuer.saveSnapshots.at(-1),
+  {
+    pendingDecision: { contractId: issuer.contract.id },
+    activeContractIds: [issuer.contract.id],
+    completionIds: [],
+  },
+  "a faction delivery decision must be saved before the player chooses a side",
+);
 
 issuer.state.resolveFactionDeliveryDecision("issuer");
 assert.equal(issuer.state.credits, 1100);
@@ -329,6 +348,7 @@ const makeReciprocalDecisionState = () => {
     frontierContractsCompleted: 0,
     addLog: () => {},
     gainExp: () => undefined,
+    saveGame: () => undefined,
   };
   const set = (update) => {
     const patch = typeof update === "function" ? update(state) : update;
