@@ -40,6 +40,15 @@ export interface PreSpacefaringContact extends PreSpacefaringSettlementSite {
     step: PreSpacefaringContactStep;
     outcome?: PreSpacefaringOutcome;
     actionHistory?: string[];
+    /** Ход достижения шага 3. Без него выплат не бывает — см. миграцию сохранений */
+    resolvedAtTurn?: number;
+    /** Дар шага 1 — множитель финальной выплаты */
+    giftGiven?: boolean;
+    /**
+     * Последний забор доли. У партнёрства — точка отсчёта следующей доли,
+     * у заповедника — признак того, что разовая выплата уже получена.
+     */
+    lastClaimTurn?: number;
 }
 
 export interface PreSpacefaringAction {

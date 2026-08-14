@@ -458,6 +458,151 @@ for (const development of Object.keys(DEVELOPMENT_MULTIPLIER)) {
 }
 assert.deepEqual(Object.keys(OUTCOME_BASE_UNITS).sort(), [...ALL_OUTCOMES].sort());
 assert.equal(PROTECTED_MATURATION_TURNS, 28);
+
+// ─── Расчёт выплаты и состояния мира ─────────────────────────────────────────
+
+const {
+  getPreSpacefaringPayoutUnits,
+  splitPayoutUnits,
+  getPreSpacefaringCredits,
+  resolvePreSpacefaringState,
+} = await import(
+  "../src/game/slices/locations/helpers/preSpacefaringState.ts"
+);
+
+assert.equal(
+  getPreSpacefaringPayoutUnits("modern", "waning", "protected", false),
+  null,
+);
+assert.equal(
+  getPreSpacefaringPayoutUnits("modern", "insular", "partnered", false),
+  null,
+);
+assert.equal(
+  getPreSpacefaringPayoutUnits("primitive", "insular", "protected", false),
+  15,
+);
+assert.equal(
+  getPreSpacefaringPayoutUnits("primitive", "insular", "protected", true),
+  19,
+);
+assert.equal(
+  getPreSpacefaringPayoutUnits("modern", "devout", "protected", false), 30);
+assert.equal(
+  getPreSpacefaringPayoutUnits("primitive", "martial", "protected", false),
+  Math.max(1, Math.round(10 * 1 * 0.25)),
+);
+assert.ok(
+  getPreSpacefaringPayoutUnits("primitive", "waning", "partnered", false) >= 1,
+);
+
+assert.deepEqual(splitPayoutUnits("primitive", 7), [
+  { type: "alien_biology", quantity: 7 },
+]);
+assert.deepEqual(splitPayoutUnits("industrial", 7), [
+  { type: "tech_salvage", quantity: 4 },
+  { type: "rare_minerals", quantity: 3 },
+]);
+assert.deepEqual(splitPayoutUnits("industrial", 8), [
+  { type: "tech_salvage", quantity: 4 },
+  { type: "rare_minerals", quantity: 4 },
+]);
+assert.deepEqual(splitPayoutUnits("primitive", 0), []);
+
+assert.equal(getPreSpacefaringCredits("primitive", "devout", "protected"), 0);
+assert.equal(
+  getPreSpacefaringCredits("primitive", "devout", "exploited"),
+  Math.round(1500 * 1 * 1.25),
+);
+
+const contact = (over = {}) => ({
+  civilizationId: "river_clans",
+  development: "primitive",
+  temperament: "insular",
+  step: 3,
+  actionHistory: [],
+  ...over,
+});
+
+assert.deepEqual(
+  resolvePreSpacefaringState(contact({ step: 1 }), 50).status,
+  "unresolved",
+);
+assert.deepEqual(resolvePreSpacefaringState(contact({ step: 1 }), 50).claimable, []);
+
+const growing = resolvePreSpacefaringState(
+  contact({ outcome: "protected", resolvedAtTurn: 10 }),
+  20,
+);
+assert.equal(growing.status, "growing");
+assert.deepEqual(growing.claimable, []);
+assert.equal(growing.turnsUntilMaturity, 18);
+
+const matured = resolvePreSpacefaringState(
+  contact({ outcome: "protected", resolvedAtTurn: 10 }),
+  38,
+);
+assert.equal(matured.status, "matured");
+assert.deepEqual(matured.claimable, [{ type: "alien_biology", quantity: 15 }]);
+
+const claimed = resolvePreSpacefaringState(
+  contact({ outcome: "protected", resolvedAtTurn: 10, lastClaimTurn: 38 }),
+  400,
+);
+assert.equal(claimed.status, "matured");
+assert.deepEqual(claimed.claimable, []);
+
+assert.deepEqual(
+  resolvePreSpacefaringState(
+    contact({ outcome: "assisted", resolvedAtTurn: 10 }),
+    400,
+  ),
+  { status: "dependent", claimable: [] },
+);
+assert.deepEqual(
+  resolvePreSpacefaringState(
+    contact({ outcome: "exploited", resolvedAtTurn: 10 }),
+    400,
+  ),
+  { status: "collapsed", claimable: [] },
+);
+
+const partner = (turn, over = {}) =>
+  resolvePreSpacefaringState(
+    contact({
+      civilizationId: "delta_league",
+      development: "agrarian",
+      temperament: "curious",
+      outcome: "partnered",
+      resolvedAtTurn: 0,
+      ...over,
+    }),
+    turn,
+  );
+assert.deepEqual(partner(5).claimable, []);
+assert.equal(partner(5).status, "partner");
+assert.deepEqual(partner(6).claimable, [
+  { type: "alien_biology", quantity: 1 },
+  { type: "ancient_data", quantity: 1 },
+]);
+assert.deepEqual(partner(18).claimable, [
+  { type: "alien_biology", quantity: 3 },
+  { type: "ancient_data", quantity: 3 },
+]);
+assert.deepEqual(partner(36).claimable, partner(9999).claimable);
+assert.deepEqual(partner(9999).claimable, [
+  { type: "alien_biology", quantity: 6 },
+  { type: "ancient_data", quantity: 6 },
+]);
+assert.deepEqual(partner(30, { lastClaimTurn: 24 }).claimable, [
+  { type: "alien_biology", quantity: 1 },
+  { type: "ancient_data", quantity: 1 },
+]);
+
+for (const outcome of ALL_OUTCOMES) {
+  const legacy = resolvePreSpacefaringState(contact({ outcome }), 100000);
+  assert.deepEqual(legacy.claimable, [], `legacy ${outcome}`);
+}
 assert.equal(PARTNER_SHARE_INTERVAL_TURNS, 6);
 assert.equal(PARTNER_SHARE_CAP, 6);
 

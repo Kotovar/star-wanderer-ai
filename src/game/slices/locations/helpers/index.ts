@@ -16,3 +16,4 @@ export * from "./orbitalScan";
 export * from "./scoutEvents";
 export * from "./exploreDerelictShip";
 export * from "./preSpacefaringContact";
+export * from "./preSpacefaringState";
