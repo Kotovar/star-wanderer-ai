@@ -1208,4 +1208,27 @@ const ruContact = [...ruKeys].filter((key) => key.startsWith("pre_spacefaring.")
 const enContact = [...enKeys].filter((key) => key.startsWith("pre_spacefaring."));
 assert.deepEqual(ruContact.sort(), enContact.sort());
 
+// ─── Карточка контакта ───────────────────────────────────────────────────
+
+const cardSource = readFileSync(
+  new URL("../src/game/components/PreSpacefaringContactCard.tsx", import.meta.url),
+  "utf8",
+);
+
+assert.match(cardSource, /pre_spacefaring\.civilizations\.\$\{[^}]+\}\.lore/);
+assert.match(cardSource, /pre_spacefaring\.temperaments\.\$\{[^}]+\}\.name/);
+assert.match(cardSource, /pre_spacefaring\.temperaments\.\$\{[^}]+\}\.hint/);
+assert.match(cardSource, /temperament_unknown/);
+assert.match(cardSource, /getUnavailableOutcomes/);
+assert.match(cardSource, /blocked_\$\{[^}]+\}/);
+assert.match(cardSource, /resolvePreSpacefaringState/);
+assert.match(cardSource, /pre_spacefaring\.status\.\$\{[^}]+\}/);
+assert.match(cardSource, /claimPreSpacefaringYield/);
+assert.match(cardSource, /growing_countdown/);
+assert.ok(
+  !/civilization\.actions/.test(cardSource),
+  "карточка всё ещё читает civilization.actions",
+);
+assert.match(cardSource, /getPreSpacefaringContactSummary\(\s*contact\s*\)/);
+
 console.log("Pre-spacefaring civilization checks passed");
