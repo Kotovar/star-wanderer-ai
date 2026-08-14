@@ -1,16 +1,27 @@
-import { getPreSpacefaringCivilization } from "@/game/constants";
+import {
+    getPreSpacefaringActions,
+    getPreSpacefaringCivilization,
+    OBSERVE_UNITS,
+} from "@/game/constants";
 import type {
     GameStore,
     Goods,
     Location,
     Outpost,
+    PreSpacefaringAction,
     PreSpacefaringActionStep,
+    PreSpacefaringContact,
     ResearchResourceType,
     SetState,
     TradeGood,
 } from "@/game/types";
 import { patchLocation } from "@/game/utils/patchLocation";
 import { store as i18nStore } from "@/lib/useTranslation";
+import {
+    getPreSpacefaringCredits,
+    getPreSpacefaringPayoutUnits,
+    splitPayoutUnits,
+} from "./preSpacefaringState";
 
 export type PreSpacefaringContactActionBlocker =
     | "wrong_location"
@@ -28,20 +39,59 @@ export interface PreSpacefaringContactSummary {
     turnsSpent: number;
 }
 
+/**
+ * Что действие приносит игроку прямо сейчас. Наблюдение — знакомство,
+ * дар — вложение без немедленной отдачи, исход — расчёт по таблицам.
+ */
+export function getPreSpacefaringActionReward(
+    contact: Pick<PreSpacefaringContact, "development" | "temperament">,
+    action: PreSpacefaringAction,
+    giftGiven: boolean,
+): { resources: { type: ResearchResourceType; quantity: number }[]; credits: number } {
+    if (action.step === 0) {
+        return {
+            resources: splitPayoutUnits(contact.development, OBSERVE_UNITS),
+            credits: 0,
+        };
+    }
+    if (action.step === 1 || !action.outcome) {
+        return { resources: [], credits: 0 };
+    }
+    // Заповедник и партнёрство платят потом — их выдаёт claim, не этот шаг.
+    if (action.outcome === "protected" || action.outcome === "partnered") {
+        return { resources: [], credits: 0 };
+    }
+    const units = getPreSpacefaringPayoutUnits(
+        contact.development,
+        contact.temperament,
+        action.outcome,
+        giftGiven,
+    );
+    return {
+        resources: units === null ? [] : splitPayoutUnits(contact.development, units),
+        credits: getPreSpacefaringCredits(
+            contact.development,
+            contact.temperament,
+            action.outcome,
+        ),
+    };
+}
+
 export function getPreSpacefaringContactSummary(
-    civilizationId: string,
-    actionHistory: string[] | undefined,
+    contact: PreSpacefaringContact,
 ): PreSpacefaringContactSummary {
-    const civilization = getPreSpacefaringCivilization(civilizationId);
-    const actions = (actionHistory ?? []).flatMap((actionId) => {
-        const action = civilization?.actions.find(
-            (entry) => entry.id === actionId,
-        );
-        return action ? [action] : [];
+    const actions = (contact.actionHistory ?? []).flatMap((actionId) => {
+        for (const step of [0, 1, 2] as const) {
+            const action = getPreSpacefaringActions(
+                contact.temperament,
+                step,
+            ).find((entry) => entry.id === actionId);
+            if (action) return [action];
+        }
+        return [];
     });
     const goodsSpent: Partial<Record<Goods, number>> = {};
-    const researchReceived: Partial<Record<ResearchResourceType, number>> =
-        {};
+    const researchReceived: Partial<Record<ResearchResourceType, number>> = {};
 
     for (const action of actions) {
         if (action.requiredGood) {
@@ -49,9 +99,14 @@ export function getPreSpacefaringContactSummary(
                 (goodsSpent[action.requiredGood.id] ?? 0) +
                 action.requiredGood.quantity;
         }
-        for (const reward of action.reward.researchResources) {
-            researchReceived[reward.type] =
-                (researchReceived[reward.type] ?? 0) + reward.quantity;
+        const reward = getPreSpacefaringActionReward(
+            contact,
+            action,
+            contact.giftGiven === true,
+        );
+        for (const entry of reward.resources) {
+            researchReceived[entry.type] =
+                (researchReceived[entry.type] ?? 0) + entry.quantity;
         }
     }
 
@@ -108,16 +163,16 @@ export function getPreSpacefaringContactActionBlocker(
         return "base_present";
     }
 
-    const civilization = getPreSpacefaringCivilization(
-        contact.civilizationId,
-    );
-    const action = civilization?.actions.find(
-        (entry) => entry.id === actionId && entry.step === expectedStep,
-    );
+    const civilization = getPreSpacefaringCivilization(contact.civilizationId);
+    const action = getPreSpacefaringActions(
+        contact.temperament,
+        expectedStep,
+    ).find((entry) => entry.id === actionId);
     if (
         !civilization ||
         !action ||
-        civilization.development !== contact.development
+        civilization.development !== contact.development ||
+        civilization.temperament !== contact.temperament
     ) {
         return "invalid_action";
     }
@@ -152,16 +207,19 @@ export function advancePreSpacefaringContact(
 
     const location = state.currentLocation;
     const contact = location?.preSpacefaringContact;
-    const civilization = contact
-        ? getPreSpacefaringCivilization(contact.civilizationId)
-        : undefined;
-    const action = civilization?.actions.find(
-        (entry) => entry.id === actionId && entry.step === expectedStep,
-    );
-    if (!location || !contact || !action) return;
+    if (!location || !contact) return;
+    const action = getPreSpacefaringActions(
+        contact.temperament,
+        expectedStep,
+    ).find((entry) => entry.id === actionId);
+    if (!action) return;
 
     const nextStep = contact.step === 0 ? 1 : contact.step === 1 ? 2 : 3;
+    const giftGiven = contact.giftGiven === true || action.grantsGiftBonus === true;
+    const reward = getPreSpacefaringActionReward(contact, action, giftGiven);
+
     set((draft) => ({
+        credits: draft.credits + reward.credits,
         ship: {
             ...draft.ship,
             tradeGoods: action.requiredGood
@@ -170,11 +228,11 @@ export function advancePreSpacefaringContact(
         },
         research: {
             ...draft.research,
-            resources: action.reward.researchResources.reduce(
-                (resources, reward) => ({
+            resources: reward.resources.reduce(
+                (resources, entry) => ({
                     ...resources,
-                    [reward.type]:
-                        (resources[reward.type] ?? 0) + reward.quantity,
+                    [entry.type]:
+                        (resources[entry.type] ?? 0) + entry.quantity,
                 }),
                 draft.research.resources,
             ),
@@ -183,14 +241,13 @@ export function advancePreSpacefaringContact(
             preSpacefaringContact: {
                 ...contact,
                 step: nextStep,
-                outcome: action.outcome,
+                outcome: action.outcome ?? contact.outcome,
+                giftGiven,
+                ...(nextStep === 3 ? { resolvedAtTurn: draft.turn } : {}),
                 ...(contact.actionHistory === undefined
                     ? {}
                     : {
-                          actionHistory: [
-                              ...contact.actionHistory,
-                              action.id,
-                          ],
+                          actionHistory: [...contact.actionHistory, action.id],
                       }),
             },
         }),

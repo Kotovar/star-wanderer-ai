@@ -707,4 +707,217 @@ for (const temperament of PRE_SPACEFARING_TEMPERAMENTS) {
   assert.equal(new Set(ids).size, ids.length, temperament);
 }
 
+// ─── Ход контакта ────────────────────────────────────────────────────────────
+
+const {
+  advancePreSpacefaringContact,
+  getPreSpacefaringContactActionBlocker,
+  getPreSpacefaringContactSummary,
+} = await import(
+  "../src/game/slices/locations/helpers/preSpacefaringContact.ts"
+);
+
+const contactHarness = (over = {}) => {
+  const location = {
+    id: "planet-contact",
+    type: "planet",
+    isEmpty: true,
+    explored: true,
+    preSpacefaringContact: {
+      civilizationId: "delta_league",
+      development: "agrarian",
+      temperament: "curious",
+      step: 0,
+      actionHistory: [],
+      ...over,
+    },
+  };
+  const contactState = {
+    turn: 40,
+    credits: 100,
+    outposts: [],
+    currentLocation: location,
+    galaxy: { sectors: [{ id: 1, locations: [location] }] },
+    currentSector: { id: 1, locations: [location] },
+    ship: { tradeGoods: [{ item: "electronics", quantity: 3, buyPrice: 10 }] },
+    research: { resources: {} },
+  };
+  const contactSet = (update) => {
+    Object.assign(
+      contactState,
+      typeof update === "function" ? update(contactState) : update,
+    );
+    contactState.currentLocation =
+      contactState.galaxy.sectors[0].locations.find(
+        (l) => l.id === "planet-contact",
+      ) ?? contactState.currentLocation;
+  };
+  const contactGet = () => ({
+    ...contactState,
+    addLog: () => {},
+    saveGame: () => {},
+    nextTurn: () => {
+      contactState.turn += 1;
+    },
+  });
+  return { state: contactState, get: contactGet, set: contactSet };
+};
+
+// Шаг 0 — единственное действие, даёт одну единицу и двигает шаг
+{
+  const h = contactHarness();
+  const step0 = getPreSpacefaringActions("curious", 0);
+  assert.equal(step0.length, 1);
+  advancePreSpacefaringContact("planet-contact", step0[0].id, 0, h.set, h.get);
+  const contactAfter = h.state.currentLocation.preSpacefaringContact;
+  assert.equal(contactAfter.step, 1);
+  assert.equal(h.state.research.resources.alien_biology, 1);
+}
+
+// Действие чужого характера не проходит
+{
+  const h = contactHarness();
+  assert.equal(
+    getPreSpacefaringContactActionBlocker(
+      "planet-contact",
+      h.state.currentLocation,
+      [],
+      h.state.ship.tradeGoods,
+      "martial_observe",
+      0,
+    ),
+    "invalid_action",
+  );
+}
+
+// Шаг 2 недоступен, пока характер не раскрыт наблюдением
+{
+  const h = contactHarness();
+  assert.equal(
+    getPreSpacefaringContactActionBlocker(
+      "planet-contact",
+      h.state.currentLocation,
+      [],
+      h.state.ship.tradeGoods,
+      "contact_partnered",
+      2,
+    ),
+    "step_mismatch",
+  );
+}
+
+// Дар списывает груз и ставит флаг, ресурсов сразу не даёт
+{
+  const h = contactHarness({ step: 1 });
+  advancePreSpacefaringContact("planet-contact", "curious_gift", 1, h.set, h.get);
+  const c = h.state.currentLocation.preSpacefaringContact;
+  assert.equal(c.giftGiven, true);
+  assert.equal(c.step, 2);
+  assert.equal(
+    h.state.ship.tradeGoods.find((g) => g.item === "electronics").quantity,
+    2,
+  );
+  assert.deepEqual(h.state.research.resources, {});
+}
+
+// Отказ от дара груз сохраняет и флаг не ставит
+{
+  const h = contactHarness({ step: 1 });
+  advancePreSpacefaringContact("planet-contact", "curious_abstain", 1, h.set, h.get);
+  const c = h.state.currentLocation.preSpacefaringContact;
+  assert.ok(!c.giftGiven);
+  assert.equal(
+    h.state.ship.tradeGoods.find((g) => g.item === "electronics").quantity,
+    3,
+  );
+}
+
+// Нет груза — дар заблокирован
+{
+  const h = contactHarness({ step: 1 });
+  assert.equal(
+    getPreSpacefaringContactActionBlocker(
+      "planet-contact",
+      h.state.currentLocation,
+      [],
+      [],
+      "curious_gift",
+      1,
+    ),
+    "missing_goods",
+  );
+}
+
+// Помощь платит сразу, заповедник — нет
+{
+  const h = contactHarness({ step: 2 });
+  advancePreSpacefaringContact("planet-contact", "contact_assisted", 2, h.set, h.get);
+  const c = h.state.currentLocation.preSpacefaringContact;
+  assert.equal(c.step, 3);
+  assert.equal(c.outcome, "assisted");
+  assert.equal(c.resolvedAtTurn, 40);
+  assert.equal(h.state.research.resources.alien_biology, 3);
+  assert.equal(h.state.research.resources.ancient_data, 3);
+}
+{
+  const h = contactHarness({ step: 2 });
+  advancePreSpacefaringContact("planet-contact", "contact_protected", 2, h.set, h.get);
+  assert.deepEqual(h.state.research.resources, {});
+  assert.equal(
+    h.state.currentLocation.preSpacefaringContact.resolvedAtTurn,
+    40,
+  );
+}
+
+// Эксплуатация платит ресурсами и кредитами
+{
+  const h = contactHarness({ step: 2 });
+  const creditsBefore = h.state.credits;
+  advancePreSpacefaringContact("planet-contact", "contact_exploited", 2, h.set, h.get);
+  assert.equal(h.state.currentLocation.preSpacefaringContact.outcome, "exploited");
+  assert.ok(h.state.credits > creditsBefore);
+  assert.ok((h.state.research.resources.alien_biology ?? 0) > 0);
+}
+
+// Недоступный характеру исход заблокирован
+{
+  const h = contactHarness({
+    step: 2,
+    civilizationId: "river_clans",
+    development: "primitive",
+    temperament: "insular",
+  });
+  assert.equal(
+    getPreSpacefaringContactActionBlocker(
+      "planet-contact",
+      h.state.currentLocation,
+      [],
+      h.state.ship.tradeGoods,
+      "contact_partnered",
+      2,
+    ),
+    "invalid_action",
+  );
+}
+
+// Журнал считает дар и итог по новым правилам
+{
+  const summary = getPreSpacefaringContactSummary({
+    civilizationId: "delta_league",
+    development: "agrarian",
+    temperament: "curious",
+    step: 3,
+    outcome: "assisted",
+    giftGiven: true,
+    resolvedAtTurn: 10,
+    actionHistory: ["curious_observe", "curious_gift", "contact_assisted"],
+  });
+  assert.equal(summary.turnsSpent, 3);
+  assert.equal(summary.goodsSpent.electronics, 1);
+  assert.equal(
+    Object.values(summary.researchReceived).reduce((a, b) => a + b, 0),
+    9,
+  );
+}
+
 console.log("Pre-spacefaring civilization checks passed");
