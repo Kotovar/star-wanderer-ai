@@ -18,10 +18,13 @@ const { CURRENT_STATE_VERSION } = await import(
 
 // ── Сейв, сделанный до аванпостов, обязан загружаться ──────────────────────
 // Первое же обращение к outposts или gases роняло игру: полей просто не было
+// Это v23: миграция 23 → 24 впервые добавляет outposts и gases. Версию нельзя
+// выводить из CURRENT_STATE_VERSION, иначе fixture перестаёт быть pre-outpost.
+const PRE_OUTPOST_SAVE_VERSION = 23;
 const legacy = loadWithMigrations(
   JSON.stringify({
-    version: CURRENT_STATE_VERSION - 1,
-    state: { stateVersion: CURRENT_STATE_VERSION - 1, credits: 100, crew: [] },
+    version: PRE_OUTPOST_SAVE_VERSION,
+    state: { stateVersion: PRE_OUTPOST_SAVE_VERSION, credits: 100, crew: [] },
   }),
 );
 assert.ok(legacy, "сейв предыдущей версии не загрузился");
