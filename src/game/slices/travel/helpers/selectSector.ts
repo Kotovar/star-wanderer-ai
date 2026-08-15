@@ -3,7 +3,6 @@ import { getSectorName } from "@/lib/translationHelpers";
 import { findActiveArtifact, findArtifactByEffect } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { findRouteNebula } from "@/game/galaxy/nebulae";
-import { getSectorRule } from "@/game/galaxy/sectorRules";
 import {
     PILOT_EXP_SAME_SECTOR,
     PILOT_EXP_PER_TIER,
@@ -11,7 +10,11 @@ import {
 import { getActiveModule, getActiveModules } from "@/game/modules";
 import { getBestByProfession, getPilotInCockpit } from "@/game/crew";
 import { playSound } from "@/sounds";
-import { calculateFuelCost } from "./calculateFuelCost";
+import {
+    calculateFuelCost,
+    canWarpJump,
+    getWarpCrystalCost,
+} from "./calculateFuelCost";
 import { applyNeutronRadiation, handlePatrolContracts } from "./processTravel";
 import { applyPatrolContractCompletions } from "./patrolCompletions";
 import { applySectorRuleEffect } from "./applySectorRuleEffect";
@@ -534,10 +537,12 @@ export const selectSector = (
 
     // Варп-двигатель обходит все ограничения доступа к тирам — но не там, где
     // правило сектора глушит варп: иначе `noWarp` списывает топливо, а прыжок
-    // всё равно остаётся мгновенным.
-    const hasWarpDrive =
-        state.research.researchedTechs.includes("warp_drive") &&
-        getSectorRule(state.currentSector?.ruleId)?.restrictions?.noWarp !== true;
+    // всё равно остаётся мгновенным. Без квантовых кристаллов прыжка нет,
+    // и корабль летит обычным маршрутом со всеми обычными требованиями.
+    const hasWarpDrive = canWarpJump(state, sectorId);
+    const warpCrystalCost = hasWarpDrive
+        ? getWarpCrystalCost(state, sectorId)
+        : 0;
     const crossedNebula = findRouteNebula(
         state.currentSector,
         sector,
@@ -594,7 +599,10 @@ export const selectSector = (
 
     // Логирование бонусов артефактов
     if (hasWarpDrive) {
-        get().addLog( i18nStore.t("game_logs.selectSector_7"), "info");
+        get().addLog(
+            i18nStore.t("game_logs.selectSector_7", { cost: warpCrystalCost }),
+            "info",
+        );
     } else if (warpCoil) {
         get().addLog( i18nStore.t("game_logs.selectSector_8"),
             "info",
@@ -608,6 +616,24 @@ export const selectSector = (
 
     // Расход топлива
     consumeFuel(fuelCost, set, get);
+
+    // Прыжок оплачивается кристаллами: они же нужны исследованиям и крафту,
+    // поэтому варп остаётся выбором, а не автоматической заменой карты
+    if (warpCrystalCost > 0) {
+        set((s) => ({
+            research: {
+                ...s.research,
+                resources: {
+                    ...s.research.resources,
+                    quantum_crystals: Math.max(
+                        0,
+                        (s.research.resources.quantum_crystals ?? 0) -
+                            warpCrystalCost,
+                    ),
+                },
+            },
+        }));
+    }
 
     // Расчёт расстояния
     const distance = Math.abs(sector.tier - (state.currentSector?.tier ?? 1));

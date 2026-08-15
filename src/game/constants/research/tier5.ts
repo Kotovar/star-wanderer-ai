@@ -60,7 +60,7 @@ export const TIER5_TECHS: Partial<Record<TechnologyId, Technology>> = {
         id: "warp_drive",
         name: "Варп-двигатель",
         description:
-            "Двигатель Древних позволяет мгновенно прыгать в любой сектор галактики без затрат топлива.",
+            "Двигатель Древних мгновенно прыгает в любой сектор галактики. Каждый прыжок сжигает квантовые кристаллы: 1 плюс расстояние по тирам. Без кристаллов корабль летит обычным маршрутом.",
         tier: 5,
         category: "ancient_tech",
         prerequisites: ["singularity_reactor"],
@@ -76,7 +76,7 @@ export const TIER5_TECHS: Partial<Record<TechnologyId, Technology>> = {
             {
                 type: "fuel_efficiency",
                 value: 1.0,
-                description: "Бесплатные перелёты",
+                description: "Прыжок вместо топлива — за квантовые кристаллы",
             },
             {
                 type: "special_ability",

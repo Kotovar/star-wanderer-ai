@@ -26,7 +26,7 @@ assert.equal(
 assert.equal(
   getFuelEfficiencyTechBonus({ researchedTechs: ["warp_drive"] }),
   0,
-  "warp drive remains a separate free-travel effect",
+  "warp drive remains a separate jump effect paid in quantum crystals",
 );
 
 console.log("Fuel efficiency checks passed");

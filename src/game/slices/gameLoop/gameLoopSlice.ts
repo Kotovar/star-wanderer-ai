@@ -21,6 +21,7 @@ import {
     regenerateShields,
     processNaniteRepair,
     processRepairBay,
+    processCrewUpkeep,
 } from "./helpers";
 import * as processors from "./processors";
 import { processTravel } from "@/game/slices/travel/helpers";
@@ -148,6 +149,10 @@ export const createGameLoopSlice = (
 
         // Обработка положительных эффектов артефактов
         processors.processArtifactEffects(state, set, get);
+
+        // Жалованье экипажу (раз в UPKEEP_INTERVAL ходов).
+        // До дезертирства: невыплата бьёт по настроению в этот же ход.
+        processCrewUpkeep(set, get);
 
         // Дезертирство экипажа
         processors.processDesertion(set, get);

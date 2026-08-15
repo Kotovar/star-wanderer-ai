@@ -38,6 +38,10 @@ const CrewLevelUpModal = dynamic(
   () => import("@/game/components/CrewLevelUpModal").then((m) => m.CrewLevelUpModal),
   { ssr: false },
 );
+const CrewUpkeepModal = dynamic(
+  () => import("@/game/components/CrewUpkeepModal").then((m) => m.CrewUpkeepModal),
+  { ssr: false },
+);
 const WelcomeTutorial = dynamic(
   () => import("@/game/components/WelcomeTutorial").then((m) => m.WelcomeTutorial),
   { ssr: false },
@@ -588,6 +592,7 @@ export default function Home() {
           <FactionDeliveryDecisionModal />
           <ContractCompletionModal />
           <CrewLevelUpModal />
+          <CrewUpkeepModal />
           <WelcomeTutorial
             forceShow={showTutorial}
             onDismissed={() => setShowTutorial(false)}

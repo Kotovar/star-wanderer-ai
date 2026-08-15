@@ -56,6 +56,7 @@ export interface GameManagementSlice {
     saveToSlot: (slotId: ManualSlotId, name?: string) => void;
     loadFromSlot: (slotId: SaveSlotId) => void;
     dismissCrewLevelUp: () => void;
+    dismissUpkeepReport: () => void;
 }
 
 export const createGameManagementSlice = (
@@ -76,6 +77,10 @@ export const createGameManagementSlice = (
         set((state) => ({
             pendingCrewLevelUps: state.pendingCrewLevelUps.slice(1),
         }));
+    },
+
+    dismissUpkeepReport: () => {
+        set(() => ({ pendingUpkeepReport: null }));
     },
 
     /** Авто-сохранение каждый ход: auto-слот использует legacy ключ. */
@@ -128,6 +133,7 @@ export const createGameManagementSlice = (
         );
         saved.pendingContractCompletions = [];
         saved.pendingCrewLevelUps = [];
+        saved.pendingUpkeepReport = null;
 
         // Синхронизация трейтов экипажа
         const allTraits = Object.values(CREW_TRAITS).flat();
@@ -196,6 +202,7 @@ export const createGameManagementSlice = (
         );
         saved.pendingContractCompletions = [];
         saved.pendingCrewLevelUps = [];
+        saved.pendingUpkeepReport = null;
 
         // Синхронизация трейтов
         const allTraits = Object.values(CREW_TRAITS).flat();

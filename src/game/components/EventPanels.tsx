@@ -8,7 +8,10 @@ import { SectorMap } from "./SectorMap";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getSectorName } from "@/lib/translationHelpers";
-import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
+import {
+  calculateFuelCostForUI,
+  canWarpJump,
+} from "@/game/slices/travel/helpers";
 
 import { CombatPanel } from "./CombatPanel";
 import { useCombatCinematicUiStore } from "./combatCinematicUiStore";
@@ -284,7 +287,6 @@ export function EventDisplay() {
       return null;
     }
     const captainLevel = getBestByProfession(s.crew, "pilot")?.level ?? 1;
-    const hasWarpDrive = s.research.researchedTechs.includes("warp_drive");
     return getFuelRecoveryNeed(
       s.ship.fuel,
       s.ship.maxFuel,
@@ -297,7 +299,7 @@ export function EventDisplay() {
           fuelCost: calculateFuelCostForUI(s, sector.id).fuelCost,
           known: sector.visited === true,
           accessible:
-            hasWarpDrive ||
+            canWarpJump(s, sector.id) ||
             canAccessTier(sector.tier, s.ship.modules, captainLevel),
         })),
     )?.targetFuel ?? null;

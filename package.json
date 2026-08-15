@@ -67,6 +67,8 @@
     "check:galaxy-map-hud": "node --no-warnings --experimental-strip-types scripts/check-galaxy-map-hud.mjs",
     "check:fuel-trap-warning": "node --no-warnings scripts/check-fuel-trap-warning.mjs",
     "check:fuel-efficiency": "node scripts/check-fuel-efficiency.mjs",
+    "check:crew-upkeep": "node --no-warnings scripts/check-crew-upkeep.mjs",
+    "check:warp-cost": "node --no-warnings scripts/check-warp-cost.mjs",
     "check:crises": "node --no-warnings --experimental-strip-types scripts/check-crisis-escalation.mjs",
     "check:player-feedback": "node --no-warnings scripts/check-player-feedback.mjs",
     "check:meta-progress": "node --no-warnings --experimental-strip-types scripts/check-meta-progress.mjs",

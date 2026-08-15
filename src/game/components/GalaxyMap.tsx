@@ -41,8 +41,10 @@ import {
 import { getEffectiveScanRange } from "@/game/slices/scanner/helpers/getEffectiveScanRange";
 import {
     calculateFuelCostForUI,
+    canWarpJump,
     DETOUR_EXTRA_TURNS,
     DETOUR_FUEL_COST,
+    type TravelCost,
 } from "@/game/slices/travel/helpers";
 import { getSectorReadiness } from "@/game/progression/sectorReadiness";
 import { getSectorRule, SECTOR_RULE_IDS } from "@/game/galaxy/sectorRules";
@@ -229,7 +231,7 @@ function getFuelTrapRisk(
 
     const captainLevel =
         getBestByProfession(state.crew, "pilot")?.level ?? 1;
-    const hasWarpDrive = state.research.researchedTechs.includes("warp_drive");
+    const hasWarpDrive = canWarpJump(state, targetSector.id);
     const departureState = {
         ...state,
         currentSector: targetSector,
@@ -496,11 +498,12 @@ export function GalaxyMap() {
         };
     }, []);
 
-    // Calculate fuel cost with all modifiers for UI display
-    const calculateFuelCost = useCallback((sectorId: number) => {
-        const state = useGameStore.getState();
-        return calculateFuelCostForUI(state, sectorId).fuelCost;
-    }, []);
+    // Calculate fuel cost with all modifiers for UI display.
+    // Возвращаем и цену варп-прыжка: на карте видно, чем платим за сектор
+    const calculateFuelCost = useCallback(
+        (sectorId: number) => calculateFuelCostForUI(useGameStore.getState(), sectorId),
+        [],
+    );
 
     const requestTravelTo = useCallback(
         (sectorId: number, route: TravelRoute = "direct") => {
@@ -535,8 +538,9 @@ export function GalaxyMap() {
             );
             const hasIonDrive =
                 state.research.researchedTechs.includes("ion_drive");
-            const hasWarpDrive =
-                state.research.researchedTechs.includes("warp_drive");
+            // Прыжок доступен, только если хватает кристаллов — иначе это
+            // обычный перелёт, и выбор маршрута игроку нужен
+            const hasWarpDrive = canWarpJump(state, sectorId);
             const turns =
                 hasIonDrive && distance > 0
                     ? Math.max(0, distance - 1)
@@ -1084,7 +1088,7 @@ export function GalaxyMap() {
                         Boolean(getActiveModule(state.ship.modules, "cockpit")) &&
                         state.areEnginesFunctional() &&
                         state.areFuelTanksFunctional() &&
-                        (state.research.researchedTechs.includes("warp_drive") ||
+                        (canWarpJump(state, sector.id) ||
                             canAccessTier(
                                 sector.tier,
                                 state.ship.modules,
@@ -1674,7 +1678,7 @@ function drawSectors(
     modules: ReturnType<typeof useGameStore.getState>["ship"]["modules"],
     captainLevel: number,
     fuel: number,
-    calculateFuelCost: (targetTier: number) => number,
+    calculateFuelCost: (targetSectorId: number) => TravelCost,
     areEnginesFunctional: () => boolean,
     areFuelTanksFunctional: () => boolean,
     currentSector: ReturnType<typeof useGameStore.getState>["currentSector"],

@@ -23,6 +23,21 @@ import { getPilotInCockpit } from "@/game/crew/getPilotInCockpit";
  */
 const FUEL_PENALTY_NO_PILOT = 1.5;
 
+/**
+ * Квантовых кристаллов за варп-прыжок в соседний тир.
+ * Прыжок через тиры дороже: цена = BASE + расстояние по тирам.
+ */
+const WARP_CRYSTAL_BASE_COST = 1;
+
+/** Цена перелёта: топливо, мгновенность и кристаллы на варп-прыжок */
+export type TravelCost = {
+    fuelCost: number;
+    travelInstant: boolean;
+    /** Кристаллов за прыжок; 0 — обычный маршрут за топливо */
+    crystalCost: number;
+};
+
+
 // ============================================================================
 // Вспомогательные функции
 // ============================================================================
@@ -34,6 +49,47 @@ const getCurrentTier = (state: GameState) =>
     state.traveling
         ? state.traveling.destination.tier
         : (state.currentSector?.tier ?? 1);
+
+/**
+ * Стоимость варп-прыжка в кристаллах. Считается всегда, даже если варп
+ * сейчас недоступен: UI показывает цену там же, где обычный расход топлива.
+ */
+export const getWarpCrystalCost = (
+    state: GameState,
+    targetSectorId: number,
+): number => {
+    const targetSector = state.galaxy.sectors.find(
+        (s) => s.id === targetSectorId,
+    );
+    if (!targetSector) return WARP_CRYSTAL_BASE_COST;
+
+    return (
+        WARP_CRYSTAL_BASE_COST +
+        Math.abs(targetSector.tier - getCurrentTier(state))
+    );
+};
+
+/**
+ * Можно ли прыгнуть варпом прямо сейчас.
+ *
+ * Варп-двигатель не отменяет карту, а даёт платную опцию поверх неё: без
+ * кристаллов корабль летит обычным маршрутом за топливо и за ходы. Поэтому
+ * нехватка кристаллов ничего не блокирует — она просто выключает прыжок.
+ */
+export const canWarpJump = (
+    state: GameState,
+    targetSectorId: number,
+): boolean => {
+    if (!hasWarpTravel(state.research.researchedTechs)) return false;
+    if (
+        getSectorRule(state.currentSector?.ruleId)?.restrictions?.noWarp === true
+    ) {
+        return false;
+    }
+
+    const available = state.research.resources.quantum_crystals ?? 0;
+    return available >= getWarpCrystalCost(state, targetSectorId);
+};
 
 /**
  * Рассчитывает угловое расстояние между секторами (0 to 6)
@@ -183,7 +239,7 @@ export const calculateFuelCost = (
     hasVoidEngine: boolean,
     hasWarpCoil: boolean,
     pilotInCockpit: boolean,
-): { fuelCost: number; travelInstant: boolean } => {
+): TravelCost => {
     const currentTier = getCurrentTier(state);
     const noWarp =
         getSectorRule(state.currentSector?.ruleId)?.restrictions?.noWarp === true;
@@ -192,12 +248,21 @@ export const calculateFuelCost = (
         (s) => s.id === targetSectorId,
     );
     if (!targetSector) {
-        return { fuelCost: DEFAULT_FUEL_COST, travelInstant: false };
+        return {
+            fuelCost: DEFAULT_FUEL_COST,
+            travelInstant: false,
+            crystalCost: 0,
+        };
     }
 
-    // Варп-драйв — бесплатные прыжки в любой сектор
-    if (!noWarp && hasWarpTravel(state.research.researchedTechs)) {
-        return { fuelCost: 0, travelInstant: true };
+    // Варп-драйв — мгновенный прыжок за квантовые кристаллы.
+    // Кристаллов нет — обычный маршрут за топливо, прыжок просто недоступен.
+    if (canWarpJump(state, targetSectorId)) {
+        return {
+            fuelCost: 0,
+            travelInstant: true,
+            crystalCost: getWarpCrystalCost(state, targetSectorId),
+        };
     }
 
     const tierDistance = Math.abs(targetSector.tier - currentTier);
@@ -232,15 +297,18 @@ export const calculateFuelCost = (
         fuelCost = DEFAULT_FUEL_COST;
     }
 
-    return applyArtifactModifiers(
-        fuelCost,
-        hasFuelFree,
-        hasVoidEngine,
-        hasWarpCoil && !noWarp,
-        pilotInCockpit,
-        tierDistance,
-        angularDistance,
-    );
+    return {
+        ...applyArtifactModifiers(
+            fuelCost,
+            hasFuelFree,
+            hasVoidEngine,
+            hasWarpCoil && !noWarp,
+            pilotInCockpit,
+            tierDistance,
+            angularDistance,
+        ),
+        crystalCost: 0,
+    };
 };
 
 /**
@@ -255,7 +323,7 @@ export const calculateFuelCost = (
 export const calculateFuelCostForUI = (
     state: GameState,
     targetSectorId: number,
-): { fuelCost: number; travelInstant: boolean } => {
+): TravelCost => {
     // Проверяем артефакты отдельно
     const fuelFree = findArtifactByEffect(state, ["fuel_free"]);
     const voidEngine = findArtifactByEffect(state, ["void_engine"]);

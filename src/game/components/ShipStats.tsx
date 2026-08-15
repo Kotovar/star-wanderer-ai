@@ -33,6 +33,11 @@ import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import { getBestByProfession } from "@/game/crew";
 import {
+  getCrewUpkeep,
+  getTurnsUntilUpkeep,
+  UPKEEP_INTERVAL,
+} from "@/game/crew/upkeep";
+import {
   getModulePointDefenseChance,
   getPointDefenseOperatorBonus,
 } from "@/game/slices/combat/helpers/pointDefense";
@@ -157,6 +162,8 @@ export function ShipStats() {
   const research = useGameStore((s) => s.research);
   const deuteriumBurn = useGameStore(getDeuteriumBurnUnits);
   const burnDeuteriumAction = useGameStore((s) => s.burnDeuterium);
+  const credits = useGameStore((s) => s.credits);
+  const turn = useGameStore((s) => s.turn);
 
   const { t } = useTranslation();
 
@@ -164,6 +171,8 @@ export function ShipStats() {
   const cargoCapacity = getCargoCapacity();
   const oxygenCapacity = getOxygenCapacity();
   const crewCapacity = getCrewCapacity();
+  const crewUpkeep = getCrewUpkeep(crew);
+  const turnsUntilUpkeep = getTurnsUntilUpkeep(turn);
 
   const currentCargo = useGameStore(getCurrentCargo);
 
@@ -565,6 +574,28 @@ export function ShipStats() {
         max={crewCapacity}
         color={crew.length <= crewCapacity ? "#00ff41" : "#ff0040"}
       />
+
+      {/* Жалованье: сумма и обратный отсчёт до списания — цена хода видна
+          заранее, а не постфактум в логе */}
+      {crewUpkeep > 0 && (
+        <div
+          className="flex justify-between items-baseline mb-1.5"
+          title={t("ship_stats.upkeep_hint", { interval: UPKEEP_INTERVAL })}
+        >
+          <StatLabel icon="credit_bonus">{t("ship_stats.upkeep")}</StatLabel>
+          <span
+            className={
+              credits < crewUpkeep ? "text-destructive" : "text-accent"
+            }
+          >
+            ₢{crewUpkeep}
+            <span className="text-[#888]">
+              {" · "}
+              {t("ship_stats.upkeep_in", { turns: turnsUntilUpkeep })}
+            </span>
+          </span>
+        </div>
+      )}
 
       <div className="flex justify-between items-baseline mb-0.5">
         <StatLabel icon="oxygen">{t("ship_stats.oxygen")}</StatLabel>

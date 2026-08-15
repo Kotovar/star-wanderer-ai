@@ -7,6 +7,7 @@ import type {
     Nebula,
 } from "@/game/types";
 import { drawStarSprite } from "@/game/assets/starSprites";
+import type { TravelCost } from "@/game/slices/travel/helpers/calculateFuelCost";
 import { getSectorRule } from "./sectorRules";
 import { findActiveArtifact } from "../artifacts";
 import { ARTIFACT_TYPES } from "../constants";
@@ -261,7 +262,7 @@ export function drawSector(
     modules: Module[],
     captainLevel: number,
     fuel: number,
-    calculateFuelCost: (targetSectorId: number) => number,
+    calculateFuelCost: (targetSectorId: number) => TravelCost,
     areEnginesFunctional: () => boolean,
     areFuelTanksFunctional: () => boolean,
     isCurrentSector: boolean,
@@ -279,7 +280,7 @@ export function drawSector(
         canAccessTier(tier, modules, captainLevel) &&
         areEnginesFunctional() &&
         areFuelTanksFunctional();
-    const fuelCost = calculateFuelCost(sector.id);
+    const { fuelCost, crystalCost } = calculateFuelCost(sector.id);
     // Safeguard against NaN or undefined fuel
     const safeFuel = fuel !== undefined && !isNaN(fuel) ? fuel : 0;
     const canAffordFuel = safeFuel >= fuelCost;
@@ -309,6 +310,7 @@ export function drawSector(
         isCurrentSector,
         canAffordFuel,
         fuelCost,
+        crystalCost,
         canvasWidth,
         canvasHeight,
         playerShipImage,
@@ -349,6 +351,7 @@ function drawSectorText(
     isCurrent: boolean,
     canAffordFuel: boolean,
     fuelCost: number,
+    crystalCost: number,
     canvasWidth?: number,
     canvasHeight?: number,
     playerShipImage?: HTMLImageElement | null,
@@ -406,8 +409,15 @@ function drawSectorText(
 
     if (isAccessible && !isCurrent) {
         ctx.font = `${fuelFontSize}px Share Tech Mono`;
-        ctx.fillStyle = canAffordFuel ? "#00d4ff" : "#ff0040";
-        ctx.fillText(`⛽${fuelCost}`, x, y - fuelOffsetY);
+        // Варп-прыжок платится кристаллами — показываем ту цену, которую
+        // спишут на самом деле, а не нулевой расход топлива
+        if (crystalCost > 0) {
+            ctx.fillStyle = "#b184ff";
+            ctx.fillText(`⚛${crystalCost}`, x, y - fuelOffsetY);
+        } else {
+            ctx.fillStyle = canAffordFuel ? "#00d4ff" : "#ff0040";
+            ctx.fillText(`⛽${fuelCost}`, x, y - fuelOffsetY);
+        }
     }
 }
 

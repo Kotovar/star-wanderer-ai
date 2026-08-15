@@ -21,6 +21,10 @@ import {
   type LaunchModifier,
 } from "../constants/launchModifiers";
 import { useTranslation } from "@/lib/useTranslation";
+import {
+  getTemplateCrewUpkeep,
+  UPKEEP_INTERVAL,
+} from "@/game/crew/upkeep";
 import type { Module, ModuleType, ResearchResourceType } from "@/game/types";
 import { useMetaProgress } from "@/game/metaProgress/useMetaProgress";
 import {
@@ -850,6 +854,15 @@ export function NewGameSetupModal({
                   <InfoMetric
                     label={t("new_game_setup.probes_label")}
                     value={String(selectedTemplate.probes)}
+                  />
+                  {/* Экипаж стоит денег каждый период — видно до старта,
+                      а не в первую выплату */}
+                  <InfoMetric
+                    label={t("new_game_setup.crew_upkeep_label")}
+                    value={`₢${getTemplateCrewUpkeep(finalCrew)}`}
+                    hint={t("new_game_setup.crew_upkeep_hint", {
+                      interval: UPKEEP_INTERVAL,
+                    })}
                   />
                   {researchSummary && (
                     <InfoMetric

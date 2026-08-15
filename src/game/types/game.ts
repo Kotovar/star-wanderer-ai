@@ -101,6 +101,22 @@ export interface CrewLevelUpResult {
   restoredHealth: number;
 }
 
+/** Итог расчётного периода: что списали и как это встретил экипаж */
+export interface CrewUpkeepReport {
+  turn: number;
+  /** Начислено экипажу за период */
+  due: number;
+  /** Фактически списано с баланса */
+  paid: number;
+  creditsLeft: number;
+  /** Изменение настроения органиков: + при полной выплате, − при недоплате */
+  happinessChange: number;
+  /** Урон синтетикам при недоплате (нехватка запчастей), 0 при выплате */
+  hardwareDamage: number;
+  organicCount: number;
+  syntheticCount: number;
+}
+
 export interface GameState {
   /** Версия состояния для миграций сохранений */
   stateVersion: number;
@@ -148,6 +164,8 @@ export interface GameState {
   pendingContractCompletions: ContractCompletionResult[]; // Очередь результатов успешно выполненных контрактов
   pendingContractDecision: PendingContractDecision | null;
   pendingCrewLevelUps: CrewLevelUpResult[];
+  /** Итог последней выплаты жалованья; показывается модалкой и сбрасывается по закрытию */
+  pendingUpkeepReport: CrewUpkeepReport | null;
   shipQuestsTaken: string[]; // IDs of ships where quest was taken
   hiredCrewFromShips: string[]; // IDs of friendly ships where crew was hired
   distressRespondedShips: string[]; // IDs of distress ships that have been helped
@@ -526,6 +544,7 @@ export interface GameManagement {
   saveToSlot: (slotId: "manual1" | "manual2" | "manual3" | "manual4" | "manual5", name?: string) => void;
   loadFromSlot: (slotId: "auto" | "manual1" | "manual2" | "manual3" | "manual4" | "manual5") => void;
   dismissCrewLevelUp: () => void;
+  dismissUpkeepReport: () => void;
 }
 
 export type GameStore = GameState &

@@ -184,6 +184,7 @@ const baseState: GameState = {
   pendingContractCompletions: [],
   pendingContractDecision: null,
   pendingCrewLevelUps: [],
+  pendingUpkeepReport: null,
   shipQuestsTaken: [],
   completedLocations: [],
   outposts: [],

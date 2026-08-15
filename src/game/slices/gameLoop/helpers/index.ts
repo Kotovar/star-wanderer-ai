@@ -6,3 +6,4 @@ export * from "./shieldRegen";
 export * from "./crewUtils";
 export * from "./naniteRepair";
 export * from "./repairBay";
+export * from "./crewUpkeep";
