@@ -1,7 +1,6 @@
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { getRelayScanBonus } from "@/game/slices/outposts/helpers/baseServices";
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
-import { getMaxCrewTraitBonus } from "@/game/traits";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getStarTypeEffect } from "@/game/constants/starEffects";
 import { getSectorRule } from "@/game/galaxy/sectorRules";
@@ -58,21 +57,11 @@ export const getEffectiveScanRange = (state: GameState) => {
         ARTIFACT_TYPES.QUANTUM_SCANNER,
     );
 
+    // Кристаллический резонанс (+15% к эффектам артефактов) уже сидит внутри
+    // getArtifactEffectValue — отдельного слагаемого здесь быть не должно,
+    // раньше оно накидывало бонус второй раз поверх уже усиленного значения
     if (quantumScanner) {
         maxRange += getArtifactEffectValue(quantumScanner, state);
-    }
-
-    // Применяем бонус кристаллического артефакта (+15% к эффектам артефактов)
-    // Применяется только к бонусу артефакта quantum_scanner, не к бонусам технологий
-    const artifactBonus = getMaxCrewTraitBonus(
-        state.crew,
-        "resonance",
-        "artifactBonus",
-    );
-
-    if (artifactBonus > 0 && quantumScanner) {
-        const quantumBonus = getArtifactEffectValue(quantumScanner, state);
-        maxRange += Math.floor(quantumBonus * artifactBonus);
     }
 
     // Бонус от сращивания ксеноморфа с scanner — плоское добавление клеток

@@ -1,7 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getRunProfileArcEncounter } from "@/game/galaxy/runProfileArcs";
-import { findActiveArtifact } from "@/game/artifacts";
-import { ARTIFACT_TYPES } from "@/game/constants";
+import { getAmbushChanceModifier } from "@/game/artifacts";
 import { addEnemyCodexEntry, getEnemyCodexId } from "@/game/constants/enemyCodex";
 import { getMedicalAugmentationCatalog } from "@/game/stations/medicalAugmentations";
 import { determineSignalOutcome } from "@/game/signals";
@@ -369,15 +368,9 @@ export const selectLocation = (
                     Math.random() * 100 < get().getSignalRevealChance();
 
                 if (canReveal && !loc.signalType) {
-                    const eyeOfSingularity = findActiveArtifact(
-                        state.artifacts,
-                        ARTIFACT_TYPES.EYE_OF_SINGULARITY,
+                    const outcome = determineSignalOutcome(
+                        getAmbushChanceModifier(state.artifacts),
                     );
-
-                    const ambushModifier = eyeOfSingularity
-                        ? (eyeOfSingularity?.negativeEffect?.value ?? 0.5)
-                        : 0;
-                    const outcome = determineSignalOutcome(ambushModifier);
                     updateLocationInSector(
                         {
                             ...loc,

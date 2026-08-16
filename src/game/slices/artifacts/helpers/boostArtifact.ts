@@ -1,5 +1,11 @@
 import { store as i18nStore } from "@/lib/useTranslation";
-import type { GameStore, SetState, RaceId, ActiveEffect } from "@/game/types";
+import type {
+    GameStore,
+    SetState,
+    RaceId,
+    ActiveEffect,
+    Artifact,
+} from "@/game/types";
 import { playSound } from "@/sounds";
 import {
     ARTIFACT_BOOST_BONUS,
@@ -15,6 +21,19 @@ import {
  * @param get - Функция получения состояния
  * @returns void
  */
+/**
+ * Можно ли усилить артефакт ритуалом.
+ *
+ * Единая проверка для отметки `boosted` и для самого эффекта усиления: раньше
+ * условие было только в `boostArtifact`, а `createVoidbornBoostEffect` вешал
+ * эффект без спроса. Выключенный артефакт при этом получал реальный буст, но
+ * игрок видел ошибку и не видел значка «усилен».
+ */
+export const isBoostableArtifact = (
+    artifact: Artifact | undefined,
+): artifact is Artifact =>
+    !!artifact && !!artifact.effect.active && artifact.canBoost !== false;
+
 export const boostArtifact = (
     artifactId: string,
     state: GameStore,
@@ -23,7 +42,7 @@ export const boostArtifact = (
 ): void => {
     const artifact = state.artifacts.find((a) => a.id === artifactId);
 
-    if (!artifact || !artifact.effect.active) {
+    if (!isBoostableArtifact(artifact)) {
         get().addLog( i18nStore.t("game_logs.boostArtifact_1"), "error");
         return;
     }
@@ -74,9 +93,13 @@ export const createVoidbornBoostEffect = (
         ],
     };
 
-    // Если выбран артефакт, добавляем эффект усиления
+    // Если выбран артефакт и его вообще можно усилить — добавляем эффект.
+    // Проверка та же, что в boostArtifact: иначе эффект и отметка расходятся.
     const effects: ActiveEffect[] = [fuelEffect];
-    if (artifactId) {
+    if (
+        artifactId &&
+        isBoostableArtifact(get().artifacts.find((a) => a.id === artifactId))
+    ) {
         effects.push({
             id: `effect-${raceId}-boost-${Date.now()}`,
             name: spec.name,

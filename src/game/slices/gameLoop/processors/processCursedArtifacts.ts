@@ -6,7 +6,12 @@ import type {
     SetState,
     ArtifactNegativeType,
 } from "@/game/types";
-import { giveRandomMutation, shiftHappiness } from "@/game/crew";
+import {
+    getLivingShipCrew,
+    giveRandomMutation,
+    shiftHappiness,
+} from "@/game/crew";
+import { getArtifactNegativeEffects, changeHealthByPercent } from "@/game/artifacts";
 import { showHintOnce } from "@/game/hints/showHint";
 
 /**
@@ -40,14 +45,19 @@ const CURSE_HANDLERS: Record<ArtifactNegativeType, CurseHandler | undefined> = {
  * Снижение счастья экипажа
  */
 function applyStatDrain(
-    _state: GameState,
+    state: GameState,
     set: SetState,
     get: () => GameStore,
     artifact: { name: string },
     value: number,
 ) {
+    const affected = new Set(getLivingShipCrew(state.crew).map((c) => c.id));
+    if (affected.size === 0) return;
+
     set((s) => ({
-        crew: s.crew.map((c) => shiftHappiness(c, -value)),
+        crew: s.crew.map((c) =>
+            affected.has(c.id) ? shiftHappiness(c, -value) : c,
+        ),
     }));
     get().addLog( i18nStore.t("game_logs.processCursedArtifacts_1", { artifact_name: artifact.name, value }),
         "warning",
@@ -71,12 +81,13 @@ function applyModuleDamage(
     );
     const targetModule = state.ship.modules[randomModuleIdx];
 
+    // value — проценты от максимума модуля; проклятие не добивает его до нуля
     set((s) => ({
         ship: {
             ...s.ship,
             modules: s.ship.modules.map((m, i) =>
                 i === randomModuleIdx
-                    ? { ...m, health: Math.max(1, m.health - value) }
+                    ? { ...m, health: changeHealthByPercent(m, -value, 1) }
                     : m,
             ),
         },
@@ -97,7 +108,7 @@ function applyCrewDesertion(
     artifact: { name: string },
     value: number,
 ) {
-    state.crew.forEach((crewMember) => {
+    getLivingShipCrew(state.crew).forEach((crewMember) => {
         if (Math.random() * 100 < value) {
             set((s) => ({
                 crew: s.crew.filter((c) => c.id !== crewMember.id),
@@ -119,7 +130,7 @@ function applyCrewMutation(
     artifact: { name: string },
     value: number,
 ) {
-    state.crew.forEach((crewMember) => {
+    getLivingShipCrew(state.crew).forEach((crewMember) => {
         if (Math.random() * 100 < value) {
             const mutationName = giveRandomMutation(crewMember, set);
             if (mutationName) {
@@ -155,18 +166,18 @@ export const processCursedArtifacts = (
     );
 
     cursedArtifacts.forEach((artifact) => {
-        const negativeType = artifact.negativeEffect?.type;
-        const negativeValue = artifact.negativeEffect?.value ?? 0;
-
-        if (!negativeType) return;
-
-        const handler = CURSE_HANDLERS[negativeType];
-
-        if (!handler) {
-            // Эффект обрабатывается в другом месте
-            return;
-        }
-
-        handler.process(state, set, get, artifact, negativeValue);
+        // Оба поля разом: раньше читалось только `negativeEffect`, и эффект,
+        // положенный в массив `negativeEffects`, здесь молча пропадал
+        getArtifactNegativeEffects(artifact).forEach((negative) => {
+            // Отсутствие обработчика значит, что эффект применяется в другом
+            // месте (засады — в signals, самоурон — после боя, и т.д.)
+            CURSE_HANDLERS[negative.type]?.process(
+                state,
+                set,
+                get,
+                artifact,
+                negative.value ?? 0,
+            );
+        });
     });
 };

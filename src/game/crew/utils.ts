@@ -1,6 +1,7 @@
 import { useGameStore } from "@/game/store";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { getTraitById } from "@/game/crew/generation";
+import { getLivingShipCrew } from "@/game/crew/stationed";
 import {
     DEFAULT_MAX_HEALTH,
     MUTATION_TRAITS,
@@ -159,11 +160,16 @@ export const getBestByProfession = (
         .sort((a, b) => (b.level ?? 1) - (a.level ?? 1))[0];
 
 /**
- * Максимальный уровень среди учёных в экипаже (0, если учёных нет).
- * Используется для проверки требований к исследованию аномалий/артефактов.
+ * Максимальный уровень среди учёных, которые могут работать прямо сейчас:
+ * живых и находящихся на борту (0, если таких нет). Используется для проверки
+ * требований к исследованию аномалий/артефактов — раньше труп в отсеке и
+ * учёный, приписанный к аванпосту за несколько секторов, засчитывались наравне
+ * с работающим.
  */
 export const getMaxScientistLevel = (crew: CrewMember[]): number => {
-    const scientists = crew.filter((c) => c.profession === "scientist");
+    const scientists = getLivingShipCrew(crew).filter(
+        (c) => c.profession === "scientist",
+    );
     return scientists.length > 0
         ? Math.max(...scientists.map((s) => s.level || 1))
         : 0;

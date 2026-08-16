@@ -3,7 +3,10 @@ import { CREW_ASSIGNMENT_BONUSES, RACES } from "@/game/constants";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getPilotInCockpit } from "@/game/crew";
-import { getArtifactEffectValue } from "@/game/artifacts/utils";
+import {
+    getArtifactEffectValue,
+    getArtifactNegativeEffects,
+} from "@/game/artifacts/utils";
 import {
     getStrongestRaceTechPerkValue,
     getTechPerkValue,
@@ -59,9 +62,9 @@ export function getTotalEvasion(state: GameState): number {
             evasion += value * 100; // Конвертируем в проценты (0.1 = 10%)
         }
 
-        // Штрафы к уклонению от проклятых артефактов (negativeEffects)
-        if (artifact.effect?.active && artifact.negativeEffects) {
-            artifact.negativeEffects.forEach((neg) => {
+        // Штрафы к уклонению от проклятых артефактов (оба поля сразу)
+        if (artifact.effect?.active) {
+            getArtifactNegativeEffects(artifact).forEach((neg) => {
                 if (neg.type === "evasion_penalty" && neg.value) {
                     evasion -= neg.value * 100;
                 }

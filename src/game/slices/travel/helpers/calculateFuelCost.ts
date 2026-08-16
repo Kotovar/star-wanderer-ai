@@ -199,32 +199,35 @@ const applyArtifactModifiers = (
     tierDistance: number,
     angularDistance: number,
 ): { fuelCost: number; travelInstant: boolean } => {
-    // Проклятый варп (void_engine) — бесплатно для любых секторов
-    if (hasVoidEngine) {
-        return { fuelCost: 0, travelInstant: false };
-    }
+    // Топливо и мгновенность — независимые оси. Раньше проверки шли цепочкой
+    // ранних возвратов, и любой артефакт бесплатного топлива выходил первым,
+    // забирая у Варп-Катушки мгновенный перелёт — её единственный смысл.
 
-    // Обычный двигатель (fuel_free) — бесплатно только для 2 соседних секторов
-    // (тот же тир + угловое расстояние <= 1.5, т.е. слева или справа)
+    // Варп катушка (warp_coil) — мгновенный перелёт (и он же бесплатный)
+    const travelInstant = hasWarpCoil;
+
+    // Проклятый варп (void_engine) — бесплатно для любых секторов.
+    // Обычный двигатель (fuel_free) — только для 2 соседних секторов
+    // (тот же тир + угловое расстояние <= 1.5, т.е. слева или справа).
     // Для 8 секторов на тир: угловое расстояние между соседями = 1.5
-    if (hasFuelFree && tierDistance === 0 && angularDistance <= 1.5) {
-        return { fuelCost: 0, travelInstant: false };
-    }
+    const travelFree =
+        hasWarpCoil ||
+        hasVoidEngine ||
+        (hasFuelFree && tierDistance === 0 && angularDistance <= 1.5);
 
-    // Варп катушка (warp_coil) — мгновенный перелёт
-    if (hasWarpCoil) {
-        return { fuelCost: 0, travelInstant: true };
+    if (travelFree) {
+        return { fuelCost: 0, travelInstant };
     }
 
     // Штраф за отсутствие пилота
     if (!pilotInCockpit) {
         return {
             fuelCost: Math.floor(fuelCost * FUEL_PENALTY_NO_PILOT),
-            travelInstant: false,
+            travelInstant,
         };
     }
 
-    return { fuelCost, travelInstant: false };
+    return { fuelCost, travelInstant };
 };
 
 // ============================================================================

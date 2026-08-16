@@ -3,6 +3,7 @@ import type { GameStore, CrewMember, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 import { getTechBonusSum } from "@/game/research";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
+import { getLivingShipCrew } from "@/game/crew";
 import {
     CURSE_REMOVAL_MIN_SCIENTIST_LEVEL,
     CURSE_REMOVAL_DAMAGE,
@@ -97,7 +98,10 @@ export const toggleArtifact = (
  * @returns Учёный или undefined
  */
 const findQualifiedScientist = (crew: CrewMember[]): CrewMember | undefined => {
-    return crew.find(
+    // Только живой и на борту: раньше подходил и труп, а урон за снятие
+    // проклятия (Math.max(1, ...)) поднимал его с 0 HP до 1 — бесплатное
+    // воскрешение через выключение артефакта
+    return getLivingShipCrew(crew).find(
         (c) =>
             c.profession === "scientist" &&
             c.level >= CURSE_REMOVAL_MIN_SCIENTIST_LEVEL,

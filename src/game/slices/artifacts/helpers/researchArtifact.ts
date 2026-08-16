@@ -1,5 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getMaxScientistLevel } from "@/game/crew/utils";
+import { getLivingShipCrew } from "@/game/crew";
 import type { GameStore, CrewMember, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 import { ARTIFACT_RESEARCH_EXP_MULTIPLIER } from "@/game/constants";
@@ -38,7 +39,11 @@ export const researchArtifact = (
         return;
     }
 
-    const scientists = state.crew.filter((c) => c.profession === "scientist");
+    // Опыт получают только те, кто действительно работал над артефактом:
+    // живые и на борту (труп и учёный на аванпосте раньше тоже качались)
+    const scientists = getLivingShipCrew(state.crew).filter(
+        (c) => c.profession === "scientist",
+    );
     const maxScientistLevel = getMaxScientistLevel(state.crew);
 
     if (maxScientistLevel < artifact.requiresScientistLevel) {

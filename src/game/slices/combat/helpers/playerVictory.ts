@@ -33,7 +33,12 @@ import type {
     CargoItem,
     BattleResult,
 } from "@/game/types";
-import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
+import {
+    findActiveArtifact,
+    getArtifactEffectValue,
+    getArtifactNegativeEffects,
+    changeHealthByPercent,
+} from "@/game/artifacts";
 import { completeBattleContracts } from "./completeBattleContracts";
 import { applyCombatTimeCost } from "./combatTime";
 import { patchLocation } from "@/game/utils/patchLocation";
@@ -426,20 +431,21 @@ function applyVictoryAftermath(
 ) {
     // Handle self_damage negative effect (e.g., Overload Matrix)
     state.artifacts.forEach((artifact) => {
-        if (
-            artifact.cursed &&
-            artifact.effect.active &&
-            artifact.negativeEffect?.type === "self_damage"
-        ) {
-            const damageValue = artifact.negativeEffect.value ?? 75;
+        if (!artifact.cursed || !artifact.effect.active) return;
+        const selfDamage = getArtifactNegativeEffects(artifact).find(
+            (negative) => negative.type === "self_damage",
+        );
+        if (selfDamage) {
+            const damageValue = selfDamage.value ?? 75;
             if (state.ship.modules.length === 0) return;
 
             const randomModuleIdx = Math.floor(
                 Math.random() * state.ship.modules.length,
             );
+            // damageValue — проценты от максимума модуля, а не плоские единицы
             set((s) => {
                 const mod = s.ship.modules[randomModuleIdx];
-                if (mod) mod.health = Math.max(1, mod.health - damageValue);
+                if (mod) mod.health = changeHealthByPercent(mod, -damageValue, 1);
             });
             const targetModule = state.ship.modules[randomModuleIdx];
             get().addLog( i18nStore.t("game_logs.playerVictory_11", { artifact_name: artifact.name, targetModule_name: targetModule.name, damageValue }),

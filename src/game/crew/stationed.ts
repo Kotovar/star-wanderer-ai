@@ -12,6 +12,15 @@ import type { CrewMember } from "@/game/types";
 export const getShipCrew = (crew: readonly CrewMember[]): CrewMember[] =>
     crew.filter((member) => !member.outpostId);
 
+/**
+ * Живой экипаж на борту — те, по кому вообще может ударить потурновый эффект
+ * корабля. Трупу нечего терять в морали, а человек на аванпосте находится за
+ * несколько секторов отсюда и не должен ни мутировать, ни дезертировать
+ * из-за артефакта, лежащего в трюме.
+ */
+export const getLivingShipCrew = (crew: readonly CrewMember[]): CrewMember[] =>
+    crew.filter((member) => !member.outpostId && member.health > 0);
+
 /** Экипаж, приписанный к конкретной постройке */
 export const getOutpostCrew = (
     crew: readonly CrewMember[],

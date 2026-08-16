@@ -1,9 +1,8 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getShipCrew } from "@/game/crew/stationed";
 import { maybeRevealRunProfileArcTarget } from "@/game/galaxy/runProfileArcs";
-import { ARTIFACT_TYPES } from "@/game/constants/artifacts";
 import { TRADE_GOODS } from "@/game/constants";
-import { findActiveArtifact } from "@/game/artifacts/utils";
+import { getAmbushChanceModifier } from "@/game/artifacts/utils";
 import {
     determineSignalOutcome as determineSignalOutcomeHelper,
     getDeepScanChance,
@@ -359,14 +358,10 @@ const determineSignalOutcomeLocal = (
         return loc.signalType;
     }
 
-    // Eye of Singularity increases ambush chance by 50%
-    const allSeeing = findActiveArtifact(
-        state.artifacts,
-        ARTIFACT_TYPES.EYE_OF_SINGULARITY,
+    // Око Сингулярности повышает шанс засады на свою же величину
+    return determineSignalOutcomeHelper(
+        getAmbushChanceModifier(state.artifacts),
     );
-    const ambushModifier = allSeeing ? 0.5 : 0;
-
-    return determineSignalOutcomeHelper(ambushModifier);
 };
 
 /**

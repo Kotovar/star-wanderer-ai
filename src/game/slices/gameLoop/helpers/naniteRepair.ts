@@ -22,7 +22,10 @@ export const processNaniteRepair = (
 
     set((s) => {
         const newModules = s.ship.modules.map((m) => {
-            if (!m.health || !m.maxHealth || m.health >= m.maxHealth) return m;
+            // Модуль с 0 HP наниты тоже поднимают — как и артефактный
+            // авторемонт. Раньше `!m.health` отсекал именно тот случай,
+            // ради которого авторемонт и держат
+            if (!m.maxHealth || m.health >= m.maxHealth) return m;
             const heal = Math.ceil(m.maxHealth * repairMultiplier);
             const newHealth = Math.min(m.maxHealth, m.health + heal);
             totalRepaired += newHealth - m.health;

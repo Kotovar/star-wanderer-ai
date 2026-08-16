@@ -310,6 +310,9 @@ export function buildStartingState(
           ...artifacts[index],
           discovered: true,
           researched: true,
+          // Как и стартовый проклятый: модификатор обещает артефакт, а не
+          // домашнее задание сходить в панель и включить его
+          effect: { ...artifacts[index].effect, active: true },
         };
       }
     }

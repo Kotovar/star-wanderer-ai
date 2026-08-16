@@ -6,6 +6,7 @@ import { RACES } from "@/game/constants/races";
 import type {
     ActiveEffect,
     Artifact,
+    ArtifactNegativeEffect,
     EffectType,
     GameState,
     Sector,
@@ -76,8 +77,11 @@ export const getArtifactHint = (
         state.galaxy.sectors,
         state.currentSector?.id,
     )[0];
-    const artifact = state.artifacts.find(
-        (candidate) => !candidate.discovered && !candidate.hinted,
+    // По весам редкости, а не по порядку массива: раньше подсказки всегда
+    // указывали на артефакты в том порядке, в каком они лежат в константе,
+    // а поиск затем предпочитает подсказанные — редкость не работала вовсе
+    const artifact = getRandomUndiscoveredArtifact(
+        state.artifacts.filter((candidate) => !candidate.hinted),
     );
 
     return artifact && hintedAt ? { artifactId: artifact.id, hintedAt } : null;
@@ -113,6 +117,20 @@ export const getRandomUndiscoveredArtifact = (
 
     return candidates[0];
 };
+
+/**
+ * Все негативные эффекты артефакта: основной и дополнительные.
+ *
+ * Поля два (`negativeEffect` и `negativeEffects`), и раньше каждый потребитель
+ * читал только одно из них — потурновый обработчик единственное, расчёт
+ * уклонения массив. Любой эффект, положенный не в то поле, молча не работал.
+ */
+export const getArtifactNegativeEffects = (
+    artifact: Pick<Artifact, "negativeEffect" | "negativeEffects">,
+): ArtifactNegativeEffect[] => [
+    ...(artifact.negativeEffect ? [artifact.negativeEffect] : []),
+    ...(artifact.negativeEffects ?? []),
+];
 
 export const getEffectDescription = (
     effect: {
@@ -346,3 +364,22 @@ export const findArtifactByEffect = (
     state.artifacts.find(
         (a) => effectTypes.includes(a.effect.type) && a.effect.active,
     );
+
+/**
+ * Прибавка к шансу засады в сигналах бедствия от Ока Сингулярности.
+ *
+ * Оба места, где решается исход сигнала, читают её отсюда: раньше одно брало
+ * значение из артефакта, а второе держало 0.5 в коде, и правка константы
+ * развела бы их.
+ */
+export const getAmbushChanceModifier = (
+    artifacts: GameState["artifacts"],
+): number => {
+    const eye = findActiveArtifact(artifacts, "all_seeing");
+    if (!eye) return 0;
+    return (
+        getArtifactNegativeEffects(eye).find(
+            (negative) => negative.type === "ambush_chance",
+        )?.value ?? 0
+    );
+};

@@ -88,6 +88,7 @@
     "check:turn-ticks": "node --no-warnings scripts/check-turn-tick-fixes.mjs",
     "check:crew-progression": "node --no-warnings scripts/check-crew-progression.mjs",
     "check:research-fixes": "node --no-warnings scripts/check-research-fixes.mjs",
+    "check:artifact-fixes": "node --no-warnings scripts/check-artifact-fixes.mjs",
     "check:research-panel": "node --no-warnings scripts/check-research-panel.mjs",
     "check:pre-spacefaring-civilizations": "node --no-warnings scripts/check-pre-spacefaring-civilizations.mjs"
   },
