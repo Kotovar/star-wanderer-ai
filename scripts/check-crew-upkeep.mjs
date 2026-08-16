@@ -23,6 +23,9 @@ const {
   settleUpkeep,
 } = jiti("../src/game/crew/upkeep.ts");
 const { SHIP_TEMPLATES } = jiti("../src/game/constants/shipTemplates.ts");
+const { processCrewUpkeep } = jiti(
+  "../src/game/slices/gameLoop/helpers/crewUpkeep.ts",
+);
 
 /** Верхняя граница давления: жалованье стартового экипажа за ход */
 const MAX_START_DRAIN_PER_TURN = 5;
@@ -115,15 +118,45 @@ const synthetic = (id, level = 1) => ({
   assert.equal(report.hardwareDamage, UNPAID_HARDWARE_DAMAGE);
 }
 
-// Частичная выплата — тоже недоплата: последствия те же
+// Если полной суммы нет, баланс не сжигается без смягчения последствий.
 {
   const crew = [organic(1)];
   const due = getCrewUpkeep(crew);
   const { crew: partialCrew, report } = settleUpkeep(crew, due - 1, UPKEEP_INTERVAL);
 
-  assert.equal(report.paid, due - 1);
-  assert.equal(report.creditsLeft, 0);
+  assert.equal(report.paid, 0);
+  assert.equal(report.creditsLeft, due - 1);
   assert.equal(partialCrew[0].happiness, 60 - UNPAID_HAPPINESS_PENALTY);
+}
+
+// Умерший от отсутствия запчастей синтетик не должен оставаться в составе.
+{
+  const payrollState = {
+    turn: UPKEEP_INTERVAL,
+    credits: 0,
+    crew: [
+      {
+        ...synthetic(3),
+        name: "Погибший синтетик",
+        health: UNPAID_HARDWARE_DAMAGE,
+      },
+    ],
+    pendingUpkeepReport: null,
+    addLog: () => {},
+  };
+  const set = (update) =>
+    Object.assign(
+      payrollState,
+      typeof update === "function" ? update(payrollState) : update,
+    );
+
+  processCrewUpkeep(set, () => payrollState);
+
+  assert.equal(
+    payrollState.crew.length,
+    0,
+    "synthetic killed by unpaid upkeep must be removed immediately",
+  );
 }
 
 // Невыплата должна бить по морали ДО проверки дезертирства в том же ходу

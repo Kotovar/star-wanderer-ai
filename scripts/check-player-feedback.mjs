@@ -80,11 +80,99 @@ const { AsteroidBeltPanel } = await import(
 const { FriendlyShipPanel } = await import(
   "../src/game/components/FriendlyShipPanel.tsx"
 );
+const { CrewTab } = await import(
+  "../src/game/components/station/CrewTab.tsx"
+);
+const { CrewList } = await import("../src/game/components/CrewList.tsx");
 const { GasSaleSection } = await import(
   "../src/game/components/station/GasSaleSection.tsx"
 );
 const ru = JSON.parse(
   readFileSync(new URL("../src/lib/locales/ru.json", import.meta.url), "utf8"),
+);
+
+const hireTabMarkup = renderToStaticMarkup(
+  createElement(CrewTab, {
+    availableCrew: [
+      {
+        member: {
+          name: "Тестовый инженер",
+          race: "human",
+          profession: "engineer",
+          level: 1,
+          traits: [],
+        },
+        price: 250,
+        quality: "normal",
+      },
+    ],
+    hasSpace: true,
+    credits: 1_000,
+    locationId: "crew-test",
+    hireCrew: () => "hired",
+  }),
+);
+assert.ok(
+  hireTabMarkup.includes("Жалованье: 50₢"),
+  "карточка найма должна показывать ставку кандидата",
+);
+assert.ok(
+  !hireTabMarkup.includes("Жалованье: 50₢ /"),
+  "ставка кандидата не должна повторять период выплат",
+);
+assert.ok(
+  !hireTabMarkup.includes("После найма:"),
+  "карточка найма не должна показывать сумму жалований всего экипажа",
+);
+
+const upkeepPeriodText = "Жалованье выплачивается каждые 50 ходов";
+globalThis.__playerFeedbackState = {
+  crew: [
+    {
+      id: "upkeep-test-crew",
+      name: "Тестовый инженер",
+      race: "human",
+      profession: "engineer",
+      level: 1,
+      exp: 0,
+      health: 100,
+      maxHealth: 100,
+      happiness: 100,
+      maxHappiness: 100,
+      traits: [],
+    },
+  ],
+  ship: { modules: [] },
+  outposts: [],
+  galaxy: { sectors: [] },
+  activeEffects: [],
+  moveCrewMember: () => {},
+  isModuleAdjacent: () => false,
+  fireCrewMember: () => {},
+  currentCombat: null,
+  crewAutomation: { enabled: false },
+  research: { researchedTechs: [] },
+  credits: 1_000,
+  turn: 17,
+};
+const crewListMarkup = renderToStaticMarkup(createElement(CrewList));
+assert.equal(
+  occurrences(crewListMarkup, upkeepPeriodText),
+  1,
+  "разъяснение периода выплат должно быть в разделе экипажа",
+);
+assert.ok(
+  crewListMarkup.includes("₢50"),
+  "раздел экипажа должен показывать сумму выплаты",
+);
+assert.ok(
+  crewListMarkup.includes("выплата через 33"),
+  "раздел экипажа должен показывать обратный отсчёт выплаты",
+);
+assert.equal(
+  hireTabMarkup.includes(upkeepPeriodText),
+  false,
+  "список найма не должен дублировать общий период выплат",
 );
 
 globalThis.__playerFeedbackState = {

@@ -86,8 +86,8 @@ export const settleUpkeep = (
     turn: number,
 ): { crew: CrewMember[]; report: CrewUpkeepReport } => {
     const due = getCrewUpkeep(crew);
-    const paid = Math.min(credits, due);
-    const fullyPaid = paid >= due;
+    const fullyPaid = credits >= due;
+    const paid = fullyPaid ? due : 0;
 
     return {
         crew: crew.map((member) => {

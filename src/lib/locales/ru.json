@@ -158,7 +158,9 @@
         "tech_tree_pending": "ожидает выбора",
         "hire_oxygen_warning": "После найма потребуется кислород для {{needed}} членов экипажа, а жизнеобеспечение рассчитано на {{capacity}}. Всё равно нанять?",
         "hire_oxygen_title": "Недостаточно кислорода",
-        "hire_oxygen_confirm": "Нанять всё равно"
+        "hire_oxygen_confirm": "Нанять всё равно",
+        "hire_upkeep": "Жалованье: {{wage}}₢",
+        "upkeep_period": "Жалованье выплачивается каждые {{interval}} ходов"
     },
     "cargo": {
         "title": "Грузовой отсек",
@@ -4821,7 +4823,7 @@
         "morale": "Настроение экипажа ({{count}})",
         "synthetics": "Синтетики ({{count}})",
         "parts_bought": "запчасти закуплены",
-        "debt_warning": "Долг по жалованью: органики теряют настроение и могут дезертировать, синтетики изнашиваются без запчастей.",
+        "debt_warning": "Недоплата по жалованью: органики теряют настроение и могут дезертировать, синтетики изнашиваются без запчастей.",
         "confirm": "Принять"
     },
     "crew_level_up": {
@@ -6082,7 +6084,7 @@
         "repairBay_1": "🔧 Ремонтные дроны восстановили модулей: {{targets_length}} (+{{totalRepaired}} HP)",
         "shieldRegen_1": "Щиты: +{{totalRegen}} ({{shields}}/{{maxShieldsWithBonus}})",
         "crew_upkeep_paid": "₢ Жалованье экипажу: -{{due}}₢ ({{count}} чел.)",
-        "crew_upkeep_unpaid": "⚠ Жалованье выплачено не полностью: {{paid}} из {{due}}₢",
+        "crew_upkeep_unpaid": "⚠ Жалованье не выплачено: {{paid}} из {{due}}₢",
         "turnInit_1": "📋 Экипаж получил +{{PASSIVE_EXP_AMOUNT}} опыта (службу на корабле)",
         "processAssignments_1": "💤 {{crewMember_name}}: усталость, задача пропущена в этом ходу",
         "processAssignments_2": "⚠️ {{crewMember_name}} устал: эффективность задачи снижена",

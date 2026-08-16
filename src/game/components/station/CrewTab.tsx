@@ -31,6 +31,7 @@ import type {
 import { useTranslation } from "@/lib/useTranslation";
 import { ProfessionSprite } from "../ProfessionSprite";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
+import { getMemberWage } from "@/game/crew/upkeep";
 
 type HireCrewHandler = (
     member: unknown,
@@ -115,7 +116,6 @@ export function CrewTab({
                         {t("station.overcrowded_warning")}
                     </div>
                 )}
-
                 {availableCrew.map((crew, i) => (
                     <CrewCard
                         key={i}
@@ -225,6 +225,10 @@ function CrewCard({
 }: CrewCardProps) {
     const race = RACES[crew.member.race];
     const { t } = useTranslation();
+    const wage = getMemberWage({
+        level: crew.member.level ?? 1,
+        race: crew.member.race,
+    });
 
     return (
         <SectionPanel padding="sm">
@@ -233,6 +237,9 @@ function CrewCard({
                     <CrewHeader crew={crew} race={race} />
                     <div className="text-xs mt-1">
                         <span className="text-[#ffb000]">💰 {crew.price}₢</span>
+                    </div>
+                    <div className="mt-0.5 text-[10px] text-[#8fac8f]">
+                        {t("crew.hire_upkeep", { wage })}
                     </div>
                     {race?.crewBonuses && (
                         <CrewBonuses bonuses={race.crewBonuses} />
@@ -529,6 +536,10 @@ function CrewDetailDialog({
     const race = RACES[crew.member.race];
     const canHire = credits >= crew.price;
     const { t } = useTranslation();
+    const wage = getMemberWage({
+        level: crew.member.level ?? 1,
+        race: crew.member.race,
+    });
 
     return (
         <div className="space-y-4 text-sm">
@@ -583,6 +594,9 @@ function CrewDetailDialog({
             {/* Price */}
             <div className="text-[#ffb000]">
                 {t("station.crew_price", { price: crew.price })}
+            </div>
+            <div className="text-xs text-[#8fac8f]">
+                {t("crew.hire_upkeep", { wage })}
             </div>
 
             {/* Race bonuses - only show if there are actual bonuses */}

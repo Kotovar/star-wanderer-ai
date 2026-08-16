@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { getSectorRule } from "@/game/galaxy/sectorRules";
 import { getArtifactHint } from "@/game/artifacts/utils";
 import { store as i18nStore } from "@/lib/useTranslation";
@@ -120,6 +121,8 @@ export const applySectorRuleEffect = (
     get().updateShipStats();
 
     if (artifactHint) {
-        get().addLog(i18nStore.t("sector_rules.logs.artifact_hint"), "info");
+        const message = i18nStore.t("sector_rules.logs.artifact_hint");
+        get().addLog(message, "info");
+        toast(message, { duration: 6000 });
     }
 };

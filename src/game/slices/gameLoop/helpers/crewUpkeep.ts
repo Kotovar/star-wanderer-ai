@@ -1,5 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getCrewUpkeep, settleUpkeep, UPKEEP_INTERVAL } from "@/game/crew/upkeep";
+import { removeDeadCrew } from "@/game/slices/gameLoop/helpers/crewUtils";
 import type { GameStore, SetState } from "@/game/types";
 
 /**
@@ -38,4 +39,6 @@ export const processCrewUpkeep = (
               }),
         fullyPaid ? "info" : "warning",
     );
+
+    removeDeadCrew(set, get);
 };

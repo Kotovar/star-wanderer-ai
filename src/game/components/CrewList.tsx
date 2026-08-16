@@ -58,6 +58,12 @@ import {
 import type { TechPerkTier } from "@/game/types";
 import { getTaskEfficiencyPercent } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import { getDesertionTurnsLeft } from "@/game/slices/gameLoop/processors/processDesertion";
+import {
+    getCrewUpkeep,
+    getTurnsUntilUpkeep,
+    UPKEEP_INTERVAL,
+} from "@/game/crew/upkeep";
+import { StatIcon } from "./StatIcon";
 
 const stripLeadingSymbol = (value: string) =>
     value.replace(/^[^\p{L}\p{N}]+/u, "");
@@ -95,6 +101,8 @@ export function CrewList() {
     const { t } = useTranslation();
     const translateTrait = useTraitTranslation(t);
     const crew = useGameStore((s) => s.crew);
+    const credits = useGameStore((s) => s.credits);
+    const turn = useGameStore((s) => s.turn);
     const modules = useGameStore((s) => s.ship.modules);
     const outposts = useGameStore((s) => s.outposts);
     const sectors = useGameStore((s) => s.galaxy.sectors);
@@ -116,9 +124,46 @@ export function CrewList() {
 
     // Check if we're in combat
     const isCombat = !!currentCombat;
+    const crewUpkeep = getCrewUpkeep(crew);
+    const turnsUntilUpkeep = getTurnsUntilUpkeep(turn);
 
     return (
         <>
+            {crewUpkeep > 0 && (
+                <div
+                    className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border border-[#00ff4133] bg-[rgba(0,255,65,0.04)] px-2 py-1.5 text-xs"
+                    title={t("ship_stats.upkeep_hint", {
+                        interval: UPKEEP_INTERVAL,
+                    })}
+                >
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 text-accent">
+                            <StatIcon type="credit_bonus" size={24} />
+                            <span>{t("ship_stats.upkeep")}</span>
+                        </div>
+                        <div className="mt-0.5 text-[10px] text-[#8fac8f]">
+                            {t("crew.upkeep_period", {
+                                interval: UPKEEP_INTERVAL,
+                            })}
+                        </div>
+                    </div>
+                    <span
+                        className={`whitespace-nowrap text-right ${
+                            credits < crewUpkeep
+                                ? "text-destructive"
+                                : "text-accent"
+                        }`}
+                    >
+                        ₢{crewUpkeep}
+                        <span className="text-[#888]">
+                            {" · "}
+                            {t("ship_stats.upkeep_in", {
+                                turns: turnsUntilUpkeep,
+                            })}
+                        </span>
+                    </span>
+                </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {crew.map((member) => {
                     const expNeeded = getExpNeededForNextLevel(member.level || 1);

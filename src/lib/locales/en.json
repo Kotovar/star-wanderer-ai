@@ -158,7 +158,9 @@
         "tech_tree_pending": "awaiting choice",
         "hire_oxygen_warning": "After hiring, {{needed}} crew members will need oxygen but life support only has capacity for {{capacity}}. Hire anyway?",
         "hire_oxygen_title": "Insufficient oxygen",
-        "hire_oxygen_confirm": "Hire anyway"
+        "hire_oxygen_confirm": "Hire anyway",
+        "hire_upkeep": "Wages: {{wage}}₢",
+        "upkeep_period": "Wages are paid every {{interval}} turns"
     },
     "cargo": {
         "title": "Cargo Bay",
@@ -4821,7 +4823,7 @@
         "morale": "Crew happiness ({{count}})",
         "synthetics": "Synthetics ({{count}})",
         "parts_bought": "spare parts bought",
-        "debt_warning": "Unpaid wages: organics lose happiness and may desert, synthetics wear down without spare parts.",
+        "debt_warning": "Missed wages: organics lose happiness and may desert, synthetics wear down without spare parts.",
         "confirm": "Acknowledge"
     },
     "crew_level_up": {
@@ -6082,7 +6084,7 @@
         "repairBay_1": "🔧 Repair drones restored {{targets_length}} module(s) (+{{totalRepaired}} HP)",
         "shieldRegen_1": "Shields: +{{totalRegen}} ({{shields}}/{{maxShieldsWithBonus}})",
         "crew_upkeep_paid": "₢ Crew wages: -{{due}}₢ ({{count}} aboard)",
-        "crew_upkeep_unpaid": "⚠ Wages paid only in part: {{paid}} of {{due}}₢",
+        "crew_upkeep_unpaid": "⚠ Crew wages unpaid: {{paid}} of {{due}}₢",
         "turnInit_1": "📋 The crew gained +{{PASSIVE_EXP_AMOUNT}} experience (shipboard service)",
         "processAssignments_1": "💤 {{crewMember_name}}: fatigued, task skipped this turn",
         "processAssignments_2": "⚠️ {{crewMember_name}} is tired: task efficiency reduced",
