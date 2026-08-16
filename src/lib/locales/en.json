@@ -1089,7 +1089,7 @@
         "desc_fabrication": "🔧 Craft and hand over: {{weapon}}",
         "desc_pirate_smuggling": "📦 Deliver {{quantity}}t of contraband to {{target}} ({{sector}})",
         "desc_pirate_bounty": "🎯 Eliminate {{target}} in {{sector}}",
-        "desc_pirate_heist": "🔓 Breach {{target}} with a probe and get away clean",
+        "desc_pirate_heist": "🔓 Breach {{target}} in {{sector}} with a probe (+15 wanted heat)",
         "desc_fabrication_offer": "Craft and hand over: {{weapon}} ({{progress}}/1) · return to the client",
         "desc_crisis_response_offer": "{{crisis}}: deliver {{cargo}} ({{progress}}/{{quantity}}t) to the client",
         "desc_cleanse_curse_offer": "✨ Bring a cursed artifact to the Crystal Hydra ({{sector}}) — it will lift the curse",
@@ -1692,6 +1692,8 @@
         "manifest": "Docking manifest · verified on arrival",
         "market_conditions": "Trade and module bonuses",
         "standard_rates": "No special trade terms or module bonuses.",
+        "pirate_market_conditions": "Black market and pirate services",
+        "pirate_market_desc": "Goods and contraband at illegal prices, plus jobs and wanted-heat laundering.",
         "guaranteed_stock": "Guaranteed stock",
         "guaranteed_crew": "Crew",
         "guaranteed_modules": "Modules",
@@ -1723,6 +1725,9 @@
         "service_research": "Research resources and boost",
         "service_mineral_buyback": "Mineral buyback",
         "service_diplomacy": "Reputation and translators",
+        "service_black_market": "Black market and contraband",
+        "service_pirate_contracts": "Pirate contract board",
+        "service_laundering": "Wanted-heat laundering: −15 for 500₢",
         "continue": "GOT IT"
     },
     "station_catalog": {
@@ -1740,7 +1745,8 @@
             "mining": "Higher mineral buyback from the player and extraction equipment.",
             "shipyard": "Discounted modules, crafting, and cargo installation.",
             "medical": "Crew healing and medical equipment.",
-            "diplomatic": "Race reputation, translators, and lifted visit bans."
+            "diplomatic": "Race reputation, translators, and lifted visit bans.",
+            "pirate": "Black market, contraband, wanted-heat laundering, and pirate jobs."
         }
     },
     "trade": {
@@ -6623,7 +6629,8 @@
         "job_heist": "HEIST",
         "objective_title": "PIRATE OPERATION",
         "objective_target": "Target: {{target}}",
-        "objective_return": "Objective complete. Return to the issuer: {{issuer}}.",
+        "objective_after_action_return": "After the operation, return to the issuer: {{issuer}} (sector {{sector}}).",
+        "objective_return": "Objective complete. Return to the issuer: {{issuer}} (sector {{sector}}).",
         "objective_ready": "Objective is already complete. Return to the issuer.",
         "objective_smuggling_action": "HAND OVER {{quantity}}T OF CONTRABAND",
         "objective_heist_action": "LAUNCH PROBE",

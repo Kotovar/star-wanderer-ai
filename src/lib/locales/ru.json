@@ -1089,7 +1089,7 @@
         "desc_fabrication": "🔧 Изготовить и сдать: {{weapon}}",
         "desc_pirate_smuggling": "📦 Доставить {{quantity}}т контрабанды на {{target}} ({{sector}})",
         "desc_pirate_bounty": "🎯 Уничтожить {{target}} в секторе {{sector}}",
-        "desc_pirate_heist": "🔓 Взломать {{target}} зондом и уйти незамеченным",
+        "desc_pirate_heist": "🔓 Взломать {{target}} в секторе {{sector}} зондом (+15 к розыску)",
         "desc_fabrication_offer": "Изготовить и сдать: {{weapon}} ({{progress}}/1) · вернуться к заказчику",
         "desc_crisis_response_offer": "{{crisis}}: доставить {{cargo}} ({{progress}}/{{quantity}}т) заказчику",
         "desc_cleanse_curse_offer": "✨ Отнести проклятый артефакт Кристальной Гидре (сектор {{sector}}) — она снимет проклятие",
@@ -1692,6 +1692,8 @@
         "manifest": "Бортовой манифест · проверено при стыковке",
         "market_conditions": "Торговля и бонусы модулей",
         "standard_rates": "Особых торговых условий и бонусов модулей нет.",
+        "pirate_market_conditions": "Чёрный рынок и пиратские услуги",
+        "pirate_market_desc": "Товары и контрабанда по нелегальным ценам; доступна доска задач и отмывка розыска.",
         "guaranteed_stock": "Гарантированный ассортимент",
         "guaranteed_crew": "Экипаж",
         "guaranteed_modules": "Модули",
@@ -1723,6 +1725,9 @@
         "service_research": "Ресурсы и ускоритель науки",
         "service_mineral_buyback": "Скупка минералов",
         "service_diplomacy": "Репутация и переводчики",
+        "service_black_market": "Чёрный рынок и контрабанда",
+        "service_pirate_contracts": "Доска пиратских задач",
+        "service_laundering": "Отмывка розыска: −15 за 500₢",
         "continue": "ПОНЯТНО"
     },
     "station_catalog": {
@@ -1740,7 +1745,8 @@
             "mining": "Повышенный выкуп минералов у игрока и добычное оснащение.",
             "shipyard": "Скидка на покупку модулей, крафт и установка из трюма.",
             "medical": "Лечение экипажа и медицинское оснащение.",
-            "diplomatic": "Репутация с расами, переводчики и снятие запретов."
+            "diplomatic": "Репутация с расами, переводчики и снятие запретов.",
+            "pirate": "Чёрный рынок, контрабанда, отмывка розыска и пиратские задачи."
         }
     },
     "trade": {
@@ -6623,7 +6629,8 @@
         "job_heist": "НАЛЁТ",
         "objective_title": "ПИРАТСКАЯ ОПЕРАЦИЯ",
         "objective_target": "Цель: {{target}}",
-        "objective_return": "Цель выполнена. Вернитесь к заказчику: {{issuer}}.",
+        "objective_after_action_return": "После операции вернитесь к заказчику: {{issuer}} (сектор {{sector}}).",
+        "objective_return": "Цель выполнена. Вернитесь к заказчику: {{issuer}} (сектор {{sector}}).",
         "objective_ready": "Цель уже выполнена. Вернитесь к заказчику.",
         "objective_smuggling_action": "ПЕРЕДАТЬ {{quantity}}Т КОНТРАБАНДЫ",
         "objective_heist_action": "ОТПРАВИТЬ ЗОНД",

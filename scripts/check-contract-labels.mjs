@@ -24,7 +24,11 @@ const { PlanetPanel } = await import(
 const { generatePirateContracts } = await import(
   "../src/game/slices/pirate/contracts.ts"
 );
-const { formatContractDescription } = await import(
+const { STATION_CONFIG } = await import("../src/game/galaxy/config.ts");
+const { getStationServiceKeys } = await import(
+  "../src/game/stations/discovery.ts"
+);
+const { formatContractDescription, formatPirateReturnInstruction } = await import(
   "../src/game/contracts/formatContractDescription.ts"
 );
 const { initializeStationData } = await import(
@@ -45,6 +49,18 @@ const PIRATE_SMUGGLING = {
   targetLocationName: "location_names.station_01",
   targetSectorName: "sector_names.sector_11_1",
 };
+const PIRATE_HEIST = {
+  id: "pirate-heist",
+  type: "pirate_heist",
+  desc: "contracts.desc_pirate_heist",
+  reward: 800,
+  sourcePlanetId: "pirate-location",
+  sourcePlanetName: "Точка Лазаря",
+  sourceSectorName: "sector_names.sector_11_1",
+  targetLocationId: "heist-target",
+  targetLocationName: "Гавань Искра",
+  targetSectorName: "sector_names.sector_11_1",
+};
 
 assert.equal(i18nStore.t("pirate.black_market"), "ЧЁРНЫЙ РЫНОК");
 assert.equal(i18nStore.t("pirate.contract_board"), "ДОСКА ПИРАТСКИХ ЗАДАЧ");
@@ -52,10 +68,12 @@ assert.equal(i18nStore.t("pirate.contract_board"), "ДОСКА ПИРАТСКИ�
 const renderPirateTab = (
   view,
   contrabandPrices = { buy: 300, sell: 200 },
+  overrides = {},
 ) => renderToStaticMarkup(
   createElement(PirateTab, {
     view,
     stationId: "pirate-station",
+    locationId: "pirate-location",
     stationPrices: {
       "pirate-station": {
         contraband: contrabandPrices,
@@ -76,7 +94,32 @@ const renderPirateTab = (
     acceptPirateContract: () => {},
     completePirateContract: () => {},
     reducePirateHeat: () => {},
+    ...overrides,
   }),
+);
+
+assert.deepEqual(
+  getStationServiceKeys("pirate", STATION_CONFIG.pirate),
+  [
+    "refuel",
+    "repairs",
+    "probes",
+    "scrap",
+    "weapon_removal",
+    "black_market",
+    "pirate_contracts",
+    "laundering",
+  ],
+  "модалка пиратской станции должна перечислять только реальные услуги",
+);
+assert.deepEqual(
+  [
+    STATION_CONFIG.pirate.guaranteedProfessions,
+    STATION_CONFIG.pirate.guaranteedModules,
+    STATION_CONFIG.pirate.guaranteedWeapons,
+  ],
+  [[], [], []],
+  "модалка не должна обещать пиратской станции экипаж, модули или оружие",
 );
 const pirateMarkup = renderPirateTab("contracts");
 assert.ok(
@@ -87,6 +130,36 @@ assert.doesNotMatch(
   pirateMarkup,
   /contracts\.desc_pirate_/,
   "сырой ключ пиратского контракта не должен попадать в UI",
+);
+const pirateHeistMarkup = renderPirateTab("contracts", undefined, {
+  contracts: [PIRATE_HEIST],
+});
+assert.ok(
+  pirateHeistMarkup.includes(
+    "Взломать Гавань Искра в секторе Гелиос-1 зондом (+15 к розыску)",
+  ),
+  "карточка налёта должна показывать детерминированный след, а не обещать скрытный уход",
+);
+assert.equal(
+  formatPirateReturnInstruction(PIRATE_HEIST, i18nStore.t.bind(i18nStore)),
+  "После операции вернитесь к заказчику: Точка Лазаря (сектор Гелиос-1).",
+  "до налёта UI должен говорить о возврате после операции и указывать сектор заказчика",
+);
+assert.equal(
+  formatPirateReturnInstruction(
+    { ...PIRATE_HEIST, pirateObjectiveComplete: true },
+    i18nStore.t.bind(i18nStore),
+  ),
+  "Цель выполнена. Вернитесь к заказчику: Точка Лазаря (сектор Гелиос-1).",
+  "только выполненная задача должна сообщать о готовности к сдаче",
+);
+const turnInMarkup = renderPirateTab("contracts", undefined, {
+  contracts: [],
+  activeContracts: [{ ...PIRATE_HEIST, pirateObjectiveComplete: true }],
+});
+assert.ok(
+  turnInMarkup.includes("СДАТЬ"),
+  "активное выполненное задание должно оставаться на доске для сдачи после её обновления",
 );
 
 const pirateMarketMarkup = renderPirateTab("market", {
@@ -106,6 +179,19 @@ assert.ok(
   pirateMarketMarkup.includes("Купить: 160₢/т | Продать: 159₢/т"),
   "чёрный рынок должен показывать фактический спред контрабанды",
 );
+for (const label of [
+  ">+1</button>",
+  ">+5</button>",
+  ">+15</button>",
+  ">-15</button>",
+  ">-5</button>",
+  ">-1</button>",
+]) {
+  assert.ok(
+    pirateMarketMarkup.includes(label),
+    `чёрный рынок должен показывать партию ${label}`,
+  );
+}
 assert.doesNotMatch(
   pirateMarketMarkup,
   /ДОСКА ПИРАТСКИХ ЗАДАЧ/,

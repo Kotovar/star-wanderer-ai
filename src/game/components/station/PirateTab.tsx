@@ -15,6 +15,7 @@ import type { Goods, Contract } from "@/game/types";
 interface PirateTabProps {
     view: "market" | "contracts";
     stationId: string;
+    locationId: string;
     stationPrices: Record<
         string,
         Record<string, { buy: number; sell: number }>
@@ -42,6 +43,7 @@ interface PirateTabProps {
 export function PirateTab({
     view,
     stationId,
+    locationId,
     stationPrices,
     stationStock,
     credits,
@@ -65,6 +67,17 @@ export function PirateTab({
         ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
         probes;
     const availSpace = cargoCapacity - currentCargo;
+    const boardContracts = [
+        ...contracts,
+        ...activeContracts.filter(
+            (active) =>
+                (active.type === "pirate_smuggling" ||
+                    active.type === "pirate_bounty" ||
+                    active.type === "pirate_heist") &&
+                active.sourcePlanetId === locationId &&
+                !contracts.some((offer) => offer.id === active.id),
+        ),
+    ];
 
     const heatLevel =
         heat < 20 ? t("pirate.heat_low") :
@@ -148,12 +161,12 @@ export function PirateTab({
                             {t("pirate.contract_board")}
                         </div>
                         <div className="flex flex-col gap-2">
-                            {contracts.length === 0 && (
+                            {boardContracts.length === 0 && (
                                 <div className="text-xs text-[#555]">
                                     {t("pirate.no_contracts")}
                                 </div>
                             )}
-                            {contracts.map((contract) => {
+                            {boardContracts.map((contract) => {
                                 const activeContract = activeContracts.find(
                                     (active) => active.id === contract.id,
                                 );
@@ -312,11 +325,22 @@ function PirateTradeRow({
                     +5
                 </Button>
                 <Button
-                    onClick={() => onSell(goodId, 1)}
-                    disabled={!playerGood || playerGood.quantity < 1}
+                    onClick={() => onBuy(goodId, 15)}
+                    disabled={
+                        availSpace < 15 ||
+                        credits < buyPrice * 3 ||
+                        stock < 15
+                    }
+                    className="bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] px-1.5 cursor-pointer disabled:cursor-not-allowed"
+                >
+                    +15
+                </Button>
+                <Button
+                    onClick={() => onSell(goodId, 15)}
+                    disabled={!playerGood || playerGood.quantity < 15}
                     className="bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-[9px] px-1.5 cursor-pointer disabled:cursor-not-allowed"
                 >
-                    -1
+                    -15
                 </Button>
                 <Button
                     onClick={() => onSell(goodId, 5)}
@@ -324,6 +348,13 @@ function PirateTradeRow({
                     className="bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-[9px] px-1.5 cursor-pointer disabled:cursor-not-allowed"
                 >
                     -5
+                </Button>
+                <Button
+                    onClick={() => onSell(goodId, 1)}
+                    disabled={!playerGood || playerGood.quantity < 1}
+                    className="bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-[9px] px-1.5 cursor-pointer disabled:cursor-not-allowed"
+                >
+                    -1
                 </Button>
             </div>
         </div>
