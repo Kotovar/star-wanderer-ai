@@ -54,11 +54,14 @@ export const REPUTATION_BUY_THRESHOLD = 20;
 export const REPUTATION_SELL_THRESHOLD = 20;
 
 /**
- * Штраф репутации за контрабанду — как и розыск, по тоннажу: 3 за стандартную
- * партию в 5т. Фиксированный штраф за сделку означал, что оптовая партия
- * обходится дешевле одной тонны.
+ * Штраф репутации за контрабанду — как и розыск, по тоннажу. Фиксированный
+ * штраф за сделку означал, что оптовая партия обходится дешевле одной тонны.
+ *
+ * Ставка ниже, чем у розыска, намеренно: «нейтрально» держится до −10, и по
+ * три за партию одна закупка на 25т уводила сразу в «недружелюбно». Розыск за
+ * объём отвечает сам — репутации хватает более пологого спуска.
  */
-export const CONTRABAND_REP_PENALTY_PER_5T = 3;
+export const CONTRABAND_REP_PENALTY_PER_5T = 1;
 
 export const getContrabandReputationPenalty = (quantity: number): number =>
     Math.max(1, Math.round((quantity / 5) * CONTRABAND_REP_PENALTY_PER_5T));

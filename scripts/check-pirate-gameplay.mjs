@@ -18,6 +18,8 @@ const {
   getWantedBribeCost,
   isWantedCheckpointRequired,
   TROPHY_PURCHASE_HEAT,
+  WANTED_CHECKPOINT_HEAT,
+  WANTED_HEAT_ON_BREAKOUT,
   WANTED_HEAT_ON_PURSUIT_ESCAPE,
   WANTED_PURSUIT_HEAT,
 } = await import("../src/game/slices/pirate/wanted.ts");
@@ -68,6 +70,12 @@ const targets = [
     enemyType: "raider",
     threat: 2,
   },
+  {
+    id: "trader-ship",
+    type: "friendly_ship",
+    name: "Караван Мелис",
+    dominantRace: "human",
+  },
 ];
 
 const originalRandom = Math.random;
@@ -93,10 +101,13 @@ try {
         "пиратское задание обязано вести к существующей цели",
       );
       if (contract.type === "pirate_bounty") {
+        // Пираты заказывают торговцев, а не патрули: заказ на вражеский
+        // корабль дублировал обычный bounty легальных досок и ставил игрока
+        // на сторону закона за пиратские деньги
         assert.equal(
           contract.targetLocationId,
-          "enemy-patrol",
-          "заказ на голову должен указывать на живой вражеский корабль",
+          "trader-ship",
+          "заказ на голову должен указывать на мирного торговца",
         );
       } else {
         assert.equal(
@@ -224,7 +235,11 @@ const dumpState = {
   },
   wantedHeat: 100,
   credits: 0,
-  ship: { tradeGoods: [{ item: "contraband", quantity: 30 }] },
+  ship: {
+    tradeGoods: [{ item: "contraband", quantity: 20 }],
+    // Подрядный груз лежит в том же трюме — досмотр находит и его
+    cargo: [{ item: "contraband", quantity: 10, contractId: "job" }],
+  },
   gameMode: "wanted_checkpoint",
   addLog: () => {},
 };
@@ -238,9 +253,101 @@ assert.equal(
   "сброс должен выкидывать всю контрабанду",
 );
 assert.equal(
+  dumpState.ship.cargo.length,
+  0,
+  "сброс обязан находить и подрядный груз: иначе задание переживало досмотр даром",
+);
+assert.equal(
   dumpState.wantedHeat,
   getHeatAfterCheckpoint(100, 30),
   "сброс должен снимать послабление досмотра плюс след самого груза",
+);
+
+// Отказ от досмотра: стрелять по страже можно на любом уровне розыска, но за
+// это платят репутацией сразу — иначе отступление уводило бы от счёта
+const breakoutState = {
+  currentLocation: {
+    id: "legal-station",
+    type: "station",
+    dominantRace: "human",
+    stationConfig: { isPirate: false },
+  },
+  currentSector: { id: 1, tier: 2 },
+  wantedHeat: WANTED_CHECKPOINT_HEAT,
+  credits: 0,
+  // Бой поднимается настоящий, через startDefenderCombat — фиктивной заглушки
+  // мало: проверять надо именно то, что игра запускает на самом деле
+  ship: { tradeGoods: [], cargo: [], shields: 0, maxShields: 20, modules: [] },
+  discoveredEnemyCodexIds: [],
+  crew: [],
+  currentCombat: null,
+  gameMode: "wanted_checkpoint",
+  addLog: () => {},
+  executeAmbushAttack: () => {},
+  changeReputation: (race, amount) => {
+    breakoutState.reputationHit = { race, amount };
+  },
+};
+createPirateSlice(
+  (update) => applyStateUpdate(breakoutState, update),
+  () => breakoutState,
+).resolveWantedCheckpoint("breakout");
+assert.ok(
+  breakoutState.currentCombat,
+  "отказ от досмотра обязан начинать бой со стражей станции",
+);
+assert.equal(
+  breakoutState.currentCombat.isAmbush,
+  true,
+  "стража стреляет первой: подчиниться отказались вы",
+);
+assert.equal(
+  breakoutState.currentCombat.enemy.enemyType,
+  "human_guard",
+  "на перехват выходит стража расы станции, а не наёмники",
+);
+assert.equal(
+  breakoutState.currentCombat.wantedPursuit,
+  true,
+  "бой обязан считаться делом розыска: иначе станцию пометит зачищенной",
+);
+assert.equal(
+  breakoutState.currentCombat.checkpointBreakout,
+  true,
+  "прорыв обязан отличаться от погони: за него розыск растёт, а не падает",
+);
+assert.equal(
+  breakoutState.currentCombat.defenderRace,
+  undefined,
+  "снятый defenderRace: за стрельбу по закону +60 репутации давать нельзя",
+);
+assert.ok(
+  breakoutState.reputationHit,
+  "платить репутацией надо сразу, до исхода боя: иначе отступление уводит от счёта",
+);
+assert.equal(
+  breakoutState.reputationHit.race,
+  "human",
+  "счёт выставляет раса станции",
+);
+assert.ok(
+  breakoutState.reputationHit.amount < 0,
+  "репутация за стрельбу по страже обязана падать",
+);
+assert.ok(
+  WANTED_HEAT_ON_BREAKOUT > 0,
+  "победа над стражей обязана добавлять розыск, а не снимать его как победа над погоней",
+);
+// Разбор исхода живёт в playerVictory рядом с погоней — проверяем, что ветка
+// прорыва там есть и разошлась с ней
+const victorySource = readFileSync(
+  new URL("../src/game/slices/combat/helpers/playerVictory.ts", import.meta.url),
+  "utf8",
+).replace(/^\s*\/\/.*$/gm, "");
+assert.ok(
+  /checkpointBreakout/.test(victorySource) &&
+    /WANTED_HEAT_ON_BREAKOUT/.test(victorySource),
+  "победа в прорыве обязана обрабатываться отдельно от победы над охотниками",
 );
 
 // Розыск и репутация за контрабанду считаются по тоннажу: раньше они были
@@ -257,12 +364,18 @@ assert.equal(
 );
 assert.equal(
   getContrabandReputationPenalty(5),
-  3,
-  "стандартная партия в 5т = 3 репутации",
+  1,
+  "стандартная партия в 5т = 1 репутации",
 );
 assert.ok(
   getContrabandReputationPenalty(30) > getContrabandReputationPenalty(5),
   "штраф репутации тоже обязан расти с тоннажем",
+);
+// «Нейтрально» держится до −10: одна закупка не должна уводить сразу в
+// «недружелюбно», иначе первая же ходка к пиратам ссорит с расой навсегда
+assert.ok(
+  getContrabandReputationPenalty(30) < 10,
+  "одна закупка не должна снимать целый уровень отношений",
 );
 
 const smugglingState = {
@@ -278,7 +391,10 @@ const smugglingState = {
       desc: "contracts.desc_pirate_smuggling",
     },
   ],
-  ship: { tradeGoods: [{ item: "contraband", quantity: 10 }] },
+  ship: {
+    tradeGoods: [{ item: "contraband", quantity: 10 }],
+    cargo: [{ item: "contraband", quantity: 10, contractId: "smuggling-job" }],
+  },
   wantedHeat: 0,
   probes: 0,
   addLog: () => {},
@@ -289,9 +405,14 @@ const smugglingSlice = createPirateSlice(
 );
 smugglingSlice.performPirateContractObjective("smuggling-job");
 assert.equal(
-  smugglingState.ship.tradeGoods.length,
+  smugglingState.ship.cargo.length,
   0,
-  "smuggling drop must transfer contraband out of the hold",
+  "сдаётся подрядный груз из контрактного отсека",
+);
+assert.equal(
+  smugglingState.ship.tradeGoods[0]?.quantity,
+  10,
+  "купленная игроком контрабанда к делу отношения не имеет и остаётся в трюме",
 );
 assert.equal(
   smugglingState.activeContracts[0]?.pirateObjectiveComplete,
@@ -875,6 +996,80 @@ assert.equal(
   shopState.wantedHeat,
   TROPHY_PURCHASE_HEAT,
   "покупка краденого железа обязана добавлять розыск",
+);
+
+// ── Груз на контрабанду выдаёт заказчик ─────────────────────────────────────
+// Раньше 25т надо было купить самому, а на пиратской станции они стоят в разы
+// больше награды: задание было убыточным по определению
+const cargoJobLocation = {
+  id: "pirate-station",
+  type: "station",
+  stationConfig: { isPirate: true },
+  pirateContracts: [
+    {
+      id: "cargo-job",
+      type: "pirate_smuggling",
+      sourcePlanetId: "pirate-station",
+      targetLocationId: "trade-station",
+      quantity: 25,
+      reward: 1000,
+      desc: "contracts.desc_pirate_smuggling",
+    },
+  ],
+};
+const makeCargoState = (capacity) => ({
+  currentLocation: cargoJobLocation,
+  galaxy: {
+    sectors: [{ id: 1, locations: [{ id: "trade-station", type: "station" }] }],
+  },
+  activeContracts: [],
+  completedContractIds: [],
+  crew: [],
+  turn: 3,
+  probes: 0,
+  gases: {},
+  research: { researchedTechs: [], activeResearch: null },
+  ship: {
+    tradeGoods: [],
+    cargo: [],
+    modules: [
+      { id: 1, type: "cargo", capacity, health: 100, active: true },
+    ],
+  },
+  addLog: () => {},
+});
+
+const cargoState = makeCargoState(100);
+createPirateSlice(
+  (update) => applyStateUpdate(cargoState, update),
+  () => cargoState,
+).acceptPirateContract("cargo-job");
+assert.equal(
+  cargoState.activeContracts.length,
+  1,
+  "задание должно приниматься",
+);
+const issued = cargoState.ship.cargo.find(
+  (item) => item.contractId === "cargo-job",
+);
+assert.ok(issued, "заказчик обязан выдать груз вместе с заданием");
+assert.equal(issued.item, "contraband");
+assert.equal(issued.quantity, 25, "выдать надо ровно то, что просят доставить");
+assert.equal(
+  cargoState.ship.tradeGoods.length,
+  0,
+  "подрядный груз идёт в контрактный отсек, а не в продаваемый трюм",
+);
+
+const crampedState = makeCargoState(10);
+createPirateSlice(
+  (update) => applyStateUpdate(crampedState, update),
+  () => crampedState,
+).acceptPirateContract("cargo-job");
+assert.equal(
+  crampedState.activeContracts.length,
+  0,
+  "без места под груз задание брать нельзя — иначе оно невыполнимо с порога",
 );
 
 // ── Репутация с пиратами ────────────────────────────────────────────────────

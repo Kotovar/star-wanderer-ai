@@ -88,8 +88,12 @@ export function generatePirateContracts(
             location.id !== station.id &&
             !location.stationConfig?.isPirate,
     );
+    // Пираты заказывают не патрули, а торговцев: убрать чужой конвой с линии
+    // выгодно им, а не властям. Прежняя цель — вражеский корабль — превращала
+    // пиратский заказ в обычный bounty, который и так есть у легальных досок,
+    // и заодно ставила игрока на сторону закона за пиратские деньги.
     const bountyTargets = locations.filter(
-        (location) => location.type === "enemy" && !location.defeated,
+        (location) => location.type === "friendly_ship" && !location.defeated,
     );
     const templates = PIRATE_CONTRACT_TEMPLATES.filter(
         (template) =>
@@ -125,10 +129,12 @@ export function generatePirateContracts(
 
         if (template.type === "pirate_bounty") {
             const target = pick(bountyTargets);
-            contract.enemyType = target.enemyType;
-            contract.targetThreat = target.threat ?? tier;
+            // Угроза — от охраны, которую поднимет раса торговца
+            // (см. attackFriendlyShip), а не от самого корабля
+            contract.targetThreat = Math.min(3, tier);
             contract.targetLocationId = target.id;
             contract.targetLocationName = target.name;
+            contract.sourceDominantRace = station.dominantRace;
         }
 
         if (template.type === "pirate_heist") {

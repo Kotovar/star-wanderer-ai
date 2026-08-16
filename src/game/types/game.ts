@@ -508,7 +508,7 @@ export interface GamePirate {
   completePirateContract: (contractId: string) => void;
   reducePirateHeat: (amount: number, cost: number) => void;
   resolveWantedCheckpoint: (
-    choice: "bribe" | "dump" | "fight" | "leave",
+    choice: "bribe" | "dump" | "fight" | "breakout" | "leave",
   ) => void;
   refreshPirateStationContracts: () => void;
   assaultPirateBase: () => void;

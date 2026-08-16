@@ -3,6 +3,8 @@ import { getReputationChanges } from "@/game/contracts/completionRewards";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { shiftHappiness } from "@/game/crew/happiness";
 import { getLivingShipCrew } from "@/game/crew/stationed";
+import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
+import { getCurrentCargo } from "@/game/slices/ship/helpers/getCurrentCargo";
 import type {
     Contract,
     GameStore,
@@ -14,7 +16,10 @@ import { patchLocation } from "@/game/utils/patchLocation";
 import { store as i18nStore } from "@/lib/useTranslation";
 import { playSound } from "@/sounds";
 import { refreshPirateContracts } from "./contracts";
-import { startWantedPursuit } from "./interception";
+import {
+    startCheckpointBreakout,
+    startWantedPursuit,
+} from "./interception";
 import { assaultPirateBase, hasActivePiratePurge } from "./purge";
 import {
     clampPirateStanding,
@@ -40,6 +45,9 @@ const LAWFUL_TRAIT_IDS: TraitId[] = ["trader", "leader", "legend", "veteran"];
 
 const LAWFUL_CONTRACT_MORALE_PENALTY = 5;
 
+/** Цена отказа от досмотра: стрельба по страже расе не забывается */
+const CHECKPOINT_BREAKOUT_REPUTATION = 20;
+
 type PirateContractType =
     | "pirate_smuggling"
     | "pirate_bounty"
@@ -61,7 +69,7 @@ export interface PirateSlice {
     completePirateContract: (contractId: string) => void;
     reducePirateHeat: (amount: number, cost: number) => void;
     resolveWantedCheckpoint: (
-        choice: "bribe" | "dump" | "fight" | "leave",
+        choice: "bribe" | "dump" | "fight" | "breakout" | "leave",
     ) => void;
     refreshPirateStationContracts: () => void;
     assaultPirateBase: () => void;
@@ -108,6 +116,27 @@ export const createPirateSlice = (
             return;
         }
 
+        // Контрабанду на дело выдаёт заказчик — это чужой груз, а не твой
+        // товар. Раньше её требовалось купить самому, и 25т на пиратской
+        // станции стоили в разы больше награды: задание было убыточным по
+        // определению. Груз идёт в контрактный отсек: продать его нельзя,
+        // и при провале срока он списывается вместе с заданием
+        const cargoQuantity =
+            contract.type === "pirate_smuggling" ? (contract.quantity ?? 0) : 0;
+        if (cargoQuantity > 0) {
+            const free =
+                getCargoCapacity(state) - getCurrentCargo(state);
+            if (free < cargoQuantity) {
+                get().addLog(
+                    i18nStore.t("pirate.err_no_cargo_space", {
+                        quantity: cargoQuantity,
+                    }),
+                    "error",
+                );
+                return;
+            }
+        }
+
         // Возмущаются только те, кто на борту и жив: труп и приписанный к
         // аванпосту за несколько секторов о подряде не узнают. Мораль двигаем
         // через shiftHappiness — он знает про Отшельника и расы без настроения
@@ -128,6 +157,20 @@ export const createPirateSlice = (
                 ...s.activeContracts,
                 { ...contract, acceptedAt: s.turn, pirateObjectiveComplete: false },
             ],
+            ship:
+                cargoQuantity > 0
+                    ? {
+                          ...s.ship,
+                          cargo: [
+                              ...s.ship.cargo,
+                              {
+                                  item: "contraband",
+                                  quantity: cargoQuantity,
+                                  contractId: contract.id,
+                              },
+                          ],
+                      }
+                    : s.ship,
             crew: s.crew.map((crewMember) =>
                 upsetIds.has(crewMember.id)
                     ? shiftHappiness(
@@ -144,6 +187,12 @@ export const createPirateSlice = (
             }),
             "warning",
         );
+        if (cargoQuantity > 0) {
+            get().addLog(
+                i18nStore.t("pirate.cargo_loaded", { quantity: cargoQuantity }),
+                "info",
+            );
+        }
         playSound("ui_confirm");
     },
 
@@ -174,10 +223,10 @@ export const createPirateSlice = (
 
         if (contract.type === "pirate_smuggling") {
             const quantity = contract.quantity ?? 1;
-            const contraband = state.ship.tradeGoods.find(
-                (good) => good.item === "contraband",
+            const carried = state.ship.cargo.find(
+                (item) => item.contractId === contract.id,
             );
-            if ((contraband?.quantity ?? 0) < quantity) {
+            if ((carried?.quantity ?? 0) < quantity) {
                 get().addLog(
                     i18nStore.t("pirate.err_need_contraband", { quantity }),
                     "error",
@@ -187,13 +236,9 @@ export const createPirateSlice = (
             set((s) => ({
                 ship: {
                     ...s.ship,
-                    tradeGoods: s.ship.tradeGoods
-                        .map((good) =>
-                            good.item === "contraband"
-                                ? { ...good, quantity: good.quantity - quantity }
-                                : good,
-                        )
-                        .filter((good) => good.quantity > 0),
+                    cargo: s.ship.cargo.filter(
+                        (item) => item.contractId !== contract.id,
+                    ),
                 },
                 activeContracts: s.activeContracts.map((active) =>
                     active.id === contractId
@@ -361,9 +406,16 @@ export const createPirateSlice = (
             return;
         }
         if (choice === "dump") {
-            const quantity = state.ship.tradeGoods.find(
-                (good) => good.item === "contraband",
-            )?.quantity ?? 0;
+            // Досмотр находит и подрядный груз: он лежит в том же трюме.
+            // Сбросив его, задание на контрабанду выполнить уже нечем
+            const contractCargo = state.ship.cargo.filter(
+                (item) => item.item === "contraband" && item.contractId,
+            );
+            const quantity =
+                (state.ship.tradeGoods.find(
+                    (good) => good.item === "contraband",
+                )?.quantity ?? 0) +
+                contractCargo.reduce((sum, item) => sum + item.quantity, 0);
             if (quantity === 0) {
                 get().addLog(i18nStore.t("pirate.err_no_contraband"), "error");
                 return;
@@ -374,14 +426,41 @@ export const createPirateSlice = (
                     tradeGoods: s.ship.tradeGoods.filter(
                         (good) => good.item !== "contraband",
                     ),
+                    cargo: s.ship.cargo.filter(
+                        (item) =>
+                            !(item.item === "contraband" && item.contractId),
+                    ),
                 },
                 wantedHeat: getHeatAfterCheckpoint(s.wantedHeat ?? 0, quantity),
                 gameMode: "station",
             }));
             get().addLog(i18nStore.t("pirate.checkpoint_dumped", { quantity }), "warning");
+            if (contractCargo.length > 0) {
+                get().addLog(i18nStore.t("pirate.checkpoint_dumped_job"), "error");
+            }
             playSound("ui_notification");
             return;
         }
+        if (choice === "breakout") {
+            // Отказ от досмотра с боем. Стража станции — не охотники за
+            // головами: за неё платят репутацией с расой, и платят сразу,
+            // чтобы отступление не позволяло уйти от счёта
+            const race = location.dominantRace;
+            if (race) {
+                get().changeReputation(race, -CHECKPOINT_BREAKOUT_REPUTATION);
+                get().addLog(
+                    i18nStore.t("pirate.checkpoint_breakout_reputation", {
+                        race: i18nStore.t(`races.${race}.plural`),
+                        penalty: CHECKPOINT_BREAKOUT_REPUTATION,
+                    }),
+                    "error",
+                );
+            }
+            get().addLog(i18nStore.t("pirate.checkpoint_breakout"), "error");
+            startCheckpointBreakout(race, set, get);
+            return;
+        }
+
         if (!canFightWantedPursuit(state.wantedHeat ?? 0)) {
             get().addLog(i18nStore.t("pirate.err_hunters_unavailable"), "error");
             return;

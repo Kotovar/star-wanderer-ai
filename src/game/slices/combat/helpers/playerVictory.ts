@@ -50,7 +50,9 @@ import {
     SPACE_MONSTERS,
 } from "@/game/constants/spaceMonsters";
 import {
+    clampWantedHeat,
     WANTED_HEAT_AFTER_PURSUIT,
+    WANTED_HEAT_ON_BREAKOUT,
 } from "@/game/slices/pirate/wanted";
 
 /**
@@ -441,10 +443,26 @@ function applyVictoryAftermath(
     get: () => GameStore,
 ) {
     if (updatedCombat.wantedPursuit) {
-        set((s) => {
-            s.wantedHeat = WANTED_HEAT_AFTER_PURSUIT;
-        });
-        get().addLog(i18nStore.t("pirate.hunters_defeated"), "info");
+        if (updatedCombat.checkpointBreakout) {
+            // Отстреляться от досмотра — не то же самое, что уйти от погони:
+            // станция цела, свидетелей полно, розыск растёт
+            set((s) => {
+                s.wantedHeat = clampWantedHeat(
+                    (s.wantedHeat ?? 0) + WANTED_HEAT_ON_BREAKOUT,
+                );
+            });
+            get().addLog(
+                i18nStore.t("pirate.checkpoint_breakout_done", {
+                    amount: WANTED_HEAT_ON_BREAKOUT,
+                }),
+                "warning",
+            );
+        } else {
+            set((s) => {
+                s.wantedHeat = WANTED_HEAT_AFTER_PURSUIT;
+            });
+            get().addLog(i18nStore.t("pirate.hunters_defeated"), "info");
+        }
     }
 
     // Взятая база: награда, репутация и снос самой базы — там же, где решается

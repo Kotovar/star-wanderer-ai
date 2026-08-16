@@ -73,6 +73,12 @@ export function WantedCheckpointPanel() {
                     />
                 )}
                 <CheckpointAction
+                    label={t("pirate.checkpoint_breakout_action")}
+                    hint={t("pirate.checkpoint_breakout_hint")}
+                    tone="red"
+                    onClick={() => resolveWantedCheckpoint("breakout")}
+                />
+                <CheckpointAction
                     label={t("pirate.checkpoint_leave")}
                     tone="green"
                     onClick={() => resolveWantedCheckpoint("leave")}

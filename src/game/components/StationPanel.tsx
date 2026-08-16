@@ -84,6 +84,7 @@ import {
     RESEARCH_STATION_BUY_PRICES,
 } from "@/game/stations/researchMaterials";
 import { getNebulaFrontProgress } from "@/game/crises/nebulaFront";
+import { getPirateRank } from "@/game/slices/pirate/standing";
 
 const STATION_BACKGROUNDS = {
     trade: "/assets/station-backgrounds/trade-hub.webp",
@@ -670,6 +671,9 @@ export function StationPanel() {
                         sectorTier={sectorTier}
                         race={race}
                         raceReputation={raceReputation}
+                        pirateStanding={
+                            isPirateStation ? pirateStanding : undefined
+                        }
                         onLeave={showSectorMap}
                         t={t}
                     />
@@ -1338,6 +1342,7 @@ function StationHeader({
     sectorTier,
     race,
     raceReputation,
+    pirateStanding,
     onLeave,
     t,
 }: {
@@ -1345,6 +1350,8 @@ function StationHeader({
     sectorTier: number;
     race: (typeof RACES)[keyof typeof RACES] | null;
     raceReputation: Record<RaceId, number> | undefined;
+    /** Задан только на пиратской базе: там хозяин не раса, а сами пираты */
+    pirateStanding?: number;
     onLeave: () => void;
     t: (key: string, params?: Record<string, string | number>) => string;
 }) {
@@ -1412,7 +1419,29 @@ function StationHeader({
                 </Button>
             </div>
 
-            {race && (
+            {pirateStanding !== undefined ? (
+                <div className="flex flex-wrap items-center gap-2 text-xs sm:gap-3 sm:text-sm">
+                    <div className="flex items-center gap-1.5 rounded border border-[#ff0040] bg-[rgba(255,0,64,0.08)] px-1.5 py-0.5 sm:gap-2 sm:px-3 sm:py-1.5">
+                        <span className="text-xl sm:text-2xl">☠</span>
+                        <div>
+                            <div className="font-bold text-[#ff6677]">
+                                {t("pirate.faction_name")}
+                            </div>
+                            <div className="hidden text-xs text-gray-400 sm:block">
+                                {t("pirate.faction_owner")}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 rounded border border-[#00d4ff] bg-[rgba(0,212,255,0.08)] px-1.5 py-0.5 text-xs sm:px-3 sm:py-1.5">
+                        <span>☠</span>
+                        <span className="text-[#00d4ff]">
+                            {t(`pirate.rank_${getPirateRank(pirateStanding)}`)}
+                        </span>
+                        <span className="text-gray-400">({pirateStanding})</span>
+                    </div>
+                </div>
+            ) : (
+                race && (
                 <div
                     className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm"
                     style={{
@@ -1473,6 +1502,7 @@ function StationHeader({
                         </div>
                     )}
                 </div>
+                )
             )}
         </>
     );

@@ -1,6 +1,11 @@
 import { store as i18nStore } from "@/lib/useTranslation";
-import type { GameStore, SetState } from "@/game/types";
+import type { GameState, GameStore, SetState } from "@/game/types";
+import type { RaceId } from "@/game/types/races";
+import { startDefenderCombat } from "@/game/slices/combat/helpers/startDefenderCombat";
 import { WANTED_PURSUIT_HEAT } from "./wanted";
+
+/** startDefenderCombat принимает мутирующий set, слайсы — возвращающий патч */
+type ImmerSet = (fn: (s: GameState) => void) => void;
 
 /** Шанс перехвата на пороге розыска, при котором охотники вообще выходят */
 const INTERCEPTION_CHANCE_AT_THRESHOLD = 0.2;
@@ -52,6 +57,34 @@ export const startWantedPursuit = (
     );
     set((s) => {
         if (s.currentCombat) s.currentCombat.wantedPursuit = true;
+    });
+};
+
+/**
+ * Отказ от досмотра с боем: на перехват выходит стража самой станции, а не
+ * охотники за головами.
+ *
+ * Стража берётся у startDefenderCombat ради её статов и засадного первого
+ * хода, но defenderRace сразу снимается: там он означает «отбился от чужаков»
+ * и даёт +60 репутации, а здесь всё ровно наоборот — стреляют в закон.
+ * combatTargetLocationId для той же цели не годится: он сносит локацию, а
+ * станция обязана остаться на карте.
+ */
+export const startCheckpointBreakout = (
+    race: RaceId | undefined,
+    set: SetState,
+    get: () => GameStore,
+): void => {
+    if (race) {
+        startDefenderCombat(race, set as unknown as ImmerSet, get);
+    } else {
+        startWantedPursuit(set, get, true);
+    }
+    set((s) => {
+        if (!s.currentCombat) return;
+        s.currentCombat.defenderRace = undefined;
+        s.currentCombat.wantedPursuit = true;
+        s.currentCombat.checkpointBreakout = true;
     });
 };
 

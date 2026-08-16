@@ -19,6 +19,9 @@ export const WANTED_CHECKPOINT_RELIEF = 20;
 /** Уход от охотников не бесплатен: погоня попадает в сводки. */
 export const WANTED_HEAT_ON_PURSUIT_ESCAPE = 10;
 
+/** Стрельба по досмотру попадает во все сводки разом. */
+export const WANTED_HEAT_ON_BREAKOUT = 15;
+
 /** Трофей с чужого корабля везёт на себе чужие серийники. */
 export const TROPHY_PURCHASE_HEAT = 5;
 

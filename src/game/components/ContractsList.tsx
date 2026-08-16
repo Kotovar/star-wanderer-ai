@@ -224,8 +224,10 @@ export function ContractsList() {
             }
             case "pirate_smuggling": {
                 const required = contract.quantity ?? 1;
-                const carried = get().ship.tradeGoods.find(
-                    (good) => good.item === "contraband",
+                // Груз выдаёт заказчик и лежит он в контрактном отсеке —
+                // купленная контрабанда в трюме к делу отношения не имеет
+                const carried = get().ship.cargo.find(
+                    (item) => item.contractId === contract.id,
                 )?.quantity ?? 0;
                 return {
                     current: contract.pirateObjectiveComplete
@@ -1072,7 +1074,9 @@ export function ContractsList() {
                             value: getStatusText(contract),
                         },
                         {
-                            label: t("contracts.task_target"),
+                            // Не «целевая планета»: пиратские задания целят
+                            // в корабли и станции
+                            label: t("contracts.task_target_generic"),
                             value: `${getLocationName(
                                 contract.targetLocationName ?? t("contracts.unknown"),
                                 t,

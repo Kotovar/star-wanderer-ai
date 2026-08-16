@@ -47,6 +47,8 @@ export interface CombatState {
     combatTargetLocationId?: string;
     /** Бой с охотниками за игроком после досмотра на легальной станции. */
     wantedPursuit?: boolean;
+    /** Прорыв с боем на досмотре: розыск растёт, а не падает, как после погони */
+    checkpointBreakout?: boolean;
     // Last hit tracking for UI animations
     lastEnemyHit?: {
         eventId?: number;
