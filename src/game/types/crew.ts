@@ -213,7 +213,6 @@ export type CrewTraitEffect = {
     sellPriceBonus?: number;
     healthPenalty?: number;
     healthBonus?: number;
-    maxHappinessBonus?: number;
     seeHostility?: number;
     pilotEvasionBonus?: number;
     /** Личный бонус к науке этого учёного (genius) — множитель поверх его вклада */

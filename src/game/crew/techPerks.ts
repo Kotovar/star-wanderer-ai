@@ -45,6 +45,7 @@ export function getCrewPerkNoEffectSource(
     tier: TechPerkTier,
     branch: TechPerkBranch,
     activeGunnerIds: readonly number[] = [],
+    cockpitPilotId?: number,
 ): CrewMember | null {
     const projectedCrewMember: CrewMember = {
         ...crewMember,
@@ -73,11 +74,23 @@ export function getCrewPerkNoEffectSource(
         );
     }
 
+    // Уклонение даёт только старший по уровню пилот в активной кабине, поэтому
+    // "Ас пилотирования" второго пилота не добавит кораблю ничего
+    if (crewMember.profession === "pilot" && branch === "A") {
+        return cockpitPilotId !== undefined && cockpitPilotId !== crewMember.id
+            ? crew.find((candidate) => candidate.id === cockpitPilotId) ?? null
+            : null;
+    }
+
     if (
         crewMember.profession !== "gunner" ||
         !activeGunnerIds.includes(crewMember.id)
     ) return null;
 
+    // Крит корабля — максимум по всем активным стрелкам, а точность считается
+    // отдельно для КАЖДОГО оружейного отсека (см. computeBayAccuracyModifier):
+    // второй "Снайпер" в своём отсеке полезен, даже если в соседнем сидит
+    // стрелок сильнее. Поэтому у ветки A конкуренты — только соседи по отсеку.
     const getGunnerValue = branch === "A"
         ? getGunnerAccuracyBonus
         : getGunnerCritBonus;
@@ -86,7 +99,9 @@ export function getCrewPerkNoEffectSource(
         crewMember,
         getGunnerValue(projectedCrewMember),
         (candidate) =>
-            candidate.profession === "gunner" && activeGunnerIds.includes(candidate.id),
+            candidate.profession === "gunner" &&
+            activeGunnerIds.includes(candidate.id) &&
+            (branch !== "A" || candidate.moduleId === crewMember.moduleId),
         getGunnerValue,
     );
 }

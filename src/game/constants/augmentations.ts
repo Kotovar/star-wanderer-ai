@@ -3,6 +3,7 @@ import type {
     AugmentationEffect,
     AugmentationId,
 } from "@/game/types/augmentations";
+import type { Profession } from "@/game/types/crew";
 
 /**
  * Бонус аугментации члена экипажа с дефолтом 0.
@@ -212,4 +213,48 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
         rarity: "common",
         installCost: 700,
     },
+};
+
+/** Профильные импланты каждой профессии по возрастанию цены — это «ранг». */
+const AUGMENTATIONS_BY_PROFESSION = Object.values(AUGMENTATIONS).reduce(
+    (byProfession, augmentation) => {
+        if (!augmentation.forProfession) return byProfession;
+        const list = byProfession[augmentation.forProfession] ?? [];
+        list.push(augmentation);
+        byProfession[augmentation.forProfession] = list;
+        return byProfession;
+    },
+    {} as Partial<Record<Profession, Augmentation[]>>,
+);
+Object.values(AUGMENTATIONS_BY_PROFESSION).forEach((list) =>
+    list.sort((a, b) => a.installCost - b.installCost),
+);
+
+/**
+ * Во что превращается имплант при переучивании.
+ *
+ * Имплант остаётся тем же железом — его перенастраивают под новую профессию,
+ * а не меняют на другой: берётся имплант новой профессии того же ранга по
+ * цене. Рангов у профессий разное количество (у пилота один, у стрелка два),
+ * поэтому ранг зажимается по длине списка новой профессии.
+ *
+ * Расовые импланты от профессии не зависят и возвращаются как есть — как и
+ * `null`, и всё, чего нет в каталоге.
+ */
+export const getRetrainedAugmentation = (
+    augmentationId: AugmentationId | null | undefined,
+    newProfession: Profession,
+): AugmentationId | null => {
+    if (!augmentationId) return null;
+    const current = AUGMENTATIONS[augmentationId];
+    if (!current?.forProfession) return augmentationId;
+    if (current.forProfession === newProfession) return augmentationId;
+
+    const currentRank =
+        AUGMENTATIONS_BY_PROFESSION[current.forProfession]?.indexOf(current) ??
+        -1;
+    const target = AUGMENTATIONS_BY_PROFESSION[newProfession];
+    if (currentRank < 0 || !target?.length) return augmentationId;
+
+    return target[Math.min(currentRank, target.length - 1)].id;
 };

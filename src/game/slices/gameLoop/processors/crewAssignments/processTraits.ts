@@ -1,5 +1,5 @@
 import { RACES } from "@/game/constants";
-import { shiftHappiness } from "@/game/crew";
+import { getLivingShipCrew, shiftHappiness } from "@/game/crew";
 import type {
     CrewMember,
     GameStore,
@@ -17,7 +17,9 @@ export const processNegativeTraits = (
     set: SetState,
     get: () => GameStore,
 ): void => {
-    const crew = get().crew;
+    // Только те, кто на борту и жив: труп никого не пугает, а приписанный к
+    // аванпосту телепат за несколько секторов отсюда не давит на весь корабль
+    const crew = getLivingShipCrew(get().crew);
 
     crew.forEach((crewMember) => {
         const crewRace = RACES[crewMember.race];
@@ -79,13 +81,7 @@ export const processNegativeTraits = (
                 set((s) => ({
                     crew: s.crew.map((c) =>
                         affectedIds.has(c.id)
-                            ? {
-                                  ...c,
-                                  happiness: Math.max(
-                                      0,
-                                      c.happiness - teamMoralePenalty,
-                                  ),
-                              }
+                            ? shiftHappiness(c, -teamMoralePenalty)
                             : c,
                     ),
                 }));
@@ -111,13 +107,7 @@ export const processNegativeTraits = (
                 set((s) => ({
                     crew: s.crew.map((c) =>
                         shipCrewIds.has(c.id)
-                            ? {
-                                  ...c,
-                                  happiness: Math.max(
-                                      0,
-                                      c.happiness - shipMoralePenalty,
-                                  ),
-                              }
+                            ? shiftHappiness(c, -shipMoralePenalty)
                             : c,
                     ),
                 }));
@@ -187,12 +177,7 @@ const processRaceNegativeEffects = (
             const affectedIds = new Set(affectedCrew.map((c) => c.id));
             set((s) => ({
                 crew: s.crew.map((c) =>
-                    affectedIds.has(c.id)
-                        ? {
-                              ...c,
-                              happiness: Math.max(0, c.happiness - penalty),
-                          }
-                        : c,
+                    affectedIds.has(c.id) ? shiftHappiness(c, -penalty) : c,
                 ),
             }));
         }

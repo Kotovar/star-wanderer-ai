@@ -1,8 +1,9 @@
 import type { GameState, WeaponType } from "@/game/types";
 import type { CombatProjectileResolution } from "@/game/types/combatCinematics";
-import { getAugmentationBonus } from "@/game/constants/augmentations";
-import { getTechPerkValue } from "@/game/constants/techTree";
-import { getGunnerCritBonus } from "@/game/crew/combatBonuses";
+import {
+    getGunnerAccuracyBonus,
+    getGunnerCritBonus,
+} from "@/game/crew/combatBonuses";
 import {
     BASE_ACCURACY,
     MIN_ACCURACY,
@@ -83,9 +84,12 @@ function getActiveGunners(state: GameState) {
             )
             .map((module) => module.id),
     );
+    // Живой: смерть не снимает человека с модуля, и труп в оружейном отсеке
+    // продолжал давать кораблю крит и снимать штраф "нет стрелка"
     return state.crew.filter(
         (crewMember) =>
             crewMember.profession === "gunner" &&
+            crewMember.health > 0 &&
             activeWeaponBayIds.has(crewMember.moduleId),
     );
 }
@@ -140,6 +144,7 @@ function computeGlobalAccuracyBonuses(state: GameState): number {
         state.crew.some(
             (c) =>
                 c.profession === "gunner" &&
+                c.health > 0 &&
                 c.combatAssignment === "targeting" &&
                 activeWeaponBayIds.has(c.moduleId),
         )
@@ -149,6 +154,7 @@ function computeGlobalAccuracyBonuses(state: GameState): number {
         state.crew.some(
             (c) =>
                 c.profession === "gunner" &&
+                c.health > 0 &&
                 c.combatAssignment === "rapidfire" &&
                 activeWeaponBayIds.has(c.moduleId),
         )
@@ -179,11 +185,14 @@ function computeGlobalAccuracyBonuses(state: GameState): number {
  * global bonuses (AI cores, targeting artifact/assignment, rapidfire) apply to all bays.
  */
 export function computeBayAccuracyModifier(state: GameState, bayId: number): number {
-    const crewInBay = state.crew.filter((c) => c.moduleId === bayId);
+    const crewInBay = state.crew.filter(
+        (c) => c.moduleId === bayId && c.health > 0,
+    );
     const gunnerInBay = crewInBay.find((c) => c.profession === "gunner");
     const hasGlobalTargeting = state.crew.some(
         (c) =>
             c.profession === "gunner" &&
+            c.health > 0 &&
             c.combatAssignment === "targeting" &&
             state.ship.modules.some(
                 (module) =>
@@ -199,19 +208,9 @@ export function computeBayAccuracyModifier(state: GameState, bayId: number): num
     if (!gunnerInBay && !hasGlobalTargeting) {
         modifier += COMBAT_ACCURACY_MODIFIERS.NO_GUNNER_PENALTY;
     } else if (gunnerInBay) {
-        const gunnerLevel = gunnerInBay.level || 1;
-        modifier += Math.min(
-            COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_MAX_BONUS,
-            gunnerLevel * COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_BONUS,
-        );
-        // Augmentation bonus on this gunner
-        modifier += getAugmentationBonus(gunnerInBay, "accuracyBonus");
-        // Trait bonuses/penalties on this gunner
-        gunnerInBay.traits?.forEach((trait) => {
-            if (trait.effect?.accuracyPenalty) modifier -= Number(trait.effect.accuracyPenalty);
-            if (trait.effect?.accuracyBonus) modifier += Number(trait.effect.accuracyBonus);
-        });
-        modifier += getTechPerkValue(gunnerInBay, "A"); // Ветка "Снайпер"
+        // Уровень + аугментация + трейты + ветка "Снайпер" — одной функцией,
+        // чтобы формула не разъезжалась с подсказкой в модалке выбора ветки
+        modifier += getGunnerAccuracyBonus(gunnerInBay);
     }
 
     // Engineer with calibration in THIS bay

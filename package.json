@@ -89,6 +89,7 @@
     "check:jettison": "node --no-warnings scripts/check-jettison.mjs",
     "check:turn-ticks": "node --no-warnings scripts/check-turn-tick-fixes.mjs",
     "check:crew-progression": "node --no-warnings scripts/check-crew-progression.mjs",
+    "check:crew-passives": "node --no-warnings scripts/check-crew-passives.mjs",
     "check:research-fixes": "node --no-warnings scripts/check-research-fixes.mjs",
     "check:artifact-fixes": "node --no-warnings scripts/check-artifact-fixes.mjs",
     "check:research-panel": "node --no-warnings scripts/check-research-panel.mjs",

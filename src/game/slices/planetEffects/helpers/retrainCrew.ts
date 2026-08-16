@@ -1,6 +1,7 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { CrewMember, GameStore, Profession, SetState } from "@/game/types";
+import { getRetrainedAugmentation } from "@/game/constants/augmentations";
 import { playSound } from "@/sounds";
 
 export const ACADEMY_RETRAIN_COST = 1000;
@@ -72,6 +73,12 @@ export const retrainCrewMember = (
         return false;
     }
 
+    // Профильный имплант — то же железо, перенастроенное под новую профессию
+    const newAugmentation = getRetrainedAugmentation(
+        crewMember.augmentation,
+        profession,
+    );
+
     set((current) => ({
         credits: current.credits - ACADEMY_RETRAIN_COST,
         planetCooldowns: { ...current.planetCooldowns, [cooldownKey]: 999 },
@@ -81,6 +88,7 @@ export const retrainCrewMember = (
                       ...crew,
                       profession,
                       techPerks: keepRaceTechPerks(crew.techPerks),
+                      augmentation: newAugmentation,
                   }
                 : crew,
         ),
@@ -93,6 +101,19 @@ export const retrainCrewMember = (
         }),
         "info",
     );
+
+    if (newAugmentation && newAugmentation !== crewMember.augmentation) {
+        get().addLog(
+            i18nStore.t("game_logs.retrainCrew_augmentation", {
+                crewMember_name: getCrewDisplayName(crewMember),
+                from: i18nStore.t(
+                    `augmentations.${crewMember.augmentation}.name`,
+                ),
+                to: i18nStore.t(`augmentations.${newAugmentation}.name`),
+            }),
+            "info",
+        );
+    }
     playSound("world_crew_milestone");
     return true;
 };

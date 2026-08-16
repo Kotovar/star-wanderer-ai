@@ -3884,6 +3884,7 @@
             "retraining_select_crew": "Select a crew member for retraining:",
             "retraining_select_profession": "Select a new profession:",
             "retraining_used": "Retraining has already been used on this planet.",
+            "retraining_augmentation": "The implant will be retuned for the new profession: {{from}} → {{to}}.",
             "retraining_button": "RETRAIN"
         },
         "synthetic_archives": {
@@ -4906,29 +4907,29 @@
         },
         "engineer": {
             "3": {
-                "A": { "name": "Virtuoso Mechanic", "desc": "+4% repair and reactor overclock efficiency" },
+                "A": { "name": "Virtuoso Mechanic", "desc": "+4% efficiency on all engineer tasks (repair, reactor overclock, fuel synthesis and more)" },
                 "B": { "name": "Reactor Specialist", "desc": "+1 power to every reactor on the ship" }
             },
             "6": {
-                "A": { "name": "Virtuoso Mechanic", "desc": "+6% repair and reactor overclock efficiency" },
+                "A": { "name": "Virtuoso Mechanic", "desc": "+6% efficiency on all engineer tasks (repair, reactor overclock, fuel synthesis and more)" },
                 "B": { "name": "Reactor Specialist", "desc": "+1 power to every reactor on the ship" }
             },
             "9": {
-                "A": { "name": "Virtuoso Mechanic", "desc": "+8% repair and reactor overclock efficiency" },
+                "A": { "name": "Virtuoso Mechanic", "desc": "+8% efficiency on all engineer tasks (repair, reactor overclock, fuel synthesis and more)" },
                 "B": { "name": "Reactor Specialist", "desc": "+1 power to every reactor on the ship" }
             }
         },
         "medic": {
             "3": {
-                "A": { "name": "Field Surgeon", "desc": "+4% healing effectiveness" },
+                "A": { "name": "Field Surgeon", "desc": "+4% efficiency on all medic tasks (healing, first aid, morale)" },
                 "B": { "name": "Biochemist", "desc": "+1 HP passive regeneration per turn" }
             },
             "6": {
-                "A": { "name": "Field Surgeon", "desc": "+6% healing effectiveness" },
+                "A": { "name": "Field Surgeon", "desc": "+6% efficiency on all medic tasks (healing, first aid, morale)" },
                 "B": { "name": "Biochemist", "desc": "+1 HP passive regeneration per turn" }
             },
             "9": {
-                "A": { "name": "Field Surgeon", "desc": "+8% healing effectiveness" },
+                "A": { "name": "Field Surgeon", "desc": "+8% efficiency on all medic tasks (healing, first aid, morale)" },
                 "B": { "name": "Biochemist", "desc": "+1 HP passive regeneration per turn" }
             }
         },
@@ -6405,6 +6406,7 @@
         "retrainCrew_6": "The crew member already has that profession",
         "retrainCrew_7": "Not enough credits for retraining! {{cost}}₢ required",
         "retrainCrew_8": "🎓 {{crewMember_name}} changed profession to {{profession}}",
+        "retrainCrew_augmentation": "🔧 {{crewMember_name}}'s implant retuned: {{from}} → {{to}}",
         "geneticTherapy_1": "Technology required: Genetic Engineering",
         "geneticTherapy_2": "Not enough credits for genetic therapy! {{cost}}₢ required",
         "geneticTherapy_3": "Crew member not found!",

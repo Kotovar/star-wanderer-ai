@@ -87,6 +87,10 @@ const healthRegenSource = await readFile(
   new URL("../src/game/slices/crew/helpers/calculateHealthRegen.ts", import.meta.url),
   "utf8",
 );
+const combatBonusesSource = await readFile(
+  new URL("../src/game/crew/combatBonuses.ts", import.meta.url),
+  "utf8",
+);
 const retreatSource = await readFile(
   new URL("../src/game/slices/combat/helpers/retreat.ts", import.meta.url),
   "utf8",
@@ -460,10 +464,17 @@ assert.doesNotMatch(
   /state\.crew\.forEach\(\(c\) => \{[\s\S]*?getTechPerkValue\(c, "A"\)/,
   "accuracy must not stack every gunner's personal bonuses",
 );
+// Формула личного бонуса стрелка живёт в одном месте (getGunnerAccuracyBonus),
+// иначе она разъезжается с подсказкой "этот выбор ничего не даст" в модалке.
 assert.match(
   playerDamageSource,
-  /export function computeBayAccuracyModifier[\s\S]*?getTechPerkValue\(gunnerInBay, "A"\)/,
+  /export function computeBayAccuracyModifier[\s\S]*?getGunnerAccuracyBonus\(gunnerInBay\)/,
   "per-bay accuracy remains local to that bay's gunner",
+);
+assert.match(
+  combatBonusesSource,
+  /export function getGunnerAccuracyBonus[\s\S]*?getTechPerkValue\(crewMember, "A"\)/,
+  "the shared gunner accuracy helper still applies the sniper branch",
 );
 assert.ok(
   Math.abs(0.5 + 9 * 0.02 + EXPECTED_FULL_PATH_TOTALS.pilot.B - 0.8) < Number.EPSILON,

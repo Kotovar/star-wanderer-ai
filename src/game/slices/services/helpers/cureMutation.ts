@@ -47,10 +47,16 @@ export const cureMutation = (
                 ...c,
                 traits: c.traits.filter((t) => t.id !== traitId),
             };
-            // Возвращаем максимум здоровья, срезанный мутацией
+            // Возвращаем максимум здоровья, срезанный мутацией.
+            // ponytail: ceil, а не round — срезали через floor, поэтому деление
+            // обратно даёт число не больше исходного; ceil никогда не завысит
+            // максимум и теряет меньше, чем round. Точное восстановление
+            // потребовало бы хранить снятые HP в самом трейте — сейчас
+            // максимум растёт ещё и от тренировок на планетах, так что
+            // пересчитать его из расы/уровня/трейтов нельзя.
             const penalty = mutation.effect?.healthPenalty;
             if (penalty && penalty < 1) {
-                updated.maxHealth = Math.round(
+                updated.maxHealth = Math.ceil(
                     updated.maxHealth / (1 - penalty),
                 );
             }

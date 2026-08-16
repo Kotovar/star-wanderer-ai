@@ -1,6 +1,8 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { RACES } from "@/game/constants";
+import { getLivingShipCrew } from "@/game/crew/stationed";
+import { shiftHappiness } from "@/game/crew/happiness";
 import { addEnemyCodexEntry, getEnemyCodexId } from "@/game/constants/enemyCodex";
 import { SPACE_MONSTERS } from "@/game/constants/spaceMonsters";
 import type { GameState, GameStore, Location } from "@/game/types";
@@ -77,13 +79,16 @@ export function initializeCombat(
 }
 
 /**
- * Применяет трейт Пессимист в начале боя
+ * Применяет трейт Бунтарь в начале боя: шанс сбежать с корабля.
+ *
+ * Только те, кто на борту и жив: бунтарь, приписанный к аванпосту за несколько
+ * секторов отсюда, в этом бою не участвует и дезертировать из него не может.
  */
 export function applyRebelTrait(
     get: () => GameStore,
     set: (fn: (s: GameState) => void) => void,
 ) {
-    const rebels = get().crew.filter((c) =>
+    const rebels = getLivingShipCrew(get().crew).filter((c) =>
         RACES[c.race]?.hasHappiness !== false &&
         c.traits?.some((t) => t.effect.desertionRisk),
     );
@@ -104,11 +109,12 @@ export function applyRebelTrait(
     });
 }
 
+/** Пессимист теряет мораль при начале боя — только тот, кто в этом бою есть. */
 export function applyPessimistTrait(
     get: () => GameStore,
     set: (fn: (s: GameState) => void) => void,
 ) {
-    const crewWithPessimist = get().crew.filter((c) =>
+    const crewWithPessimist = getLivingShipCrew(get().crew).filter((c) =>
         c.traits?.some((t) => t.effect.combatStartMoraleDrain),
     );
 
@@ -119,9 +125,13 @@ export function applyPessimistTrait(
         if (!trait) return;
 
         const moraleDrain = trait.effect.combatStartMoraleDrain as number;
+        // Через shiftHappiness, а не вычитанием: только он знает про расы без
+        // настроения и про «Отшельника», который настроение не теряет
         set((s) => {
-            const c = s.crew.find((x) => x.id === crewMember.id);
-            if (c) c.happiness = Math.max(0, c.happiness - moraleDrain);
+            const index = s.crew.findIndex((x) => x.id === crewMember.id);
+            if (index >= 0) {
+                s.crew[index] = shiftHappiness(s.crew[index], -moraleDrain);
+            }
         });
         get().addLog( i18nStore.t("game_logs.startCombat_5", { crewMember_name: getCrewDisplayName(crewMember), moraleDrain }),
             "warning",

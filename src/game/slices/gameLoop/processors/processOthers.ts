@@ -1,6 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
-import { getShipCrew } from "@/game/crew/stationed";
+import { getLivingShipCrew, getShipCrew } from "@/game/crew/stationed";
 import type { CrewTrait, GameStore, SetState } from "@/game/types";
 import { RACES } from "@/game/constants/races";
 import { shiftHappiness } from "@/game/crew";
@@ -33,7 +33,10 @@ export const processMoraleTraits = (
     set: SetState,
     get: () => GameStore,
 ): void => {
-    const crew = get().crew;
+    // Только те, кто на борту и жив: труп не воодушевляет соседей по отсеку,
+    // а приписанный к аванпосту находится за несколько секторов отсюда — ни
+    // поднимать мораль на корабле, ни терять её в чужом бою он не должен
+    const crew = getLivingShipCrew(get().crew);
     const inCombat = !!get().currentCombat;
 
     // Боевой дренаж морали от трейтов (напр. "Трус": -10 за ход)
@@ -73,11 +76,10 @@ export const processMoraleTraits = (
             if (affectedCrew.length === 0) return;
 
             // Повышаем настроение
+            const affectedIds = new Set(affectedCrew.map((c) => c.id));
             set((s) => ({
                 crew: s.crew.map((c) =>
-                    c.moduleId === crewMember.moduleId && c.id !== crewMember.id
-                        ? shiftHappiness(c, moraleBonus)
-                        : c,
+                    affectedIds.has(c.id) ? shiftHappiness(c, moraleBonus) : c,
                 ),
             }));
 
@@ -103,10 +105,10 @@ export const processMoraleTraits = (
 
             if (affectedCrew.length === 0) return;
 
+            const affectedIds = new Set(affectedCrew.map((c) => c.id));
             set((s) => ({
                 crew: s.crew.map((c) =>
-                    c.id !== crewMember.id &&
-                    get().isModuleAdjacent(crewMember.moduleId, c.moduleId)
+                    affectedIds.has(c.id)
                         ? shiftHappiness(c, adjacentBonus)
                         : c,
                 ),

@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { useGameStore } from "@/game/store";
 import { isBunkerFull } from "@/game/slices/outposts/helpers";
+import { getLivingShipCrew } from "@/game/crew/stationed";
 import { getVisibleNavigatorTargetIds } from "@/game/navigator/intel";
 import { useTranslation } from "@/lib/useTranslation";
 import { getLocationName } from "@/lib/translationHelpers";
@@ -240,8 +241,12 @@ export function SectorMap() {
       ),
     [outposts],
   );
+  // Только живой телепат на борту: труп и приписанный к аванпосту в другой
+  // системе не могут подсвечивать врагов на карте текущего сектора
   const hasTelepathy = useGameStore((s) =>
-    s.crew.some((c) => c.traits?.some((t) => t.effect?.seeHostility)),
+    getLivingShipCrew(s.crew).some((c) =>
+      c.traits?.some((t) => t.effect?.seeHostility),
+    ),
   );
   const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
   const { t } = useTranslation();

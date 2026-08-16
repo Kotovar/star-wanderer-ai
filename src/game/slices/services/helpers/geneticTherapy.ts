@@ -59,9 +59,10 @@ export const treatNegativeTrait = (
                 traits: crew.traits.filter((candidate) => candidate.id !== traitId),
                 geneticTherapyUsed: true,
             };
+            // ceil, а не round: см. тот же расчёт в cureMutation
             const healthPenalty = trait.effect.healthPenalty;
             if (healthPenalty && healthPenalty < 1) {
-                updated.maxHealth = Math.round(
+                updated.maxHealth = Math.ceil(
                     updated.maxHealth / (1 - healthPenalty),
                 );
             }

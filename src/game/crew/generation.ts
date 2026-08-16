@@ -37,8 +37,7 @@ const conflictsWithExisting = (
 const hasPersonalMoraleEffect = (effect: CrewTrait["effect"]): boolean =>
     effect.moralePenalty !== undefined ||
     effect.combatMoraleDrain !== undefined ||
-    effect.combatStartMoraleDrain !== undefined ||
-    effect.maxHappinessBonus !== undefined;
+    effect.combatStartMoraleDrain !== undefined;
 
 export const generateCrewTraits = (
     quality: Quality = "average",

@@ -10,9 +10,11 @@ import type { CrewMember, GameState } from "@/game/types";
  *
  * Формула:
  * - Базовая регенерация: 0 HP
- * - Бонус расы: human +5, xenosymbiont +10, krylorian +15
- * - Процентные бонусы от трейтов (например, "Регенерация" +50%)
- * - Бонусы от активных эффектов (например, Биолаборатория +5)
+ * - Бонус расы: human +5, xenosymbiont +10
+ * - Плоские бонусы трейтов (мутация "Клеточное восстановление" +5) и ветки
+ *   "Биохимик" (медик), затем бонусы активных эффектов (Биолаборатория +5)
+ * - И только в конце — проценты: трейт "Непобедимый" (+10%) и расовая
+ *   ветка ксеносимбионта
  *
  * НЕ включает:
  * - Лечение от медика (назначение "heal")
@@ -28,20 +30,20 @@ export const calculateHealthRegen = (
     state?: Pick<GameState, "activeEffects"> & { crew?: CrewMember[] },
 ): number => {
 
-    // Базовая регенерация: 0 HP
-    let regenAmount = 0;
+    // Сначала складываем ВСЕ плоские источники, только потом множим на
+    // проценты: иначе "+10% регенерации" Непобедимого умножало бы одну лишь
+    // расовую регенерацию (у человека floor(5 * 1.1) = 5, то есть ноль), а
+    // +5 HP мутации "Клеточное восстановление" не попадали бы под процент
+    // вообще — мутации всегда идут в массиве трейтов после позитивных.
+    let regenAmount = getRaceCrewBonus(crewMember.race, "healthRegen");
 
-    // Пассивная регенерация от расы (healthRegen)
-    const raceHealthRegen = getRaceCrewBonus(crewMember.race, "healthRegen");
-    regenAmount += raceHealthRegen;
-
-    // Процентные бонусы от трейтов (например, "Регенерация" +50%)
+    let regenMultiplier = 1;
     crewMember.traits.forEach((trait) => {
-        if (trait.effect.regenBonus) {
-            regenAmount = Math.floor(regenAmount * (1 + trait.effect.regenBonus));
-        }
         if (trait.effect.flatRegen) {
             regenAmount += trait.effect.flatRegen;
+        }
+        if (trait.effect.regenBonus) {
+            regenMultiplier += trait.effect.regenBonus;
         }
     });
 
@@ -62,6 +64,10 @@ export const calculateHealthRegen = (
                 }
             });
         });
+    }
+
+    if (regenMultiplier !== 1) {
+        regenAmount = Math.floor(regenAmount * regenMultiplier);
     }
 
     if (state?.crew) {

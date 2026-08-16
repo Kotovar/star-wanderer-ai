@@ -9,6 +9,7 @@ import {
     REPUTATION_SELL_THRESHOLD,
 } from "../constants";
 import { clampWantedHeat } from "@/game/slices/pirate/wanted";
+import { getLivingShipCrew } from "@/game/crew/stationed";
 
 const CONTRABAND_REP_PENALTY = 3;
 const CONTRABAND_HEAT_PER_SELL = 4;
@@ -78,9 +79,13 @@ const validateSellTradeGood = (
         price = getPirateContrabandSellPrice(price);
     }
 
+    // Торг ведут те, кто на борту и жив: приписанный к аванпосту за несколько
+    // секторов отсюда не торчит у прилавка — ни жадный, ни торговец
+    const tradingCrew = getLivingShipCrew(state.crew);
+
     // Штраф от жадных
     let greedyCrewCount = 0;
-    state.crew.forEach((c) => {
+    tradingCrew.forEach((c) => {
         c.traits?.forEach((trait) => {
             if (trait.effect.sellPricePenalty) greedyCrewCount++;
         });
@@ -90,7 +95,7 @@ const validateSellTradeGood = (
     }
 
     // Бонус от торговцев
-    const traderBonus = state.crew.reduce((sum, c) => {
+    const traderBonus = tradingCrew.reduce((sum, c) => {
         return (
             sum +
             (c.traits?.reduce(

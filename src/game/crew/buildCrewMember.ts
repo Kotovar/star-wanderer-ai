@@ -108,14 +108,7 @@ const calculateCrewStats = (options: CrewStatsOptions): CrewStats => {
     maxHealth += raceHealthBonus * level;
 
     const raceHappinessBonus = getRaceCrewBonus(race, "happiness");
-    let maxHappiness = DEFAULT_MAX_HAPPINESS + raceHappinessBonus;
-    traits.forEach((trait) => {
-        if (trait.effect.maxHappinessBonus) {
-            maxHappiness = Math.floor(
-                maxHappiness * (1 + trait.effect.maxHappinessBonus),
-            );
-        }
-    });
+    const maxHappiness = DEFAULT_MAX_HAPPINESS + raceHappinessBonus;
 
     const hasHappiness = raceData?.hasHappiness ?? true;
     return {

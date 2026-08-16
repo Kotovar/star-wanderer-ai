@@ -24,6 +24,7 @@ import {
 } from "@/game/research/utils";
 import {
     getActiveAssignment,
+    getLivingShipCrew,
     giveRandomMutation,
 } from "@/game/crew";
 import { showHintOnce } from "@/game/hints/showHint";
@@ -311,7 +312,7 @@ function calculateVictoryCredits(
 
     // «В розыске»: охота на игрока оплачивается трофеями с охотников
     let lootBonus = getRunModifierValue(state.startModifierIds, "combatLootBonus");
-    get().crew.forEach((c) => {
+    getLivingShipCrew(get().crew).forEach((c) => {
         c.traits?.forEach((trait) => {
             if (trait.effect.lootBonus) lootBonus += trait.effect.lootBonus;
         });

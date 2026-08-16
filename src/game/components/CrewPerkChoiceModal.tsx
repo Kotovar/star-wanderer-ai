@@ -19,6 +19,7 @@ import { useTranslation } from "@/lib/useTranslation";
 import { useShallow } from "zustand/react/shallow";
 import type { PendingCrewPerkChoice } from "@/game/crew/techPerks";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
+import { getPilotInCockpit } from "@/game/crew/getPilotInCockpit";
 
 interface CrewPerkChoiceContentProps {
     pending: PendingCrewPerkChoice;
@@ -49,9 +50,12 @@ export function CrewPerkChoiceContent({
     const activeGunnerIds = crew
         .filter(
             (member) =>
-                member.profession === "gunner" && activeWeaponBayIds.has(member.moduleId),
+                member.profession === "gunner" &&
+                member.health > 0 &&
+                activeWeaponBayIds.has(member.moduleId),
         )
         .map((member) => member.id);
+    const cockpitPilotId = getPilotInCockpit(crew, ship.modules)?.id;
     const options = [
         {
             branch: "A" as const,
@@ -100,6 +104,7 @@ export function CrewPerkChoiceContent({
                         pending.tier,
                         branch,
                         activeGunnerIds,
+                        cockpitPilotId,
                     );
                     return (
                         <div

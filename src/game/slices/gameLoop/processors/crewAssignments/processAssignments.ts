@@ -72,11 +72,8 @@ export const processCrewAssignments = (
             (m) => m.id === crewMember.moduleId,
         );
 
-        // Проверка на сбой ИИ для синтетиков
-        if (
-            crewRace.id === "synthetic" &&
-            !checkAiGlitch(crewMember, crewRace, get(), get)
-        ) {
+        // Проверка на сбой ИИ для синтетиков: сбой = ход пропущен
+        if (checkAiGlitch(crewMember, crewRace, get(), get)) {
             return;
         }
 
@@ -177,8 +174,9 @@ export const processCrewAssignments = (
 };
 
 /**
- * Проверяет шанс сбоя ИИ для синтетиков
- * @returns true если сбой произошёл (действие отменено)
+ * Проверяет шанс сбоя ИИ. Гейт — сам расовый трейт `glitchChance`, а не
+ * список рас: новая синтетическая раса без трейта просто не сбоит.
+ * @returns true если сбой произошёл (ход члена экипажа отменён)
  */
 const checkAiGlitch = (
     crewMember: CrewMember,
@@ -189,6 +187,9 @@ const checkAiGlitch = (
     const glitchTrait = crewRace.specialTraits.find(
         (t) => t.effects.glitchChance,
     );
+    // Нет трейта сбоя — сбоя не бывает. Раньше здесь возвращалось значение,
+    // которое вызывающий код трактовал как "ход пропущен", и синтетическая
+    // раса без этого трейта не работала бы вообще никогда
     if (!glitchTrait?.effects.glitchChance) return false;
 
     let glitchChance = Number(glitchTrait.effects.glitchChance);
@@ -206,10 +207,10 @@ const checkAiGlitch = (
         get().addLog( i18nStore.t("game_logs.processAssignments_4", { crewMember_name: getCrewDisplayName(crewMember) }),
             "warning",
         );
-        return false;
+        return true;
     }
 
-    return true;
+    return false;
 };
 
 /**

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useGameStore } from "@/game/store";
 import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
 import { RACES } from "@/game/constants/races";
+import { getRetrainedAugmentation } from "@/game/constants/augmentations";
 import { canUsePlanetSpecialization } from "@/game/reputation/planetSpecializationAccess";
 import { Button } from "@/components/ui/button";
 import { SectionPanel } from "./SectionPanel";
@@ -98,6 +99,19 @@ export function PlanetSpecializationPanel({
     const needsCrewSelection =
         spec.id === "human_academy" && selectedCrewId === null;
     const needsProfessionSelection = isRetraining && selectedProfession === null;
+
+    // Профильный имплант перенастраивается под новую профессию — игрок должен
+    // видеть, во что он превратится, ДО оплаты переучивания
+    const retrainedAugmentation =
+        isRetraining && selectedCrew?.augmentation && selectedProfession
+            ? getRetrainedAugmentation(
+                  selectedCrew.augmentation,
+                  selectedProfession,
+              )
+            : null;
+    const augmentationChanges =
+        retrainedAugmentation !== null &&
+        retrainedAugmentation !== selectedCrew?.augmentation;
 
     const isMaxLevelReached = !isRetraining && spec.requirements?.maxLevel
         ? (selectedCrew?.level || 1) >= spec.requirements.maxLevel
@@ -357,6 +371,22 @@ export function PlanetSpecializationPanel({
                                     </Button>
                                 ))}
                             </div>
+                            {augmentationChanges && (
+                                <div className="border-l-2 border-[#ffb000] pl-2 text-[10px] leading-relaxed text-[#ffb000]">
+                                    ⚠{" "}
+                                    {t(
+                                        "planet_specializations.human_academy.retraining_augmentation",
+                                        {
+                                            from: t(
+                                                `augmentations.${selectedCrew.augmentation}.name`,
+                                            ),
+                                            to: t(
+                                                `augmentations.${retrainedAugmentation}.name`,
+                                            ),
+                                        },
+                                    )}
+                                </div>
+                            )}
                         </>
                     )}
                     {isRetraining && academyRetrainingUsed && (

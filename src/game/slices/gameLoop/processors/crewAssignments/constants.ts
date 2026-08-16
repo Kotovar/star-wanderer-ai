@@ -40,7 +40,9 @@ export function getTaskBonusMultiplier(crewMember: CrewMember): number {
         if (trait.effect?.taskPenalty) taskPenalty += trait.effect.taskPenalty;
         if (trait.effect?.doubleTaskEffect) hasDoubleEffect = true;
     });
-    if (hasDoubleEffect) taskBonus = Math.max(taskBonus, 1);
+    // "Мастер" удваивает задание — складывается с остальными бонусами, а не
+    // затирает их: раньше Мастер + Опытный давали ×2.0 вместо ×2.15
+    if (hasDoubleEffect) taskBonus += 1;
     taskBonus += getAugmentationBonus(crewMember, "actionSpeedBonus");
     taskBonus += getHappinessEfficiencyModifier(crewMember);
     // Ветки "Механик-виртуоз" (инженер) и "Полевой хирург" (медик)
