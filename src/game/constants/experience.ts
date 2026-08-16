@@ -17,6 +17,9 @@ export const CONTRACT_REWARDS = {
     expedition_survey: { baseExp: 25 },
     crisis_response: { baseExp: 28 },
     fabrication: { baseExp: 20 },
+    pirate_smuggling: { baseExp: 15 },
+    pirate_bounty: { baseExp: 20 },
+    pirate_heist: { baseExp: 20 },
 } as const;
 
 // ============================================================================

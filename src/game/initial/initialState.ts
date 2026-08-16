@@ -149,6 +149,7 @@ const baseState: GameState = {
   turn: INITIAL_TURN,
   lastProcessedTurn: INITIAL_TURN,
   credits: INITIAL_CREDITS,
+  wantedHeat: 0,
   creditsEarnedThisRun: 0,
   probes: 1,
   currentSector: sectors[0],

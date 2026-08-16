@@ -34,6 +34,7 @@ import {
     shouldSkipSectorEnsure,
 } from "./sectorRules";
 import type { ContractGenerationContext } from "../contracts/frontierContracts";
+import { populatePirateContracts } from "@/game/slices/pirate/contracts";
 
 // ============================================================================
 // Основная функция генерации
@@ -221,6 +222,7 @@ export const generateGalaxy = (
     sectors.forEach((sector) => assignGridPositions(sector.locations, true));
 
     // Постобработка
+    populatePirateContracts(sectors);
     populateContracts(sectors, profile, context);
     populateShipQuests(sectors);
     return sectors;

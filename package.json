@@ -25,6 +25,7 @@
     "check:asteroid-belt": "node --no-warnings scripts/check-asteroid-belt.mjs",
     "check:response-contracts": "node --no-warnings scripts/check-response-contracts.mjs",
     "check:contract-labels": "node --no-warnings scripts/check-contract-labels.mjs",
+    "check:pirate-gameplay": "node --no-warnings scripts/check-pirate-gameplay.mjs",
     "check:black-hole-sectors": "node --no-warnings scripts/check-black-hole-sectors.mjs",
     "check:run-profile-arcs": "node --no-warnings scripts/check-run-profile-arcs.mjs",
     "check:reputation": "node --no-warnings --experimental-strip-types scripts/check-reputation-ripple.mjs",

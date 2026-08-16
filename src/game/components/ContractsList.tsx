@@ -221,6 +221,24 @@ export function ContractsList() {
                 );
                 return { current: crafted ? 1 : 0, total: 1 };
             }
+            case "pirate_smuggling": {
+                const required = contract.quantity ?? 1;
+                const carried = get().ship.tradeGoods.find(
+                    (good) => good.item === "contraband",
+                )?.quantity ?? 0;
+                return {
+                    current: contract.pirateObjectiveComplete
+                        ? required
+                        : Math.min(carried, required),
+                    total: required,
+                };
+            }
+            case "pirate_bounty":
+            case "pirate_heist":
+                return {
+                    current: contract.pirateObjectiveComplete ? 1 : 0,
+                    total: 1,
+                };
             case "gas_dive":
                 return {
                     current: contract.collectedMembranes ?? 0,
@@ -254,6 +272,13 @@ export function ContractsList() {
     };
 
     const isContractReady = (contract: Contract): boolean => {
+        if (
+            contract.type === "pirate_smuggling" ||
+            contract.type === "pirate_bounty" ||
+            contract.type === "pirate_heist"
+        ) {
+            return Boolean(contract.pirateObjectiveComplete);
+        }
         if (contract.type === "expedition_survey" && contract.expeditionDone) {
             return true;
         }
@@ -341,9 +366,52 @@ export function ContractsList() {
                     ),
                 })}`;
             case "pirate_smuggling":
+                return contract.pirateObjectiveComplete
+                    ? t("pirate.objective_return", {
+                          issuer: getLocationName(
+                              contract.sourcePlanetName ?? t("contracts.unknown"),
+                              t,
+                          ),
+                      })
+                    : t("pirate.status_smuggling", {
+                          quantity: contract.quantity ?? 0,
+                          target: getLocationName(
+                              contract.targetLocationName ?? t("contracts.unknown"),
+                              t,
+                          ),
+                      });
             case "pirate_bounty":
+                return contract.pirateObjectiveComplete
+                    ? t("pirate.objective_return", {
+                          issuer: getLocationName(
+                              contract.sourcePlanetName ?? t("contracts.unknown"),
+                              t,
+                          ),
+                      })
+                    : t("pirate.status_bounty", {
+                          target: getLocationName(
+                              contract.targetLocationName ?? t("contracts.unknown"),
+                              t,
+                          ),
+                          sector: getLocationName(
+                              contract.targetSectorName ?? t("contracts.unknown"),
+                              t,
+                          ),
+                      });
             case "pirate_heist":
-                return formatContractDescription(contract, t);
+                return contract.pirateObjectiveComplete
+                    ? t("pirate.objective_return", {
+                          issuer: getLocationName(
+                              contract.sourcePlanetName ?? t("contracts.unknown"),
+                              t,
+                          ),
+                      })
+                    : t("pirate.status_heist", {
+                          target: getLocationName(
+                              contract.targetLocationName ?? t("contracts.unknown"),
+                              t,
+                          ),
+                      });
             default:
                 return t("contracts.default");
         }
@@ -422,6 +490,12 @@ export function ContractsList() {
                 return t("contracts.name_fabrication", {
                     weapon: getWeaponTypeName(contract.requiredWeaponType, t),
                 });
+            case "pirate_smuggling":
+                return t("pirate.job_smuggling");
+            case "pirate_bounty":
+                return t("pirate.job_bounty");
+            case "pirate_heist":
+                return t("pirate.job_heist");
             default:
                 return contract.desc;
         }
@@ -978,6 +1052,49 @@ export function ContractsList() {
                     ],
                 };
             }
+            case "pirate_smuggling":
+            case "pirate_bounty":
+            case "pirate_heist": {
+                const pirateProgress = getProgress(contract);
+                const title =
+                    contract.type === "pirate_smuggling"
+                        ? t("pirate.job_smuggling")
+                        : contract.type === "pirate_bounty"
+                          ? t("pirate.job_bounty")
+                          : t("pirate.job_heist");
+                return {
+                    type: title,
+                    tasks: [
+                        {
+                            label: t("contracts.task_what"),
+                            value: getStatusText(contract),
+                        },
+                        {
+                            label: t("contracts.task_target"),
+                            value: `${getLocationName(
+                                contract.targetLocationName ?? t("contracts.unknown"),
+                                t,
+                            )} (${getLocationName(
+                                contract.targetSectorName ?? t("contracts.unknown"),
+                                t,
+                            )})`,
+                        },
+                        {
+                            label: t("contracts.task_progress"),
+                            value: `${pirateProgress?.current ?? 0} / ${pirateProgress?.total ?? 1}`,
+                        },
+                        {
+                            label: t("contracts.task_where"),
+                            value: t("pirate.objective_return", {
+                                issuer: getLocationName(
+                                    contract.sourcePlanetName ?? t("contracts.unknown"),
+                                    t,
+                                ),
+                            }),
+                        },
+                    ],
+                };
+            }
             case "diplomacy":
                 return {
                     type: t("contracts.type_diplomacy"),
@@ -1137,6 +1254,9 @@ export function ContractsList() {
                         cleanse_curse: t("contracts.type_cleanse_curse"),
                         crisis_response: t("contracts.type_crisis_response"),
                         fabrication: t("contracts.type_fabrication"),
+                        pirate_smuggling: t("pirate.job_smuggling"),
+                        pirate_bounty: t("pirate.job_bounty"),
+                        pirate_heist: t("pirate.job_heist"),
                     };
                     return (
                         <div

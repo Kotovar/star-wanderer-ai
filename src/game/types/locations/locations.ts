@@ -175,7 +175,8 @@ export interface Location {
     // Friendly ship pregenerated quest
     pregeneratedQuest?: Contract;
     // Pirate station fields
-    pirateHeat?: number; // Wanted heat from illegal transactions (0-100)
+    /** Устаревшее локальное поле, читается только миграцией v28. */
+    pirateHeat?: number;
     pirateContracts?: Contract[]; // Available pirate contracts
     pirateLastRefreshTurn?: number; // Turn when contracts were last refreshed
 

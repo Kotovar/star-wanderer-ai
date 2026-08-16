@@ -81,7 +81,8 @@ export type GameMode =
   | "gas_giant"
   | "wreck_field"
   | "space_monster"
-  | "hostile_approach_warning";
+  | "hostile_approach_warning"
+  | "wanted_checkpoint";
 
 export interface RunProfileArcTarget {
   profileId: RunProfileId;
@@ -128,6 +129,8 @@ export interface GameState {
    */
   lastProcessedTurn?: number;
   credits: number;
+  /** Общая разыскиваемость за пиратские сделки и задания (0–100). */
+  wantedHeat: number;
   /** Валовые поступления кредитов в текущем забеге, без стартового баланса */
   creditsEarnedThisRun: number;
   probes: number;
@@ -497,8 +500,12 @@ export interface GameReputation {
 
 export interface GamePirate {
   acceptPirateContract: (contractId: string) => void;
+  performPirateContractObjective: (contractId: string) => void;
   completePirateContract: (contractId: string) => void;
   reducePirateHeat: (amount: number, cost: number) => void;
+  resolveWantedCheckpoint: (
+    choice: "bribe" | "dump" | "fight" | "leave",
+  ) => void;
   refreshPirateStationContracts: () => void;
 }
 

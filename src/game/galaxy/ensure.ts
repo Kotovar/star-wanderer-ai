@@ -11,7 +11,6 @@ import { STATION_TYPES } from "./consts";
 import { getRandomRace, getDominantRaceForPlanet } from "@/game/races/utils";
 import { getLocationNameKey } from "./generate";
 import { shouldSkipSectorEnsure } from "./sectorRules";
-import { generatePirateContracts } from "@/game/slices/pirate/contracts";
 
 /**
  * Обеспечивает минимальное количество аномалий в секторе
@@ -162,11 +161,7 @@ export const ensureStation = (
     };
 
     if (stationType === "pirate") {
-        newStation.pirateHeat = 0;
-        newStation.pirateContracts = generatePirateContracts(
-            newStation,
-            sector.tier,
-        );
+        newStation.pirateContracts = [];
         newStation.pirateLastRefreshTurn = 0;
     }
 

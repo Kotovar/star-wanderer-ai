@@ -8,6 +8,7 @@ import type { GameStore, Location, SetState } from "@/game/types";
 import { getRaceReputationLevel } from "@/game/reputation/utils";
 import { patchLocation } from "@/game/utils/patchLocation";
 import { getNavigatorLocationKey } from "@/game/types/navigator";
+import { isWantedCheckpointRequired } from "@/game/slices/pirate/wanted";
 
 // ============================================================================
 // Константы
@@ -174,6 +175,13 @@ export const selectLocation = (
                 getRaceReputationLevel(state.raceReputation, stationRace) === "hostile"
             ) {
                 set({ gameMode: "hostile_approach_warning" });
+                break;
+            }
+            if (
+                !loc.stationConfig?.isPirate &&
+                isWantedCheckpointRequired(get().wantedHeat ?? 0)
+            ) {
+                set({ gameMode: "wanted_checkpoint" });
                 break;
             }
             if (

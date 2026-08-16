@@ -47,6 +47,9 @@ import {
     getSpaceMonsterHuntReward,
     SPACE_MONSTERS,
 } from "@/game/constants/spaceMonsters";
+import {
+    WANTED_HEAT_AFTER_PURSUIT,
+} from "@/game/slices/pirate/wanted";
 
 /**
  * Handles victory after defeating boss
@@ -128,6 +131,7 @@ export function handleVictory(
     if (
         !updatedCombat.enemy.isBoss &&
         !state.assaultingOutpostId &&
+        !updatedCombat.wantedPursuit &&
         get().currentLocation
     ) {
         set((s) => {
@@ -183,6 +187,7 @@ export function handleVictory(
         get,
         enemyTier,
         updatedCombat.enemy.isBoss ?? false,
+        updatedCombat.wantedPursuit ?? false,
     );
 
     const combatResources = grantVictoryResearchResources(
@@ -237,7 +242,11 @@ export function handleVictory(
     // Mark location as completed. Штурм постройки — снова исключение: локация
     // закрывается навсегда (selectLocation откажет в повторном визите), а на
     // свой газосборник надо возвращаться за бункером
-    if (get().currentLocation && !state.assaultingOutpostId) {
+    if (
+        get().currentLocation &&
+        !state.assaultingOutpostId &&
+        !updatedCombat.wantedPursuit
+    ) {
         set((s) => ({
             completedLocations: [
                 ...s.completedLocations,
@@ -429,6 +438,13 @@ function applyVictoryAftermath(
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
 ) {
+    if (updatedCombat.wantedPursuit) {
+        set((s) => {
+            s.wantedHeat = WANTED_HEAT_AFTER_PURSUIT;
+        });
+        get().addLog(i18nStore.t("pirate.hunters_defeated"), "info");
+    }
+
     // Handle self_damage negative effect (e.g., Overload Matrix)
     state.artifacts.forEach((artifact) => {
         if (!artifact.cursed || !artifact.effect.active) return;

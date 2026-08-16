@@ -43,6 +43,7 @@ export interface Contract {
     targetLocationType?: ContactSourceType; // Type of target location
     sourcePlanetId?: string;
     sourcePlanetName?: string;
+    sourceSector?: number;
     sourceSectorName?: string;
     sourceName?: string; // Name of the source (planet or ship)
     sourceType?: Exclude<ContactSourceType, "station">; // Type of source
@@ -71,6 +72,8 @@ export interface Contract {
     requiresAnomalies?: number;
     visitedAnomalies?: number;
     acceptedAt?: number;
+    /** Цель пиратского задания выполнена; награда выдаётся только у заказчика. */
+    pirateObjectiveComplete?: boolean;
     // Race-specific contracts
     requiredRace?: RaceId;
     isRaceQuest?: boolean;

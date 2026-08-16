@@ -1,5 +1,4 @@
-import type { Contract, GalaxyTierAll, Location } from "@/game/types";
-import type { EnemyShip } from "@/game/types/enemy";
+import type { Contract, GalaxyTierAll, Location, Sector } from "@/game/types";
 
 const PIRATE_CONTRACT_TEMPLATES = [
     {
@@ -22,12 +21,42 @@ const PIRATE_CONTRACT_TEMPLATES = [
     },
 ];
 
-const BOUNTY_TARGETS: EnemyShip[] = [
-    "pirate",
-    "raider",
-    "mercenary",
-    "marauder",
-];
+const PIRATE_CONTRACT_TIME_LIMIT = (tier: GalaxyTierAll): number => 12 + tier * 2;
+
+const pick = <T>(items: T[]): T =>
+    items[Math.floor(Math.random() * items.length)];
+
+const withTargetSector = (
+    contract: Contract,
+    sourceSector: Sector | undefined,
+    sectors: Sector[],
+): Contract => {
+    const targetSector = sectors.find((sector) =>
+        sector.locations.some((location) => location.id === contract.targetLocationId),
+    );
+    return {
+        ...contract,
+        sourceSector: sourceSector?.id,
+        sourceSectorName: sourceSector?.name,
+        targetSector: targetSector?.id,
+        targetSectorName: targetSector?.name,
+    };
+};
+
+const generatePirateStationContracts = (
+    station: Location,
+    tier: GalaxyTierAll,
+    sectors: Sector[],
+): Contract[] => {
+    const sourceSector = sectors.find((sector) =>
+        sector.locations.some((location) => location.id === station.id),
+    );
+    return generatePirateContracts(
+        station,
+        tier,
+        sectors.flatMap((sector) => sector.locations),
+    ).map((contract) => withTargetSector(contract, sourceSector, sectors));
+};
 
 /**
  * Генерирует случайные пиратские контракты для станции.
@@ -35,15 +64,30 @@ const BOUNTY_TARGETS: EnemyShip[] = [
 export function generatePirateContracts(
     station: Location,
     tier: GalaxyTierAll,
+    locations: Location[] = [],
 ): Contract[] {
+    const stationTargets = locations.filter(
+        (location) =>
+            location.type === "station" &&
+            location.id !== station.id &&
+            !location.stationConfig?.isPirate,
+    );
+    const bountyTargets = locations.filter(
+        (location) => location.type === "enemy" && !location.defeated,
+    );
+    const templates = PIRATE_CONTRACT_TEMPLATES.filter(
+        (template) =>
+            template.type === "pirate_bounty"
+                ? bountyTargets.length > 0
+                : stationTargets.length > 0,
+    );
+    if (templates.length === 0) return [];
+
     const contracts: Contract[] = [];
-    const count = 2 + Math.floor(Math.random() * 2); // 2–3 контракта
+    const count = Math.min(3, 2 + Math.floor(Math.random() * 2));
 
     for (let i = 0; i < count; i++) {
-        const template =
-            PIRATE_CONTRACT_TEMPLATES[
-                Math.floor(Math.random() * PIRATE_CONTRACT_TEMPLATES.length)
-            ];
+        const template = pick(templates);
         const reward =
             template.baseReward +
             template.rewardPerTier * tier +
@@ -57,29 +101,52 @@ export function generatePirateContracts(
             sourcePlanetId: station.id,
             sourcePlanetName: station.name,
             sourceDominantRace: station.dominantRace,
+            timeLimit: PIRATE_CONTRACT_TIME_LIMIT(tier),
         };
 
         if (template.type === "pirate_bounty") {
-            contract.enemyType =
-                BOUNTY_TARGETS[Math.floor(Math.random() * BOUNTY_TARGETS.length)];
-            contract.targetThreat = Math.min(3, tier);
+            const target = pick(bountyTargets);
+            contract.enemyType = target.enemyType;
+            contract.targetThreat = target.threat ?? tier;
+            contract.targetLocationId = target.id;
+            contract.targetLocationName = target.name;
         }
 
         if (template.type === "pirate_heist") {
-            contract.targetStationId = `station-target-${i}`;
-            contract.targetStationName = `Станция ${String.fromCharCode(65 + i)}`;
+            const target = pick(stationTargets);
+            contract.targetStationId = target.stationId ?? target.id;
+            contract.targetStationName = target.name;
+            contract.targetLocationId = target.id;
+            contract.targetLocationName = target.name;
         }
 
         if (template.type === "pirate_smuggling") {
+            const target = pick(stationTargets);
             contract.cargo = "contraband";
             contract.quantity = 10 + tier * 5;
-            contract.timeLimit = 15 + tier * 5;
+            contract.targetLocationId = target.id;
+            contract.targetLocationName = target.name;
         }
 
         contracts.push(contract);
     }
 
     return contracts;
+}
+
+/** Заполняет доски после полной сборки галактики, когда реальные цели уже существуют. */
+export function populatePirateContracts(sectors: Sector[]): void {
+    sectors.forEach((sector) => {
+        sector.locations.forEach((location) => {
+            if (!location.stationConfig?.isPirate) return;
+            location.pirateContracts = generatePirateStationContracts(
+                location,
+                sector.tier,
+                sectors,
+            );
+            location.pirateLastRefreshTurn = 0;
+        });
+    });
 }
 
 /**
@@ -89,12 +156,13 @@ export function refreshPirateContracts(
     station: Location,
     tier: GalaxyTierAll,
     currentTurn: number,
+    sectors: Sector[],
     refreshInterval = 10,
 ): boolean {
     const last = station.pirateLastRefreshTurn ?? 0;
     if (currentTurn - last < refreshInterval) return false;
 
-    station.pirateContracts = generatePirateContracts(station, tier);
+    station.pirateContracts = generatePirateStationContracts(station, tier, sectors);
     station.pirateLastRefreshTurn = currentTurn;
     return true;
 }

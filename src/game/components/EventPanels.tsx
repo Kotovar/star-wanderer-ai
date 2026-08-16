@@ -34,6 +34,7 @@ import { GasGiantPanel } from "./GasGiantPanel";
 import { WreckFieldPanel } from "./WreckFieldPanel";
 import { SpaceMonsterPanel } from "./SpaceMonsterPanel";
 import { HostileApproachWarningPanel } from "./HostileApproachWarningPanel";
+import { WantedCheckpointPanel } from "./WantedCheckpointPanel";
 import { CrisisPanel } from "./CrisisPanel";
 import { EnemyCodexPanel } from "./EnemyCodexPanel";
 import { NavigatorPanel } from "./NavigatorPanel";
@@ -664,6 +665,9 @@ export function EventDisplay() {
 
     case "hostile_approach_warning":
       return <HostileApproachWarningPanel />;
+
+    case "wanted_checkpoint":
+      return <WantedCheckpointPanel />;
 
     case "artifacts":
       return <ArtifactPanel />;

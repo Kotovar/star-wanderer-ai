@@ -12,7 +12,10 @@ export function completeBattleContracts(
     get: () => GameStore,
     enemyThreat: number,
     isBoss: boolean,
+    isWantedPursuit = false,
 ) {
+    if (isWantedPursuit) return;
+
     // Standard combat contracts (defeat any enemy in target sector)
     const completedCombat = isBoss
         ? []
@@ -128,5 +131,27 @@ export function completeBattleContracts(
             reputationChanges: getReputationChanges(reputationBefore, get().raceReputation),
             experience,
         });
+    });
+
+    const completedPirateBounties = isBoss
+        ? []
+        : get().activeContracts.filter(
+              (contract) =>
+                  contract.type === "pirate_bounty" &&
+                  !contract.pirateObjectiveComplete &&
+                  contract.targetLocationId === get().currentLocation?.id,
+          );
+    if (completedPirateBounties.length === 0) return;
+
+    const completedIds = new Set(completedPirateBounties.map((contract) => contract.id));
+    set((s) => ({
+        activeContracts: s.activeContracts.map((contract) =>
+            completedIds.has(contract.id)
+                ? { ...contract, pirateObjectiveComplete: true }
+                : contract,
+        ),
+    }));
+    completedPirateBounties.forEach(() => {
+        get().addLog(i18nStore.t("pirate.objective_bounty_done"), "warning");
     });
 }

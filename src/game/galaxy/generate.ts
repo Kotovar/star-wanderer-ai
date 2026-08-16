@@ -25,7 +25,6 @@ import {
     SPACE_MONSTERS,
 } from "@/game/constants/spaceMonsters";
 
-import { generatePirateContracts } from "@/game/slices/pirate/contracts";
 
 const ENEMY_TYPES: EnemyShip[] = ["pirate", "raider", "mercenary", "marauder"];
 
@@ -207,8 +206,7 @@ export const generateStation = (
     };
 
     if (stationType === "pirate") {
-        base.pirateHeat = 0;
-        base.pirateContracts = generatePirateContracts(base, tier);
+        base.pirateContracts = [];
         base.pirateLastRefreshTurn = 0;
     }
 

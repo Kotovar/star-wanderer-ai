@@ -3,6 +3,12 @@ import type { GameStore, SetState } from "@/game/types";
 import { toast } from "sonner";
 import { isContractExpired } from "@/game/contracts/contractDeadline";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
+import { clampWantedHeat } from "@/game/slices/pirate/wanted";
+
+const isPirateContract = (type: string): boolean =>
+    type === "pirate_smuggling" ||
+    type === "pirate_bounty" ||
+    type === "pirate_heist";
 
 /**
  * Проверяет просроченные контракты и применяет штраф к репутации рас.
@@ -21,38 +27,56 @@ export const checkContractExpiry = (
 
     if (expired.length === 0) return;
 
-    set((s) => ({
-        activeContracts: s.activeContracts.filter(
-            (ac) => !expired.some((e) => e.id === ac.id),
-        ),
-        galaxy: {
-            ...s.galaxy,
-            sectors: s.galaxy.sectors.map((sector) => ({
-                ...sector,
-                locations: sector.locations.map((location) =>
-                    location.contracts?.some((offer) =>
-                        expired.some((contract) => contract.id === offer.id),
-                    )
-                        ? {
-                              ...location,
-                              contracts: location.contracts.filter(
-                                  (offer) =>
-                                      !expired.some(
-                                          (contract) => contract.id === offer.id,
-                                      ),
-                              ),
-                          }
-                        : location,
-                ),
-            })),
-        },
-        ship: {
-            ...s.ship,
-            cargo: s.ship.cargo.filter(
-                (cargo) => !expired.some((contract) => contract.id === cargo.contractId),
+    const expiredIds = new Set(expired.map((contract) => contract.id));
+    const expiredPirateCount = expired.filter((contract) =>
+        isPirateContract(contract.type),
+    ).length;
+    const removeExpiredOffers = <T extends { id: string }>(offers?: T[]): T[] | undefined =>
+        offers?.some((offer) => expiredIds.has(offer.id))
+            ? offers.filter((offer) => !expiredIds.has(offer.id))
+            : offers;
+
+    set((s) => {
+        const removeFromLocation = (location: (typeof s.galaxy.sectors)[number]["locations"][number]) => {
+            const contracts = removeExpiredOffers(location.contracts);
+            const pirateContracts = removeExpiredOffers(location.pirateContracts);
+            return contracts === location.contracts &&
+                pirateContracts === location.pirateContracts
+                ? location
+                : { ...location, contracts, pirateContracts };
+        };
+        const sectors = s.galaxy.sectors.map((sector) => ({
+            ...sector,
+            locations: sector.locations.map(removeFromLocation),
+        }));
+        const currentSector = s.currentSector
+            ? {
+                  ...s.currentSector,
+                  locations: s.currentSector.locations.map(removeFromLocation),
+              }
+            : null;
+        const currentLocation = s.currentLocation
+            ? removeFromLocation(s.currentLocation)
+            : null;
+
+        return {
+            activeContracts: s.activeContracts.filter(
+                (contract) => !expiredIds.has(contract.id),
             ),
-        },
-    }));
+            wantedHeat: clampWantedHeat(
+                (s.wantedHeat ?? 0) + expiredPirateCount * 10,
+            ),
+            galaxy: { ...s.galaxy, sectors },
+            currentSector,
+            currentLocation,
+            ship: {
+                ...s.ship,
+                cargo: s.ship.cargo.filter(
+                    (cargo) => !expiredIds.has(cargo.contractId ?? ""),
+                ),
+            },
+        };
+    });
 
     expired.forEach((c) => {
         const description = formatContractDescription(
@@ -65,6 +89,10 @@ export const checkContractExpiry = (
         toast.warning(
             i18nStore.t("contracts.expired_toast", { contract: description }),
         );
+        if (isPirateContract(c.type)) {
+            get().addLog(i18nStore.t("pirate.contract_expired_heat"), "warning");
+            return;
+        }
         const issuerRace = c.requiredRace ?? c.sourceDominantRace;
         if (issuerRace) {
             get().changeReputation(issuerRace, c.isRaceQuest ? -10 : -2);

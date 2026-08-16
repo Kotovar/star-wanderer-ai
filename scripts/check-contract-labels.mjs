@@ -24,6 +24,9 @@ const { PlanetPanel } = await import(
 const { generatePirateContracts } = await import(
   "../src/game/slices/pirate/contracts.ts"
 );
+const { formatContractDescription } = await import(
+  "../src/game/contracts/formatContractDescription.ts"
+);
 const { initializeStationData } = await import(
   "../src/game/stations/initialize.ts"
 );
@@ -39,6 +42,8 @@ const PIRATE_SMUGGLING = {
   reward: 400,
   cargo: "contraband",
   quantity: 10,
+  targetLocationName: "location_names.station_01",
+  targetSectorName: "sector_names.sector_11_1",
 };
 
 assert.equal(i18nStore.t("pirate.black_market"), "ЧЁРНЫЙ РЫНОК");
@@ -63,7 +68,9 @@ const renderPirateTab = (
     probes: 0,
     heat: 0,
     contracts: [PIRATE_SMUGGLING],
-    activeContractIds: [],
+    activeContracts: [],
+    completedContractIds: [],
+    currentTurn: 1,
     buyTradeGood: () => {},
     sellTradeGood: () => {},
     acceptPirateContract: () => {},
@@ -73,7 +80,7 @@ const renderPirateTab = (
 );
 const pirateMarkup = renderPirateTab("contracts");
 assert.ok(
-  pirateMarkup.includes("Перевезти контрабанду на другую станцию"),
+  pirateMarkup.includes("Доставить 10т контрабанды на Меридианская кузница"),
   "пиратский контракт обязан отображаться на выбранном языке",
 );
 assert.doesNotMatch(
@@ -120,8 +127,8 @@ await new Promise((done) => setTimeout(done, 0));
 assert.equal(i18nStore.t("pirate.black_market"), "BLACK MARKET");
 assert.equal(i18nStore.t("pirate.contract_board"), "PIRATE CONTRACT BOARD");
 assert.equal(
-  i18nStore.t(PIRATE_SMUGGLING.desc),
-  "📦 Smuggle contraband to another station",
+  formatContractDescription(PIRATE_SMUGGLING, i18nStore.t.bind(i18nStore)),
+  "📦 Deliver 10t of contraband to Meridian Foundry (Helios-1)",
   "английское описание пиратского контракта обязано быть переведено",
 );
 i18nStore.changeLanguage("ru");
@@ -134,6 +141,22 @@ const generatedPirateContracts = generatePirateContracts(
     name: "Пиратская база",
   },
   2,
+  [
+    {
+      id: "trade-station",
+      stationId: "trade-station",
+      type: "station",
+      name: "Торговый узел",
+      stationConfig: { isPirate: false },
+    },
+    {
+      id: "enemy-patrol",
+      type: "enemy",
+      name: "Патруль",
+      enemyType: "raider",
+      threat: 2,
+    },
+  ],
 );
 assert.ok(
   generatedPirateContracts.every((contract) =>

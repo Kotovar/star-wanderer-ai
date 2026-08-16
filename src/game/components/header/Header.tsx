@@ -32,6 +32,7 @@ export function GameHeader() {
   } | null>(null);
   const turn = useGameStore((s) => s.turn);
   const credits = useGameStore((s) => s.credits);
+  const wantedHeat = useGameStore((s) => s.wantedHeat ?? 0);
   const activeCrisis = useGameStore((s) => s.activeCrisis);
   const currentSector = useGameStore((s) => s.currentSector);
   const traveling = useGameStore((s) => s.traveling);
@@ -222,6 +223,15 @@ export function GameHeader() {
               <span className="font-bold text-[#00ff41]">
                 {isNaN(credits) ? 0 : Math.floor(credits)}
               </span>
+            </div>
+            <div
+              className={`flex items-center gap-1 md:gap-2 ${
+                wantedHeat >= 50 ? "text-[#ff0040]" : "text-[#ffb000]"
+              }`}
+              title={t("pirate.heat_title")}
+            >
+              <span>☠</span>
+              <span className="font-bold">{wantedHeat}</span>
             </div>
           </div>
 

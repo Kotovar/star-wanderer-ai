@@ -24,6 +24,15 @@ const getContractTargetSectorIds = (contract: Contract): number[] => {
     if (contract.type === "expedition_survey" && contract.expeditionDone) {
         return [];
     }
+    if (
+        (contract.type === "pirate_smuggling" ||
+            contract.type === "pirate_bounty" ||
+            contract.type === "pirate_heist") &&
+        contract.pirateObjectiveComplete &&
+        typeof contract.sourceSector === "number"
+    ) {
+        return [contract.sourceSector];
+    }
 
     const targetIds = new Set<number>();
     if (typeof contract.targetSector === "number") {
@@ -47,7 +56,12 @@ const getContractTargetLabel = (
     translate: (key: string) => string,
 ): string =>
     getLocationName(
-        contract.targetLocationName ??
+        (contract.pirateObjectiveComplete &&
+        (contract.type === "pirate_smuggling" ||
+            contract.type === "pirate_bounty" ||
+            contract.type === "pirate_heist")
+            ? contract.sourcePlanetName
+            : contract.targetLocationName) ??
             contract.targetPlanetName ??
             contract.targetSectorName ??
             contract.sectorName ??

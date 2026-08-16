@@ -21,6 +21,8 @@ type ContractDescription = Pick<
   | "stormName"
   | "targetPlanetName"
   | "targetPlanetType"
+  | "targetLocationName"
+  | "sourcePlanetName"
   | "targetSectorNames"
   | "targetSectorName"
   | "targetSectors"
@@ -72,7 +74,11 @@ export const formatContractDescription = (
     type: contract.targetPlanetType ?? "",
     sectors: getSectorNames(contract.targetSectorNames ?? "", t),
     visited: contract.visitedSectors?.length ?? 0,
-    target: contract.targetSectors?.length ?? 0,
+    target:
+      contract.targetLocationName
+        ? getLocationName(contract.targetLocationName, t)
+        : contract.targetSectors?.length ?? 0,
+    issuer: getLocationName(contract.sourcePlanetName ?? "", t),
     stormName: contract.stormName ?? "",
     sectorName: getLocationName(contract.sectorName ?? "", t),
     crisis: contract.crisisName ? t(contract.crisisName) : "",

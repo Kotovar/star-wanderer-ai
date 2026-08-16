@@ -37,6 +37,7 @@ import { ModuleUpgradeModal } from "./station/ModuleUpgradeModal";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getLocationName } from "@/lib/translationHelpers";
+import { formatContractDescription } from "@/game/contracts/formatContractDescription";
 import { getSectorRule } from "@/game/galaxy/sectorRules";
 import {
     canHireRace,
@@ -250,6 +251,7 @@ export function StationPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
     const currentSector = useGameStore((s) => s.currentSector);
     const credits = useGameStore((s) => s.credits);
+    const wantedHeat = useGameStore((s) => s.wantedHeat ?? 0);
     const ship = useGameStore((s) => s.ship);
     const stationInventory = useGameStore((s) => s.stationInventory);
     const stationPrices = useGameStore((s) => s.stationPrices);
@@ -314,13 +316,21 @@ export function StationPanel() {
         (s) => s.diplomaticTranslatorRaceIds,
     );
     const activeContracts = useGameStore((s) => s.activeContracts);
+    const completedContractIds = useGameStore((s) => s.completedContractIds);
+    const turn = useGameStore((s) => s.turn);
     const completeDeliveryContract = useGameStore(
         (s) => s.completeDeliveryContract,
     );
     const hiredCrew = useGameStore((s) => s.hiredCrew);
     const acceptPirateContract = useGameStore((s) => s.acceptPirateContract);
+    const performPirateContractObjective = useGameStore(
+        (s) => s.performPirateContractObjective,
+    );
     const completePirateContract = useGameStore((s) => s.completePirateContract);
     const reducePirateHeat = useGameStore((s) => s.reducePirateHeat);
+    const refreshPirateStationContracts = useGameStore(
+        (s) => s.refreshPirateStationContracts,
+    );
     const [activeTab, setActiveTab] = useState(() =>
         currentLocation?.stationType === "pirate" ? "black-market" : "shop",
     );
@@ -366,6 +376,15 @@ export function StationPanel() {
         : activeTab === "black-market" || activeTab === "pirate-contracts"
           ? "shop"
           : activeTab;
+
+    useEffect(() => {
+        if (isPirateStation) refreshPirateStationContracts();
+    }, [
+        currentLocation?.id,
+        isPirateStation,
+        refreshPirateStationContracts,
+        turn,
+    ]);
 
     const stationItems = useMemo(
         () =>
@@ -492,6 +511,13 @@ export function StationPanel() {
             c.targetLocationId === currentLocation?.id &&
             ship.cargo.some((cargo) => cargo.contractId === c.id),
     );
+    const pirateTargetContracts = activeContracts.filter(
+        (contract) =>
+            (contract.type === "pirate_smuggling" ||
+                contract.type === "pirate_heist") &&
+            !contract.pirateObjectiveComplete &&
+            contract.targetLocationId === currentLocation?.id,
+    );
 
     // Get hired crew names for this station
     const availableCrew = useMemo(() => {
@@ -569,9 +595,11 @@ export function StationPanel() {
         ship,
         cargoCapacity: getCargoCapacity(),
         probes,
-        heat: currentLocation.pirateHeat ?? 0,
+        heat: wantedHeat,
         contracts: currentLocation.pirateContracts ?? [],
-        activeContractIds: activeContracts.map((contract) => contract.id),
+        activeContracts,
+        completedContractIds,
+        currentTurn: turn,
         buyTradeGood,
         sellTradeGood,
         acceptPirateContract,
@@ -623,6 +651,46 @@ export function StationPanel() {
                     onComplete={completeDeliveryContract}
                     t={t}
                 />
+            )}
+
+            {pirateTargetContracts.length > 0 && (
+                <section className="border border-[#ff0040] bg-[rgba(255,0,64,0.06)] p-3">
+                    <div className="font-bold text-sm text-[#ff6677]">
+                        ☠ {t("pirate.objective_title")}
+                    </div>
+                    <div className="mt-2 flex flex-col gap-2">
+                        {pirateTargetContracts.map((contract) => (
+                            <div
+                                key={contract.id}
+                                className="border border-[#ff004066] bg-[rgba(5,8,16,0.6)] p-2"
+                            >
+                                <div className="text-xs text-[#ffb000]">
+                                    {formatContractDescription(contract, t)}
+                                </div>
+                                <div className="mt-1 text-[11px] text-[#888]">
+                                    {t("pirate.objective_return", {
+                                        issuer: getLocationName(
+                                            contract.sourcePlanetName ?? "",
+                                            t,
+                                        ),
+                                    })}
+                                </div>
+                                <Button
+                                    onClick={() =>
+                                        performPirateContractObjective(contract.id)
+                                    }
+                                    className="mt-2 cursor-pointer border border-[#ff0040] bg-transparent px-2 py-1 text-xs text-[#ff6677] hover:bg-[#ff0040] hover:text-[#050810]"
+                                >
+                                    {contract.type === "pirate_smuggling"
+                                        ? t("pirate.objective_smuggling_action", {
+                                              quantity: contract.quantity ?? 0,
+                                          })
+                                        : t("pirate.objective_heist_action")}
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                </section>
             )}
 
             <Tabs

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
+import { getContractTurnsRemaining } from "@/game/contracts/contractDeadline";
 import {
     getPirateContrabandBuyPrice,
     getPirateContrabandSellPrice,
@@ -28,7 +29,9 @@ interface PirateTabProps {
     probes: number;
     heat: number;
     contracts: Contract[];
-    activeContractIds: string[];
+    activeContracts: Contract[];
+    completedContractIds: string[];
+    currentTurn: number;
     buyTradeGood: (goodId: Goods, quantity: number) => void;
     sellTradeGood: (goodId: Goods, quantity: number) => void;
     acceptPirateContract: (contractId: string) => void;
@@ -47,7 +50,9 @@ export function PirateTab({
     probes,
     heat,
     contracts,
-    activeContractIds,
+    activeContracts,
+    completedContractIds,
+    currentTurn,
     buyTradeGood,
     sellTradeGood,
     acceptPirateContract,
@@ -149,7 +154,15 @@ export function PirateTab({
                                 </div>
                             )}
                             {contracts.map((contract) => {
-                                const isActive = activeContractIds.includes(contract.id);
+                                const activeContract = activeContracts.find(
+                                    (active) => active.id === contract.id,
+                                );
+                                const isCompleted = completedContractIds.includes(
+                                    contract.id,
+                                );
+                                const turnsRemaining = activeContract
+                                    ? getContractTurnsRemaining(activeContract, currentTurn)
+                                    : null;
                                 return (
                                     <div
                                         key={contract.id}
@@ -162,13 +175,22 @@ export function PirateTab({
                                             <div className="text-[#ffb000] text-xs mt-1">
                                                 💰 {contract.reward}₢
                                             </div>
+                                            {turnsRemaining !== null && (
+                                                <div className="text-[11px] text-[#ffb000] mt-1">
+                                                    ⏳ {t("contracts.turns_left", { count: turnsRemaining })}
+                                                </div>
+                                            )}
                                             {contract.cargo && (
                                                 <div className="text-[11px] text-[#888]">
                                                     📦 {contract.quantity}т {t(`trade.goods.${contract.cargo}`)}
                                                 </div>
                                             )}
                                         </div>
-                                        {!isActive ? (
+                                        {isCompleted ? (
+                                            <div className="text-xs font-bold text-[#00ff41]">
+                                                {t("contracts.completed")}
+                                            </div>
+                                        ) : !activeContract ? (
                                             <Button
                                                 onClick={() =>
                                                     acceptPirateContract(contract.id)
@@ -177,7 +199,7 @@ export function PirateTab({
                                             >
                                                 {t("pirate.accept")}
                                             </Button>
-                                        ) : (
+                                        ) : activeContract.pirateObjectiveComplete ? (
                                             <Button
                                                 onClick={() =>
                                                     completePirateContract(contract.id)
@@ -186,6 +208,10 @@ export function PirateTab({
                                             >
                                                 {t("pirate.complete")}
                                             </Button>
+                                        ) : (
+                                            <div className="text-right text-[11px] text-[#ffb000]">
+                                                {t("contracts.in_progress")}
+                                            </div>
                                         )}
                                     </div>
                                 );

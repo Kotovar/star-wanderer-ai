@@ -45,6 +45,8 @@ export interface CombatState {
     defenderRace?: RaceId;
     // Set when player actively attacks a friendly ship (location will be removed on victory)
     combatTargetLocationId?: string;
+    /** Бой с охотниками за игроком после досмотра на легальной станции. */
+    wantedPursuit?: boolean;
     // Last hit tracking for UI animations
     lastEnemyHit?: {
         eventId?: number;

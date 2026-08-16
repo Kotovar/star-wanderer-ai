@@ -467,6 +467,58 @@ const migrations: Record<number, Migration> = {
         : null,
     };
   },
+  27: (raw) => {
+    const state = raw as Partial<GameState>;
+    const isLegacyPirateContract = (type: string): boolean =>
+      type === "pirate_smuggling" ||
+      type === "pirate_bounty" ||
+      type === "pirate_heist";
+    const clearLegacyPirateBoard = (location: Location): Location => {
+      if (!location.stationConfig?.isPirate) return location;
+      return {
+        ...location,
+        pirateContracts: [],
+        pirateLastRefreshTurn: (state.turn ?? 0) - 10,
+      };
+    };
+    const clearLegacyPirateBoards = (sector: Sector): Sector => ({
+      ...sector,
+      locations: sector.locations.map(clearLegacyPirateBoard),
+    });
+    const legacyHeat = [
+      state.wantedHeat,
+      state.currentLocation?.pirateHeat,
+      ...(state.currentSector?.locations ?? []).map(
+        (location) => location.pirateHeat,
+      ),
+      ...(state.galaxy?.sectors ?? []).flatMap((sector) =>
+        sector.locations.map((location) => location.pirateHeat),
+      ),
+    ].filter((heat): heat is number => typeof heat === "number");
+    const sectors = (state.galaxy?.sectors ?? []).map(clearLegacyPirateBoards);
+    const currentSector = state.currentSector
+      ? (sectors.find((sector) => sector.id === state.currentSector?.id) ??
+        clearLegacyPirateBoards(state.currentSector))
+      : null;
+    const currentLocation = state.currentLocation
+      ? (sectors
+          .flatMap((sector) => sector.locations)
+          .find((location) => location.id === state.currentLocation?.id) ??
+        clearLegacyPirateBoard(state.currentLocation))
+      : null;
+
+    return {
+      ...state,
+      stateVersion: 28,
+      wantedHeat: Math.min(100, Math.max(0, ...legacyHeat)),
+      activeContracts: state.activeContracts?.filter(
+        (contract) => !isLegacyPirateContract(contract.type),
+      ),
+      galaxy: state.galaxy ? { ...state.galaxy, sectors } : state.galaxy,
+      currentSector,
+      currentLocation,
+    };
+  },
 };
 
 /**

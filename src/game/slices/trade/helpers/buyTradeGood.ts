@@ -17,6 +17,7 @@ import {
     getPirateContrabandBuyPrice,
     REPUTATION_BUY_THRESHOLD,
 } from "../constants";
+import { clampWantedHeat } from "@/game/slices/pirate/wanted";
 
 const CONTRABAND_REP_PENALTY = 3;
 const CONTRABAND_HEAT_PER_BUY = 4;
@@ -200,7 +201,7 @@ export const buyTradeGood = (
 
     const dominantRace = state.currentLocation?.dominantRace;
 
-    // Пиратские станции не дают репутации за торговлю, но контрабанда портит репутацию
+    // Пиратские станции не дают репутации за торговлю, но контрабанда оставляет след.
     if (isPirate) {
         if (goodId === "contraband" && dominantRace) {
             get().changeReputation(dominantRace, -CONTRABAND_REP_PENALTY);
@@ -208,14 +209,19 @@ export const buyTradeGood = (
                 `☠️ Покупка контрабанды: репутация с ${dominantRace} -${CONTRABAND_REP_PENALTY}`,
                 "warning",
             );
-            set((s) => {
-                if (s.currentLocation) {
-                    s.currentLocation.pirateHeat =
-                        (s.currentLocation.pirateHeat ?? 0) +
-                        CONTRABAND_HEAT_PER_BUY;
-                }
-                return s;
-            });
+        }
+        if (goodId === "contraband") {
+            set((s) => ({
+                wantedHeat: clampWantedHeat(
+                    (s.wantedHeat ?? 0) + CONTRABAND_HEAT_PER_BUY,
+                ),
+            }));
+            get().addLog(
+                i18nStore.t("pirate.heat_trade", {
+                    amount: CONTRABAND_HEAT_PER_BUY,
+                }),
+                "warning",
+            );
         }
     } else if (dominantRace && quantity >= REPUTATION_BUY_THRESHOLD) {
         // Повышение репутации с расой за крупную торговлю (+1 за 20+ единиц)
