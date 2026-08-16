@@ -152,6 +152,13 @@ export const selectLocation = (
         return;
     }
 
+    // Проверяется до completedLocations: победа над базой заносит её туда же,
+    // и без этой ветки игрок читал бы «уже посещено» вместо «база уничтожена»
+    if (loc.pirateBaseDestroyed) {
+        get().addLog(i18nStore.t("pirate.base_destroyed_wreck"), "warning");
+        return;
+    }
+
     // Локация уже посещена
     if (state.completedLocations.includes(loc.id)) {
         get().addLog( i18nStore.t("game_logs.selectLocation_1", { loc_name: loc.name }), "warning");

@@ -268,6 +268,8 @@ export function StationPanel() {
     const currentSector = useGameStore((s) => s.currentSector);
     const credits = useGameStore((s) => s.credits);
     const wantedHeat = useGameStore((s) => s.wantedHeat ?? 0);
+    const pirateStanding = useGameStore((s) => s.pirateStanding ?? 0);
+    const assaultPirateBase = useGameStore((s) => s.assaultPirateBase);
     const ship = useGameStore((s) => s.ship);
     const stationInventory = useGameStore((s) => s.stationInventory);
     const stationPrices = useGameStore((s) => s.stationPrices);
@@ -411,8 +413,9 @@ export function StationPanel() {
                 stationId,
                 sectorTier,
                 currentLocation?.stationConfig,
+                pirateStanding,
             ),
-        [stationId, sectorTier, currentLocation?.stationConfig],
+        [stationId, sectorTier, currentLocation?.stationConfig, pirateStanding],
     );
     const researchMaterialStock = useMemo(
         () => getResearchMaterialStocks(stationId, stationInventory),
@@ -530,6 +533,13 @@ export function StationPanel() {
             c.targetLocationId === currentLocation?.id &&
             ship.cargo.some((cargo) => cargo.contractId === c.id),
     );
+    // Подряд на эту базу: пираты не знают, что ты за ними пришёл, поэтому
+    // стыковка обычная — а решение принимается здесь
+    const purgeContract = activeContracts.find(
+        (contract) =>
+            contract.type === "pirate_purge" &&
+            contract.targetLocationId === currentLocation?.id,
+    );
     const pirateTargetContracts = activeContracts.filter(
         (contract) =>
             (contract.type === "pirate_smuggling" ||
@@ -616,6 +626,7 @@ export function StationPanel() {
         cargoCapacity: getCargoCapacity(),
         probes,
         heat: wantedHeat,
+        standing: pirateStanding,
         contracts: currentLocation.pirateContracts ?? [],
         activeContracts,
         completedContractIds,
@@ -671,6 +682,27 @@ export function StationPanel() {
                     onComplete={completeDeliveryContract}
                     t={t}
                 />
+            )}
+
+            {purgeContract && (
+                <section className="border-2 border-[#ff0040] bg-[rgba(255,0,64,0.1)] p-3">
+                    <div className="font-bold text-sm text-[#ff0040]">
+                        ⚔ {t("pirate.purge_title")}
+                    </div>
+                    <div className="mt-1 text-[11px] leading-snug text-[#ffb000]">
+                        {t("pirate.purge_warning")}
+                    </div>
+                    <div className="mt-1 text-[11px] text-[#888]">
+                        💰 {purgeContract.reward}₢ · {t("locations.threat")}{" "}
+                        {purgeContract.targetThreat ?? 2}
+                    </div>
+                    <Button
+                        onClick={assaultPirateBase}
+                        className="mt-2 cursor-pointer border border-[#ff0040] bg-transparent px-2 py-1 text-xs text-[#ff6677] hover:bg-[#ff0040] hover:text-[#050810]"
+                    >
+                        {t("pirate.purge_action")}
+                    </Button>
+                </section>
             )}
 
             {pirateTargetContracts.length > 0 && (

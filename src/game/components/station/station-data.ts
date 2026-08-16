@@ -13,6 +13,7 @@ import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import { RACES } from "@/game/constants/races";
 import { shuffle } from "@/game/utils/shuffle";
 import { MODULE_HEALTH_BY_LEVEL } from "@/game/slices/shop/constants";
+import { getTrophyPriceMultiplier } from "@/game/slices/pirate/standing";
 
 // Module pools by tier level
 // Tier 1: levels 1-2, Tier 2: levels 2-3, Tier 3: levels 3-4 (rare)
@@ -1002,9 +1003,6 @@ const WEAPONS: ShopItem[] = [
 // оружие у военной станции) — но потрёпанное, штучное и с чужими серийниками,
 // за которые потом объясняться на досмотре (розыск начисляет buyItem).
 
-/** Награбленное продают заметно дешевле любой легальной скидки */
-const TROPHY_PRICE_MULTIPLIER = 0.55;
-
 /**
  * Корпус уже пробит и заварен: запас прочности урезан навсегда, ремонт его не
  * вернёт — чинят до maxHealth, а он у трофея ниже.
@@ -1014,14 +1012,19 @@ const TROPHY_HEALTH_MULTIPLIER = 0.6;
 const TROPHY_MODULE_COUNT = 3;
 const TROPHY_WEAPON_COUNT = 2;
 
-const asTrophy = (item: ShopItem, stationId: string): ShopItem => {
+const asTrophy = (
+  item: ShopItem,
+  stationId: string,
+  pirateStanding: number,
+): ShopItem => {
   const maxHealth =
     item.maxHealth ?? MODULE_HEALTH_BY_LEVEL[item.level ?? 1] ?? 100;
   return {
     ...item,
     id: `${item.id}-trophy-${stationId}`,
     basePrice: item.price,
-    price: Math.floor(item.price * TROPHY_PRICE_MULTIPLIER),
+    // Своим отдают дешевле: 0.55 у чужака → 0.40 у подельника
+    price: Math.floor(item.price * getTrophyPriceMultiplier(pirateStanding)),
     stock: 1,
     ...(item.type === "module"
       ? { maxHealth: Math.floor(maxHealth * TROPHY_HEALTH_MULTIPLIER) }
@@ -1034,6 +1037,7 @@ export function generateStationItems(
   stationId: string,
   sectorTier: number,
   stationConfig?: StationConfig,
+  pirateStanding = 0,
 ): ShopItem[] {
   let hash = 0;
   for (let i = 0; i < stationId.length; i++) {
@@ -1083,7 +1087,7 @@ export function generateStationItems(
     return [
       ...modulePool.slice(0, TROPHY_MODULE_COUNT),
       ...weaponPool.slice(0, TROPHY_WEAPON_COUNT),
-    ].map((item) => asTrophy(item, stationId));
+    ].map((item) => asTrophy(item, stationId, pirateStanding));
   }
 
   // Get upgrades for this tier and lower tiers

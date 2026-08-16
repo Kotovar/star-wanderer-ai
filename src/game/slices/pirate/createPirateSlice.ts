@@ -15,6 +15,13 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import { playSound } from "@/sounds";
 import { refreshPirateContracts } from "./contracts";
 import { startWantedPursuit } from "./interception";
+import { assaultPirateBase, hasActivePiratePurge } from "./purge";
+import {
+    clampPirateStanding,
+    getPirateContractReward,
+    getPirateRank,
+    PIRATE_STANDING_PER_CONTRACT,
+} from "./standing";
 import {
     canFightWantedPursuit,
     clampWantedHeat,
@@ -57,6 +64,7 @@ export interface PirateSlice {
         choice: "bribe" | "dump" | "fight" | "leave",
     ) => void;
     refreshPirateStationContracts: () => void;
+    assaultPirateBase: () => void;
 }
 
 /** Создаёт слайс пиратских механик. */
@@ -84,6 +92,11 @@ export const createPirateSlice = (
             state.completedContractIds.includes(contractId)
         ) {
             get().addLog(i18nStore.t("pirate.err_contract_taken"), "error");
+            return;
+        }
+        // Взял подряд на пиратов — на их доске тебе больше не работать
+        if (hasActivePiratePurge(state.activeContracts)) {
+            get().addLog(i18nStore.t("pirate.err_board_closed"), "error");
             return;
         }
 
@@ -227,11 +240,20 @@ export const createPirateSlice = (
             return;
         }
 
+        // Платят по репутации: подельнику до +50%. Та же функция считает
+        // награду на доске — показанная и начисленная суммы обязаны совпадать
+        const standing = state.pirateStanding ?? 0;
+        const reward = getPirateContractReward(contract.reward, standing);
+        const newStanding = clampPirateStanding(
+            standing + PIRATE_STANDING_PER_CONTRACT,
+        );
+
         // Сдача задания розыск не снижает: раньше молчаливые −20 делали
         // контрабанду (+8 за передачу) чистым минусом по розыску, и «Приют
         // контрабандистов» вместе со взятками терял всякий смысл
         set((s) => ({
-            credits: s.credits + contract.reward,
+            credits: s.credits + reward,
+            pirateStanding: newStanding,
             activeContracts: s.activeContracts.filter(
                 (active) => active.id !== contractId,
             ),
@@ -239,6 +261,16 @@ export const createPirateSlice = (
                 ? s.completedContractIds
                 : [...s.completedContractIds, contractId],
         }));
+
+        if (getPirateRank(newStanding) !== getPirateRank(standing)) {
+            get().addLog(
+                i18nStore.t("pirate.rank_up", {
+                    rank: i18nStore.t(`pirate.rank_${getPirateRank(newStanding)}`),
+                }),
+                "info",
+            );
+            playSound("world_contract");
+        }
 
         // Опыт — только тем, кто на борту и жив: giveCrewExperience раздаёт
         // его всему списку, включая трупы и приписанных к аванпостам
@@ -260,7 +292,7 @@ export const createPirateSlice = (
         get().addLog(i18nStore.t("pirate.contract_experience"), "info");
         get().showContractCompletion({
             contract,
-            credits: contract.reward,
+            credits: reward,
             reputationChanges: getReputationChanges(
                 state.raceReputation,
                 get().raceReputation,
@@ -268,7 +300,7 @@ export const createPirateSlice = (
             experience,
         });
         get().addLog(
-            i18nStore.t("pirate.contract_completed", { reward: contract.reward }),
+            i18nStore.t("pirate.contract_completed", { reward }),
             "info",
         );
         playSound("world_contract");
@@ -359,6 +391,8 @@ export const createPirateSlice = (
         // от перехвата на подлёте к сектору
         startWantedPursuit(set, get);
     },
+
+    assaultPirateBase: () => assaultPirateBase(set, get),
 
     refreshPirateStationContracts: () => {
         const state = get();

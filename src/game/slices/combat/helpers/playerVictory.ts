@@ -1,6 +1,7 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { resolveOutpostAssault } from "@/game/slices/outposts/helpers/assaultOutpost";
+import { resolvePirateBaseAssault } from "@/game/slices/pirate/purge";
 import type { SetState } from "@/game/types";
 import {
     getRunProfileArcRewardPatch,
@@ -445,6 +446,10 @@ function applyVictoryAftermath(
         });
         get().addLog(i18nStore.t("pirate.hunters_defeated"), "info");
     }
+
+    // Взятая база: награда, репутация и снос самой базы — там же, где решается
+    // судьба отбитой постройки
+    resolvePirateBaseAssault(set as unknown as SetState, get);
 
     // Handle self_damage negative effect (e.g., Overload Matrix)
     state.artifacts.forEach((artifact) => {

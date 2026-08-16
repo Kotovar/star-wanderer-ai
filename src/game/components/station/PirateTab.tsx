@@ -11,6 +11,12 @@ import {
     WANTED_CHECKPOINT_HEAT,
     WANTED_PURSUIT_HEAT,
 } from "@/game/slices/pirate/wanted";
+import {
+    getLaunderingCost,
+    getPirateContractReward,
+    getPirateRank,
+    LAUNDERING_HEAT,
+} from "@/game/slices/pirate/standing";
 import { useTranslation } from "@/lib/useTranslation";
 import { TRADE_GOODS } from "@/game/constants";
 import { typedKeys } from "@/lib/utils";
@@ -36,6 +42,7 @@ interface PirateTabProps {
     cargoCapacity: number;
     probes: number;
     heat: number;
+    standing: number;
     contracts: Contract[];
     activeContracts: Contract[];
     completedContractIds: string[];
@@ -58,6 +65,7 @@ export function PirateTab({
     cargoCapacity,
     probes,
     heat,
+    standing,
     contracts,
     activeContracts,
     completedContractIds,
@@ -102,6 +110,9 @@ export function PirateTab({
                 ? t("pirate.heat_high")
                 : t("pirate.heat_critical");
 
+    const rank = getPirateRank(standing);
+    const launderingCost = getLaunderingCost(standing);
+
     return (
         <div className="flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto pr-1 pb-2">
             {view === "market" && (
@@ -120,6 +131,22 @@ export function PirateTab({
                         </div>
                     </div>
 
+                    {/* Pirate standing */}
+                    <div className="p-3 border border-[#00d4ff] bg-[rgba(0,212,255,0.05)]">
+                        <div className="text-[#00d4ff] font-bold text-sm">
+                            {t("pirate.standing_title")}: {t(`pirate.rank_${rank}`)}
+                        </div>
+                        <div className="text-xs text-[#888]">
+                            {t(`pirate.rank_${rank}_desc`)}
+                        </div>
+                        <div className="w-full h-2 bg-[#00253a] mt-2 rounded">
+                            <div
+                                className="h-full rounded bg-gradient-to-r from-[#00d4ff] to-[#00ff41]"
+                                style={{ width: `${Math.min(100, standing)}%` }}
+                            />
+                        </div>
+                    </div>
+
                     {/* Smuggler's Den */}
                     <div className="p-3 border border-[#ffb000] bg-[rgba(255,176,0,0.05)]">
                         <div className="text-[#ffb000] font-bold text-sm mb-2">
@@ -129,11 +156,16 @@ export function PirateTab({
                             {t("pirate.smugglers_den_desc")}
                         </div>
                         <Button
-                            onClick={() => reducePirateHeat(15, 500)}
-                            disabled={credits < 500 || heat <= 0}
+                            onClick={() =>
+                                reducePirateHeat(LAUNDERING_HEAT, launderingCost)
+                            }
+                            disabled={credits < launderingCost || heat <= 0}
                             className="bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] text-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                            {t("pirate.reduce_heat", { amount: 15, cost: 500 })}
+                            {t("pirate.reduce_heat", {
+                                amount: LAUNDERING_HEAT,
+                                cost: launderingCost,
+                            })}
                         </Button>
                     </div>
 
@@ -215,7 +247,12 @@ export function PirateTab({
                                                 {formatContractDescription(contract, t)}
                                             </div>
                                             <div className="text-[#ffb000] text-xs mt-1">
-                                                💰 {contract.reward}₢
+                                                💰{" "}
+                                                {getPirateContractReward(
+                                                    contract.reward,
+                                                    standing,
+                                                )}
+                                                ₢
                                             </div>
                                             {turnsRemaining !== null && (
                                                 <div className="text-[11px] text-[#ffb000] mt-1">

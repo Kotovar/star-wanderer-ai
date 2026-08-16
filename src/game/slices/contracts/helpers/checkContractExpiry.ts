@@ -4,6 +4,10 @@ import { toast } from "sonner";
 import { isContractExpired } from "@/game/contracts/contractDeadline";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
 import { clampWantedHeat } from "@/game/slices/pirate/wanted";
+import {
+    clampPirateStanding,
+    PIRATE_STANDING_ON_EXPIRY,
+} from "@/game/slices/pirate/standing";
 
 const isPirateContract = (type: string): boolean =>
     type === "pirate_smuggling" ||
@@ -65,6 +69,12 @@ export const checkContractExpiry = (
             ),
             wantedHeat: clampWantedHeat(
                 (s.wantedHeat ?? 0) + expiredPirateCount * 10,
+            ),
+            // Подвести заказчика дороже, чем выполнить заказ: репутация теряется
+            // быстрее, чем набирается
+            pirateStanding: clampPirateStanding(
+                (s.pirateStanding ?? 0) -
+                    expiredPirateCount * PIRATE_STANDING_ON_EXPIRY,
             ),
             galaxy: { ...s.galaxy, sectors },
             currentSector,

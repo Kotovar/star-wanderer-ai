@@ -36,6 +36,7 @@ import {
 } from "./sectorRules";
 import type { ContractGenerationContext } from "../contracts/frontierContracts";
 import { populatePirateContracts } from "@/game/slices/pirate/contracts";
+import { populatePurgeContracts } from "@/game/slices/pirate/purge";
 
 // ============================================================================
 // Основная функция генерации
@@ -229,6 +230,8 @@ export const generateGalaxy = (
     // Постобработка
     populatePirateContracts(sectors);
     populateContracts(sectors, profile, context);
+    // После планетных: подряд на зачистку дописывается к уже собранной доске
+    populatePurgeContracts(sectors);
     populateShipQuests(sectors);
     return sectors;
 };

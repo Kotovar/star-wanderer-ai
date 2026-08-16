@@ -179,6 +179,8 @@ export interface Location {
     pirateHeat?: number;
     pirateContracts?: Contract[]; // Available pirate contracts
     pirateLastRefreshTurn?: number; // Turn when contracts were last refreshed
+    /** База уничтожена по подряду на зачистку: от неё остались обломки */
+    pirateBaseDestroyed?: boolean;
 
     population?: number; // Population in thousands
 

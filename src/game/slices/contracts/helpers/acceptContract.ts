@@ -11,6 +11,7 @@ import { isRaceContractAvailable } from "@/game/reputation/utils";
 import { isContractTargetAvailable } from "@/game/contracts/targetAvailability";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
 import { getLocationName } from "@/lib/translationHelpers";
+import { PIRATE_PURGE_STANDING_LIMIT } from "@/game/slices/pirate/purge";
 
 /**
  * Принимает контракт
@@ -61,6 +62,16 @@ export const acceptContract = (
             );
             return false;
         }
+    }
+
+    // Подряд на пиратов не дадут тому, кого пираты считают своим: две стороны
+    // развилки исключают друг друга, иначе её и нет
+    if (
+        contract.type === "pirate_purge" &&
+        (state.pirateStanding ?? 0) >= PIRATE_PURGE_STANDING_LIMIT
+    ) {
+        get().addLog(i18nStore.t("pirate.err_purge_too_friendly"), "error");
+        return false;
     }
 
     if (contract.type === "delivery" && contract.cargo) {

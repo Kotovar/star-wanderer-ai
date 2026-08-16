@@ -240,6 +240,9 @@ export function ContractsList() {
                     current: contract.pirateObjectiveComplete ? 1 : 0,
                     total: 1,
                 };
+            // Подряд на зачистку закрывается на месте, промежуточной цели нет
+            case "pirate_purge":
+                return { current: 0, total: 1 };
             case "gas_dive":
                 return {
                     current: contract.collectedMembranes ?? 0,
@@ -389,6 +392,17 @@ export function ContractsList() {
                               t,
                           ),
                       });
+            case "pirate_purge":
+                return t("pirate.status_purge", {
+                    target: getLocationName(
+                        contract.targetLocationName ?? t("contracts.unknown"),
+                        t,
+                    ),
+                    sector: getLocationName(
+                        contract.targetSectorName ?? t("contracts.unknown"),
+                        t,
+                    ),
+                });
             case "pirate_heist":
                 return contract.pirateObjectiveComplete
                     ? formatPirateReturnInstruction(contract, t)
@@ -482,6 +496,8 @@ export function ContractsList() {
                 return t("pirate.job_bounty");
             case "pirate_heist":
                 return t("pirate.job_heist");
+            case "pirate_purge":
+                return t("pirate.job_purge");
             default:
                 return contract.desc;
         }
@@ -1238,6 +1254,7 @@ export function ContractsList() {
                         pirate_smuggling: t("pirate.job_smuggling"),
                         pirate_bounty: t("pirate.job_bounty"),
                         pirate_heist: t("pirate.job_heist"),
+                        pirate_purge: t("pirate.job_purge"),
                     };
                     return (
                         <div

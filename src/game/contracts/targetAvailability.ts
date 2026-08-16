@@ -1,6 +1,7 @@
 import { RESEARCH_TREE } from "@/game/constants/research";
 import { CRAFTING_RECIPES } from "@/game/constants/crafting";
 import type { Contract, GameState, Sector, TechnologyId } from "@/game/types";
+import { isPirateBaseAlive } from "@/game/slices/pirate/purge";
 
 export type ContractTargetContext = Pick<GameState, "artifacts"> & {
     researchedTechs: GameState["research"]["researchedTechs"];
@@ -140,6 +141,17 @@ export const isContractTargetAvailable = (
                         location.type === "planet" &&
                         !location.isEmpty &&
                         !location.expeditionCompleted,
+                ),
+            );
+        }
+        case "pirate_purge": {
+            // База могла быть снесена другим подрядом — или тем же, но раньше
+            if (!contract.targetLocationId) return false;
+            return sectors.some((sector) =>
+                sector.locations.some(
+                    (location) =>
+                        location.id === contract.targetLocationId &&
+                        isPirateBaseAlive(location),
                 ),
             );
         }

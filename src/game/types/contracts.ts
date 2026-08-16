@@ -132,7 +132,8 @@ export type ContractType =
     | "fabrication"
     | "pirate_smuggling"
     | "pirate_bounty"
-    | "pirate_heist";
+    | "pirate_heist"
+    | "pirate_purge";
 
 // Special delivery goods (quest items - given to player, not trade goods)
 export type DeliveryGoods =

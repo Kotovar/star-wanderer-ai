@@ -131,6 +131,8 @@ export interface GameState {
   credits: number;
   /** Общая разыскиваемость за пиратские сделки и задания (0–100). */
   wantedHeat: number;
+  /** Репутация с пиратами за сданные задания (0–100). Старые сейвы читаются через `?? 0`. */
+  pirateStanding: number;
   /** Валовые поступления кредитов в текущем забеге, без стартового баланса */
   creditsEarnedThisRun: number;
   probes: number;
@@ -185,6 +187,8 @@ export interface GameState {
   gases: Partial<Record<GasType, number>>;
   /** Какую постройку сейчас отбиваем — чтобы вернуть её при победе */
   assaultingOutpostId?: string | null;
+  /** Штурмуемая пиратская база: победа засчитывается ровно там, где начался штурм */
+  assaultingPirateBaseId?: string | null;
   knownLocationIntel: Record<string, KnownLocationIntel>;
   navigatorTargets: NavigatorTarget[];
   /** Станции, где игрок реально был в доке — их цены считаются известными */
@@ -507,6 +511,7 @@ export interface GamePirate {
     choice: "bribe" | "dump" | "fight" | "leave",
   ) => void;
   refreshPirateStationContracts: () => void;
+  assaultPirateBase: () => void;
 }
 
 export interface GamePlanetSpecializations {

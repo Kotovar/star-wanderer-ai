@@ -85,6 +85,7 @@ const renderPirateTab = (
     cargoCapacity: 20,
     probes: 0,
     heat: 0,
+    standing: 0,
     contracts: [PIRATE_SMUGGLING],
     activeContracts: [],
     completedContractIds: [],

@@ -877,6 +877,441 @@ assert.equal(
   "покупка краденого железа обязана добавлять розыск",
 );
 
+// ── Репутация с пиратами ────────────────────────────────────────────────────
+// У чёрного рынка не было никакого отношения к игроку: доска, цены и трофеи
+// не различали первый заказ и двадцатый
+const {
+  clampPirateStanding,
+  getLaunderingCost,
+  getPirateContractReward,
+  getPirateRank,
+  getTrophyPriceMultiplier,
+  PIRATE_RANK_ASSOCIATE,
+  PIRATE_RANK_INSIDER,
+  PIRATE_STANDING_ON_EXPIRY,
+  PIRATE_STANDING_PER_CONTRACT,
+} = await import("../src/game/slices/pirate/standing.ts");
+
+assert.equal(getPirateRank(0), "outsider");
+assert.equal(getPirateRank(PIRATE_RANK_ASSOCIATE - 1), "outsider");
+assert.equal(getPirateRank(PIRATE_RANK_ASSOCIATE), "associate");
+assert.equal(getPirateRank(PIRATE_RANK_INSIDER), "insider");
+assert.equal(clampPirateStanding(-40), 0);
+assert.equal(clampPirateStanding(140), 100);
+// Поля нет в сейвах до его появления: одного пропущенного `?? 0` хватило бы,
+// чтобы NaN разошёлся по наградам, трофеям и отмывке
+assert.equal(clampPirateStanding(undefined), 0);
+assert.equal(clampPirateStanding(NaN), 0);
+assert.equal(getLaunderingCost(undefined), getLaunderingCost(0));
+assert.equal(getPirateContractReward(1000, undefined), 1000);
+assert.ok(
+  PIRATE_STANDING_ON_EXPIRY > PIRATE_STANDING_PER_CONTRACT,
+  "доверие обязано теряться быстрее, чем набирается: иначе просрочка ничего не стоит",
+);
+
+// Каждая льгота обязана расти с репутацией и не разъезжаться на краях шкалы
+assert.equal(
+  getPirateContractReward(1000, 0),
+  1000,
+  "чужак получает ровно объявленную награду",
+);
+assert.equal(
+  getPirateContractReward(1000, 100),
+  1500,
+  "подельнику платят в полтора раза больше",
+);
+assert.ok(
+  getTrophyPriceMultiplier(100) < getTrophyPriceMultiplier(0),
+  "трофеи своим обязаны быть дешевле",
+);
+assert.ok(
+  getTrophyPriceMultiplier(0) < 0.85,
+  "даже чужаку трофей дешевле любой легальной скидки",
+);
+assert.ok(
+  getLaunderingCost(100) < getLaunderingCost(0),
+  "отмывка своим обязана быть дешевле",
+);
+assert.ok(
+  getLaunderingCost(100) > 0,
+  "отмывка не должна становиться бесплатной",
+);
+
+// Скидка на трофеи обязана доходить до самого товара, а не жить в вакууме
+assert.ok(
+  generateStationItems("pirate-yard", 2, STATION_CONFIG.pirate, 100).every(
+    (item, index) =>
+      item.price <
+      generateStationItems("pirate-yard", 2, STATION_CONFIG.pirate, 0)[index]
+        .price,
+  ),
+  "репутация обязана снижать цену каждого трофея на складе",
+);
+
+// Сдача задания: репутация растёт, а платят уже по ней
+const standingState = {
+  currentLocation: {
+    id: "pirate-station",
+    type: "station",
+    stationConfig: { isPirate: true },
+  },
+  activeContracts: [
+    {
+      id: "standing-job",
+      type: "pirate_heist",
+      sourcePlanetId: "pirate-station",
+      pirateObjectiveComplete: true,
+      reward: 1000,
+      desc: "contracts.desc_pirate_heist",
+    },
+  ],
+  completedContractIds: [],
+  credits: 0,
+  crew: [],
+  raceReputation: {},
+  wantedHeat: 0,
+  pirateStanding: 100,
+  addLog: () => {},
+  gainExp: () => undefined,
+  showContractCompletion: () => {},
+};
+createPirateSlice(
+  (update) => applyStateUpdate(standingState, update),
+  () => standingState,
+).completePirateContract("standing-job");
+assert.equal(
+  standingState.credits,
+  1500,
+  "подельнику обязаны заплатить по репутации, а не по объявленной сумме",
+);
+assert.equal(
+  standingState.pirateStanding,
+  100,
+  "репутация не должна переваливать за сотню",
+);
+
+// Задание собирается заново, а не берётся из standingState: там оно уже
+// сдано и список активных пуст
+const newcomerState = {
+  ...standingState,
+  credits: 0,
+  pirateStanding: 0,
+  completedContractIds: [],
+  activeContracts: [
+    {
+      id: "newcomer-job",
+      type: "pirate_heist",
+      sourcePlanetId: "pirate-station",
+      pirateObjectiveComplete: true,
+      reward: 1000,
+      desc: "contracts.desc_pirate_heist",
+    },
+  ],
+};
+createPirateSlice(
+  (update) => applyStateUpdate(newcomerState, update),
+  () => newcomerState,
+).completePirateContract("newcomer-job");
+assert.equal(newcomerState.credits, 1000, "чужаку платят по объявленной сумме");
+assert.equal(
+  newcomerState.pirateStanding,
+  PIRATE_STANDING_PER_CONTRACT,
+  "сдача задания обязана поднимать репутацию",
+);
+
+// Просрочка обязана бить по репутации, а не только по розыску
+const { checkContractExpiry } = await import(
+  "../src/game/slices/contracts/helpers/checkContractExpiry.ts"
+);
+const expiryState = {
+  turn: 100,
+  activeContracts: [
+    {
+      id: "late-job",
+      type: "pirate_smuggling",
+      acceptedAt: 1,
+      timeLimit: 10,
+      desc: "contracts.desc_pirate_smuggling",
+    },
+  ],
+  wantedHeat: 0,
+  pirateStanding: 50,
+  galaxy: { sectors: [] },
+  currentSector: null,
+  currentLocation: null,
+  ship: { cargo: [] },
+  addLog: () => {},
+  changeReputation: () => {},
+};
+checkContractExpiry(
+  (update) => applyStateUpdate(expiryState, update),
+  () => expiryState,
+);
+assert.equal(
+  expiryState.activeContracts.length,
+  0,
+  "просроченное задание должно сниматься",
+);
+assert.equal(
+  expiryState.pirateStanding,
+  50 - PIRATE_STANDING_ON_EXPIRY,
+  "просрочка обязана стоить репутации у заказчика",
+);
+
+// ── Развилка: подряд на зачистку базы ───────────────────────────────────────
+// До неё пиратство ничего не закрывало — контрабанду можно было возить с
+// идеальной репутацией у всех рас, потому что противопоставить ей было нечего
+const {
+  assaultPirateBase,
+  hasActivePiratePurge,
+  isPirateBaseAlive,
+  PIRATE_PURGE_HEAT_RELIEF,
+  PIRATE_PURGE_STANDING_LIMIT,
+  resolvePirateBaseAssault,
+} = await import("../src/game/slices/pirate/purge.ts");
+
+assert.equal(
+  PIRATE_PURGE_STANDING_LIMIT,
+  PIRATE_RANK_ASSOCIATE,
+  "порог отказа обязан совпадать с рангом «свой»: с него начинаются льготы пиратов",
+);
+assert.equal(
+  isPirateBaseAlive({ stationConfig: { isPirate: true } }),
+  true,
+);
+assert.equal(
+  isPirateBaseAlive({ stationConfig: { isPirate: true }, pirateBaseDestroyed: true }),
+  false,
+  "снесённая база больше не считается живой целью",
+);
+assert.equal(
+  hasActivePiratePurge([{ type: "pirate_smuggling" }]),
+  false,
+);
+assert.equal(hasActivePiratePurge([{ type: "pirate_purge" }]), true);
+
+// Подряд не дадут тому, кого пираты считают своим
+const { acceptContract } = await import(
+  "../src/game/slices/contracts/helpers/acceptContract.ts"
+);
+const purgeOffer = {
+  id: "purge-base",
+  type: "pirate_purge",
+  desc: "contracts.desc_pirate_purge",
+  reward: 1300,
+  reputationReward: 12,
+  sourceDominantRace: "human",
+  targetLocationId: "pirate-base",
+  targetThreat: 3,
+};
+const purgeBaseLocation = {
+  id: "pirate-base",
+  stationId: "pirate-base",
+  type: "station",
+  stationConfig: { isPirate: true },
+};
+const makeAcceptState = (standing) => ({
+  activeContracts: [],
+  completedContractIds: [],
+  completedLocations: [],
+  galaxy: { sectors: [{ id: 1, tier: 2, locations: [purgeBaseLocation] }] },
+  artifacts: [],
+  research: { researchedTechs: [], unlockedRecipes: [] },
+  activeCrisis: null,
+  raceReputation: {},
+  pirateStanding: standing,
+  ship: { modules: [], cargo: [], tradeGoods: [] },
+  gases: {},
+  probes: 0,
+  turn: 5,
+  addLog: () => {},
+});
+const friendlyState = makeAcceptState(PIRATE_PURGE_STANDING_LIMIT);
+assert.equal(
+  acceptContract(
+    purgeOffer,
+    (update) => applyStateUpdate(friendlyState, update),
+    () => friendlyState,
+  ),
+  false,
+  "своему у пиратов подряд на них выдавать нельзя — иначе развилки нет",
+);
+const neutralState = makeAcceptState(PIRATE_PURGE_STANDING_LIMIT - 1);
+assert.equal(
+  acceptContract(
+    purgeOffer,
+    (update) => applyStateUpdate(neutralState, update),
+    () => neutralState,
+  ),
+  true,
+  "нейтральному подряд обязан быть доступен",
+);
+
+// Взятый подряд закрывает пиратскую доску
+const boycottState = {
+  currentLocation: {
+    id: "pirate-base",
+    type: "station",
+    stationConfig: { isPirate: true },
+    pirateContracts: [
+      {
+        id: "job-while-purging",
+        type: "pirate_heist",
+        sourcePlanetId: "pirate-base",
+        targetLocationId: "trade-station",
+        reward: 800,
+        desc: "contracts.desc_pirate_heist",
+      },
+    ],
+  },
+  galaxy: {
+    sectors: [{ id: 1, locations: [{ id: "trade-station", type: "station" }] }],
+  },
+  activeContracts: [{ id: "purge-base", type: "pirate_purge" }],
+  completedContractIds: [],
+  crew: [],
+  turn: 5,
+  addLog: () => {},
+};
+createPirateSlice(
+  (update) => applyStateUpdate(boycottState, update),
+  () => boycottState,
+).acceptPirateContract("job-while-purging");
+assert.equal(
+  boycottState.activeContracts.length,
+  1,
+  "нельзя работать на доске тех, кого подрядился уничтожить",
+);
+
+// Штурм и его итог
+const assaultState = {
+  currentLocation: { ...purgeBaseLocation },
+  currentSector: { id: 1, tier: 2, locations: [{ ...purgeBaseLocation }] },
+  galaxy: { sectors: [{ id: 1, tier: 2, locations: [{ ...purgeBaseLocation }] }] },
+  activeContracts: [{ ...purgeOffer }],
+  completedContractIds: [],
+  credits: 0,
+  wantedHeat: 100,
+  pirateStanding: 20,
+  turn: 7,
+  addLog: () => {},
+  changeReputation: (race, amount) => {
+    assaultState.reputationGain = { race, amount };
+  },
+  startCombat: (enemy) => {
+    assaultState.startedCombat = enemy;
+  },
+};
+const assaultSet = (update) => applyStateUpdate(assaultState, update);
+assaultPirateBase(assaultSet, () => assaultState);
+assert.equal(
+  assaultState.assaultingPirateBaseId,
+  "pirate-base",
+  "штурм обязан помечать, где он начался: победить можно и в другом бою",
+);
+assert.equal(
+  assaultState.startedCombat.threat,
+  purgeOffer.targetThreat,
+  "оборона базы должна драться по угрозе из подряда",
+);
+
+resolvePirateBaseAssault(assaultSet, () => assaultState);
+assert.equal(
+  assaultState.currentLocation.pirateBaseDestroyed,
+  true,
+  "взятая база обязана исчезнуть вместе с рынком, складом и доской",
+);
+assert.deepEqual(
+  assaultState.currentLocation.pirateContracts,
+  [],
+  "доска снесённой базы должна опустеть",
+);
+assert.equal(assaultState.credits, purgeOffer.reward, "подряд обязан заплатить");
+assert.equal(
+  assaultState.pirateStanding,
+  0,
+  "сдавшего базу пираты своим больше не считают",
+);
+assert.equal(
+  assaultState.wantedHeat,
+  100 - PIRATE_PURGE_HEAT_RELIEF,
+  "доказанная лояльность обязана снимать розыск",
+);
+assert.equal(
+  assaultState.reputationGain.race,
+  "human",
+  "репутация должна расти у расы заказчика",
+);
+assert.deepEqual(
+  assaultState.activeContracts,
+  [],
+  "подряд закрывается на месте, возвращаться не к кому",
+);
+assert.equal(
+  assaultState.assaultingPirateBaseId,
+  null,
+  "пометка штурма не должна тянуться за игроком",
+);
+
+// Чужая победа не должна засчитываться за взятую базу
+const strayState = {
+  currentLocation: { id: "some-enemy", type: "enemy" },
+  currentSector: { id: 1, locations: [] },
+  galaxy: { sectors: [] },
+  assaultingPirateBaseId: "pirate-base",
+  activeContracts: [{ ...purgeOffer }],
+  completedContractIds: [],
+  credits: 0,
+  wantedHeat: 50,
+  pirateStanding: 20,
+  addLog: () => {},
+  changeReputation: () => assert.fail("чужой бой не должен закрывать подряд"),
+};
+resolvePirateBaseAssault(
+  (update) => applyStateUpdate(strayState, update),
+  () => strayState,
+);
+assert.equal(strayState.credits, 0, "победа не на месте не оплачивается");
+assert.equal(
+  strayState.assaultingPirateBaseId,
+  null,
+  "но пометка обязана сняться, иначе засчитается следующая победа",
+);
+
+// Развилка обязана существовать в каждом забеге: подряд на каждую базу,
+// заказчик — в другом секторе
+for (const profile of Object.values(RUN_PROFILES)) {
+  const sectors = generateGalaxy(profile);
+  const bases = sectors.flatMap((sector) =>
+    sector.locations.filter((location) => location.stationConfig?.isPirate),
+  );
+  const purges = sectors.flatMap((sector) =>
+    sector.locations.flatMap((location) =>
+      (location.contracts ?? [])
+        .filter((contract) => contract.type === "pirate_purge")
+        .map((contract) => ({ sector, contract })),
+    ),
+  );
+  assert.equal(
+    purges.length,
+    bases.length,
+    `${profile.id}: на каждую пиратскую базу обязан быть подряд на зачистку`,
+  );
+  for (const { sector, contract } of purges) {
+    const targetSector = sectors.find((candidate) =>
+      candidate.locations.some(
+        (location) => location.id === contract.targetLocationId,
+      ),
+    );
+    assert.ok(targetSector, `${profile.id}: подряд не должен вести в пустоту`);
+    assert.notEqual(
+      targetSector.id,
+      sector.id,
+      `${profile.id}: заказчик не должен сидеть в одном секторе с базой`,
+    );
+  }
+}
+
 // ── Перехват в пути ─────────────────────────────────────────────────────────
 // До правки розыск влиял ровно на одно: стыковку на легальной станции. Сидеть
 // на 90 можно было бесконечно, просто обходя легальные станции стороной.
