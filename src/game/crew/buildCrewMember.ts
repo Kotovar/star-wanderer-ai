@@ -10,6 +10,7 @@ import {
     BASE_CREW_HEALTH_PER_LEVEL,
     DEFAULT_MAX_HAPPINESS,
     INITIAL_HAPPINESS_PERCENT,
+    MAX_CREW_LEVEL,
 } from "@/game/constants/crew";
 import { RACES } from "@/game/constants/races";
 import { ALL_PROFESSIONS } from "@/game/types/crew";
@@ -185,6 +186,7 @@ export function buildCrewMember(options: CrewBuildOptions = {}): CrewMember {
     } else {
         level = levelOpt;
     }
+    level = Math.min(level, MAX_CREW_LEVEL);
 
     // Traits
     let traits: CrewTrait[];

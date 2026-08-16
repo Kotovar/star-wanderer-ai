@@ -47,13 +47,19 @@ export const processCrewAssignments = (
     set: SetState,
     get: () => GameStore,
 ): void => {
-    const crew = get().crew;
-
     // === ПАССИВНАЯ РЕГЕНЕРАЦИЯ ЗДОРОВЬЯ ===
     // Применяется ко всему живому экипажу в начале хода
     processPassiveHealthRegen(set, get);
 
+    // Снимок берётся после регенерации: иначе обработчики весь ход видят
+    // здоровье до неё.
+    const crew = get().crew;
+
     crew.forEach((crewMember) => {
+        // Убитого раньше в этом же ходу (проклятый артефакт, эффект звезды)
+        // подметает не каждый шаг цикла — работать и получать опыт он не должен
+        if (crewMember.health <= 0) return;
+
         const crewRace = RACES[crewMember.race];
         const fatigueState = getAssignmentFatigueState({
             fatigue: crewMember.assignmentFatigue,

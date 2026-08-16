@@ -7,6 +7,7 @@ import { RACES } from "@/game/constants/races";
 import {
     COMBAT_ACTIONS,
     CREW_ACTIONS,
+    MAX_CREW_LEVEL,
     XENOSYMBIONT_MERGE_ACTION,
     getCrewActionLabelKey,
 } from "@/game/constants/crew";
@@ -358,8 +359,10 @@ export function CrewList() {
                                     />
                                 </div>
                                 <span className="text-[#555] text-[9px] shrink-0 tabular-nums">
-                                    {t("crew_member.experience")} {member.exp || 0}/
-                                    {expNeeded}
+                                    {t("crew_member.experience")}{" "}
+                                    {member.level >= MAX_CREW_LEVEL
+                                        ? t("crew_member.experience_max")
+                                        : `${member.exp || 0}/${expNeeded}`}
                                 </span>
                             </div>
 
@@ -513,8 +516,9 @@ export function CrewList() {
                                             <span className="text-[#ffb000]">
                                                 {t("crew_member.experience")}{" "}
                                             </span>
-                                            {selectedCrew.exp}/
-                                            {selectedExpNeeded}
+                                            {selectedCrew.level >= MAX_CREW_LEVEL
+                                                ? t("crew_member.experience_max")
+                                                : `${selectedCrew.exp}/${selectedExpNeeded}`}
                                             <Progress
                                                 value={Math.min(
                                                     100,

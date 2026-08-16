@@ -3,6 +3,7 @@ import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getStrongestRaceTechPerkValue } from "@/game/constants/techTree";
 import { isValidCrewAssignment } from "@/game/slices/crew/helpers/validateAssignment";
+import { grantCombatExpOnce } from "@/game/crew/combatExp";
 import { store as i18nStore } from "@/lib/useTranslation";
 import {
     BASE_EXP_REWARDS,
@@ -70,35 +71,35 @@ export const processCombatAssignment = (
             break;
         case "targeting":
             get().addLog( i18nStore.t("game_logs.processCombatAssignments_1", { crewMember_name: getCrewDisplayName(crewMember) }), "combat");
-            get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
+            grantCombatExpOnce(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER, set, get);
             break;
         case "overclock":
             get().addLog( i18nStore.t("game_logs.processCombatAssignments_2", { crewMember_name: getCrewDisplayName(crewMember) }),
                 "combat",
             );
-            get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
+            grantCombatExpOnce(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER, set, get);
             break;
         case "rapidfire":
             get().addLog( i18nStore.t("game_logs.processCombatAssignments_3", { crewMember_name: getCrewDisplayName(crewMember) }),
                 "combat",
             );
-            get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
+            grantCombatExpOnce(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER, set, get);
             break;
         case "calibration":
             get().addLog( i18nStore.t("game_logs.processCombatAssignments_4", { crewMember_name: getCrewDisplayName(crewMember) }), "combat");
-            get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
+            grantCombatExpOnce(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER, set, get);
             break;
         case "analysis":
             get().addLog( i18nStore.t("game_logs.processCombatAssignments_5", { crewMember_name: getCrewDisplayName(crewMember) }),
                 "combat",
             );
-            get().gainExp(crewMember, BASE_EXP_REWARDS.ANALYSIS_SABOTAGE);
+            grantCombatExpOnce(crewMember, BASE_EXP_REWARDS.ANALYSIS_SABOTAGE, set, get);
             break;
         case "sabotage":
             get().addLog( i18nStore.t("game_logs.processCombatAssignments_6", { crewMember_name: getCrewDisplayName(crewMember) }),
                 "combat",
             );
-            get().gainExp(crewMember, BASE_EXP_REWARDS.ANALYSIS_SABOTAGE);
+            grantCombatExpOnce(crewMember, BASE_EXP_REWARDS.ANALYSIS_SABOTAGE, set, get);
             break;
         case "vent_fuel":
             processVentFuel(crewMember, currentModule, set, get);
@@ -127,7 +128,7 @@ const processVentFuel = (
     get().addLog( i18nStore.t("game_logs.processCombatAssignments_7", { crewMember_name: getCrewDisplayName(crewMember), restored }),
         "combat",
     );
-    get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
+    grantCombatExpOnce(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER, set, get);
 };
 
 /**
@@ -186,7 +187,7 @@ const processCombatRepair = (
     get().addLog( i18nStore.t("game_logs.processCombatAssignments_9", { crewMember_name: getCrewDisplayName(crewMember), currentModule_name: currentModule.name, repairAmount }),
         "combat",
     );
-    get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_REPAIR);
+    grantCombatExpOnce(crewMember, BASE_EXP_REWARDS.COMBAT_REPAIR, set, get);
 };
 
 /**
@@ -254,7 +255,7 @@ const processCombatHeal = (
     get().addLog( i18nStore.t("game_logs.processCombatAssignments_10", { crewMember_name: getCrewDisplayName(crewMember), healAmount }),
         "combat",
     );
-    get().gainExp(crewMember, BASE_EXP_REWARDS.HEAL);
+    grantCombatExpOnce(crewMember, BASE_EXP_REWARDS.HEAL, set, get);
 };
 
 /**
@@ -294,10 +295,10 @@ const processCombatFirstAid = (
  */
 const processCombatEvasion = (
     crewMember: CrewMember,
-    _set: SetState,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     // Evasion bonus is computed dynamically in getTotalEvasion() when
     // combatAssignment === "evasion" — no state mutation needed here.
-    get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
+    grantCombatExpOnce(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER, set, get);
 };

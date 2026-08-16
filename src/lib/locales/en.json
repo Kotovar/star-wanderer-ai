@@ -2649,6 +2649,7 @@
         "current_module": "📍 Current module:",
         "profession": "Profession:",
         "experience": "Experience:",
+        "experience_max": "max",
         "health": "Health:",
         "regen": "❤ Regeneration:",
         "mood": "Mood:",

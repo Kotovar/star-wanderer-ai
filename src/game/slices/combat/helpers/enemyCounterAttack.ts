@@ -1,5 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
-import type { GameState, GameStore, Module } from "@/game/types";
+import type { GameState, GameStore, Module, SetState } from "@/game/types";
+import { grantCombatExpOnce } from "@/game/crew/combatExp";
 import type { CombatProjectileEvent } from "@/game/types/combatCinematics";
 import { playCombatSound } from "./combatSound";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
@@ -254,7 +255,15 @@ export function performEnemyAttack(
         );
         recordMiss(set, tgt);
         pushEnemyVolley(timeline, combat, tgt, 0, 0, false, "miss", undefined, true);
-        if (pilot) get().gainExp(pilot, PILOT_EVASION_COMBAT_EXP);
+        // Раз за бой, как и опыт за боевые назначения: раунды ходов не стоят
+        if (pilot) {
+            grantCombatExpOnce(
+                pilot,
+                PILOT_EVASION_COMBAT_EXP,
+                set as unknown as SetState,
+                get,
+            );
+        }
         return;
     }
 

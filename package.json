@@ -86,6 +86,7 @@
     "check:outpost-economy": "node --no-warnings scripts/check-outpost-economy.mjs",
     "check:jettison": "node --no-warnings scripts/check-jettison.mjs",
     "check:turn-ticks": "node --no-warnings scripts/check-turn-tick-fixes.mjs",
+    "check:crew-progression": "node --no-warnings scripts/check-crew-progression.mjs",
     "check:research-panel": "node --no-warnings scripts/check-research-panel.mjs",
     "check:pre-spacefaring-civilizations": "node --no-warnings scripts/check-pre-spacefaring-civilizations.mjs"
   },

@@ -133,6 +133,15 @@ export const BASE_CREW_HEALTH_PER_LEVEL = 20;
 export const BASE_CREW_HEALTH = 100;
 
 /**
+ * Потолок уровня экипажа.
+ *
+ * Ветки прокачки заканчиваются тиром 9, а 10 уровень — то, что засчитывает
+ * достижение (maxLevel10CrewCountThisRun). Выше росли только голые числа
+ * (+20 HP и +1 к эффекту назначения за уровень) без единого нового решения.
+ */
+export const MAX_CREW_LEVEL = 10;
+
+/**
  * Базовое счастье экипажа при найме (в процентах от максимального)
  */
 export const INITIAL_HAPPINESS_PERCENT = 80;

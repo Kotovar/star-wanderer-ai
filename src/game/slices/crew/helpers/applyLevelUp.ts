@@ -1,8 +1,19 @@
 import { getRaceCrewBonus } from "@/game/races";
 import type { CrewMember } from "@/game/types";
 import { getExpNeededForNextLevel } from "./getExpNeededForNextLevel";
-import { BASE_CREW_HEALTH_PER_LEVEL } from "@/game/constants/crew";
+import { BASE_CREW_HEALTH_PER_LEVEL, MAX_CREW_LEVEL } from "@/game/constants/crew";
 import { RACES } from "@/game/constants/races";
+
+/**
+ * Итог повышения уровня. Прибавка здоровья возвращается прибавкой, а не
+ * готовым максимумом: применять её нужно к текущему значению в состоянии,
+ * иначе левелап откатывает всё, что изменило здоровье после снимка.
+ */
+export interface LevelUpOutcome {
+    level: number;
+    exp: number;
+    healthGain: number;
+}
 
 /**
  * Проверяет, должен ли член экипажа повысить уровень
@@ -12,6 +23,7 @@ import { RACES } from "@/game/constants/races";
  * @returns true если опыт достаточен для повышения уровня
  */
 const shouldLevelUp = (currentExp: number, level: number) => {
+    if (level >= MAX_CREW_LEVEL) return false;
     const expNeeded = getExpNeededForNextLevel(level);
     return currentExp >= expNeeded;
 };
@@ -30,9 +42,20 @@ const calculateLevelUp = (
     let newLevel = currentLevel;
     let remainingExp = currentExp;
 
-    while (remainingExp >= getExpNeededForNextLevel(newLevel)) {
+    while (
+        newLevel < MAX_CREW_LEVEL &&
+        remainingExp >= getExpNeededForNextLevel(newLevel)
+    ) {
         remainingExp -= getExpNeededForNextLevel(newLevel);
         newLevel += 1;
+    }
+
+    // На потолке опыт не копится дальше: полоса просто стоит полной
+    if (newLevel >= MAX_CREW_LEVEL) {
+        remainingExp = Math.min(
+            remainingExp,
+            getExpNeededForNextLevel(MAX_CREW_LEVEL),
+        );
     }
 
     return { newLevel, remainingExp };
@@ -48,10 +71,7 @@ const calculateLevelUp = (
 export const applyLevelUp = (
     crewMember: CrewMember,
     newExp: number,
-): Pick<
-    CrewMember,
-    "level" | "exp" | "maxHealth" | "health" | "maxHappiness" | "happiness"
-> | null => {
+): LevelUpOutcome | null => {
     const currentLevel = crewMember.level;
 
     if (!shouldLevelUp(newExp, currentLevel)) {
@@ -96,23 +116,13 @@ export const applyLevelUp = (
         }
     });
 
-    // Добавляем фиксированный бонус расы (human +5, xenosymbiont +10, krylorian +15)
+    // Фиксированный бонус расы — за каждый полученный уровень, как и в
+    // calculateCrewStats (raceHealthBonus * level). Разово он делал скачок
+    // через несколько уровней навсегда дешевле по здоровью, чем те же уровни
+    // по одному.
     const raceHealthBonus = getRaceCrewBonus(crewMember.race, "health");
-    healthGain += raceHealthBonus;
+    healthGain += raceHealthBonus * levelsGained;
 
-    const newMaxHealth = crewMember.maxHealth + healthGain;
-
-    // === СЧАСТЬЕ ===
-    // Счастье не увеличивается с уровнем, если только нет специальных эффектов
-    // На данный момент нет бонусов к maxHappiness за уровень
-    const newMaxHappiness = crewMember.maxHappiness;
-
-    return {
-        level: newLevel,
-        exp: remainingExp,
-        maxHealth: newMaxHealth,
-        health: newMaxHealth, // Полное восстановление при левелапе
-        maxHappiness: newMaxHappiness,
-        happiness: crewMember.happiness, // Счастье не меняется
-    };
+    // Счастье уровень не трогает — ни максимум, ни текущее.
+    return { level: newLevel, exp: remainingExp, healthGain };
 };

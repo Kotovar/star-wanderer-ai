@@ -28,6 +28,9 @@ export interface CombatState {
     round: number;
     // Drone stack counter: +5% damage per hit, resets after combat (max 20 stacks = +100%)
     droneStacks: number;
+    // Кто уже получил опыт за боевое назначение в этом бою: раунды ходов не
+    // стоят, поэтому награда даётся раз за бой, а не раз за раунд
+    assignmentExpCrewIds?: number[];
     // Ambush - enemy attacks first (when no scanner and approaching unknown enemy ship)
     isAmbush?: boolean;
     ambushAttackDone?: boolean; // Track if ambush attack was already executed

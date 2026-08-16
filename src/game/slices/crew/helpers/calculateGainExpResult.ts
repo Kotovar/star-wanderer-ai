@@ -3,6 +3,8 @@ import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { CrewMember } from "@/game/types";
 import { calculateExpMultiplier } from "./calculateExpMultiplier";
 import { applyLevelUp } from "./applyLevelUp";
+import { getExpNeededForNextLevel } from "./getExpNeededForNextLevel";
+import { MAX_CREW_LEVEL } from "@/game/constants/crew";
 
 /**
  * Результат начисления опыта члену экипажа
@@ -18,11 +20,8 @@ export interface GainExpResult {
     newLevel?: number;
     /** Сообщение для лога (если было повышение уровня) */
     logMessage?: string;
-    /** Данные о повышении уровня (если было повышение) */
-    levelUpData?: Pick<
-        CrewMember,
-        "maxHealth" | "health" | "maxHappiness" | "happiness"
-    >;
+    /** Прибавка к максимуму здоровья за полученные уровни (если было повышение) */
+    healthGain?: number;
 }
 
 /**
@@ -38,6 +37,15 @@ export const calculateGainExpResult = (
     amount: number,
     state: GameState,
 ): GainExpResult => {
+    // На потолке опыт больше не копится: полоса стоит полной, число не растёт
+    if (crewMember.level >= MAX_CREW_LEVEL) {
+        return {
+            finalAmount: 0,
+            newExp: getExpNeededForNextLevel(MAX_CREW_LEVEL),
+            leveledUp: false,
+        };
+    }
+
     const expMultiplier = calculateExpMultiplier(
         crewMember,
         state.research,
@@ -55,14 +63,7 @@ export const calculateGainExpResult = (
         newExp: levelUp ? levelUp.exp : newExp,
         leveledUp: levelUp !== null,
         newLevel: levelUp?.level,
-        levelUpData: levelUp
-            ? {
-                  maxHealth: levelUp.maxHealth,
-                  health: levelUp.health,
-                  maxHappiness: levelUp.maxHappiness,
-                  happiness: levelUp.happiness,
-              }
-            : undefined,
+        healthGain: levelUp?.healthGain,
         logMessage:
             levelUp !== null
                 ? `${getCrewDisplayName(crewMember)} повысил уровень до ${levelUp.level}!`

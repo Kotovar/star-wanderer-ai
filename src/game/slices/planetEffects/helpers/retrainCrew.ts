@@ -1,9 +1,26 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
-import type { GameStore, Profession, SetState } from "@/game/types";
+import type { CrewMember, GameStore, Profession, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 
 export const ACADEMY_RETRAIN_COST = 1000;
+
+/**
+ * Профессиональные ветки (A/B) читаются по дереву текущей профессии, поэтому
+ * после переучивания старый выбор молча превращался в ветку новой профессии —
+ * ту же букву, но с другим эффектом и другой силой. Сбрасываем их, и тир снова
+ * становится нерешённым: игрок выбирает заново уже в новом дереве.
+ * Расовая ветка (C) от профессии не зависит и остаётся.
+ */
+const keepRaceTechPerks = (
+    techPerks: CrewMember["techPerks"],
+): CrewMember["techPerks"] => {
+    if (!techPerks) return techPerks;
+    const kept = Object.entries(techPerks).filter(
+        ([, branch]) => branch === "C",
+    );
+    return kept.length > 0 ? Object.fromEntries(kept) : undefined;
+};
 
 export const getAcademyRetrainingCooldownKey = (planetId: string): string =>
     `academy-retraining:${planetId}`;
@@ -59,7 +76,13 @@ export const retrainCrewMember = (
         credits: current.credits - ACADEMY_RETRAIN_COST,
         planetCooldowns: { ...current.planetCooldowns, [cooldownKey]: 999 },
         crew: current.crew.map((crew) =>
-            crew.id === crewMemberId ? { ...crew, profession } : crew,
+            crew.id === crewMemberId
+                ? {
+                      ...crew,
+                      profession,
+                      techPerks: keepRaceTechPerks(crew.techPerks),
+                  }
+                : crew,
         ),
     }));
 
