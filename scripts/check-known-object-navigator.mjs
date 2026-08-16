@@ -170,6 +170,10 @@ assert.ok(
   "Cargo sale search must be presented as a goods filter",
 );
 assert.ok(
+  navigatorMarkup.includes(ru.navigator.filters.black_market_only),
+  "Navigator must expose a black-market-only filter",
+);
+assert.ok(
   navigatorMarkup.includes("grid grid-cols-2 gap-2 lg:grid-cols-3"),
   "Navigator filters must use two columns on mobile so results stay visible",
 );
@@ -481,6 +485,28 @@ const navigatorSectors = [
         dominantRace: "human",
       },
       {
+        id: "pirate-market",
+        name: "Known Black Market",
+        type: "station",
+        stationId: "station-pirate",
+        stationConfig: { allowsTrade: true, isPirate: true },
+        dominantRace: "human",
+      },
+      {
+        id: "scanned-pirate-market",
+        name: "Scanned Black Market",
+        type: "station",
+        stationId: "station-scanned-pirate",
+        stationConfig: { allowsTrade: true, isPirate: true },
+      },
+      {
+        id: "hidden-pirate-market",
+        name: "Hidden Black Market",
+        type: "station",
+        stationId: "station-hidden-pirate",
+        stationConfig: { allowsTrade: true, isPirate: true },
+      },
+      {
         id: "mining-station",
         name: "Ore Exchange",
         type: "station",
@@ -582,6 +608,8 @@ const knownLocationIntel = Object.fromEntries(
     [10, "known-lab-station", 8, true],
     [10, "unseen-lab-station", 8, false],
     [10, "zulu-station", 3, false],
+    [10, "pirate-market", 3, false],
+    [10, "scanned-pirate-market", 3, false],
     [10, "mining-station", 8, true],
     [10, "friendly-trader", 8, true],
     [10, "crew-station", 3, false],
@@ -672,11 +700,17 @@ assert.ok(
 const navigatorInput = {
   galaxy: { sectors: navigatorSectors },
   knownLocationIntel,
-  knownTradeStations: ["station-market", "station-zulu", "station-mining"],
+  knownTradeStations: [
+    "station-market",
+    "station-zulu",
+    "station-mining",
+    "station-pirate",
+  ],
   stationPrices: {
     "station-market": { water: { buy: 100, sell: 60 } },
     "station-zulu": { water: { buy: 200, sell: 150 } },
     "station-mining": { minerals: { buy: 100, sell: 95 } },
+    "station-pirate": { contraband: { buy: 300, sell: 200 } },
   },
   friendlyShipStock: {
     "friendly-trader": { water: 7, food: 5, medicine: 3 },
@@ -759,6 +793,35 @@ assert.deepEqual(
     { goodId: "water", buy: 10, sell: 6 },
     { goodId: "water", buy: 40, sell: 30 },
   ],
+);
+const blackMarketResults = results({
+  category: "trade",
+  blackMarketOnly: true,
+});
+assert.deepEqual(
+  blackMarketResults.map(({ locationId }) => locationId),
+  ["pirate-market", "scanned-pirate-market"],
+  "Black-market search must return identified pirate stations only",
+);
+assert.equal(
+  blackMarketResults.some(({ locationId }) => locationId === "hidden-pirate-market"),
+  false,
+  "Black-market search must not reveal unscanned pirate stations",
+);
+assert.deepEqual(
+  results(
+    { category: "trade", blackMarketOnly: true, goodId: "contraband" },
+    {
+      ...navigatorInput,
+      raceReputation: { ...navigatorInput.raceReputation, human: 20 },
+    },
+  ).map(({ locationId, details, trade }) => [locationId, details, trade]),
+  [[
+    "pirate-market",
+    ["black_market", "contraband"],
+    { goodId: "contraband", buy: 60, sell: 52 },
+  ]],
+  "Black-market contraband prices must use its real spread without reputation discounts",
 );
 assert.deepEqual(
   results({
@@ -1056,6 +1119,19 @@ const englishLocalizedMarkup = renderToStaticMarkup(
     }),
     createElement(NavigatorResultDetails, {
       result: {
+        key: "black-market",
+        sectorId: 1,
+        sectorName: "Alpha",
+        sectorTier: 1,
+        locationId: "black-market",
+        locationName: "Black Market",
+        category: "trade",
+        kind: "station",
+        details: ["black_market"],
+      },
+    }),
+    createElement(NavigatorResultDetails, {
+      result: {
         key: "wreck",
         sectorId: 1,
         sectorName: "Alpha",
@@ -1073,6 +1149,7 @@ assert.ok(englishLocalizedMarkup.includes(en.locations.planet_types.oceanic));
 assert.ok(englishLocalizedMarkup.includes(en.racial_traits.sharpshooter.name));
 assert.ok(englishLocalizedMarkup.includes(en.racial_traits.charismatic.name));
 assert.ok(englishLocalizedMarkup.includes(en.trade.goods.water));
+assert.ok(englishLocalizedMarkup.includes(en.pirate.black_market));
 assert.ok(englishLocalizedMarkup.includes(en.location_types.wreck_field));
 assert.equal(englishLocalizedMarkup.includes("Океаническая"), false);
 assert.equal(englishLocalizedMarkup.includes("sharpshooter"), false);
@@ -1128,6 +1205,19 @@ const russianLocalizedMarkup = renderToStaticMarkup(
     }),
     createElement(NavigatorResultDetails, {
       result: {
+        key: "black-market",
+        sectorId: 1,
+        sectorName: "Альфа",
+        sectorTier: 1,
+        locationId: "black-market",
+        locationName: "Чёрный рынок",
+        category: "trade",
+        kind: "station",
+        details: ["black_market"],
+      },
+    }),
+    createElement(NavigatorResultDetails, {
+      result: {
         key: "wreck",
         sectorId: 1,
         sectorName: "Альфа",
@@ -1145,6 +1235,7 @@ assert.ok(russianLocalizedMarkup.includes(ru.locations.planet_types.oceanic));
 assert.ok(russianLocalizedMarkup.includes(ru.racial_traits.sharpshooter.name));
 assert.ok(russianLocalizedMarkup.includes(ru.racial_traits.charismatic.name));
 assert.ok(russianLocalizedMarkup.includes(ru.trade.goods.water));
+assert.ok(russianLocalizedMarkup.includes(ru.pirate.black_market));
 assert.ok(russianLocalizedMarkup.includes(ru.location_types.wreck_field));
 assert.equal(russianLocalizedMarkup.includes("wreck_field"), false);
 

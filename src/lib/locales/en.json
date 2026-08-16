@@ -330,6 +330,7 @@
             "any": "Any",
             "good": "Good",
             "cargo_goods_only": "Only goods in cargo",
+            "black_market_only": "Black markets only",
             "race": "Race",
             "profession": "Profession",
             "min_level": "Minimum level",

@@ -42,6 +42,8 @@ export type NavigatorFilters = {
   sort: NavigatorSort;
   goodId?: Goods;
   cargoOnly?: boolean;
+  /** Только известные пиратские станции с чёрным рынком. */
+  blackMarketOnly?: boolean;
   mineralBuybackOnly?: boolean;
   /** Только станции, где идёт торговля газом: скупка и продажа полимеров */
   gasOnly?: boolean;

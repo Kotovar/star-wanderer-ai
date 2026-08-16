@@ -11,7 +11,11 @@ import {
   canHireRace,
   getRaceReputationLevel,
 } from "@/game/reputation/utils";
-import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
+import {
+  getPirateContrabandBuyPrice,
+  getPirateContrabandSellPrice,
+  getTierPriceMultiplier,
+} from "@/game/slices/trade/constants";
 import { applyCrisisMarketModifier } from "@/game/stations/crisisMarket";
 import type {
   GameState,
@@ -193,7 +197,7 @@ const withReputation = (
   input: NavigatorInput,
   location: Location,
 ): { buy: number; sell: number } => {
-  const batchPrices = !location.dominantRace
+  const batchPrices = !location.dominantRace || location.stationConfig?.isPirate
     ? prices
     : {
         buy: applyReputationPriceModifier(
@@ -225,12 +229,17 @@ const getTradeResult = (
   goodId = input.filters.goodId,
 ): NavigatorResult | null => {
   const result = createResult(sector, location, "trade", []);
+  const isBlackMarket =
+    location.type === "station" && location.stationConfig?.isPirate === true;
+  const blackMarketDetails = isBlackMarket ? ["black_market"] : [];
+
+  if (input.filters.blackMarketOnly && !isBlackMarket) return null;
 
   // Газ торгуется только на станциях с торговым блоком: он живёт во вкладке
   // торговли, а у добывающей та же вкладка под минералы. Корабли-торговцы
   // газ не берут вовсе, поэтому здесь их отсекаем сразу
   if (input.filters.gasOnly) {
-    if (location.type !== "station") return null;
+    if (location.type !== "station" || isBlackMarket) return null;
     const stationId = location.stationId ?? location.id;
     const known =
       intel.visited ||
@@ -263,7 +272,7 @@ const getTradeResult = (
     ) {
       return null;
     }
-    if (!goodId) return result;
+    if (!goodId) return { ...result, details: blackMarketDetails };
     const stationId = location.stationId ?? location.id;
     const prices = input.knownTradeStations.includes(stationId)
       ? input.stationPrices[stationId]?.[goodId]
@@ -271,19 +280,31 @@ const getTradeResult = (
     const adjustedPrices = prices
       ? applyCrisisMarketModifier(prices, input.activeCrisis?.id, goodId)
       : undefined;
-    return adjustedPrices
+    const marketPrices =
+      adjustedPrices && isBlackMarket && goodId === "contraband"
+        ? {
+            buy: getPirateContrabandBuyPrice(
+              adjustedPrices.buy,
+              adjustedPrices.sell,
+            ),
+            sell: getPirateContrabandSellPrice(adjustedPrices.sell),
+          }
+        : adjustedPrices;
+    return marketPrices
       ? {
           ...result,
-          details: [goodId],
+          details: [...blackMarketDetails, goodId],
           trade: {
             goodId,
-            ...withReputation(adjustedPrices, input, location),
+            ...withReputation(marketPrices, input, location),
           },
         }
       : null;
   }
 
-  if (input.filters.mineralBuybackOnly) return null;
+  if (input.filters.mineralBuybackOnly || input.filters.blackMarketOnly) {
+    return null;
+  }
 
   if (
     location.type !== "friendly_ship" ||

@@ -330,6 +330,7 @@
             "any": "Любой",
             "good": "Товар",
             "cargo_goods_only": "Только товары из трюма",
+            "black_market_only": "Только чёрный рынок",
             "race": "Раса",
             "profession": "Профессия",
             "min_level": "Мин. уровень",

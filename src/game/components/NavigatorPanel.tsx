@@ -119,6 +119,9 @@ const getResultDetailLabel = (
   if (result.category === "trade" && TRADE_GOODS[detail as Goods]) {
     return t(`trade.goods.${detail}`);
   }
+  if (result.category === "trade" && detail === "black_market") {
+    return t("pirate.black_market");
+  }
   if (detail === "gas_sell" || detail === "gas_buy_polymers") {
     return t(`navigator.gas.${detail}`);
   }
@@ -459,6 +462,9 @@ export function NavigatorPanel() {
                     mineralBuybackOnly: event.target.checked
                       ? undefined
                       : filters.mineralBuybackOnly,
+                    blackMarketOnly: event.target.checked
+                      ? undefined
+                      : filters.blackMarketOnly,
                     goodId: event.target.checked ? undefined : filters.goodId,
                   })
                 }
@@ -473,6 +479,9 @@ export function NavigatorPanel() {
                 onChange={(event) =>
                   updateFilters({
                     mineralBuybackOnly: event.target.checked,
+                    blackMarketOnly: event.target.checked
+                      ? undefined
+                      : filters.blackMarketOnly,
                     goodId:
                       event.target.checked &&
                       filters.goodId &&
@@ -483,6 +492,23 @@ export function NavigatorPanel() {
                 }
               />
               {t("navigator.filters.mineral_buyback_only")}
+            </label>
+            <label className="flex items-center gap-2 self-end pb-1 text-xs text-[#9aa59a]">
+              <input
+                type="checkbox"
+                checked={Boolean(filters.blackMarketOnly)}
+                disabled={Boolean(filters.gasOnly || filters.mineralBuybackOnly)}
+                onChange={(event) =>
+                  updateFilters({
+                    blackMarketOnly: event.target.checked || undefined,
+                    gasOnly: event.target.checked ? undefined : filters.gasOnly,
+                    mineralBuybackOnly: event.target.checked
+                      ? undefined
+                      : filters.mineralBuybackOnly,
+                  })
+                }
+              />
+              {t("navigator.filters.black_market_only")}
             </label>
           </>
           )}
