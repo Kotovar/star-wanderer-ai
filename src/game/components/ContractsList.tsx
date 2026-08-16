@@ -154,8 +154,11 @@ export function ContractsList() {
     const frontierFuelCost = frontierStation
         ? calculateFuelCostForUI(get(), frontierStation.sector.id).fuelCost
         : null;
+    const hasActiveFrontierContract = activeContracts.some(
+        (contract) => contract.progressionTrack === "frontier",
+    );
     const showFrontierCard =
-        !frontierChainClosed ||
+        hasActiveFrontierContract ||
         !!(
             frontierSubsidy &&
             (frontierSubsidy.weaponBayAvailable || frontierSubsidy.weaponAvailable)

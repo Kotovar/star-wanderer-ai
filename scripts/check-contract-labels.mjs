@@ -424,6 +424,11 @@ setUiState({
   turn: 5,
   addLog: () => {},
 });
+const frontierUnstartedMarkup = renderToStaticMarkup(createElement(ContractsList));
+assert.ok(
+  !frontierUnstartedMarkup.includes("Контракты дальнего рубежа"),
+  "линейка дальнего рубежа не должна отображаться среди активных заданий до принятия первого контракта",
+);
 const frontierOfferMarkup = renderToStaticMarkup(createElement(PlanetPanel));
 assert.equal(
   frontierOfferMarkup.split("Поручение дальнего рубежа").length - 1,
@@ -433,6 +438,10 @@ assert.equal(
 
 patchUiState({ activeContracts: [FRONTIER_DELIVERY, ORDINARY_DELIVERY] });
 const frontierActiveMarkup = renderToStaticMarkup(createElement(ContractsList));
+assert.ok(
+  frontierActiveMarkup.includes("Контракты дальнего рубежа"),
+  "линейка дальнего рубежа должна отображаться после принятия первого контракта",
+);
 assert.equal(
   frontierActiveMarkup.split("Поручение дальнего рубежа").length - 1,
   1,
