@@ -5,8 +5,8 @@ import { calculateFuelCostForUI } from "@/game/slices/travel/helpers/calculateFu
 import type { Contract, GameState, Location, Module, Sector, ShopItem } from "@/game/types";
 
 export const FRONTIER_CONTRACT_TARGET = 2;
-export const FRONTIER_WEAPON_BAY_DISCOUNT = 200;
-export const FRONTIER_WEAPON_DISCOUNT = 300;
+export const FRONTIER_WEAPON_BAY_DISCOUNT = 300;
+export const FRONTIER_WEAPON_DISCOUNT = 200;
 export const FRONTIER_CONTRACT_TYPES: readonly Contract["type"][] = [
   "delivery",
   "supply_run",
@@ -50,8 +50,7 @@ export const getFrontierSubsidyPrice = (
         : 0;
   if (!amount) return { price: item.price, discount: 0 };
 
-  const subsidizedPrice = Math.max(0, (item.basePrice ?? item.price) - amount);
-  const price = Math.min(item.price, subsidizedPrice);
+  const price = Math.max(0, item.price - amount);
   return { price, discount: item.price - price };
 };
 

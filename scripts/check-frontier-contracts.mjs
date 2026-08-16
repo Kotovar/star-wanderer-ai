@@ -708,7 +708,7 @@ const laser = {
 };
 assert.deepEqual(
   getFrontierSubsidyPrice(targetState, weaponBay, targetStationId),
-  { price: 300, discount: 200 },
+  { price: 200, discount: 300 },
 );
 assert.deepEqual(
   getFrontierSubsidyPrice(
@@ -716,12 +716,13 @@ assert.deepEqual(
     { ...weaponBay, price: 300 },
     targetStationId,
   ),
-  { price: 300, discount: 0 },
-  "a station discount tied with the subsidy must not display a voucher discount",
+  { price: 0, discount: 300 },
+  "the weapon bay subsidy must remain a fixed 300 credits",
 );
 assert.deepEqual(
   getFrontierSubsidyPrice(targetState, laser, targetStationId),
-  { price: 0, discount: 255 },
+  { price: 55, discount: 200 },
+  "the weapon subsidy must use the current station price and remain a fixed 200 credits",
 );
 assert.equal(
   getFrontierSubsidyPrice(targetState, laser, wrongStationId).discount,
@@ -778,12 +779,12 @@ const successfulSubsidizedBay = makeStoreStub({
 });
 createShopSlice(successfulSubsidizedBay.set, successfulSubsidizedBay.get)
   .buyItem({ ...weaponBay, width: 1, height: 1 });
-assert.equal(successfulSubsidizedBay.state.credits, 0);
+assert.equal(successfulSubsidizedBay.state.credits, 100);
 assert.equal(successfulSubsidizedBay.state.frontierSubsidy.weaponBayAvailable, false);
 assert.equal(successfulSubsidizedBay.state.frontierSubsidy.weaponAvailable, true);
 
 const successfulSubsidizedWeapon = makeStoreStub({
-  credits: 0,
+  credits: 55,
   currentLocation: { stationId: targetStationId },
   stationInventory: { [targetStationId]: {} },
   frontierSubsidy: { ...targetState.frontierSubsidy },
@@ -806,8 +807,8 @@ assert.equal(
 );
 assert.deepEqual(
   getFrontierSubsidyPrice(targetState, { ...weaponBay, price: 250 }, targetStationId),
-  { price: 250, discount: 0 },
-  "the stronger station discount must win without stacking",
+  { price: 0, discount: 250 },
+  "the subsidy must be capped by the current item price",
 );
 const successfulCraft = makeStoreStub({
   ship: {

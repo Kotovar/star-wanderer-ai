@@ -176,17 +176,17 @@ const subsidizedShopMarkup = renderToStaticMarkup(
   }),
 );
 assert.ok(
-  subsidizedShopMarkup.includes("Субсидия дальнего рубежа: −255₢"),
+  subsidizedShopMarkup.includes("Субсидия дальнего рубежа: −200₢"),
   "магазин обязан показывать применённую субсидию",
 );
 assert.ok(
-  subsidizedShopMarkup.includes("💰 0 ₢"),
+  subsidizedShopMarkup.includes("💰 55 ₢"),
   "магазин обязан показывать итоговую цену",
 );
-assert.doesNotMatch(
+assert.match(
   subsidizedShopMarkup,
   /<button[^>]*disabled=""/,
-  "нулевой итог должен быть доступен с нулевыми кредитами",
+  "недостающие после фиксированной субсидии кредиты должны блокировать покупку",
 );
 
 patchUiState({

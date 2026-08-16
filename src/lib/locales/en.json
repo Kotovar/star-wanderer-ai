@@ -1057,7 +1057,7 @@
             "subsidy": "Subsidy remaining: weapon bay {{weaponBay}}₢ · weapon {{weapon}}₢",
             "subsidy_weapon_bay": "Weapon bay: {{status}}",
             "subsidy_weapon": "Weapon: {{status}}",
-            "subsidy_remaining": "−{{amount}}₢ available",
+            "subsidy_remaining": "−{{amount}}₢ discount available",
             "subsidy_completed": "redeemed",
             "bounty_friendly": "FRIENDLY BOUNTY · +{{reputation}} reputation",
             "step_badge": "Frontier Assignment"

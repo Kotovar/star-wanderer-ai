@@ -1073,14 +1073,14 @@ export function ContractsList() {
                                 <div>
                                     {t("contracts.frontier.subsidy_weapon_bay", {
                                         status: frontierSubsidy.weaponBayAvailable
-                                            ? t("contracts.frontier.subsidy_remaining", { amount: 200 })
+                                            ? t("contracts.frontier.subsidy_remaining", { amount: 300 })
                                             : t("contracts.frontier.subsidy_completed"),
                                     })}
                                 </div>
                                 <div>
                                     {t("contracts.frontier.subsidy_weapon", {
                                         status: frontierSubsidy.weaponAvailable
-                                            ? t("contracts.frontier.subsidy_remaining", { amount: 300 })
+                                            ? t("contracts.frontier.subsidy_remaining", { amount: 200 })
                                             : t("contracts.frontier.subsidy_completed"),
                                     })}
                                 </div>
