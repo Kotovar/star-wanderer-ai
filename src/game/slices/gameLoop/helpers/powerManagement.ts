@@ -123,25 +123,33 @@ const handlePowerSurplus = (get: () => GameStore, set: SetStateFn): void => {
     if (disabledModules.length === 0) return;
 
     const { currentPower, currentConsumption } = getPowerStatus(get);
-    const powerNeeded = disabledModules.reduce(
-        (sum, m) => sum + (m.consumption ?? 0),
-        0,
-    );
 
-    if (currentPower < currentConsumption + powerNeeded) return;
+    // Включаем по одному, пока хватает запаса: раньше включались либо все
+    // разом, либо (если на всех не хватало) ни один — корабль оставался
+    // обесточенным даже с профицитом на половину списка.
+    let surplus = currentPower - currentConsumption;
+    const restoredIds = new Set<number>();
+    for (const mod of disabledModules) {
+        const consumption = mod.consumption ?? 0;
+        if (consumption > surplus) continue;
+        surplus -= consumption;
+        restoredIds.add(mod.id);
+    }
+
+    if (restoredIds.size === 0) return;
 
     set((s) => ({
         ship: {
             ...s.ship,
             modules: s.ship.modules.map((m) =>
-                m.disabled && m.health > 0 ? { ...m, disabled: false } : m,
+                restoredIds.has(m.id) ? { ...m, disabled: false } : m,
             ),
         },
     }));
     get().updateShipStats();
     const { currentPower: newPower, currentConsumption: newConsumption } =
         getPowerStatus(get);
-    get().addLog( i18nStore.t("game_logs.powerManagement_4", { disabledModules_length: disabledModules.length, newConsumption: newPower - newConsumption }),
+    get().addLog( i18nStore.t("game_logs.powerManagement_4", { disabledModules_length: restoredIds.size, newConsumption: newPower - newConsumption }),
         "info",
     );
 };

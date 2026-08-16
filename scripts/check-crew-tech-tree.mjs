@@ -438,15 +438,12 @@ assert.match(
   /const PILOT_LEVEL_RETREAT_BONUS = 2/,
   "pilot level retreat growth is bounded at 2% per level",
 );
-assert.match(
-  playerDamageSource,
-  /const bestGunnerAccuracyBonus = Math\.max\(/,
-  "legacy global accuracy uses only the strongest active gunner",
-);
+// Общий (не по отсекам) расчёт точности удалён вместе с legacy-атакой —
+// остался только per-bay, поэтому личные бонусы стрелков негде складывать.
 assert.doesNotMatch(
   playerDamageSource,
   /state\.crew\.forEach\(\(c\) => \{[\s\S]*?getTechPerkValue\(c, "A"\)/,
-  "legacy global accuracy must not stack every gunner's personal bonuses",
+  "accuracy must not stack every gunner's personal bonuses",
 );
 assert.match(
   playerDamageSource,

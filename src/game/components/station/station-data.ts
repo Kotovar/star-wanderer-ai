@@ -11,6 +11,7 @@ import { CREW_BASE_PRICES } from "@/game/constants/crew";
 import { generateCrewTraits, getRandomName, rollQuality } from "@/game/crew/utils";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import { RACES } from "@/game/constants/races";
+import { shuffle } from "@/game/utils/shuffle";
 
 // Module pools by tier level
 // Tier 1: levels 1-2, Tier 2: levels 2-3, Tier 3: levels 3-4 (rare)
@@ -1007,6 +1008,13 @@ export function generateStationItems(
     hash = hash & hash;
   }
 
+  // Детерминированный источник случайности для перестановок: ассортимент
+  // станции обязан быть стабильным между заходами, поэтому не Math.random.
+  const nextSeeded = (): number => {
+    hash = (hash * 1103515245 + 12345) & 0x7fffffff;
+    return hash / 0x80000000;
+  };
+
   const items: ShopItem[] = [];
   const withBasePrice = (item: ShopItem): ShopItem => ({
     ...item,
@@ -1082,10 +1090,7 @@ export function generateStationItems(
     (m) => !guaranteedModules.includes(m.moduleType),
   );
 
-  const shuffled = [...modulePool].sort(() => {
-    hash = (hash * 1103515245 + 12345) & 0x7fffffff;
-    return (hash % 3) - 1;
-  });
+  const shuffled = shuffle(modulePool, nextSeeded);
 
   for (let i = 0; i < Math.min(numModules, shuffled.length); i++) {
     const baseItem = shuffled[i];
@@ -1111,10 +1116,7 @@ export function generateStationItems(
   } else {
     // Random weapons for stations without guaranteed weapons
     const numWeapons = 1 + (Math.abs(hash >> 4) % 2);
-    const shuffledWeapons = [...WEAPONS].sort(() => {
-      hash = (hash * 1103515245 + 12345) & 0x7fffffff;
-      return (hash % 3) - 1;
-    });
+    const shuffledWeapons = shuffle(WEAPONS, nextSeeded);
     for (let i = 0; i < numWeapons; i++) {
       const weapon = shuffledWeapons[i];
       items.push({ ...withBasePrice(weapon), id: `${weapon.id}-${stationId}` });

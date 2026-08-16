@@ -20,7 +20,9 @@ const { generateGalaxy } = jiti("../src/game/galaxy/generateGalaxy.ts");
 const { RUN_PROFILES } = jiti("../src/game/galaxy/runProfiles.ts");
 const { generateLocation } = jiti("../src/game/galaxy/getLocation.ts");
 const { ensureStation, ensureStationAnchors } = jiti("../src/game/galaxy/ensure.ts");
-const { calculateFuelCost } = jiti("../src/game/slices/travel/helpers/calculateFuelCost.ts");
+const { calculateFuelCost, canWarpJump } = jiti(
+  "../src/game/slices/travel/helpers/calculateFuelCost.ts",
+);
 const { repairShip } = jiti("../src/game/slices/services/helpers/repairShip.ts");
 const { getEffectiveScanRange } = jiti("../src/game/slices/scanner/helpers/getEffectiveScanRange.ts");
 const { scanSector } = jiti("../src/game/slices/planetEffects/helpers/scanSector.ts");
@@ -281,18 +283,41 @@ const LOCATION_TYPE_BY_WEIGHT = {
 };
 const ruleSamples = {};
 const plainSample = { sectors: 0 };
-for (let run = 0; run < 120; run += 1) {
-  for (const sector of generateGalaxy()) {
-    if (sector.star.type === "blackhole") continue;
 
-    const bucket = sector.ruleId
-      ? (ruleSamples[sector.ruleId] ??= { sectors: 0 })
-      : plainSample;
-    bucket.sectors += 1;
-    for (const location of sector.locations) {
-      bucket[location.type] = (bucket[location.type] ?? 0) + 1;
+/**
+ * Выборка обязана быть воспроизводимой. Веса нормализуются до суммы 1, поэтому
+ * слабейший множитель (dead_drift, derelictShip ×2) даёт по доле всего ~×2 при
+ * пороге ×1.3 — на живом Math.random разброс по 120 галактикам накрывал порог
+ * примерно раз на двадцать прогонов, и проверка падала на ровном месте.
+ */
+const seededRandom = (seed) => {
+  let state = seed | 0;
+  return () => {
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+};
+
+const liveRandom = Math.random;
+Math.random = seededRandom(20260816);
+try {
+  for (let run = 0; run < 120; run += 1) {
+    for (const sector of generateGalaxy()) {
+      if (sector.star.type === "blackhole") continue;
+
+      const bucket = sector.ruleId
+        ? (ruleSamples[sector.ruleId] ??= { sectors: 0 })
+        : plainSample;
+      bucket.sectors += 1;
+      for (const location of sector.locations) {
+        bucket[location.type] = (bucket[location.type] ?? 0) + 1;
+      }
     }
   }
+} finally {
+  Math.random = liveRandom;
 }
 const shareOf = (bucket, type) => (bucket[type] ?? 0) / bucket.sectors;
 for (const rule of Object.values(SECTOR_RULES)) {
@@ -547,20 +572,45 @@ assert.equal(
   "zero field must disable warp coil",
 );
 // calculateFuelCost отказывает правильно, но решение о мгновенности принимает
-// selectSector — раньше он сам объявлял прыжок мгновенным по одному лишь теху.
-const selectSectorSource = readFileSync(
-  path.join(root, "src/game/slices/travel/helpers/selectSector.ts"),
-  "utf8",
+// selectSector — он спрашивает canWarpJump, так что проверяем поведение
+// разрешающей функции, а не текст вызывающего файла.
+const jumpState = makeState();
+const jumpOrigin = { ...makeSector(902, 2), id: 902, mapAngle: 0 };
+const jumpBlockedOrigin = {
+  ...makeSector(903, 2, "zero_field"),
+  id: 903,
+  mapAngle: 0,
+};
+const jumpSameTier = { ...makeSector(904, 2), id: 904, mapAngle: Math.PI / 4 };
+const jumpNextTier = { ...makeSector(905, 3), id: 905, mapAngle: Math.PI / 4 };
+jumpState.galaxy.sectors = [
+  jumpOrigin,
+  jumpBlockedOrigin,
+  jumpSameTier,
+  jumpNextTier,
+];
+jumpState.research = {
+  researchedTechs: ["warp_drive"],
+  resources: { quantum_crystals: 99 },
+};
+
+jumpState.currentSector = jumpOrigin;
+assert.equal(
+  canWarpJump(jumpState, jumpNextTier.id),
+  true,
+  "warp drive must jump across tiers when crystals allow it",
 );
-assert.match(
-  selectSectorSource,
-  /const hasWarpDrive =\s*state\.research\.researchedTechs\.includes\("warp_drive"\) &&\s*getSectorRule\(state\.currentSector\?\.ruleId\)\?\.restrictions\?\.noWarp !== true;/,
+assert.equal(
+  canWarpJump(jumpState, jumpSameTier.id),
+  false,
+  "warp must not spend crystals inside the tier — that trip is instant anyway",
+);
+
+jumpState.currentSector = jumpBlockedOrigin;
+assert.equal(
+  canWarpJump(jumpState, jumpNextTier.id),
+  false,
   "the warp drive tech must not bypass a noWarp sector rule",
-);
-assert.doesNotMatch(
-  selectSectorSource,
-  /const hasWarpDrive = state\.research\.researchedTechs\.includes\("warp_drive"\);/,
-  "warp drive must never be read without its sector restriction",
 );
 
 // Экономия топлива от правила обязана переживать потолок топливных технологий.

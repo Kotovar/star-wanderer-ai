@@ -121,6 +121,12 @@ export interface GameState {
   /** Версия состояния для миграций сохранений */
   stateVersion: number;
   turn: number;
+  /**
+   * Ход, на котором в последний раз отработал nextTurn. Нужен тикам «раз в N
+   * ходов»: счётчик хода растёт и мимо nextTurn, см. crossedTurnInterval.
+   * У старых сохранений поля нет.
+   */
+  lastProcessedTurn?: number;
   credits: number;
   /** Валовые поступления кредитов в текущем забеге, без стартового баланса */
   creditsEarnedThisRun: number;
@@ -324,7 +330,6 @@ export interface GameCombat {
   startCombat: (enemy: Location, isAmbush?: boolean) => void;
   startBossCombat: (bossLocation: Location) => void;
   selectEnemyModule: (moduleId: number) => void;
-  attackEnemy: () => void;
   attackEnemyWithBayTargets: (bayTargets: Record<number, number | null>) => CombatTurnTimeline | null;
   executeAmbushAttack: () => void; // Execute enemy attack for ambush (first strike)
   processEnemyAttack: () => void; // Process enemy counter-attack during combat

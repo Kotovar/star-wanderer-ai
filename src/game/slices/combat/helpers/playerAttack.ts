@@ -16,7 +16,6 @@ import {
   getWeaponAccuracy,
   getPlayerCritChance,
   calculateFinalDamagePerWeapon,
-  computeAccuracyModifier,
   computeBayAccuracyModifier,
   processLaserDamage,
   processKineticDamage,
@@ -60,6 +59,7 @@ import type {
 } from "../../../types/combatCinematics";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import type { CrewMember } from "@/game/types";
+import type { EnemyModule } from "@/game/types/enemy";
 
 // Призматическая линза работает только из оружейной палубы с лазером.
 const getCrewLaserDamageBonus = (
@@ -146,7 +146,7 @@ const createCombatHitEventId = () => Date.now() + Math.random();
 
 function recordEnemyMiss(
   set: (fn: (s: GameState) => void) => void,
-  target: NonNullable<ReturnType<typeof resolveTarget>>,
+  target: EnemyModule,
 ) {
   set((s) => {
     if (!s.currentCombat) return;
@@ -370,80 +370,6 @@ function getWeaponBayCrew(state: GameState) {
 }
 
 /**
- * Counts weapons by type across all active weapon bays
- */
-function countWeapons(state: GameState): WeaponCounts {
-  const counts: WeaponCounts = {
-    kinetic: 0,
-    laser: 0,
-    missile: 0,
-    plasma: 0,
-    drones: 0,
-    antimatter: 0,
-    siege_torpedo: 0,
-    quantum_torpedo: 0,
-    ion_cannon: 0,
-  };
-
-  state.ship.modules.forEach((m) => {
-    if (m.type === "weaponbay" && m.weapons) {
-      m.weapons.forEach((w) => {
-        if (w && WEAPON_TYPES[w.type]) counts[w.type]++;
-      });
-    }
-  });
-
-  return counts;
-}
-
-/**
- * Resolves the target module for this attack.
- * Returns null and logs an error if no valid target is available.
- */
-function resolveTarget(
-  state: GameState,
-  crewInWeaponBays: ReturnType<typeof getWeaponBayCrew>["crewInWeaponBays"],
-  get: () => GameStore,
-) {
-  if (!state.currentCombat) return null;
-
-  const hasGunner = crewInWeaponBays.some((c) => c.profession === "gunner");
-  const hasGunnerWithTargeting = crewInWeaponBays.some(
-    (c) => c.profession === "gunner" && c.combatAssignment === "targeting",
-  );
-
-  const aliveModules = state.currentCombat.enemy.modules.filter(
-    (m) => m.health > 0,
-  );
-  if (aliveModules.length === 0) return null;
-
-  // No gunner → fully random
-  if (!hasGunner) {
-    const target =
-      aliveModules[Math.floor(Math.random() * aliveModules.length)];
-    get().addLog( i18nStore.t("game_logs.playerAttack_1", { target_name: target.name }), "warning");
-    return target;
-  }
-
-  // Gunner without targeting → random among alive
-  if (!hasGunnerWithTargeting) {
-    return aliveModules[Math.floor(Math.random() * aliveModules.length)];
-  }
-
-  // Gunner with targeting → use selected module
-  const selectedTarget = state.currentCombat.enemy.modules.find(
-    (m) => m.id === state.currentCombat?.enemy.selectedModule,
-  );
-
-  if (!selectedTarget || selectedTarget.health <= 0) {
-    get().addLog( i18nStore.t("game_logs.playerAttack_2"), "error");
-    return null;
-  }
-
-  return selectedTarget;
-}
-
-/**
  * Rolls for critical hit, applying artifact bonuses.
  * Logs bonuses only when a crit actually occurs.
  */
@@ -485,48 +411,6 @@ function rollCrit(state: GameState, get: () => GameStore): CritResult {
   }
 
   return { isCrit, multiplier: critMultiplier };
-}
-
-/**
- * Builds the accuracy modifier from crew, modules, and artifacts.
- * Uses computeAccuracyModifier for the calculation (shared with UI),
- * then emits log messages for significant bonuses.
- */
-function resolveAccuracy(
-  state: GameState,
-  crewInWeaponBays: ReturnType<typeof getWeaponBayCrew>["crewInWeaponBays"],
-  _combatFlags: CombatFlags,
-  get: () => GameStore,
-): number {
-  const modifier = computeAccuracyModifier(state);
-
-  // Logging (no effect on calculation)
-  const gunnerInBay = crewInWeaponBays.find((c) => c.profession === "gunner");
-  if (gunnerInBay) {
-    const gunnerLevel = gunnerInBay.level || 1;
-    const gunnerBonus = Math.min(0.2, gunnerLevel * 0.02);
-    get().addLog( i18nStore.t("game_logs.playerAttack_6", { gunnerInBay_name: getCrewDisplayName(gunnerInBay), gunnerLevel, value: Math.round(gunnerBonus * 100) }),
-      "info",
-    );
-  }
-  const aiCoreCount = state.ship.modules.filter(
-    (m) => m.type === "ai_core" && isModuleActive(m),
-  ).length;
-  if (aiCoreCount > 0) {
-    get().addLog( i18nStore.t("game_logs.playerAttack_7", { value: aiCoreCount * 5 }), "info");
-  }
-  const targetingCore = findActiveArtifact(
-    state.artifacts,
-    ARTIFACT_TYPES.TARGETING_CORE,
-  );
-  if (targetingCore) {
-    const bonus = getArtifactEffectValue(targetingCore, state);
-    get().addLog( i18nStore.t("game_logs.playerAttack_8", { value: Math.round(bonus) }),
-      "info",
-    );
-  }
-
-  return modifier;
 }
 
 /**
@@ -807,7 +691,7 @@ function calculateAllDamage(
 function applyDamageToEnemy(
   set: (fn: (s: GameState) => void) => void,
   get: () => GameStore,
-  tgtMod: NonNullable<ReturnType<typeof resolveTarget>>,
+  tgtMod: EnemyModule,
   damage: DamageResult,
   enemyShields: number,
   combatFlags: CombatFlags,
@@ -1080,180 +964,6 @@ function resolveCombatFlags(
   };
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
-
-/**
- * Executes player attack on enemy.
- */
-export function executePlayerAttack(
-  set: (fn: (s: GameState) => void) => void,
-  get: () => GameStore,
-) {
-  // Use get() for fresh state throughout
-  const currentState = get();
-  if (!currentState.currentCombat) return;
-
-  // 0. Skip turn check (boss turn_skip effect)
-  if (consumeSkippedTurn(set, get)) return;
-
-  // 1. Crew & weapon setup
-  const { weaponBays, crewInWeaponBays } = getWeaponBayCrew(currentState);
-  const combatFlags = resolveCombatFlags(currentState, crewInWeaponBays);
-  const weaponCounts = countWeapons(currentState);
-
-  const totalWeapons =
-    weaponCounts.kinetic +
-    weaponCounts.laser +
-    weaponCounts.missile +
-    weaponCounts.plasma +
-    weaponCounts.drones +
-    weaponCounts.antimatter +
-    weaponCounts.siege_torpedo +
-    weaponCounts.quantum_torpedo +
-    weaponCounts.ion_cannon;
-  if (totalWeapons === 0) {
-    // Отказ действия — кинематики не будет, звук нужен сразу.
-    playSound("combat_no_active_weapons");
-    return;
-  }
-
-  // 2. Target resolution
-  const tgtMod = resolveTarget(currentState, crewInWeaponBays, get);
-  if (!tgtMod) return;
-  playWeaponFires(weaponCounts);
-
-  // 2a. Boss evasion_boost: entire attack evaded
-  if (checkBossEvasionBoost(currentState, get)) {
-    recordEnemyMiss(set, tgtMod);
-    finishPlayerTurn(currentState, set, get);
-    return;
-  }
-
-  // 2b. Module dodge passive (boss or space monster)
-  const aliveBossMods = currentState.currentCombat.enemy.modules.filter(
-    (m) => m.health > 0,
-  );
-  if (checkBossModuleDodge(aliveBossMods, get)) {
-    get().addLog( i18nStore.t("game_logs.playerAttack_11", { tgtMod_name: tgtMod.name }), "warning");
-    recordEnemyMiss(set, tgtMod);
-    finishPlayerTurn(currentState, set, get);
-    return;
-  }
-
-  // 3. Crit roll
-  const crit = rollCrit(currentState, get);
-  let damageMultiplier = crit.isCrit ? crit.multiplier : 1;
-
-  // 3a. Module phase_shift: negate critical hit
-  if (crit.isCrit && checkBossPhaseShift(aliveBossMods, get)) {
-    damageMultiplier = 1;
-  }
-
-  // 4. Accuracy
-  const accuracyModifier = resolveAccuracy(
-    currentState,
-    crewInWeaponBays,
-    combatFlags,
-    get,
-  );
-
-  // 5. Damage per weapon
-  const baseWeaponDamage = get().getTotalDamage().total;
-  const finalDamagePerWeapon = calculateFinalDamagePerWeapon(
-    baseWeaponDamage,
-    combatFlags.hasGunner,
-  );
-
-  // 6. Calculate all damage
-  const enemyShields = currentState.currentCombat.enemy.shields;
-  const droneStacks = currentState.currentCombat.droneStacks;
-
-  // Призматическая линза: носитель должен быть в палубе с лазером.
-  const laserDamageBonus = getCrewLaserDamageBonus(
-    currentState.crew,
-    currentState.ship.modules,
-  );
-
-  // Build per-type damage using fullMultiplier = finalDamagePerWeapon / rawBaseTotal,
-  // where rawBaseTotal is the unmodified sum of per-type bases (no racial/artifact/tech bonuses).
-  // This correctly scales each weapon type by ALL bonuses combined.
-  const totalDamageByType = get().getTotalDamage();
-  const rawBaseTotal = (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "siege_torpedo", "quantum_torpedo", "ion_cannon"] as const)
-    .reduce((s, t) => s + totalDamageByType[t], 0);
-  const fullMultiplier = rawBaseTotal > 0 ? finalDamagePerWeapon / rawBaseTotal : 1;
-  const perTypeDamage: Partial<Record<string, number>> = {};
-  (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "siege_torpedo", "quantum_torpedo", "ion_cannon"] as const).forEach(
-    (type) => {
-      if (totalDamageByType[type] > 0) {
-        perTypeDamage[type] = Math.floor(totalDamageByType[type] * fullMultiplier);
-      }
-    },
-  );
-
-  const damage = calculateAllDamage(
-    weaponCounts,
-    finalDamagePerWeapon,
-    damageMultiplier,
-    enemyShields,
-    accuracyModifier,
-    droneStacks,
-    laserDamageBonus,
-    perTypeDamage,
-    currentState.currentCombat.enemy.modules,
-  );
-
-  // Early return if everything missed
-  if (damage.totalShieldDamage === 0 && damage.totalModuleDamage === 0) {
-    damage.logs.forEach((log) => get().addLog(log, "combat"));
-    get().addLog( i18nStore.t("game_logs.playerAttack_12"), "warning");
-    recordEnemyMiss(set, tgtMod);
-    finishPlayerTurn(currentState, set, get);
-    return;
-  }
-
-  // 7. Apply damage
-  applyDamageToEnemy(
-    set,
-    get,
-    tgtMod,
-    damage,
-    enemyShields,
-    combatFlags,
-    weaponCounts,
-    crit.isCrit && damageMultiplier > 1,
-  );
-  if (crit.isCrit && damageMultiplier > 1) {
-    playCombatSound("combat_critical");
-  }
-
-  // 7a. Boss take-damage passives (damage_absorb, damage_mirror)
-  if (currentState.currentCombat.enemy.isBoss && damage.totalModuleDamage > 0) {
-    applyBossTakeDamageEffects(get(), set, get, damage.totalModuleDamage);
-  }
-
-  // 8. Flush logs
-  damage.logs.forEach((log) => get().addLog(log, "combat"));
-
-  // 8b. symbiotic_armor: xenosymbiont crew heal for % of total damage dealt
-  applyXenoLifesteal(
-    damage.totalShieldDamage + damage.totalModuleDamage,
-    currentState.crew,
-    set,
-    get,
-  );
-
-  // 8a. If a shield module was just destroyed, recalculate enemy shield pool
-  if (damage.totalModuleDamage > 0 && tgtMod.type === "shield") {
-    recalcEnemyShieldPoolIfDestroyed(set, get, tgtMod.id);
-  }
-
-  // 9. Victory check
-  if (resolveVictoryIfCoreDestroyed(currentState, set, get, weaponBays)) return;
-
-  // 10-12. Counter-attack, cleanup, round advance
-  finishPlayerTurn(currentState, set, get);
-}
-
 // ─── Per-bay attack ────────────────────────────────────────────────────────────
 
 /**
@@ -1433,8 +1143,13 @@ export function executePlayerAttackWithBayTargets(
     const bayPerTypeDamage: Partial<Record<string, number>> = {};
     bay.weapons?.forEach((w) => {
       if (w && WEAPON_TYPES[w.type]) {
-        bayPerTypeDamage[w.type] = Math.floor(
-          Math.floor(WEAPON_TYPES[w.type].damage * bayLevelBonus) * fullMultiplier,
+        // Не ниже 1: попадание с нулевым уроном роняет recordProjectileHit,
+        // а штрафы урона (правила сектора, проклятия) умеют дожать до нуля.
+        bayPerTypeDamage[w.type] = Math.max(
+          1,
+          Math.floor(
+            Math.floor(WEAPON_TYPES[w.type].damage * bayLevelBonus) * fullMultiplier,
+          ),
         );
       }
     });

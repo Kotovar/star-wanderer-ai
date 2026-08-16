@@ -65,10 +65,11 @@ const applyOxygenDamage = (
  * @returns true если наступил конец игры
  */
 export const checkOxygen = (
-    state: GameState,
     get: () => GameStore,
     set: SetState,
 ): boolean => {
+    const state = get();
+
     // Только члены экипажа, которым нужен кислород
     const breathingCrew = get().crew.filter(
         (c) => RACES[c.race]?.requiresOxygen !== false,

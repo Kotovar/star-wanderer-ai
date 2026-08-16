@@ -147,6 +147,7 @@ const DEBUG_RESEARCHED_TECHS: TechnologyId[] = [
 const baseState: GameState = {
   stateVersion: CURRENT_STATE_VERSION,
   turn: INITIAL_TURN,
+  lastProcessedTurn: INITIAL_TURN,
   credits: INITIAL_CREDITS,
   creditsEarnedThisRun: 0,
   probes: 1,

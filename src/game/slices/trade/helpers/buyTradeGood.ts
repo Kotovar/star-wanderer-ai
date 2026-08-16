@@ -137,12 +137,24 @@ export const buyTradeGood = (
     set((s) => {
         const existingGood = s.ship.tradeGoods.find((g) => g.item === goodId);
         if (existingGood) {
+            // Себестоимость — средневзвешенная по стаку: раньше она застревала
+            // на цене самой первой покупки.
+            const totalQuantity = existingGood.quantity + quantity;
+            const averageBuyPrice = Math.round(
+                ((existingGood.buyPrice ?? pricePer5) * existingGood.quantity +
+                    pricePer5 * quantity) /
+                    totalQuantity,
+            );
             return {
                 ship: {
                     ...s.ship,
                     tradeGoods: s.ship.tradeGoods.map((g) =>
                         g.item === goodId
-                            ? { ...g, quantity: g.quantity + quantity }
+                            ? {
+                                  ...g,
+                                  quantity: totalQuantity,
+                                  buyPrice: averageBuyPrice,
+                              }
                             : g,
                     ),
                 },

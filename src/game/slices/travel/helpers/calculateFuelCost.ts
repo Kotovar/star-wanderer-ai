@@ -87,6 +87,16 @@ export const canWarpJump = (
         return false;
     }
 
+    // Внутри тира прыгать нечего: такой перелёт и так мгновенный, а кристаллы
+    // нужны исследованиям и крафту. Иначе варп молча съедал их на каждом хопе
+    // к соседу, и отказаться от прыжка было нельзя.
+    const targetSector = state.galaxy.sectors.find(
+        (s) => s.id === targetSectorId,
+    );
+    if (!targetSector || targetSector.tier === getCurrentTier(state)) {
+        return false;
+    }
+
     const available = state.research.resources.quantum_crystals ?? 0;
     return available >= getWarpCrystalCost(state, targetSectorId);
 };

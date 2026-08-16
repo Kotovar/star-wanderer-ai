@@ -4,6 +4,7 @@ import { TRADE_GOODS } from "@/game/constants/goods";
 import { PLANET_TYPES } from "@/game/constants/planets";
 import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
 import { typedKeys } from "@/lib/utils";
+import { shuffle } from "@/game/utils/shuffle";
 import { DELIVERY_GOODS } from "../constants/contracts";
 import { CONTRACT_REWARDS as REWARD } from "./rewards";
 import { getGeneratedContractTimeLimit } from "./contractDeadline";
@@ -230,9 +231,7 @@ export const generatePlanetContracts = (
             // Xenosymbionts: Bio-scan - visit sectors to collect biological samples (scales with tier)
             const tier = sector.tier ?? 1;
             const numTargets = Math.min(XENO_TARGET_SECTORS_BY_TIER[tier - 1], availableSectors.length);
-            const targets = availableSectors
-                .sort(() => Math.random() - 0.5)
-                .slice(0, numTargets);
+            const targets = shuffle(availableSectors).slice(0, numTargets);
             return {
                 id: `c-${planetId}-xeno-${Date.now()}-${Math.random()}`,
                 type: "patrol",

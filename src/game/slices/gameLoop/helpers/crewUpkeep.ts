@@ -1,6 +1,7 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getCrewUpkeep, settleUpkeep, UPKEEP_INTERVAL } from "@/game/crew/upkeep";
 import { removeDeadCrew } from "@/game/slices/gameLoop/helpers/crewUtils";
+import { crossedTurnInterval } from "@/game/utils/turnTicks";
 import type { GameStore, SetState } from "@/game/types";
 
 /**
@@ -15,7 +16,7 @@ export const processCrewUpkeep = (
     get: () => GameStore,
 ): void => {
     const state = get();
-    if (state.turn % UPKEEP_INTERVAL !== 0) return;
+    if (!crossedTurnInterval(state, UPKEEP_INTERVAL)) return;
     if (getCrewUpkeep(state.crew) <= 0) return;
 
     const { crew, report } = settleUpkeep(state.crew, state.credits, state.turn);

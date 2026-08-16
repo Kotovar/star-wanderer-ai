@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { getActiveModules } from "@/game/modules/utils";
 import { XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants/races";
+import { shuffle } from "@/game/utils/shuffle";
 
 /** Минимальный % здоровья модуля, при котором дроны его игнорируют */
 const REPAIR_THRESHOLD = 0.95;
@@ -49,7 +50,7 @@ export const processRepairBay = (
     if (damaged.length === 0) return;
 
     // Выбираем случайных кандидатов (без повторений)
-    const shuffled = [...damaged].sort(() => Math.random() - 0.5);
+    const shuffled = shuffle(damaged);
     const targets = shuffled.slice(0, Math.min(totalTargets, shuffled.length));
 
     let totalRepaired = 0;

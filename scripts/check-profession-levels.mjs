@@ -93,14 +93,25 @@ assert.match(
 );
 
 const passiveExp = [];
-processPassiveExperience(
-  { turn: 5, crew: [reactorEngineer] },
-  () => ({
-    gainExp: (_crewMember, amount) => passiveExp.push(amount),
-    addLog: () => {},
-  }),
-);
+processPassiveExperience(() => ({
+  turn: 5,
+  lastProcessedTurn: 4,
+  crew: [reactorEngineer],
+  gainExp: (_crewMember, amount) => passiveExp.push(amount),
+  addLog: () => {},
+}));
 assert.deepEqual(passiveExp, [2]);
+
+// Ход-перепрыжок (бой, орбитальный скан) не должен съедать начисление
+const jumpedExp = [];
+processPassiveExperience(() => ({
+  turn: 6,
+  lastProcessedTurn: 4,
+  crew: [reactorEngineer],
+  gainExp: (_crewMember, amount) => jumpedExp.push(amount),
+  addLog: () => {},
+}));
+assert.deepEqual(jumpedExp, [2]);
 assert.deepEqual(
   [1, 2, 3].map(getExpNeededForNextLevel),
   [100, 200, 300],

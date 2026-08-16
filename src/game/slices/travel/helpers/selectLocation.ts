@@ -60,23 +60,20 @@ const markLocationVisited = (
  * @param set - Функция обновления состояния
  */
 const updateLocationInSector = (loc: Location, set: SetState): void => {
+    // Через patchLocation: запись только в currentSector терялась при выходе
+    // из сектора — currentSector пересобирается из galaxy.sectors при возврате.
     set((s) => ({
+        ...patchLocation(s, loc.id, (existing) => ({
+            ...loc,
+            visited: existing.visited || loc.visited,
+        })),
         currentLocation: {
             ...loc,
-            visited: s.currentLocation?.id === loc.id
-                ? s.currentLocation.visited || loc.visited
-                : loc.visited,
+            visited:
+                s.currentLocation?.id === loc.id
+                    ? s.currentLocation.visited || loc.visited
+                    : loc.visited,
         },
-        currentSector: s.currentSector
-            ? {
-                  ...s.currentSector,
-                  locations: s.currentSector.locations.map((l) =>
-                      l.id === loc.id
-                          ? { ...loc, visited: l.visited || loc.visited }
-                          : l,
-                  ),
-              }
-            : null,
     }));
 };
 

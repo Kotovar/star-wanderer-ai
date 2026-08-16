@@ -44,6 +44,7 @@ import { getCrisisResponseChance } from "@/game/crises/escalation";
 import { getCrisisResponseDefinition } from "@/game/constants/crisisResponses";
 import { runCrewAutomation } from "@/game/slices/crew/helpers/runCrewAutomation";
 import { refreshVisitedPlanetContracts } from "@/game/contracts/refreshPlanetContracts";
+import { crossedTurnInterval } from "@/game/utils/turnTicks";
 
 /**
  * Как часто планеты обновляют предложения контрактов.
@@ -77,12 +78,10 @@ export const createGameLoopSlice = (
             return;
         }
 
-        const state = get();
-
         // Инициализация нового хода
         initNewTurn(set);
         const currentTurnState = get();
-        if (currentTurnState.turn % CONTRACT_REFRESH_INTERVAL === 0) {
+        if (crossedTurnInterval(currentTurnState, CONTRACT_REFRESH_INTERVAL)) {
             const sectors = refreshVisitedPlanetContracts(currentTurnState);
             if (sectors) {
                 set((s) => ({
@@ -112,7 +111,7 @@ export const createGameLoopSlice = (
         }));
 
         // Пассивный опыт каждые 5 ходов
-        processPassiveExperience(state, get);
+        processPassiveExperience(get);
 
         // Удаление просроченных эффектов планеты (включая станционный буст
         // исследований — обычная запись в activeEffects, см. activateResearchBoost.ts)
@@ -121,7 +120,7 @@ export const createGameLoopSlice = (
         get().processResearch();
 
         // Проверка кислорода
-        const gameOver = checkOxygen(state, get, set);
+        const gameOver = checkOxygen(get, set);
         if (gameOver) return;
 
         runCrewAutomation(set, get);
@@ -132,11 +131,13 @@ export const createGameLoopSlice = (
         // Управление энергией
         managePower(get, set);
 
-        // Регенерация щитов (штраф от опасной звезды учитывается внутри)
-        regenerateShields(state, get, set);
+        // Регенерация щитов (штраф от опасной звезды учитывается внутри).
+        // Состояние берём свежим: managePower строкой выше мог отключить
+        // щитовой модуль, а updateShipStats — пересчитать потолок щита.
+        regenerateShields(get(), get, set);
 
         // Пассивные эффекты типа звезды текущего сектора (счастье, распад модуля)
-        processors.processStarTypeEffects(state, get, set);
+        processors.processStarTypeEffects(get(), get, set);
 
         // Ремонт нанитами (automated_repair / nanite_hull)
         processNaniteRepair(get, set);
@@ -145,10 +146,10 @@ export const createGameLoopSlice = (
         processRepairBay(get, set);
 
         // Обработка проклятых артефактов
-        processors.processCursedArtifacts(state, set, get);
+        processors.processCursedArtifacts(get(), set, get);
 
         // Обработка положительных эффектов артефактов
-        processors.processArtifactEffects(state, set, get);
+        processors.processArtifactEffects(get(), set, get);
 
         // Жалованье экипажу (раз в UPKEEP_INTERVAL ходов).
         // До дезертирства: невыплата бьёт по настроению в этот же ход.
@@ -170,10 +171,10 @@ export const createGameLoopSlice = (
         processTravel(set, get);
 
         // Случайные события
-        processors.processRandomEvents(state, set, get);
+        processors.processRandomEvents(set, get);
 
         // Глобальные кризисы
-        processors.processGlobalCrises(currentTurnState, set, get);
+        processors.processGlobalCrises(get(), set, get);
 
         // Назначения экипажа
         processors.processCrewAssignments(set, get);
@@ -209,6 +210,9 @@ export const createGameLoopSlice = (
         processors.processOvercrowding(set, get);
         processors.processPowerCheck(set, get);
         processors.processExpeditionFatigue(set);
+
+        // Ход отработан целиком: с него отсчитываются тики «раз в N ходов»
+        set((s) => ({ lastProcessedTurn: s.turn }));
 
         // Сохранение
         get().updateShipStats();

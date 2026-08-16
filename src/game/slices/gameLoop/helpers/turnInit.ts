@@ -1,5 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
-import type { GameState, GameStore, SetState } from "@/game/types";
+import { crossedTurnInterval } from "@/game/utils/turnTicks";
+import type { GameStore, SetState } from "@/game/types";
 
 // === Constants ===
 const PASSIVE_EXP_INTERVAL = 5;
@@ -31,11 +32,12 @@ export const initNewTurn = (set: SetState): void => {
 /**
  * Пассивный опыт экипажа каждые 5 ходов
  */
-export const processPassiveExperience = (
-    state: GameState,
-    get: () => GameStore,
-): void => {
-    if (state.turn % PASSIVE_EXP_INTERVAL !== 0 || state.crew.length === 0) {
+export const processPassiveExperience = (get: () => GameStore): void => {
+    const state = get();
+    if (
+        !crossedTurnInterval(state, PASSIVE_EXP_INTERVAL) ||
+        state.crew.length === 0
+    ) {
         return;
     }
 

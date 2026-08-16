@@ -24,7 +24,6 @@ export interface CombatSlice {
     startCombat: (enemy: Location, isAmbush?: boolean) => void;
     startBossCombat: (bossLocation: Location) => void;
     selectEnemyModule: (moduleId: number) => void;
-    attackEnemy: () => void;
     attackEnemyWithBayTargets: (bayTargets: Record<number, number | null>) => CombatTurnTimeline | null;
     executeAmbushAttack: () => void;
     retreat: () => CombatTurnTimeline | null;
@@ -69,10 +68,6 @@ export const createCombatSlice = (
             }
         });
         if (selected) playSound("combat_target_select");
-    },
-
-    attackEnemy: () => {
-        helpers.executePlayerAttack(set, get);
     },
 
     attackEnemyWithBayTargets: (bayTargets) => {

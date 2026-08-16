@@ -1088,7 +1088,6 @@ function generateEventPayload(
 }
 
 export const processRandomEvents = (
-  _state: GameState,
   set: SetState,
   get: () => GameStore,
 ): void => {

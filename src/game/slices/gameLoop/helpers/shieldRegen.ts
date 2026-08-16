@@ -149,12 +149,9 @@ export const calculateShieldRegen = (
         "voidborn",
     );
 
-    // Итоговая ёмкость щита с бонусом от сращивания
-    const maxShieldsWithBonus = mergeBonus.shieldCapacity
-        ? Math.floor(
-              state.ship.maxShields * (1 + mergeBonus.shieldCapacity / 100),
-          )
-        : state.ship.maxShields;
+    // Потолок щита берём как есть: бонус сращивания в него уже вписал
+    // updateShipStats, второе умножение задирало и кап регена, и число в UI.
+    const maxShieldsWithBonus = state.ship.maxShields;
 
     // В бою регенерация вдвое медленнее
     const combatPenalty = state.currentCombat ? COMBAT_SHIELD_REGEN_MULTIPLIER : 1;
@@ -185,11 +182,10 @@ export const regenerateShields = (
     get: () => GameStore,
     set: SetState,
 ): void => {
-    const oldShields = state.ship.shields;
-    if (oldShields >= state.ship.maxShields) return;
-
     // Окно пробития: щиты сломаны врагом в этом раунде — реген пропускается
-    // (зеркально пропуску регена врага при enemyShieldsJustBroken)
+    // (зеркально пропуску регена врага при enemyShieldsJustBroken).
+    // Проверяем до «щит уже полон»: иначе при maxShields = 0 (все щитовые
+    // модули уничтожены) флаг не сбрасывался и съедал следующий реген.
     if (state.currentCombat?.playerShieldsJustBroken) {
         set((s) =>
             s.currentCombat
@@ -204,6 +200,9 @@ export const regenerateShields = (
         get().addLog(i18nStore.t("game_logs.player_shields_broken"), "warning");
         return;
     }
+
+    const oldShields = state.ship.shields;
+    if (oldShields >= state.ship.maxShields) return;
 
     const {
         baseRegen,

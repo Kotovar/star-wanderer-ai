@@ -579,10 +579,16 @@ function selectTargetModule(
         return priority;
     };
 
-    const sortedMods = [...activeMods].sort(
-        (a, b) => getModuleTargetPriority(b) - getModuleTargetPriority(a),
-    );
-    return sortedMods[0];
+    // Приоритет считается по одному разу на модуль: в компараторе случайная
+    // добавка пересчитывалась на каждом сравнении, и порядок сортировки с таким
+    // непоследовательным компаратором не определён — приоритет не работал.
+    const scored = activeMods.map((module) => ({
+        module,
+        priority: getModuleTargetPriority(module),
+    }));
+    return scored.reduce((best, current) =>
+        current.priority > best.priority ? current : best,
+    ).module;
 }
 
 /**

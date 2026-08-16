@@ -1,5 +1,6 @@
 import type { ActiveEffect, EffectPolarity, GalaxyTierAll, Sector } from "@/game/types";
 import type { LocationWeightKey, RunProfileId } from "./runProfiles";
+import { shuffle } from "@/game/utils/shuffle";
 
 export const SECTOR_RULE_IDS = [
     "zero_field",
@@ -186,15 +187,6 @@ const isReservedBossSector = (sector: Sector): boolean =>
         (location) =>
             location.bossId === "void_oracle" || location.bossId === "the_eternal",
     );
-
-const shuffle = <T>(values: readonly T[]): T[] => {
-    const result = [...values];
-    for (let index = result.length - 1; index > 0; index -= 1) {
-        const swapIndex = Math.floor(Math.random() * (index + 1));
-        [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
-    }
-    return result;
-};
 
 export const planSectorRules = (
     sectors: Sector[],

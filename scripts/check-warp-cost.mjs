@@ -23,11 +23,13 @@ const sector = (id, tier, mapAngle) => ({
 });
 
 const HOME = sector(1, 1, 0);
+/** Сосед по тиру: перелёт туда и так мгновенный, прыжок там не нужен */
 const NEAR = sector(2, 1, Math.PI / 4);
+const MID = sector(4, 2, Math.PI / 4);
 const FAR = sector(3, 3, Math.PI);
 
 const makeState = ({ techs = [], crystals = 0 } = {}) => ({
-  galaxy: { sectors: [HOME, NEAR, FAR] },
+  galaxy: { sectors: [HOME, NEAR, MID, FAR] },
   currentSector: HOME,
   traveling: null,
   crew: [],
@@ -48,12 +50,25 @@ assert.equal(getWarpCrystalCost(makeState(), NEAR.id), 1);
 assert.equal(getWarpCrystalCost(makeState(), FAR.id), 3);
 
 // Без технологии прыжка нет, сколько бы кристаллов ни лежало
-assert.equal(canWarpJump(makeState({ crystals: 99 }), NEAR.id), false);
+assert.equal(canWarpJump(makeState({ crystals: 99 }), FAR.id), false);
+
+// Внутри тира прыжка нет даже с полным складом: такой перелёт мгновенный сам
+// по себе, а кристаллы нужны исследованиям и крафту
+assert.equal(
+  canWarpJump(makeState({ techs: ["warp_drive"], crystals: 99 }), NEAR.id),
+  false,
+);
+const sameTierCost = cost(
+  makeState({ techs: ["warp_drive"], crystals: 99 }),
+  NEAR.id,
+);
+assert.ok(sameTierCost.fuelCost > 0, "a same-tier hop is paid in fuel");
+assert.equal(sameTierCost.crystalCost, 0);
 
 // С технологией, но без кристаллов — обычный перелёт за топливо
 const poor = makeState({ techs: ["warp_drive"], crystals: 0 });
-assert.equal(canWarpJump(poor, NEAR.id), false);
-const poorCost = cost(poor, NEAR.id);
+assert.equal(canWarpJump(poor, FAR.id), false);
+const poorCost = cost(poor, FAR.id);
 assert.ok(poorCost.fuelCost > 0, "without crystals the jump costs fuel");
 assert.equal(poorCost.travelInstant, false);
 assert.equal(poorCost.crystalCost, 0);
@@ -71,7 +86,7 @@ assert.deepEqual(exactCost, {
 // Кристаллов хватает на ближний прыжок, но не на дальний:
 // дефицит выключает прыжок точечно, а не целиком
 const partial = makeState({ techs: ["warp_drive"], crystals: 2 });
-assert.equal(canWarpJump(partial, NEAR.id), true);
+assert.equal(canWarpJump(partial, MID.id), true);
 assert.equal(canWarpJump(partial, FAR.id), false);
 
 console.log("Warp cost checks passed");
