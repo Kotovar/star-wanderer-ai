@@ -13,12 +13,7 @@ import { getTechBonusSum } from "@/game/research";
 import { getDiminishingResearchSpeedBonus } from "@/game/constants/augmentations";
 import { getTechPerkValue } from "@/game/constants/techTree";
 import { typedKeys } from "@/lib/utils";
-import {
-    DEFAULT_MODULE_HEALTH,
-    DEFAULT_REACTOR_POWER,
-    DEFAULT_SHIELD_DEFENSE,
-    DEFAULT_CARGO_CAPACITY,
-} from "./constants";
+import { DEFAULT_MODULE_HEALTH } from "./constants";
 import type {
     CrewMember,
     Module,
@@ -83,9 +78,15 @@ export const calculateResearchOutput = (
     );
     const labOutput = labs.reduce((sum, m) => sum + (m.researchOutput ?? 0), 0);
 
-    // Бонус от учёных (не более одного учёного на лабораторию)
+    // Бонус от учёных (не более одного учёного на лабораторию).
+    // Только те, кто реально на борту и жив: приписанного к аванпосту снимают
+    // с модуля и с назначений (см. stationCrew), а труп до конца хода может
+    // висеть в state.crew — ни тот, ни другой науку не делают.
     let scientistBonus = 0;
-    const allScientists = getCrewByProfession(state.crew, "scientist");
+    const allScientists = getCrewByProfession(
+        state.crew.filter((c) => c.health > 0 && !c.outpostId),
+        "scientist",
+    );
     const activeLabIds = new Set(labs.map((lab) => lab.id));
     const isActivelyResearching = (scientist: (typeof allScientists)[number]) =>
         scientist.assignment === "research" && activeLabIds.has(scientist.moduleId);
@@ -328,7 +329,11 @@ export const hasLabAndScientist = (state: GameStore): boolean => {
         (m) => isModuleActive(m) && LAB_MODULE_TYPES.includes(m.type),
     );
 
-    const hasScientist = state.crew.some((c) => c.profession === "scientist");
+    // Тот же отбор, что и в calculateResearchOutput: запускать исследование
+    // некому, если единственный учёный мёртв или оставлен на аванпосте
+    const hasScientist = state.crew.some(
+        (c) => c.profession === "scientist" && c.health > 0 && !c.outpostId,
+    );
 
     return hasLab && hasScientist;
 };
@@ -357,47 +362,16 @@ export const applyModuleBonus = (
                 newModule = {
                     ...newModule,
                     maxHealth: newMaxHealth,
-                    health: newMaxHealth,
+                    // Доля здоровья сохраняется: целый модуль остаётся целым,
+                    // побитый — побитым, уничтоженный не воскресает. Раньше
+                    // здесь стояло health = newMaxHealth, и любая технология
+                    // с этим бонусом бесплатно чинила весь корпус и поднимала
+                    // уничтоженные модули — мимо станции и мимо нанитов.
+                    health: Math.min(
+                        newMaxHealth,
+                        Math.floor((m.health ?? 0) * (1 + bonusValue)),
+                    ),
                 };
-                break;
-            }
-
-            case "module_power": {
-                if (m.type === "reactor") {
-                    newModule = {
-                        ...newModule,
-                        power: Math.floor(
-                            (m.power || DEFAULT_REACTOR_POWER) *
-                                (1 + bonusValue),
-                        ),
-                    };
-                }
-                break;
-            }
-
-            case "shield_strength": {
-                if (m.type === "shield") {
-                    newModule = {
-                        ...newModule,
-                        defense: Math.floor(
-                            (m.defense || DEFAULT_SHIELD_DEFENSE) *
-                                (1 + bonusValue),
-                        ),
-                    };
-                }
-                break;
-            }
-
-            case "cargo_capacity": {
-                if (m.type === "cargo") {
-                    newModule = {
-                        ...newModule,
-                        capacity: Math.floor(
-                            (m.capacity || DEFAULT_CARGO_CAPACITY) *
-                                (1 + bonusValue),
-                        ),
-                    };
-                }
                 break;
             }
 

@@ -154,8 +154,12 @@ export const startResearch = (
     // Валидация
     const validation = validateResearchStart(state, techId);
 
-    if (!validation.canStart && validation.errorMessage) {
-        get().addLog(validation.errorMessage, validation.messageType);
+    // Отказ останавливает запуск независимо от наличия текста: раньше отказ
+    // без сообщения проваливался дальше и исследование стартовало даром
+    if (!validation.canStart) {
+        if (validation.errorMessage) {
+            get().addLog(validation.errorMessage, validation.messageType);
+        }
         return;
     }
 

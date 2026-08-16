@@ -44,6 +44,9 @@ export const applyResearchedTechs = (
     for (const techId of techs) {
         const tech = RESEARCH_TREE[techId];
         if (!tech) continue;
+        // Разовые бонусы применяются ровно один раз: повтор в списке удваивал
+        // бы прибавку к здоровью модулей и экипажа
+        if (researchedTechs.includes(techId)) continue;
 
         // Применяем каждый бонус технологии
         for (const bonus of tech.bonuses) {
@@ -51,7 +54,6 @@ export const applyResearchedTechs = (
 
             switch (bonus.type) {
                 case "module_health":
-                case "scan_range":
                 case "weapon_slots":
                     modules = applyModuleBonus(
                         modules,

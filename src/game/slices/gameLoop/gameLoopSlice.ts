@@ -113,11 +113,7 @@ export const createGameLoopSlice = (
         // Пассивный опыт каждые 5 ходов
         processPassiveExperience(get);
 
-        // Удаление просроченных эффектов планеты (включая станционный буст
-        // исследований — обычная запись в activeEffects, см. activateResearchBoost.ts)
-        get().removeExpiredEffects();
         get().updateShipStats();
-        get().processResearch();
 
         // Проверка кислорода
         const gameOver = checkOxygen(get, set);
@@ -130,6 +126,10 @@ export const createGameLoopSlice = (
 
         // Управление энергией
         managePower(get, set);
+
+        // Наука считается после управления энергией: лаборатория, которую
+        // в этом ходу обесточило дефицитом, работать уже не должна
+        get().processResearch();
 
         // Регенерация щитов (штраф от опасной звезды учитывается внутри).
         // Состояние берём свежим: managePower строкой выше мог отключить
@@ -210,6 +210,12 @@ export const createGameLoopSlice = (
         processors.processOvercrowding(set, get);
         processors.processPowerCheck(set, get);
         processors.processExpeditionFatigue(set);
+
+        // Временные эффекты тикают последними, когда все потребители за этот
+        // ход уже отработали. Раньше срок списывался в начале хода, и эффект
+        // на N ходов успевал сработать только N−1 раз: в последний свой ход
+        // его снимали до того, как он что-либо сделал.
+        get().removeExpiredEffects();
 
         // Ход отработан целиком: с него отсчитываются тики «раз в N ходов»
         set((s) => ({ lastProcessedTurn: s.turn }));
