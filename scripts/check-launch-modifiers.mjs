@@ -17,7 +17,9 @@ const { getTotalConsumption } = await import(
 const { getCurrentCargo } = await import(
   "../src/game/slices/ship/helpers/getCurrentCargo.ts"
 );
-const { shiftHappiness } = await import("../src/game/crew/utils.ts");
+// Не из crew/utils.ts и не из бочки crew/: там тянется весь стор.
+// shiftHappiness живёт отдельным чистым модулем именно поэтому.
+const { shiftHappiness } = await import("../src/game/crew/happiness.ts");
 const { TRADE_GOODS } = await import("../src/game/constants/goods.ts");
 
 const byId = (id) => LAUNCH_MODIFIERS.find((mod) => mod.id === id);

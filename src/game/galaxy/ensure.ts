@@ -309,6 +309,71 @@ export const ensureStationTypes = (
     }
 };
 
+/** Станции, которые нельзя перекрашивать: их наличие гарантируют отдельно */
+const isServiceStation = (stationType?: string): boolean =>
+    stationType === "shipyard" ||
+    stationType === "medical" ||
+    stationType === "military" ||
+    stationType === "diplomatic";
+
+/**
+ * Обеспечивает наличие хотя бы одной пиратской станции в галактике.
+ *
+ * Без неё забег остаётся вообще без чёрного рынка, розыска и пиратской доски —
+ * а это целая ветка механик. Заметнее всего это было на «Сломанных торговых
+ * путях»: там вес станций нулевой, и половина галактик не содержала ни одной
+ * пиратской базы, хотя по фикшену профиля контрабанда там и должна цвести.
+ *
+ * Пираты не селятся в тире 1 (см. фильтр в ensureStation и generate), поэтому
+ * ищем сектор от второго тира и выше.
+ */
+export const ensurePirateStation = (sectors: Sector[]): void => {
+    const hasPirate = sectors.some((sector) =>
+        sector.locations.some(
+            (location) => location.stationConfig?.isPirate,
+        ),
+    );
+    if (hasPirate) return;
+
+    const candidates = sectors.filter(
+        (sector) =>
+            sector.tier >= 2 &&
+            sector.star?.type !== "blackhole" &&
+            !shouldSkipSectorEnsure(sector, "station"),
+    );
+    if (candidates.length === 0) return;
+
+    // Сначала пробуем перекрасить обычную станцию: лишняя локация в секторе
+    // меняет его плотность, а замена — нет
+    for (const sector of candidates) {
+        const stationIdx = sector.locations.findIndex(
+            (location) =>
+                location.type === "station" &&
+                !isServiceStation(location.stationType),
+        );
+        if (stationIdx < 0) continue;
+
+        sector.locations[stationIdx] = {
+            ...sector.locations[stationIdx],
+            stationType: "pirate",
+            stationConfig: STATION_CONFIG.pirate,
+        };
+        return;
+    }
+
+    const sector = candidates[0];
+    sector.locations.push({
+        id: `${sector.id}-guaranteed-pirate`,
+        stationId: `station-${sector.id}-guaranteed-pirate`,
+        type: "station",
+        name: getLocationNameKey("station", sector.id, sector.locations.length),
+        stationType: "pirate",
+        stationConfig: STATION_CONFIG.pirate,
+        dominantRace: getRandomRace([]),
+        population: 50 + Math.floor(Math.random() * 200),
+    });
+};
+
 /**
  * Обеспечивает наличие ровно одной дипломатической станции в tier-1 секторах.
  * Станция уникальна в галактике и всегда нейтральной расы.

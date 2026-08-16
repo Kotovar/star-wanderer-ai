@@ -12,6 +12,7 @@ import { generateCrewTraits, getRandomName, rollQuality } from "@/game/crew/util
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import { RACES } from "@/game/constants/races";
 import { shuffle } from "@/game/utils/shuffle";
+import { MODULE_HEALTH_BY_LEVEL } from "@/game/slices/shop/constants";
 
 // Module pools by tier level
 // Tier 1: levels 1-2, Tier 2: levels 2-3, Tier 3: levels 3-4 (rare)
@@ -996,6 +997,38 @@ const WEAPONS: ShopItem[] = [
   },
 ];
 
+// ── Трофейный склад пиратов ────────────────────────────────────────────────
+// Снятое с чужих кораблей железо. Дешевле любой верфи (0.9 у верфи, 0.85 на
+// оружие у военной станции) — но потрёпанное, штучное и с чужими серийниками,
+// за которые потом объясняться на досмотре (розыск начисляет buyItem).
+
+/** Награбленное продают заметно дешевле любой легальной скидки */
+const TROPHY_PRICE_MULTIPLIER = 0.55;
+
+/**
+ * Корпус уже пробит и заварен: запас прочности урезан навсегда, ремонт его не
+ * вернёт — чинят до maxHealth, а он у трофея ниже.
+ */
+const TROPHY_HEALTH_MULTIPLIER = 0.6;
+
+const TROPHY_MODULE_COUNT = 3;
+const TROPHY_WEAPON_COUNT = 2;
+
+const asTrophy = (item: ShopItem, stationId: string): ShopItem => {
+  const maxHealth =
+    item.maxHealth ?? MODULE_HEALTH_BY_LEVEL[item.level ?? 1] ?? 100;
+  return {
+    ...item,
+    id: `${item.id}-trophy-${stationId}`,
+    basePrice: item.price,
+    price: Math.floor(item.price * TROPHY_PRICE_MULTIPLIER),
+    stock: 1,
+    ...(item.type === "module"
+      ? { maxHealth: Math.floor(maxHealth * TROPHY_HEALTH_MULTIPLIER) }
+      : {}),
+  };
+};
+
 // Generate station-specific items based on stationId hash
 export function generateStationItems(
   stationId: string,
@@ -1037,6 +1070,20 @@ export function generateStationItems(
   } else {
     // Tier 3 stations: levels 1-3 (level 4 is boss reward only)
     availableLevels = [1, 2, 3];
+  }
+
+  // Пираты не модернизируют — они перепродают снятое, поэтому ни апгрейдов,
+  // ни гарантированного ассортимента: что взяли с конвоя, то и лежит
+  if (stationConfig?.isPirate) {
+    const modulePool = shuffle(
+      availableLevels.flatMap((level) => MODULES_BY_LEVEL[level] ?? []),
+      nextSeeded,
+    );
+    const weaponPool = shuffle(WEAPONS, nextSeeded);
+    return [
+      ...modulePool.slice(0, TROPHY_MODULE_COUNT),
+      ...weaponPool.slice(0, TROPHY_WEAPON_COUNT),
+    ].map((item) => asTrophy(item, stationId));
   }
 
   // Get upgrades for this tier and lower tiers

@@ -9,6 +9,7 @@ import {
     ensureColonizedPlanet,
     ensureDiplomaticStation,
     ensureMinAnomalies,
+    ensurePirateStation,
     ensureStation,
     ensureStationAnchors,
     ensureStationTypes,
@@ -218,6 +219,10 @@ export const generateGalaxy = (
 
     // Гарантируем одну дипломатическую станцию в тире 1
     ensureDiplomaticStation(sectors);
+
+    // …и хотя бы одну пиратскую: иначе забег остаётся без чёрного рынка,
+    // розыска и пиратской доски целиком. Обязательно до populatePirateContracts
+    ensurePirateStation(sectors);
 
     sectors.forEach((sector) => assignGridPositions(sector.locations, true));
 

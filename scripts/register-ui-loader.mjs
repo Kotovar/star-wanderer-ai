@@ -20,11 +20,14 @@ const sourceFile = (base) =>
     (candidate) => existsSync(candidate) && statSync(candidate).isFile(),
   );
 
+// Пустой объект по умолчанию, а не undefined: компонент может читать стор
+// раньше, чем проверка успела позвать setUiState, и селектор не обязан
+// падать на этом — он должен получить состояние без нужных полей
 const storeFixture = `
 export const useGameStore = Object.assign(
-  (selector) => selector(globalThis.__uiState),
+  (selector) => selector(globalThis.__uiState ?? {}),
   {
-    getState: () => globalThis.__uiState,
+    getState: () => globalThis.__uiState ?? {},
     setState: () => {},
     subscribe: () => () => {},
   },

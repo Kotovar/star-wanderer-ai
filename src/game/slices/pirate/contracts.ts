@@ -23,7 +23,16 @@ const PIRATE_CONTRACT_TEMPLATES = [
     },
 ];
 
-const PIRATE_CONTRACT_TIME_LIMIT = (tier: GalaxyTierAll): number => 12 + tier * 2;
+/**
+ * Срок задания зависит и от тира заказчика, и от того, как далеко цель:
+ * прыжок между тирами стоит ходов. Раньше считался только тир заказчика, и
+ * станция тира 1 могла отправить в тир 4 на 14 ходов. Формула повторяет
+ * getGeneratedContractTimeLimit для обычных контрактов.
+ */
+export const getPirateContractTimeLimit = (
+    sourceTier: GalaxyTierAll,
+    targetTier: GalaxyTierAll = sourceTier,
+): number => 12 + sourceTier * 2 + Math.abs(targetTier - sourceTier) * 2;
 
 const pick = <T>(items: T[]): T =>
     items[Math.floor(Math.random() * items.length)];
@@ -42,6 +51,11 @@ const withTargetSector = (
         sourceSectorName: sourceSector?.name,
         targetSector: targetSector?.id,
         targetSectorName: targetSector?.name,
+        // Срок известен только здесь: тир цели виден лишь вместе с секторами
+        timeLimit: getPirateContractTimeLimit(
+            sourceSector?.tier ?? 1,
+            targetSector?.tier ?? sourceSector?.tier ?? 1,
+        ),
     };
 };
 
@@ -87,6 +101,9 @@ export function generatePirateContracts(
 
     const contracts: Contract[] = [];
     const count = Math.min(3, 2 + Math.floor(Math.random() * 2));
+    // Доска не должна дважды предлагать одно и то же: пара «тип + цель»
+    // выбиралась независимыми pick, и три одинаковых заказа были обычным делом
+    const offered = new Set<string>();
 
     for (let i = 0; i < count; i++) {
         const template = pick(templates);
@@ -103,7 +120,7 @@ export function generatePirateContracts(
             sourcePlanetId: station.id,
             sourcePlanetName: station.name,
             sourceDominantRace: station.dominantRace,
-            timeLimit: PIRATE_CONTRACT_TIME_LIMIT(tier),
+            timeLimit: getPirateContractTimeLimit(tier),
         };
 
         if (template.type === "pirate_bounty") {
@@ -130,6 +147,9 @@ export function generatePirateContracts(
             contract.targetLocationName = target.name;
         }
 
+        const offer = `${contract.type}:${contract.targetLocationId}`;
+        if (offered.has(offer)) continue;
+        offered.add(offer);
         contracts.push(contract);
     }
 

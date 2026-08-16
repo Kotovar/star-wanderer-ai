@@ -10,6 +10,9 @@ import {
 import { useTranslation } from "@/lib/useTranslation";
 import { TRADE_GOODS } from "@/game/constants";
 import { typedKeys } from "@/lib/utils";
+import { useGameStore } from "@/game/store";
+import { getGasVolume } from "@/game/slices/ship/helpers/getCurrentCargo";
+import { applyCrisisMarketModifier } from "@/game/stations/crisisMarket";
 import type { Goods, Contract } from "@/game/types";
 
 interface PirateTabProps {
@@ -62,9 +65,14 @@ export function PirateTab({
     reducePirateHeat,
 }: PirateTabProps) {
     const { t } = useTranslation();
+    const gases = useGameStore((s) => s.gases);
+    const activeCrisisId = useGameStore((s) => s.activeCrisis?.id);
+    // Газ занимает трюм наравне с товаром (см. getCurrentCargo) — без него
+    // кнопки покупки были активны, а сама покупка падала с «нет места»
     const currentCargo =
         ship.cargo.reduce((s, c) => s + c.quantity, 0) +
         ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
+        getGasVolume(gases) +
         probes;
     const availSpace = cargoCapacity - currentCargo;
     const boardContracts = [
@@ -127,7 +135,18 @@ export function PirateTab({
                         <div className="flex flex-col gap-2">
                             {stationId &&
                                 typedKeys(TRADE_GOODS).map((goodId) => {
-                                    const prices = stationPrices[stationId]?.[goodId];
+                                    // Кризисный множитель применяет и покупка,
+                                    // и продажа — без него показанная цена
+                                    // расходилась со списанной
+                                    const rawPrices =
+                                        stationPrices[stationId]?.[goodId];
+                                    const prices = rawPrices
+                                        ? applyCrisisMarketModifier(
+                                              rawPrices,
+                                              activeCrisisId,
+                                              goodId,
+                                          )
+                                        : rawPrices;
                                     const stock = stationStock[stationId]?.[goodId] || 0;
                                     const playerGood = ship.tradeGoods.find(
                                         (g) => g.item === goodId,

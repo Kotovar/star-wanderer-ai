@@ -54,8 +54,21 @@ export const processMarketTick = (
     }
 
     if (turn > 0 && turn % RESTOCK_INTERVAL === 0) {
+        const blackMarkets = new Set<string>();
+        for (const sector of get().galaxy.sectors) {
+            for (const loc of sector.locations) {
+                if (loc.stationConfig?.isPirate && loc.stationId) {
+                    blackMarkets.add(loc.stationId);
+                }
+            }
+        }
         set((s) => ({
-            stationStock: restockStations(s.stationStock, RESTOCK_TARGET),
+            stationStock: restockStations(
+                s.stationStock,
+                RESTOCK_TARGET,
+                (stationId, goodId) =>
+                    goodId !== "contraband" || blackMarkets.has(stationId),
+            ),
         }));
     }
 };

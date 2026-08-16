@@ -46,7 +46,10 @@ assert.match(
 );
 assert.match(
   sectorMapSource,
-  /className="flex items-start justify-between gap-2">[\s\S]*?Current sector indicator[\s\S]*?pointer-events-auto bg-\[rgba\(255,176,0,0\.15\)\] border-2 border-accent[\s\S]*?Scanner range indicator[\s\S]*?pointer-events-auto bg-\[rgba\(0,255,65,0\.1\)\] border border-\[#00ff41\]/,
+  // Якоря — разметка, а не комментарии рядом с ней: прошлый вариант регулярки
+  // ловил `{/* Current sector indicator */}`, и проверка развалилась, когда
+  // комментарий потерялся при добавлении карточки правила сектора
+  /className="flex items-start justify-between gap-2">[\s\S]*?pointer-events-auto bg-\[rgba\(255,176,0,0\.15\)\] border-2 border-accent[\s\S]*?pointer-events-auto bg-\[rgba\(0,255,65,0\.1\)\] border border-\[#00ff41\]/,
   "индикатор сканера должен оставаться отдельной компактной карточкой в правом верхнем углу",
 );
 

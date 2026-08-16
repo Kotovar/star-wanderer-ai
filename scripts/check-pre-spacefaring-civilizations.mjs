@@ -525,7 +525,13 @@ const { CURRENT_STATE_VERSION } = await import(
   "../src/game/constants/version.ts"
 );
 
-assert.equal(CURRENT_STATE_VERSION, 27);
+// Проверка не пришпиливает номер версии: она про то, что сейв, сделанный до
+// переписывания темпераментов (v26), доезжает до актуальной версии целым.
+// Раньше здесь стояло `=== 27`, и любая новая миграция роняла весь файл.
+assert.ok(
+  CURRENT_STATE_VERSION >= 27,
+  "миграция темпераментов появилась в 27-й версии",
+);
 
 const legacyContact = {
   civilizationId: "forge_cities",
@@ -555,7 +561,7 @@ const legacySave = JSON.stringify({
 
 const migrated = loadWithMigrations(legacySave);
 assert.ok(migrated);
-assert.equal(migrated.stateVersion, 27);
+assert.equal(migrated.stateVersion, CURRENT_STATE_VERSION);
 
 const migratedContact =
   migrated.galaxy.sectors[0].locations[0].preSpacefaringContact;

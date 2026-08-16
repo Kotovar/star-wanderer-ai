@@ -386,10 +386,13 @@ export function StationPanel() {
     const activeStationTab = isPirateStation
         ? activeTab === "black-market" ||
           activeTab === "pirate-contracts" ||
+          activeTab === "trophies" ||
           activeTab === "services"
             ? activeTab
             : "black-market"
-        : activeTab === "black-market" || activeTab === "pirate-contracts"
+        : activeTab === "black-market" ||
+            activeTab === "pirate-contracts" ||
+            activeTab === "trophies"
           ? "shop"
           : activeTab;
 
@@ -720,6 +723,13 @@ export function StationPanel() {
                                 className="cursor-pointer data-[state=active]:bg-[#ff0040] data-[state=active]:text-[#050810] text-[#ff0040] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
                             >
                                 ☠ {t("pirate.black_market")}
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="trophies"
+                                title={t("pirate.trophies_hint")}
+                                className="cursor-pointer data-[state=active]:bg-[#ffb000] data-[state=active]:text-[#050810] text-[#ffb000] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                            >
+                                🛠 {t("pirate.trophies")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="pirate-contracts"
@@ -1242,6 +1252,27 @@ export function StationPanel() {
                             className="mt-4 min-h-0 overflow-y-auto flex flex-col gap-4"
                         >
                             <PirateTab view="market" {...pirateTabProps} />
+                        </TabsContent>
+                        <TabsContent
+                            value="trophies"
+                            className="mt-4 min-h-0 overflow-hidden flex flex-col"
+                        >
+                            <div className="mb-2 border border-[#ffb00066] bg-[rgba(255,176,0,0.06)] p-2 text-[11px] leading-snug text-[#ffb000]">
+                                ⚠ {t("pirate.trophies_desc")}
+                            </div>
+                            <ShopTab
+                                stationId={stationId}
+                                stationItems={stationItems}
+                                stationInventory={stationInventory}
+                                credits={displayCredits}
+                                ship={ship}
+                                stationConfig={stationConfig}
+                                buyItem={buyItem}
+                                onUpgradeClick={(item) => {
+                                    setPendingUpgrade(item);
+                                    setUpgradeModalOpen(true);
+                                }}
+                            />
                         </TabsContent>
                         <TabsContent
                             value="pirate-contracts"

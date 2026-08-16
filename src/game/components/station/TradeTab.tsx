@@ -59,7 +59,12 @@ export function TradeTab({
         probes;
     const availSpace = cargoCapacity - currentCargo;
 
-    const tradeGoodsKeys = onlyGoods ?? typedKeys(TRADE_GOODS);
+    // Легальный прилавок (эта вкладка есть только на непиратских станциях)
+    // контрабанду не показывает: строка была видна всегда, а кнопки продажи
+    // всегда отвечали ошибкой «только на чёрном рынке»
+    const tradeGoodsKeys = (onlyGoods ?? typedKeys(TRADE_GOODS)).filter(
+        (goodId) => goodId !== "contraband",
+    );
     const raceReputation = useGameStore((s) => s.raceReputation);
     const currentLocation = useGameStore((s) => s.currentLocation);
     const dominantRace = currentLocation?.dominantRace;

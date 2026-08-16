@@ -1,7 +1,15 @@
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { getReputationChanges } from "@/game/contracts/completionRewards";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
-import type { Contract, GameStore, Location, SetState } from "@/game/types";
+import { shiftHappiness } from "@/game/crew/happiness";
+import { getLivingShipCrew } from "@/game/crew/stationed";
+import type {
+    Contract,
+    GameStore,
+    Location,
+    SetState,
+    TraitId,
+} from "@/game/types";
 import { patchLocation } from "@/game/utils/patchLocation";
 import { store as i18nStore } from "@/lib/useTranslation";
 import { playSound } from "@/sounds";
@@ -9,10 +17,20 @@ import { refreshPirateContracts } from "./contracts";
 import {
     canFightWantedPursuit,
     clampWantedHeat,
+    getHeatAfterCheckpoint,
     getWantedBribeCost,
     isWantedCheckpointRequired,
-    WANTED_HEAT_AFTER_CHECKPOINT,
 } from "./wanted";
+
+/**
+ * Кому пиратский подряд не по нутру: торговцу, который живёт репутацией, и
+ * тем, кто держит команду именем. Раньше «принципиальность» определялась по
+ * эффектам combatStartMoraleDrain и sellPriceBonus — то есть под неё попадал
+ * Пессимист, к законопослушности отношения не имеющий.
+ */
+const LAWFUL_TRAIT_IDS: TraitId[] = ["trader", "leader", "legend", "veteran"];
+
+const LAWFUL_CONTRACT_MORALE_PENALTY = 5;
 
 type PirateContractType =
     | "pirate_smuggling"
@@ -76,24 +94,34 @@ export const createPirateSlice = (
             return;
         }
 
+        // Возмущаются только те, кто на борту и жив: труп и приписанный к
+        // аванпосту за несколько секторов о подряде не узнают. Мораль двигаем
+        // через shiftHappiness — он знает про Отшельника и расы без настроения
+        const upsetIds = new Set(
+            getLivingShipCrew(state.crew)
+                .filter((crewMember) =>
+                    crewMember.traits?.some(
+                        (trait) =>
+                            trait.id !== undefined &&
+                            LAWFUL_TRAIT_IDS.includes(trait.id),
+                    ),
+                )
+                .map((crewMember) => crewMember.id),
+        );
+
         set((s) => ({
             activeContracts: [
                 ...s.activeContracts,
                 { ...contract, acceptedAt: s.turn, pirateObjectiveComplete: false },
             ],
-            crew: s.crew.map((crewMember) => {
-                const lawful = crewMember.traits?.some(
-                    (trait) =>
-                        trait.effect.combatStartMoraleDrain ||
-                        trait.effect.sellPriceBonus,
-                );
-                return lawful
-                    ? {
-                          ...crewMember,
-                          happiness: Math.max(0, crewMember.happiness - 5),
-                      }
-                    : crewMember;
-            }),
+            crew: s.crew.map((crewMember) =>
+                upsetIds.has(crewMember.id)
+                    ? shiftHappiness(
+                          crewMember,
+                          -LAWFUL_CONTRACT_MORALE_PENALTY,
+                      )
+                    : crewMember,
+            ),
         }));
 
         get().addLog(
@@ -198,9 +226,11 @@ export const createPirateSlice = (
             return;
         }
 
+        // Сдача задания розыск не снижает: раньше молчаливые −20 делали
+        // контрабанду (+8 за передачу) чистым минусом по розыску, и «Приют
+        // контрабандистов» вместе со взятками терял всякий смысл
         set((s) => ({
             credits: s.credits + contract.reward,
-            wantedHeat: clampWantedHeat((s.wantedHeat ?? 0) - 20),
             activeContracts: s.activeContracts.filter(
                 (active) => active.id !== contractId,
             ),
@@ -209,7 +239,9 @@ export const createPirateSlice = (
                 : [...s.completedContractIds, contractId],
         }));
 
-        const experience = get().crew.flatMap((crewMember) => {
+        // Опыт — только тем, кто на борту и жив: giveCrewExperience раздаёт
+        // его всему списку, включая трупы и приписанных к аванпостам
+        const experience = getLivingShipCrew(get().crew).flatMap((crewMember) => {
             const result = get().gainExp(
                 crewMember,
                 CONTRACT_REWARDS[contract.type].baseExp,
@@ -286,11 +318,11 @@ export const createPirateSlice = (
                 get().addLog(i18nStore.t("pirate.err_no_credits"), "error");
                 return;
             }
-            set({
-                credits: state.credits - cost,
-                wantedHeat: WANTED_HEAT_AFTER_CHECKPOINT,
+            set((s) => ({
+                credits: s.credits - cost,
+                wantedHeat: getHeatAfterCheckpoint(s.wantedHeat ?? 0),
                 gameMode: "station",
-            });
+            }));
             get().addLog(i18nStore.t("pirate.checkpoint_bribed", { cost }), "info");
             playSound("ui_notification");
             return;
@@ -310,7 +342,7 @@ export const createPirateSlice = (
                         (good) => good.item !== "contraband",
                     ),
                 },
-                wantedHeat: WANTED_HEAT_AFTER_CHECKPOINT,
+                wantedHeat: getHeatAfterCheckpoint(s.wantedHeat ?? 0, quantity),
                 gameMode: "station",
             }));
             get().addLog(i18nStore.t("pirate.checkpoint_dumped", { quantity }), "warning");

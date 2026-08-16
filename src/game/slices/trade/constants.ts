@@ -53,6 +53,16 @@ export const REPUTATION_BUY_THRESHOLD = 20;
 /** Количество товара для получения +1 репутации (за продажу) */
 export const REPUTATION_SELL_THRESHOLD = 20;
 
+/**
+ * Штраф репутации за контрабанду — как и розыск, по тоннажу: 3 за стандартную
+ * партию в 5т. Фиксированный штраф за сделку означал, что оптовая партия
+ * обходится дешевле одной тонны.
+ */
+export const CONTRABAND_REP_PENALTY_PER_5T = 3;
+
+export const getContrabandReputationPenalty = (quantity: number): number =>
+    Math.max(1, Math.round((quantity / 5) * CONTRABAND_REP_PENALTY_PER_5T));
+
 /** Чёрный рынок платит за контрабанду на 30% больше базовой цены станции. */
 export const PIRATE_CONTRABAND_SELL_MULTIPLIER = 1.3;
 

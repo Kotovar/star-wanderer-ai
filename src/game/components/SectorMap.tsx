@@ -1346,6 +1346,7 @@ export function SectorMap() {
         )}
 
         <div className="flex items-start justify-between gap-2">
+          {/* Current sector indicator */}
           <div className="flex min-w-0 flex-col gap-1 lg:flex-row lg:items-start">
             <div className="pointer-events-auto bg-[rgba(255,176,0,0.15)] border-2 border-accent px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm font-['Orbitron'] font-bold text-accent shadow-[0_0_15px_rgba(255,176,0,0.3)] lg:shrink-0">
               <span className="text-[10px] md:text-xs opacity-70 mr-1">

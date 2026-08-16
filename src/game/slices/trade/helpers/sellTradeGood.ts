@@ -5,14 +5,12 @@ import type { SellValidation } from "./types";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
 import { applyCrisisMarketModifier } from "@/game/stations/crisisMarket";
 import {
+    getContrabandReputationPenalty,
     getPirateContrabandSellPrice,
     REPUTATION_SELL_THRESHOLD,
 } from "../constants";
-import { clampWantedHeat } from "@/game/slices/pirate/wanted";
+import { clampWantedHeat, getContrabandHeat } from "@/game/slices/pirate/wanted";
 import { getLivingShipCrew } from "@/game/crew/stationed";
-
-const CONTRABAND_REP_PENALTY = 3;
-const CONTRABAND_HEAT_PER_SELL = 4;
 
 /**
  * Проверяет возможность продажи товара
@@ -184,23 +182,24 @@ export const sellTradeGood = (
 
     // Пиратские станции не дают репутации за торговлю, но контрабанда оставляет след.
     if (isPirate) {
-        if (goodId === "contraband" && dominantRace) {
-            get().changeReputation(dominantRace, -CONTRABAND_REP_PENALTY);
-            get().addLog(
-                `☠️ Продажа контрабанды: репутация с ${dominantRace} -${CONTRABAND_REP_PENALTY}`,
-                "warning",
-            );
-        }
         if (goodId === "contraband") {
+            const penalty = getContrabandReputationPenalty(quantity);
+            if (dominantRace) {
+                get().changeReputation(dominantRace, -penalty);
+                get().addLog(
+                    i18nStore.t("pirate.contraband_sold_reputation", {
+                        race: i18nStore.t(`races.${dominantRace}.plural`),
+                        penalty,
+                    }),
+                    "warning",
+                );
+            }
+            const heat = getContrabandHeat(quantity);
             set((s) => ({
-                wantedHeat: clampWantedHeat(
-                    (s.wantedHeat ?? 0) + CONTRABAND_HEAT_PER_SELL,
-                ),
+                wantedHeat: clampWantedHeat((s.wantedHeat ?? 0) + heat),
             }));
             get().addLog(
-                i18nStore.t("pirate.heat_trade", {
-                    amount: CONTRABAND_HEAT_PER_SELL,
-                }),
+                i18nStore.t("pirate.heat_trade", { amount: heat }),
                 "warning",
             );
         }

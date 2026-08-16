@@ -15,6 +15,10 @@ import { advanceCombatRound, applyCombatTimeCost } from "./helpers/combatTime";
 import type { RaceId } from "@/game/types/races";
 import type { EnemyShip } from "@/game/types/enemy";
 import { getPilotInCockpit } from "@/game/crew";
+import {
+    clampWantedHeat,
+    WANTED_HEAT_ON_PURSUIT_ESCAPE,
+} from "@/game/slices/pirate/wanted";
 
 /**
  * Интерфейс CombatSlice
@@ -191,6 +195,9 @@ export const createCombatSlice = (
 
         if (Math.random() < retreatChance) {
             const combatRound = state.currentCombat.round;
+            // Уход от охотников на досмотре не бесплатен: раньше можно было
+            // пробовать прорыв сколько угодно раз без последствий
+            const escapedPursuit = state.currentCombat.wantedPursuit ?? false;
             set((s) => {
                 s.currentCombat = null;
                 // Always return to sector map after combat (not galaxy map)
@@ -199,9 +206,22 @@ export const createCombatSlice = (
                     c.combatAssignment = null;
                     c.combatAssignmentEffect = null;
                 });
+                if (escapedPursuit) {
+                    s.wantedHeat = clampWantedHeat(
+                        (s.wantedHeat ?? 0) + WANTED_HEAT_ON_PURSUIT_ESCAPE,
+                    );
+                }
             });
             applyCombatTimeCost(combatRound, set, get);
             get().addLog( i18nStore.t("game_logs.combatSlice_7"), "info");
+            if (escapedPursuit) {
+                get().addLog(
+                    i18nStore.t("pirate.hunters_escaped", {
+                        amount: WANTED_HEAT_ON_PURSUIT_ESCAPE,
+                    }),
+                    "warning",
+                );
+            }
             return null;
         } else {
             const initialSnapshot = createCombatCinematicSnapshot(state);

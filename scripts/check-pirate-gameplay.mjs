@@ -1,8 +1,11 @@
 import "./register-ts-loader.mjs";
 import assert from "node:assert/strict";
 
+import { readFileSync } from "node:fs";
+
 const {
   generatePirateContracts,
+  getPirateContractTimeLimit,
   PIRATE_CONTRACT_REFRESH_INTERVAL,
   refreshPirateContracts,
 } = await import(
@@ -10,9 +13,20 @@ const {
 );
 const {
   canFightWantedPursuit,
+  getContrabandHeat,
+  getHeatAfterCheckpoint,
   getWantedBribeCost,
   isWantedCheckpointRequired,
+  TROPHY_PURCHASE_HEAT,
+  WANTED_HEAT_ON_PURSUIT_ESCAPE,
 } = await import("../src/game/slices/pirate/wanted.ts");
+const { getContrabandReputationPenalty } = await import(
+  "../src/game/slices/trade/constants.ts"
+);
+const { restockStations } = await import("../src/game/stations/marketTick.ts");
+const { initializeStationData } = await import(
+  "../src/game/stations/initialize.ts"
+);
 const { loadWithMigrations } = await import(
   "../src/game/saves/migrations.ts"
 );
@@ -62,6 +76,11 @@ try {
     const contracts = generatePirateContracts(pirateStation, 2, targets);
 
     assert.ok(contracts.length >= 1, "пиратская база должна выдавать задания");
+    assert.equal(
+      new Set(contracts.map((c) => `${c.type}:${c.targetLocationId}`)).size,
+      contracts.length,
+      "доска не должна дважды предлагать одну и ту же пару «тип + цель»",
+    );
     for (const contract of contracts) {
       assert.equal(
         contract.timeLimit,
@@ -175,13 +194,74 @@ checkpointSlice.resolveWantedCheckpoint("bribe");
 assert.equal(checkpointState.credits, 785, "bribe must deduct its real cost");
 assert.equal(
   checkpointState.wantedHeat,
-  45,
-  "bribe must lower the global wanted heat to 45",
+  30,
+  "взятка должна снимать фиксированные 20 розыска, а не сбрасывать шкалу",
 );
 assert.equal(
   checkpointState.gameMode,
   "station",
   "successful bribe must allow docking",
+);
+
+// Досмотр не обнуляет розыск: раньше любой исход возвращал ровно 45, и одна
+// тонна контрабанды превращала розыск 100 в 45 бесплатно
+assert.equal(
+  getHeatAfterCheckpoint(100),
+  80,
+  "досмотр на высоком розыске должен оставлять игрока разыскиваемым",
+);
+assert.ok(
+  getHeatAfterCheckpoint(100, 30) < getHeatAfterCheckpoint(100, 1),
+  "сброс полного трюма должен помогать сильнее, чем сброс одной тонны",
+);
+
+const dumpState = {
+  currentLocation: {
+    id: "legal-station",
+    type: "station",
+    stationConfig: { isPirate: false },
+  },
+  wantedHeat: 100,
+  credits: 0,
+  ship: { tradeGoods: [{ item: "contraband", quantity: 30 }] },
+  gameMode: "wanted_checkpoint",
+  addLog: () => {},
+};
+createPirateSlice(
+  (update) => applyStateUpdate(dumpState, update),
+  () => dumpState,
+).resolveWantedCheckpoint("dump");
+assert.equal(
+  dumpState.ship.tradeGoods.length,
+  0,
+  "сброс должен выкидывать всю контрабанду",
+);
+assert.equal(
+  dumpState.wantedHeat,
+  getHeatAfterCheckpoint(100, 30),
+  "сброс должен снимать послабление досмотра плюс след самого груза",
+);
+
+// Розыск и репутация за контрабанду считаются по тоннажу: раньше они были
+// фиксированными за сделку, и 30т одной кнопкой стоили как одна тонна
+assert.equal(getContrabandHeat(5), 4, "стандартная партия в 5т = 4 розыска");
+assert.ok(
+  getContrabandHeat(30) > getContrabandHeat(5),
+  "оптовая партия обязана оставлять больший след",
+);
+assert.equal(
+  getContrabandHeat(30),
+  getContrabandHeat(15) * 2,
+  "след контрабанды должен быть линеен по тоннажу",
+);
+assert.equal(
+  getContrabandReputationPenalty(5),
+  3,
+  "стандартная партия в 5т = 3 репутации",
+);
+assert.ok(
+  getContrabandReputationPenalty(30) > getContrabandReputationPenalty(5),
+  "штраф репутации тоже обязан расти с тоннажем",
 );
 
 const smugglingState = {
@@ -277,9 +357,29 @@ assert.equal(
 );
 
 for (const profile of Object.values(RUN_PROFILES)) {
-  for (let run = 0; run < 3; run += 1) {
+  // Шесть галактик на профиль, а не три: гарантия пиратской станции — про
+  // редкий случай, и на трёх прогонах её потеря ловилась лишь через раз
+  for (let run = 0; run < 6; run += 1) {
     const sectors = generateGalaxy(profile);
     const locations = sectors.flatMap((sector) => sector.locations);
+
+    // Без пиратской станции забег остаётся без чёрного рынка, розыска и доски
+    // целиком. «Сломанные торговые пути» с их нулевым весом станций теряли её
+    // в половине галактик — при том что контрабанда там и должна цвести
+    const pirateSectors = sectors.filter((sector) =>
+      sector.locations.some((location) => location.stationConfig?.isPirate),
+    );
+    assert.ok(
+      pirateSectors.length > 0,
+      `${profile.id}: в галактике обязана быть хотя бы одна пиратская станция`,
+    );
+    for (const sector of pirateSectors) {
+      assert.ok(
+        sector.tier >= 2,
+        `${profile.id}: пираты не селятся в тире 1`,
+      );
+    }
+
     for (const sector of sectors) {
       for (const station of sector.locations.filter(
         (location) => location.stationConfig?.isPirate,
@@ -297,10 +397,15 @@ for (const profile of Object.values(RUN_PROFILES)) {
             station.id,
             `${profile.id}: pirate job must return to its issuing station`,
           );
+          const targetSector = sectors.find((candidate) =>
+            candidate.locations.some(
+              (location) => location.id === contract.targetLocationId,
+            ),
+          );
           assert.equal(
             contract.timeLimit,
-            12 + sector.tier * 2,
-            `${profile.id}: pirate job deadline must match its issuer tier`,
+            getPirateContractTimeLimit(sector.tier, targetSector.tier),
+            `${profile.id}: срок задания должен учитывать и тир заказчика, и тир цели`,
           );
         }
       }
@@ -422,6 +527,367 @@ assert.equal(
     ?.pirateLastRefreshTurn,
   32,
   "миграция не должна сбрасывать реальные предложения существующей доски",
+);
+
+// ── Контрабанда живёт только на чёрном рынке ────────────────────────────────
+// Раньше пополнение складов завозило её на легальные станции (к 10-му ходу
+// 8 тонн на прилавке), а покупка не имела проверки isPirate, которая есть
+// у продажи. Контрабанду можно было купить легально, без розыска, ещё и
+// с плюсом к репутации за оптовую партию.
+const contrabandSectors = [
+  {
+    id: 1,
+    tier: 1,
+    locations: [
+      {
+        id: "legal",
+        stationId: "legal",
+        type: "station",
+        stationConfig: { isPirate: false },
+      },
+      {
+        id: "black",
+        stationId: "black",
+        type: "station",
+        stationConfig: { isPirate: true, priceDiscount: 0.75 },
+      },
+    ],
+  },
+];
+const { stock: contrabandStock } = initializeStationData(contrabandSectors);
+
+assert.equal(
+  contrabandStock.legal.contraband,
+  0,
+  "легальная станция не должна держать контрабанду",
+);
+assert.ok(
+  contrabandStock.black.contraband >= 30,
+  "запас чёрного рынка обязан покрывать крупнейший заказ на контрабанду (30т)",
+);
+const isBlackMarket = (stationId, goodId) =>
+  goodId !== "contraband" || stationId === "black";
+let restocked = { legal: { ...contrabandStock.legal }, black: { ...contrabandStock.black } };
+for (let tick = 0; tick < 20; tick += 1) {
+  restocked = restockStations(restocked, 35, isBlackMarket);
+}
+assert.equal(
+  restocked.legal.contraband,
+  0,
+  "пополнение складов не должно завозить контрабанду на легальную станцию",
+);
+assert.ok(
+  restocked.legal.water >= 35,
+  "остальные товары на легальной станции пополняться обязаны",
+);
+assert.ok(
+  restocked.black.contraband >= 35,
+  "чёрный рынок контрабандой пополняться обязан",
+);
+
+// Сам фильтр проверен выше на restockStations; здесь — что потурновый тик его
+// действительно передаёт, а не пополняет всё подряд
+const marketTickSource = readFileSync(
+  new URL("../src/game/stations/processMarketTick.ts", import.meta.url),
+  "utf8",
+);
+assert.ok(
+  /isPirate/.test(marketTickSource) &&
+    /goodId !== "contraband"/.test(marketTickSource),
+  "потурновое пополнение обязано отсекать контрабанду на непиратских станциях",
+);
+
+const { buyTradeGood } = await import(
+  "../src/game/slices/trade/helpers/buyTradeGood.ts"
+);
+const legalBuyState = {
+  currentLocation: {
+    id: "legal",
+    stationId: "legal",
+    type: "station",
+    stationConfig: { isPirate: false },
+  },
+  stationPrices: { legal: { contraband: { buy: 100, sell: 60 } } },
+  stationStock: { legal: { contraband: 40 } },
+  credits: 100_000,
+  ship: {
+    tradeGoods: [],
+    cargo: [],
+    modules: [{ id: 1, type: "cargo", capacity: 100, health: 100, active: true }],
+  },
+  gases: {},
+  probes: 0,
+  crew: [],
+  research: { researchedTechs: [], activeResearch: null },
+  raceReputation: {},
+  wantedHeat: 0,
+  addLog: () => {},
+};
+const legalBuy = (goodId) =>
+  buyTradeGood(
+    (update) => applyStateUpdate(legalBuyState, update),
+    () => legalBuyState,
+    goodId,
+    5,
+  );
+// Контрольная покупка: сцена рабочая, обычный товар покупается
+legalBuyState.stationPrices.legal.water = { buy: 100, sell: 60 };
+legalBuyState.stationStock.legal.water = 40;
+legalBuy("water");
+assert.equal(
+  legalBuyState.ship.tradeGoods.length,
+  1,
+  "проверочная сцена должна позволять обычную покупку",
+);
+legalBuy("contraband");
+assert.ok(
+  !legalBuyState.ship.tradeGoods.some((good) => good.item === "contraband"),
+  "контрабанду нельзя купить на легальной станции",
+);
+
+// Скидка пиратской станции не должна съедать надбавку чёрного рынка
+const discountedSectors = [
+  {
+    id: 1,
+    tier: 1,
+    locations: [
+      {
+        id: "black",
+        stationId: "black",
+        type: "station",
+        stationConfig: { isPirate: true, priceDiscount: 0.75 },
+      },
+    ],
+  },
+];
+const { prices: discountedPrices } = initializeStationData(discountedSectors);
+const { TRADE_GOODS } = await import("../src/game/constants/goods.ts");
+assert.ok(
+  discountedPrices.black.contraband.sell >=
+    Math.floor(TRADE_GOODS.contraband.basePrice * 0.7),
+  "цена контрабанды не должна резаться скидкой станции (иначе ×1.3 — фикция)",
+);
+
+// ── Сдача пиратского задания не отмывает розыск ─────────────────────────────
+const turnInState = {
+  currentLocation: {
+    id: "pirate-station",
+    type: "station",
+    stationConfig: { isPirate: true },
+  },
+  activeContracts: [
+    {
+      id: "heist-job",
+      type: "pirate_heist",
+      sourcePlanetId: "pirate-station",
+      pirateObjectiveComplete: true,
+      reward: 800,
+      desc: "contracts.desc_pirate_heist",
+    },
+  ],
+  completedContractIds: [],
+  credits: 0,
+  crew: [],
+  raceReputation: {},
+  wantedHeat: 40,
+  addLog: () => {},
+  gainExp: () => undefined,
+  showContractCompletion: () => {},
+};
+createPirateSlice(
+  (update) => applyStateUpdate(turnInState, update),
+  () => turnInState,
+).completePirateContract("heist-job");
+assert.equal(turnInState.credits, 800, "задание должно платить награду");
+assert.equal(
+  turnInState.wantedHeat,
+  40,
+  "сдача задания не должна снижать розыск: иначе контрабанда уходила в минус по розыску, а «Приют» терял смысл",
+);
+
+// ── Мораль от пиратского подряда ────────────────────────────────────────────
+const lawfulTrait = { id: "trader", name: "Торговец", type: "positive", effect: {} };
+const moraleState = {
+  currentLocation: {
+    id: "pirate-station",
+    type: "station",
+    stationConfig: { isPirate: true },
+    pirateContracts: [
+      {
+        id: "morale-job",
+        type: "pirate_heist",
+        sourcePlanetId: "pirate-station",
+        targetLocationId: "trade-station",
+        reward: 800,
+        desc: "contracts.desc_pirate_heist",
+      },
+    ],
+  },
+  galaxy: {
+    sectors: [{ id: 1, locations: [{ id: "trade-station", type: "station" }] }],
+  },
+  activeContracts: [],
+  completedContractIds: [],
+  turn: 1,
+  crew: [
+    { id: 1, race: "human", health: 10, happiness: 100, traits: [lawfulTrait] },
+    { id: 2, race: "human", health: 0, happiness: 100, traits: [lawfulTrait] },
+    {
+      id: 3,
+      race: "human",
+      health: 10,
+      happiness: 100,
+      outpostId: "outpost-1",
+      traits: [lawfulTrait],
+    },
+    { id: 4, race: "synthetic", health: 10, happiness: 100, traits: [lawfulTrait] },
+    { id: 5, race: "human", health: 10, happiness: 100, traits: [] },
+    {
+      id: 6,
+      race: "human",
+      health: 10,
+      happiness: 100,
+      hermit: true,
+      traits: [lawfulTrait],
+    },
+  ],
+  addLog: () => {},
+};
+createPirateSlice(
+  (update) => applyStateUpdate(moraleState, update),
+  () => moraleState,
+).acceptPirateContract("morale-job");
+const happinessById = Object.fromEntries(
+  moraleState.crew.map((member) => [member.id, member.happiness]),
+);
+assert.equal(happinessById[1], 95, "принципиальный на борту обязан возмутиться");
+assert.equal(happinessById[2], 100, "мёртвый о подряде не узнает");
+assert.equal(
+  happinessById[3],
+  100,
+  "приписанный к аванпосту за несколько секторов о подряде не узнает",
+);
+assert.equal(
+  happinessById[4],
+  100,
+  "синтетик без настроения терять его не может (нужен shiftHappiness)",
+);
+assert.equal(happinessById[5], 100, "экипаж без принципов не возмущается");
+assert.equal(happinessById[6], 100, "Отшельник настроение не теряет");
+
+// ── Срок задания учитывает расстояние до цели ───────────────────────────────
+assert.ok(
+  getPirateContractTimeLimit(1, 4) > getPirateContractTimeLimit(1, 1),
+  "заказ через всю галактику обязан давать больше ходов, чем заказ по соседству",
+);
+assert.equal(
+  getPirateContractTimeLimit(2, 2),
+  16,
+  "срок задания уровня 2 по своему тиру должен остаться 16 ходов",
+);
+
+// ── Трофейный склад ─────────────────────────────────────────────────────────
+// Единственная причина лететь к пиратам за железом: дёшево и штучно, но
+// потрёпано и с чужими серийниками
+const { generateStationItems } = await import(
+  "../src/game/components/station/station-data.ts"
+);
+const { STATION_CONFIG } = await import("../src/game/galaxy/config.ts");
+const { MODULE_HEALTH_BY_LEVEL } = await import(
+  "../src/game/slices/shop/constants.ts"
+);
+
+const trophies = generateStationItems("pirate-yard", 2, STATION_CONFIG.pirate);
+assert.ok(trophies.length > 0, "у пиратской станции должен быть трофейный склад");
+assert.ok(
+  trophies.every((item) => item.type !== "upgrade"),
+  "пираты перепродают снятое, а не модернизируют — апгрейдов быть не должно",
+);
+assert.ok(
+  trophies.some((item) => item.type === "module") &&
+    trophies.some((item) => item.type === "weapon"),
+  "склад должен держать и модули, и оружие",
+);
+for (const item of trophies) {
+  assert.equal(item.stock, 1, `${item.id}: трофей штучный`);
+  // Дешевле любой легальной скидки: 0.9 у верфи на модули, 0.85 на оружие
+  assert.ok(
+    item.price < Math.floor(item.basePrice * 0.85),
+    `${item.id}: трофей обязан быть дешевле легальной скидки`,
+  );
+  if (item.type === "module") {
+    const standard = MODULE_HEALTH_BY_LEVEL[item.level ?? 1] ?? 100;
+    assert.ok(
+      item.maxHealth < standard,
+      `${item.id}: у трофея урезан запас прочности (${item.maxHealth} против ${standard})`,
+    );
+  }
+}
+assert.deepEqual(
+  generateStationItems("pirate-yard", 2, STATION_CONFIG.pirate).map((i) => i.id),
+  trophies.map((i) => i.id),
+  "ассортимент склада обязан быть стабильным между заходами",
+);
+assert.ok(
+  generateStationItems("legal-yard", 2, STATION_CONFIG.trade).some(
+    (item) => item.type === "upgrade",
+  ),
+  "проверочная сцена: легальная станция апгрейды продавать не перестала",
+);
+
+const { createShopSlice } = await import(
+  "../src/game/slices/shop/createShopSlice.ts"
+);
+const trophyModule = trophies.find((item) => item.type === "module");
+const shopState = {
+  currentLocation: {
+    id: "pirate-station",
+    stationId: "pirate-yard",
+    type: "station",
+    stationConfig: STATION_CONFIG.pirate,
+  },
+  credits: 100_000,
+  wantedHeat: 0,
+  ship: { gridSize: 5, modules: [], cargo: [], tradeGoods: [] },
+  crew: [],
+  research: { researchedTechs: [], activeResearch: null },
+  stationInventory: {},
+  addLog: () => {},
+  canPlaceModule: () => true,
+  updateShipStats: () => {},
+};
+createShopSlice(
+  (update) => applyStateUpdate(shopState, update),
+  () => shopState,
+).buyItem(trophyModule);
+assert.equal(
+  shopState.ship.modules.length,
+  1,
+  "трофей должен вставать на корабль",
+);
+assert.equal(
+  shopState.ship.modules[0].maxHealth,
+  trophyModule.maxHealth,
+  "изношенность трофея обязана дойти до установленного модуля",
+);
+assert.equal(
+  shopState.wantedHeat,
+  TROPHY_PURCHASE_HEAT,
+  "покупка краденого железа обязана добавлять розыск",
+);
+
+// ── Побег от охотников не бесплатен ─────────────────────────────────────────
+const combatSliceSource = readFileSync(
+  new URL("../src/game/slices/combat/combatSlice.ts", import.meta.url),
+  "utf8",
+);
+assert.ok(
+  combatSliceSource.includes("WANTED_HEAT_ON_PURSUIT_ESCAPE"),
+  "успешный побег из погони обязан добавлять розыск, иначе прорыв можно пробовать бесконечно",
+);
+assert.ok(
+  WANTED_HEAT_ON_PURSUIT_ESCAPE > 0,
+  "штраф за побег от охотников должен быть положительным",
 );
 
 console.log("Pirate wanted gameplay checks passed");

@@ -14,13 +14,11 @@ import type { BuyValidation } from "./types";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
 import { applyCrisisMarketModifier } from "@/game/stations/crisisMarket";
 import {
+    getContrabandReputationPenalty,
     getPirateContrabandBuyPrice,
     REPUTATION_BUY_THRESHOLD,
 } from "../constants";
-import { clampWantedHeat } from "@/game/slices/pirate/wanted";
-
-const CONTRABAND_REP_PENALTY = 3;
-const CONTRABAND_HEAT_PER_BUY = 4;
+import { clampWantedHeat, getContrabandHeat } from "@/game/slices/pirate/wanted";
 
 /**
  * Проверяет возможность покупки товара
@@ -47,15 +45,24 @@ const validateBuyTradeGood = (
         return { canBuy: false, error: i18nStore.t("game_logs.err_no_trade") };
     }
 
+    // Применяем модификатор репутации если есть доминирующая раса
+    const raceId = state.currentLocation?.dominantRace;
+    const isPirate = state.currentLocation?.stationConfig?.isPirate ?? false;
+
+    // Контрабанду покупают только на чёрном рынке — как и продают её только там
+    if (goodId === "contraband" && !isPirate) {
+        return {
+            canBuy: false,
+            error: i18nStore.t("game_logs.err_contraband_pirate_only"),
+        };
+    }
+
     // Кризисный множитель применяется к обеим ценам — арбитраж невозможен
     const crisisPrices = applyCrisisMarketModifier(
         pricesFromStation[goodId],
         state.activeCrisis?.id,
         goodId,
     );
-    // Применяем модификатор репутации если есть доминирующая раса
-    const raceId = state.currentLocation?.dominantRace;
-    const isPirate = state.currentLocation?.stationConfig?.isPirate ?? false;
     const pricePer5 =
         isPirate && goodId === "contraband"
             ? getPirateContrabandBuyPrice(crisisPrices.buy, crisisPrices.sell)
@@ -203,23 +210,24 @@ export const buyTradeGood = (
 
     // Пиратские станции не дают репутации за торговлю, но контрабанда оставляет след.
     if (isPirate) {
-        if (goodId === "contraband" && dominantRace) {
-            get().changeReputation(dominantRace, -CONTRABAND_REP_PENALTY);
-            get().addLog(
-                `☠️ Покупка контрабанды: репутация с ${dominantRace} -${CONTRABAND_REP_PENALTY}`,
-                "warning",
-            );
-        }
         if (goodId === "contraband") {
+            const penalty = getContrabandReputationPenalty(quantity);
+            if (dominantRace) {
+                get().changeReputation(dominantRace, -penalty);
+                get().addLog(
+                    i18nStore.t("pirate.contraband_bought_reputation", {
+                        race: i18nStore.t(`races.${dominantRace}.plural`),
+                        penalty,
+                    }),
+                    "warning",
+                );
+            }
+            const heat = getContrabandHeat(quantity);
             set((s) => ({
-                wantedHeat: clampWantedHeat(
-                    (s.wantedHeat ?? 0) + CONTRABAND_HEAT_PER_BUY,
-                ),
+                wantedHeat: clampWantedHeat((s.wantedHeat ?? 0) + heat),
             }));
             get().addLog(
-                i18nStore.t("pirate.heat_trade", {
-                    amount: CONTRABAND_HEAT_PER_BUY,
-                }),
+                i18nStore.t("pirate.heat_trade", { amount: heat }),
                 "warning",
             );
         }

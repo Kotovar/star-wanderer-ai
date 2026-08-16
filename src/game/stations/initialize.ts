@@ -57,11 +57,16 @@ export const initializeStationData = (sectors: Sector[]) => {
                     const priceVar =
                         MIN_PRICE_VARIATION +
                         Math.random() * MAX_PRICE_VARIATION;
+                    // Скидка станции на контрабанду не распространяется: у
+                    // пиратов priceDiscount 0.75 съедал почти всю надбавку
+                    // чёрного рынка (×1.3), и «платим больше» было фикцией
+                    const goodDiscount =
+                        goodId === "contraband" ? DEFAULT_DISCOUNT : priceDiscount;
                     const baseSellPrice = Math.floor(
                         good.basePrice *
                             tierMultiplier *
                             priceVar *
-                            priceDiscount,
+                            goodDiscount,
                     );
 
                     let buyPrice = Math.floor(
@@ -99,14 +104,14 @@ export const initializeStationData = (sectors: Sector[]) => {
                         MIN_STOCK_AMOUNT +
                         Math.floor(Math.random() * MAX_STOCK_VARIATION);
 
-                    // Pirate stations carry very little contraband in "official" stock
-                    if (isPirate && goodId === "contraband") {
-                        stockAmount = 5 + Math.floor(Math.random() * 11);
-                    }
-
-                    // Contraband is only openly traded at pirate stations
-                    if (!isPirate && goodId === "contraband") {
-                        stockAmount = 0;
+                    // Contraband is only openly traded at pirate stations.
+                    // Запас должен покрывать самый крупный заказ на контрабанду
+                    // (10 + tier*5 = 30т в тире 4), иначе задание невыполнимо
+                    // до первого пополнения склада.
+                    if (goodId === "contraband") {
+                        stockAmount = isPirate
+                            ? 30 + Math.floor(Math.random() * 11)
+                            : 0;
                     }
 
                     stock[loc.stationId][goodId] = stockAmount;

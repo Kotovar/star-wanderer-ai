@@ -94,11 +94,15 @@ export const driftStationPrices = (
  *
  * @param stock - Текущие запасы станций
  * @param target - Целевой уровень склада
+ * @param canStock - Какие товары станция вообще держит. Без этого фильтра
+ *   пополнение завозило контрабанду на легальные станции: initialize ставит
+ *   там ноль, но дефицит-то есть, и к 10-му ходу на прилавке лежало 8 тонн.
  * @returns Новые запасы станций
  */
 export const restockStations = (
     stock: StationStock,
     target: number,
+    canStock: (stationId: string, goodId: string) => boolean = () => true,
 ): StationStock => {
     const next: StationStock = {};
 
@@ -107,6 +111,7 @@ export const restockStations = (
         next[stationId] = { ...stationStock };
 
         for (const goodId of Object.keys(stationStock)) {
+            if (!canStock(stationId, goodId)) continue;
             const current =
                 stationStock[goodId as keyof typeof stationStock] ?? 0;
             const deficit = target - current;

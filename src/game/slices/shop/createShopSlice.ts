@@ -4,6 +4,10 @@ import { buyUpgrade } from "./helpers/buyUpgrade";
 import { buyModule } from "./helpers/buyModule";
 import { buyWeapon } from "./helpers/buyWeapon";
 import { getFrontierSubsidyPrice } from "@/game/contracts/frontierContracts";
+import {
+    clampWantedHeat,
+    TROPHY_PURCHASE_HEAT,
+} from "@/game/slices/pirate/wanted";
 
 /**
  * Интерфейс ShopSlice
@@ -66,6 +70,22 @@ export const createShopSlice = (
         } else {
             get().addLog( i18nStore.t("game_logs.createShopSlice_3"), "error");
             return;
+        }
+
+        // Трофей несёт чужие серийники: на ближайшем досмотре объясняться
+        // придётся уже за железо, а не только за трюм
+        if (purchased && state.currentLocation?.stationConfig?.isPirate) {
+            set((s) => ({
+                wantedHeat: clampWantedHeat(
+                    (s.wantedHeat ?? 0) + TROPHY_PURCHASE_HEAT,
+                ),
+            }));
+            get().addLog(
+                i18nStore.t("pirate.heat_trophy", {
+                    amount: TROPHY_PURCHASE_HEAT,
+                }),
+                "warning",
+            );
         }
 
         if (purchased && state.frontierSubsidy?.targetStationId === stationId) {
