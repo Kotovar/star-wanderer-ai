@@ -18,6 +18,7 @@ import {
 import { applyNeutronRadiation, handlePatrolContracts } from "./processTravel";
 import { applyPatrolContractCompletions } from "./patrolCompletions";
 import { applySectorRuleEffect } from "./applySectorRuleEffect";
+import { rollWantedInterception } from "@/game/slices/pirate/interception";
 import type { GameState, GameStore, GameMode, Artifact, SetState } from "@/game/types";
 
 // ============================================================================
@@ -390,6 +391,9 @@ const handleTravelCompletion = (
     if (sector.tier === 4) {
         get().checkVictory();
     }
+
+    // Последним: перехват переводит игру в бой
+    rollWantedInterception(set as SetState, get);
 };
 
 /**
@@ -480,6 +484,9 @@ const handleTravelStart = (
         if (sector.tier === 4) {
             get().checkVictory();
         }
+
+        // Последним: перехват переводит игру в бой
+        rollWantedInterception(set as SetState, get);
     } else {
         get().addLog(travelStartMessage, "info");
     }

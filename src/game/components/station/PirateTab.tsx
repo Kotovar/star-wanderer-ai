@@ -7,6 +7,10 @@ import {
     getPirateContrabandBuyPrice,
     getPirateContrabandSellPrice,
 } from "@/game/slices/trade/constants";
+import {
+    WANTED_CHECKPOINT_HEAT,
+    WANTED_PURSUIT_HEAT,
+} from "@/game/slices/pirate/wanted";
 import { useTranslation } from "@/lib/useTranslation";
 import { TRADE_GOODS } from "@/game/constants";
 import { typedKeys } from "@/lib/utils";
@@ -87,10 +91,16 @@ export function PirateTab({
         ),
     ];
 
+    // Пороги берутся из механики, а не на глаз: подпись обязана совпадать
+    // с тем, что реально произойдёт — досмотр с 50, перехват с 75
     const heatLevel =
-        heat < 20 ? t("pirate.heat_low") :
-        heat < 50 ? t("pirate.heat_medium") :
-        heat < 80 ? t("pirate.heat_high") : t("pirate.heat_critical");
+        heat < 20
+            ? t("pirate.heat_low")
+            : heat < WANTED_CHECKPOINT_HEAT
+              ? t("pirate.heat_medium")
+              : heat < WANTED_PURSUIT_HEAT
+                ? t("pirate.heat_high")
+                : t("pirate.heat_critical");
 
     return (
         <div className="flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto pr-1 pb-2">

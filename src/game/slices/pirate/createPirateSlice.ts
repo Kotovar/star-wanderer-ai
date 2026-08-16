@@ -14,6 +14,7 @@ import { patchLocation } from "@/game/utils/patchLocation";
 import { store as i18nStore } from "@/lib/useTranslation";
 import { playSound } from "@/sounds";
 import { refreshPirateContracts } from "./contracts";
+import { startWantedPursuit } from "./interception";
 import {
     canFightWantedPursuit,
     clampWantedHeat,
@@ -354,16 +355,9 @@ export const createPirateSlice = (
             return;
         }
 
-        get().startCombat({
-            id: `wanted-hunters-${state.turn}`,
-            type: "enemy",
-            name: i18nStore.t("pirate.hunters_name"),
-            enemyType: "mercenary",
-            threat: Math.min(4, (state.currentSector?.tier ?? 1) + 1),
-        });
-        set((s) => {
-            if (s.currentCombat) s.currentCombat.wantedPursuit = true;
-        });
+        // Не засада: на прорыв игрок идёт сам и подготовленным, в отличие
+        // от перехвата на подлёте к сектору
+        startWantedPursuit(set, get);
     },
 
     refreshPirateStationContracts: () => {

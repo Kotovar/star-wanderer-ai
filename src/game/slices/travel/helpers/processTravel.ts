@@ -45,6 +45,7 @@ import {
     type PatrolContractResult,
 } from "./patrolCompletions";
 import { applySectorRuleEffect } from "./applySectorRuleEffect";
+import { rollWantedInterception } from "@/game/slices/pirate/interception";
 
 /** Вероятность случайного события в пути (прямой маршрут) */
 const TRAVEL_EVENT_CHANCE_DIRECT = 0.45;
@@ -884,5 +885,9 @@ export const processTravel = (
         if (destinationSector.tier === 4) {
             get().checkVictory();
         }
+
+        // Последним: перехват переводит игру в бой, и всё, что ставит режим
+        // сектора, обязано отработать до него
+        rollWantedInterception(set, get);
     }
 };

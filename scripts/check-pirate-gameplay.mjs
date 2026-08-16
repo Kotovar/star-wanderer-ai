@@ -19,6 +19,7 @@ const {
   isWantedCheckpointRequired,
   TROPHY_PURCHASE_HEAT,
   WANTED_HEAT_ON_PURSUIT_ESCAPE,
+  WANTED_PURSUIT_HEAT,
 } = await import("../src/game/slices/pirate/wanted.ts");
 const { getContrabandReputationPenalty } = await import(
   "../src/game/slices/trade/constants.ts"
@@ -875,6 +876,101 @@ assert.equal(
   TROPHY_PURCHASE_HEAT,
   "покупка краденого железа обязана добавлять розыск",
 );
+
+// ── Перехват в пути ─────────────────────────────────────────────────────────
+// До правки розыск влиял ровно на одно: стыковку на легальной станции. Сидеть
+// на 90 можно было бесконечно, просто обходя легальные станции стороной.
+const { getWantedInterceptionChance, rollWantedInterception } = await import(
+  "../src/game/slices/pirate/interception.ts"
+);
+
+assert.equal(
+  getWantedInterceptionChance(WANTED_PURSUIT_HEAT - 1),
+  0,
+  "ниже порога погони охотники выходить не должны",
+);
+assert.ok(
+  getWantedInterceptionChance(WANTED_PURSUIT_HEAT) > 0,
+  "на пороге погони перехват обязан стать возможным",
+);
+assert.ok(
+  getWantedInterceptionChance(100) > getWantedInterceptionChance(80),
+  "шанс перехвата обязан расти с розыском",
+);
+assert.ok(
+  getWantedInterceptionChance(100) < 1,
+  "перехват не должен быть гарантированным даже на сотне",
+);
+
+const interceptState = {
+  wantedHeat: 100,
+  turn: 12,
+  currentSector: { id: 1, tier: 2 },
+  currentCombat: null,
+  traveling: null,
+  addLog: () => {},
+  startCombat: (enemy, isAmbush) => {
+    interceptState.currentCombat = { enemy, isAmbush };
+  },
+};
+const interceptSet = (update) => applyStateUpdate(interceptState, update);
+assert.equal(
+  rollWantedInterception(interceptSet, () => interceptState, () => 0.99),
+  false,
+  "неудачный бросок не должен начинать бой",
+);
+assert.equal(
+  rollWantedInterception(interceptSet, () => interceptState, () => 0),
+  true,
+  "удачный бросок обязан начать бой",
+);
+assert.equal(
+  interceptState.currentCombat.isAmbush,
+  true,
+  "перехват — засада: охотники ждали, а не встретились случайно",
+);
+assert.equal(
+  interceptState.currentCombat.wantedPursuit,
+  true,
+  "бой обязан быть помечен как погоня, иначе playerVictory зачистит локацию и засчитает контракты",
+);
+
+const calmState = {
+  wantedHeat: WANTED_PURSUIT_HEAT - 1,
+  turn: 12,
+  currentSector: { id: 1, tier: 2 },
+  currentCombat: null,
+  traveling: null,
+  addLog: () => {},
+  startCombat: () => assert.fail("перехвата ниже порога быть не должно"),
+};
+assert.equal(
+  rollWantedInterception((u) => applyStateUpdate(calmState, u), () => calmState, () => 0),
+  false,
+  "ниже порога погони перехвата быть не должно даже при худшем броске",
+);
+
+// Перехват обязан висеть на всех путях прибытия в сектор — как радиация
+// нейтронной звезды рядом с ним
+for (const file of [
+  "../src/game/slices/travel/helpers/processTravel.ts",
+  "../src/game/slices/travel/helpers/selectSector.ts",
+]) {
+  // Комментарии срезаются: закомментированный вызов — это тоже потерянный
+  // путь прибытия, а регулярка его от живого не отличит
+  const source = readFileSync(new URL(file, import.meta.url), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
+  // Считаются именно вызовы: в импортах и в объявлении за именем скобки нет
+  const arrivals = (source.match(/applyNeutronRadiation\(/g) ?? []).length;
+  const intercepts = (source.match(/rollWantedInterception\(/g) ?? []).length;
+  assert.ok(arrivals > 0, `${file}: сцена проверки развалилась`);
+  assert.equal(
+    intercepts,
+    arrivals,
+    `${file}: перехват должен стоять на каждом пути прибытия в сектор`,
+  );
+}
 
 // ── Побег от охотников не бесплатен ─────────────────────────────────────────
 const combatSliceSource = readFileSync(
