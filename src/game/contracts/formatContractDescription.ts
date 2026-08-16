@@ -49,6 +49,23 @@ export const formatResearchTechRequirement = (
         : "contracts.research_tech_basic",
   );
 
+export const formatPirateReturnInstruction = (
+  contract: Pick<
+    Contract,
+    "pirateObjectiveComplete" | "sourcePlanetName" | "sourceSectorName"
+  >,
+  t: Translate,
+): string =>
+  t(
+    contract.pirateObjectiveComplete
+      ? "pirate.objective_return"
+      : "pirate.objective_after_action_return",
+    {
+      issuer: getLocationName(contract.sourcePlanetName ?? "", t),
+      sector: getLocationName(contract.sourceSectorName ?? "", t),
+    },
+  );
+
 export const formatContractDescription = (
   contract: ContractDescription,
   t: Translate,

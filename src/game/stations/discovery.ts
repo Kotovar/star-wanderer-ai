@@ -75,12 +75,28 @@ type StationServiceKey =
   | "genetic_therapy"
   | "research"
   | "mineral_buyback"
-  | "diplomacy";
+  | "diplomacy"
+  | "black_market"
+  | "pirate_contracts"
+  | "laundering";
 
 export function getStationServiceKeys(
   stationType: StationName,
   config?: StationConfig,
 ): StationServiceKey[] {
+  if (stationType === "pirate") {
+    return [
+      "refuel",
+      "repairs",
+      "probes",
+      "scrap",
+      "weapon_removal",
+      "black_market",
+      "pirate_contracts",
+      "laundering",
+    ];
+  }
+
   const services: StationServiceKey[] = [
     "refuel",
     "repairs",

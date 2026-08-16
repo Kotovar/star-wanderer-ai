@@ -37,7 +37,10 @@ import { ModuleUpgradeModal } from "./station/ModuleUpgradeModal";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getLocationName } from "@/lib/translationHelpers";
-import { formatContractDescription } from "@/game/contracts/formatContractDescription";
+import {
+    formatContractDescription,
+    formatPirateReturnInstruction,
+} from "@/game/contracts/formatContractDescription";
 import { getSectorRule } from "@/game/galaxy/sectorRules";
 import {
     canHireRace,
@@ -104,6 +107,7 @@ function StationDiscoveryModal({
 }) {
     const { t } = useTranslation();
     if (!stationType) return null;
+    const isPirateStation = stationType === "pirate";
 
     const marketRates = getStationRates(stationConfig).map((rate) => ({
         label: t(`station_discovery.rate_${rate.key}`),
@@ -161,10 +165,20 @@ function StationDiscoveryModal({
                 <div className="space-y-4 p-4">
                     <section>
                         <div className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.16em] text-[#00d4ff]">
-                            <span>{t("station_discovery.market_conditions")}</span>
+                            <span>
+                                {t(
+                                    isPirateStation
+                                        ? "station_discovery.pirate_market_conditions"
+                                        : "station_discovery.market_conditions",
+                                )}
+                            </span>
                             <span className="text-[#4c6873]">MARKET</span>
                         </div>
-                        {marketRates.length > 0 ? (
+                        {isPirateStation ? (
+                            <div className="border border-[#ff004044] bg-[rgba(255,0,64,0.06)] px-3 py-2 text-sm text-[#ffb3bf]">
+                                {t("station_discovery.pirate_market_desc")}
+                            </div>
+                        ) : marketRates.length > 0 ? (
                             <div className="grid grid-cols-2 gap-px border border-[#00d4ff44] bg-[#00d4ff44] sm:grid-cols-3">
                                 {marketRates.map((rate) => (
                                     <div
@@ -187,37 +201,39 @@ function StationDiscoveryModal({
                         )}
                     </section>
 
-                    <section className="overflow-hidden border border-[#00ff4144]">
-                        <div className="border-b border-[#00ff4144] bg-[rgba(0,255,65,0.06)] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#00ff41]">
-                            {t("station_discovery.guaranteed_stock")}
-                        </div>
-                        {guaranteedRows.map((row) => (
-                            <div
-                                key={row.label}
-                                className="grid grid-cols-[7rem_1fr] gap-2 border-b border-[#00ff4122] px-3 py-2 last:border-b-0 sm:grid-cols-[9rem_1fr]"
-                            >
-                                <div className="pt-0.5 text-[10px] font-bold uppercase tracking-wide text-[#8fa3aa]">
-                                    {row.label}
-                                </div>
-                                {row.values.length > 0 ? (
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {row.values.map((value) => (
-                                            <span
-                                                key={value}
-                                                className={`border px-1.5 py-0.5 text-xs ${row.color}`}
-                                            >
-                                                {value}
-                                            </span>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <span className="text-xs text-[#576b72]">
-                                        {t("station_discovery.no_guarantees")}
-                                    </span>
-                                )}
+                    {!isPirateStation && (
+                        <section className="overflow-hidden border border-[#00ff4144]">
+                            <div className="border-b border-[#00ff4144] bg-[rgba(0,255,65,0.06)] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#00ff41]">
+                                {t("station_discovery.guaranteed_stock")}
                             </div>
-                        ))}
-                    </section>
+                            {guaranteedRows.map((row) => (
+                                <div
+                                    key={row.label}
+                                    className="grid grid-cols-[7rem_1fr] gap-2 border-b border-[#00ff4122] px-3 py-2 last:border-b-0 sm:grid-cols-[9rem_1fr]"
+                                >
+                                    <div className="pt-0.5 text-[10px] font-bold uppercase tracking-wide text-[#8fa3aa]">
+                                        {row.label}
+                                    </div>
+                                    {row.values.length > 0 ? (
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {row.values.map((value) => (
+                                                <span
+                                                    key={value}
+                                                    className={`border px-1.5 py-0.5 text-xs ${row.color}`}
+                                                >
+                                                    {value}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <span className="text-xs text-[#576b72]">
+                                            {t("station_discovery.no_guarantees")}
+                                        </span>
+                                    )}
+                                </div>
+                            ))}
+                        </section>
+                    )}
 
                     <section>
                         <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#ffb000]">
@@ -589,6 +605,7 @@ export function StationPanel() {
         STATION_BACKGROUNDS.trade;
     const pirateTabProps = {
         stationId,
+        locationId: currentLocation.id,
         stationPrices,
         stationStock,
         credits: displayCredits,
@@ -668,12 +685,7 @@ export function StationPanel() {
                                     {formatContractDescription(contract, t)}
                                 </div>
                                 <div className="mt-1 text-[11px] text-[#888]">
-                                    {t("pirate.objective_return", {
-                                        issuer: getLocationName(
-                                            contract.sourcePlanetName ?? "",
-                                            t,
-                                        ),
-                                    })}
+                                    {formatPirateReturnInstruction(contract, t)}
                                 </div>
                                 <Button
                                     onClick={() =>

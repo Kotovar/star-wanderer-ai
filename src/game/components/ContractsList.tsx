@@ -23,6 +23,7 @@ import { getContractTurnsRemaining } from "@/game/contracts/contractDeadline";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers/calculateFuelCost";
 import {
     formatContractDescription,
+    formatPirateReturnInstruction,
     formatResearchTechRequirement,
 } from "@/game/contracts/formatContractDescription";
 import {
@@ -367,12 +368,7 @@ export function ContractsList() {
                 })}`;
             case "pirate_smuggling":
                 return contract.pirateObjectiveComplete
-                    ? t("pirate.objective_return", {
-                          issuer: getLocationName(
-                              contract.sourcePlanetName ?? t("contracts.unknown"),
-                              t,
-                          ),
-                      })
+                    ? formatPirateReturnInstruction(contract, t)
                     : t("pirate.status_smuggling", {
                           quantity: contract.quantity ?? 0,
                           target: getLocationName(
@@ -382,12 +378,7 @@ export function ContractsList() {
                       });
             case "pirate_bounty":
                 return contract.pirateObjectiveComplete
-                    ? t("pirate.objective_return", {
-                          issuer: getLocationName(
-                              contract.sourcePlanetName ?? t("contracts.unknown"),
-                              t,
-                          ),
-                      })
+                    ? formatPirateReturnInstruction(contract, t)
                     : t("pirate.status_bounty", {
                           target: getLocationName(
                               contract.targetLocationName ?? t("contracts.unknown"),
@@ -400,12 +391,7 @@ export function ContractsList() {
                       });
             case "pirate_heist":
                 return contract.pirateObjectiveComplete
-                    ? t("pirate.objective_return", {
-                          issuer: getLocationName(
-                              contract.sourcePlanetName ?? t("contracts.unknown"),
-                              t,
-                          ),
-                      })
+                    ? formatPirateReturnInstruction(contract, t)
                     : t("pirate.status_heist", {
                           target: getLocationName(
                               contract.targetLocationName ?? t("contracts.unknown"),
@@ -1085,12 +1071,7 @@ export function ContractsList() {
                         },
                         {
                             label: t("contracts.task_where"),
-                            value: t("pirate.objective_return", {
-                                issuer: getLocationName(
-                                    contract.sourcePlanetName ?? t("contracts.unknown"),
-                                    t,
-                                ),
-                            }),
+                            value: formatPirateReturnInstruction(contract, t),
                         },
                     ],
                 };

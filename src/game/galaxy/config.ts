@@ -200,9 +200,9 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
     },
     pirate: {
         priceDiscount: 0.75,
-        guaranteedProfessions: ["gunner"],
-        guaranteedWeapons: ["kinetic", "missile"],
-        guaranteedModules: ["weaponbay", "shield", "cargo"],
+        guaranteedProfessions: [],
+        guaranteedWeapons: [],
+        guaranteedModules: [],
         allowsTrade: true,
         allowsCraft: false,
         allowsModuleInstall: false,
