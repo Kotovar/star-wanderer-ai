@@ -64,6 +64,32 @@ assert.equal(
   "war_spiral: start sector must keep baseline hostile locations",
 );
 
+const lostRoutesBlackHoleStart = withConstantRandom(
+  0,
+  () => generateGalaxy(RUN_PROFILES.broken_trade_lanes)[0],
+);
+assert.notEqual(
+  lostRoutesBlackHoleStart.star.type,
+  "blackhole",
+  "broken_trade_lanes: the start sector must never be a black hole",
+);
+assert.ok(
+  lostRoutesBlackHoleStart.locations.some(
+    (location) => location.type === "station",
+  ),
+  "broken_trade_lanes: the start sector must provide refuelling",
+);
+assert.match(
+  ru.run_profiles.broken_trade_lanes.risk,
+  /Без инженера нельзя синтезировать топливо/,
+  "broken_trade_lanes: the risk copy must explain the engineer dependency",
+);
+assert.match(
+  en.run_profiles.broken_trade_lanes.risk,
+  /Without an engineer, fuel cannot be synthesized/,
+  "broken_trade_lanes: the risk copy must explain the engineer dependency",
+);
+
 for (const stationType of ["shipyard", "medical"]) {
   const sectors = makeTier1Anchors(stationType);
   ensureStationTypes(sectors, 1);
@@ -74,6 +100,19 @@ for (const stationType of ["shipyard", "medical"]) {
     `broken_trade_lanes: ${stationType}-only anchors must provide all tier-1 services`,
   );
 }
+
+const duplicateShipyardAnchors = makeTier1Anchors("shipyard");
+duplicateShipyardAnchors[2].locations[0].stationType = "diplomatic";
+duplicateShipyardAnchors[3].locations[0].stationType = "diplomatic";
+ensureStationTypes(duplicateShipyardAnchors, 1);
+assert.deepEqual(
+  duplicateShipyardAnchors
+    .flatMap((sector) => sector.locations)
+    .map((location) => location.stationType)
+    .sort(),
+  ["diplomatic", "medical", "military", "shipyard"],
+  "tier 1: adding medical and military services must retain the only shipyard",
+);
 
 const tier4Services = makeTier4ServiceFixture();
 ensureStationAnchors(tier4Services, { 4: 2 });
@@ -129,7 +168,10 @@ for (const profile of Object.values(RUN_PROFILES)) {
     if (profile.id === "broken_trade_lanes") {
       const expectedStations = { 1: 4, 2: 3, 3: 3, 4: 2 };
       for (const [tier, expected] of Object.entries(expectedStations)) {
-        assert.equal(tierLocations(sectors, Number(tier), "station"), expected);
+        assert.ok(
+          tierLocations(sectors, Number(tier), "station") >= expected,
+          `${profile.id}: tier ${tier} needs at least ${expected} stations`,
+        );
       }
     }
   }

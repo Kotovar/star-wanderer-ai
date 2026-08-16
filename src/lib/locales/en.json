@@ -4466,7 +4466,7 @@
         "broken_trade_lanes": {
             "name": "Lost Routes",
             "opportunity": "Distress signals, derelicts, and wreck fields are more common.",
-            "risk": "Stations are scarce, but each region has several reliable places to repair and resupply."
+            "risk": "Stations are scarce: the starting sector has one, and every tier has resupply points. Without an engineer, fuel cannot be synthesized — plan reserves before each jump."
         }
     },
     "run_profile_arcs": {

@@ -72,7 +72,11 @@ export const generateGalaxy = (
         for (let i = 0; i < count; i++) {
             const angle = calculateSectorAngle(i, count, tier);
             const actualRadius = calculateSectorRadius(radiusRatio);
-            const star = generateStar(tier);
+            const generatedStar = generateStar(tier);
+            const star: Sector["star"] =
+                sectorIdx === 0 && generatedStar.type === "blackhole"
+                    ? { type: "red_dwarf", name: "star_types.red_dwarf" }
+                    : generatedStar;
             sectors.push({
                 id: sectorIdx,
                 name: getSectorNameKey(sectorIdx, tier),

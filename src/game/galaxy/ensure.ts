@@ -205,12 +205,11 @@ export const ensureStationTypes = (
         "medical",
         ...(tier === 1 ? ["military" as const] : []),
     ];
-    const stationTypes = tierSectors
-        .flatMap((sector) => sector.locations)
-        .filter((location) => location.type === "station")
-        .map((location) => location.stationType);
-
     for (const requiredType of requiredTypes) {
+        const stationTypes = tierSectors
+            .flatMap((sector) => sector.locations)
+            .filter((location) => location.type === "station")
+            .map((location) => location.stationType);
         const hasType = tierSectors.some((s) =>
             s.locations.some(
                 (l) => l.type === "station" && l.stationType === requiredType,
