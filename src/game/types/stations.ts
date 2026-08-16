@@ -8,7 +8,8 @@ export type StationName =
     | "mining"
     | "shipyard"
     | "medical"
-    | "diplomatic";
+    | "diplomatic"
+    | "pirate";
 
 export type StationConfig = {
     cargoBonus?: number; // Множитель вместимости грузового отсека (1.5 = +50%)
@@ -27,4 +28,5 @@ export type StationConfig = {
     allowsCraft: boolean; // Крафт
     allowsModuleInstall: boolean; // Установка модулей и оружия
     allowsCrewHeal: boolean; // Лечение экипажа
+    isPirate?: boolean; // Пиратская станция (чёрный рынок, контракты, риск засады)
 };

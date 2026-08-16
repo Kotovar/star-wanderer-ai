@@ -52,3 +52,14 @@ export const REPUTATION_BUY_THRESHOLD = 20;
 
 /** Количество товара для получения +1 репутации (за продажу) */
 export const REPUTATION_SELL_THRESHOLD = 20;
+
+/** Чёрный рынок платит за контрабанду на 30% больше базовой цены станции. */
+export const PIRATE_CONTRABAND_SELL_MULTIPLIER = 1.3;
+
+export const getPirateContrabandSellPrice = (price: number): number =>
+    Math.floor(price * PIRATE_CONTRABAND_SELL_MULTIPLIER);
+
+export const getPirateContrabandBuyPrice = (
+    buyPrice: number,
+    sellPrice: number,
+): number => Math.max(buyPrice, getPirateContrabandSellPrice(sellPrice) + 1);

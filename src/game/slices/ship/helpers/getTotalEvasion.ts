@@ -1,5 +1,6 @@
 import type { GameState } from "@/game/types/game";
-import { CREW_ASSIGNMENT_BONUSES, RACES } from "@/game/constants";
+import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
+import { sumRaceTraitEffect } from "@/game/races";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getPilotInCockpit } from "@/game/crew";
@@ -73,16 +74,7 @@ export function getTotalEvasion(state: GameState): number {
     });
 
     // Бонусы от расовых трейтов (например, Krylorian intimidation)
-    crew.forEach((c) => {
-        const race = RACES[c.race];
-        if (race?.specialTraits) {
-            race.specialTraits.forEach((trait) => {
-                if (trait.effects.evasionBonus) {
-                    evasion += Number(trait.effects.evasionBonus) * 100;
-                }
-            });
-        }
-    });
+    evasion += sumRaceTraitEffect(crew, "evasionBonus") * 100;
 
     // Бонус аугментации neural_reflex (пилот в кабине, +10% уклонения)
     evasion += getAugmentationBonus(cockpitPilot, "evasionBonus") * 100;

@@ -5,8 +5,9 @@ import {
 import { getTechBonusSum } from "@/game/research";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getReactorOverloadPower } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
-import { getTechPerkValue } from "@/game/constants/techTree";
+import { getStrongestTechPerkValue } from "@/game/constants/techTree";
 import { getStarTypeEffect } from "@/game/constants/starEffects";
+import { getLivingShipCrew } from "@/game/crew/stationed";
 import type { GameState } from "@/game/types/game";
 
 /**
@@ -32,12 +33,10 @@ export function getTotalPower(state: GameState): number {
         .reduce((sum, m) => sum + (m.power ?? 0), 0);
 
     // === Бонус ветки "Реакторный инженер" (лучший инженер экипажа, не суммируется) ===
-    const bestEngineerPowerBonus = Math.max(
-        0,
-        ...crew
-            .filter((c) => c.profession === "engineer")
-            .map((c) => getTechPerkValue(c, "B")),
-        0,
+    const bestEngineerPowerBonus = getStrongestTechPerkValue(
+        crew,
+        "engineer",
+        "B",
     );
     if (bestEngineerPowerBonus > 0) {
         const reactorCount = modules.filter(
@@ -53,7 +52,8 @@ export function getTotalPower(state: GameState): number {
             .filter((m) => m.type === "reactor" && isModuleFunctional(m))
             .map((m) => m.id),
     );
-    crew.filter(
+    // Живой: смерть не снимает назначение, и труп продолжал разгонять реактор
+    getLivingShipCrew(crew).filter(
         (c) =>
             c.profession === "engineer" &&
             c.assignment === "reactor_overload" &&

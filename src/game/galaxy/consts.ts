@@ -76,4 +76,5 @@ export const STATION_TYPES: StationName[] = [
     "shipyard",
     "medical",
     "diplomatic",
+    "pirate",
 ];

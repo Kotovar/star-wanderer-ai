@@ -14,11 +14,230 @@ const { renderToStaticMarkup } = await import("react-dom/server");
 const { ContractsList, getSupplyRunTurnInLocation } = await import(
   "../src/game/components/ContractsList.tsx"
 );
+const { PirateTab } = await import(
+  "../src/game/components/station/PirateTab.tsx"
+);
 const { ShopTab } = await import("../src/game/components/station/ShopTab.tsx");
 const { PlanetPanel } = await import(
   "../src/game/components/PlanetPanel.tsx"
 );
+const { generatePirateContracts } = await import(
+  "../src/game/slices/pirate/contracts.ts"
+);
+const { initializeStationData } = await import(
+  "../src/game/stations/initialize.ts"
+);
+const { sellTradeGood } = await import(
+  "../src/game/slices/trade/helpers/sellTradeGood.ts"
+);
 const { store: i18nStore } = await import("../src/lib/useTranslation.ts");
+
+const PIRATE_SMUGGLING = {
+  id: "pirate-smuggling",
+  type: "pirate_smuggling",
+  desc: "contracts.desc_pirate_smuggling",
+  reward: 400,
+  cargo: "contraband",
+  quantity: 10,
+};
+
+assert.equal(i18nStore.t("pirate.black_market"), "ЧЁРНЫЙ РЫНОК");
+assert.equal(i18nStore.t("pirate.contract_board"), "ДОСКА ПИРАТСКИХ ЗАДАЧ");
+
+const renderPirateTab = (
+  view,
+  contrabandPrices = { buy: 300, sell: 200 },
+) => renderToStaticMarkup(
+  createElement(PirateTab, {
+    view,
+    stationId: "pirate-station",
+    stationPrices: {
+      "pirate-station": {
+        contraband: contrabandPrices,
+      },
+    },
+    stationStock: { "pirate-station": { contraband: 10 } },
+    credits: 1_000,
+    ship: { cargo: [], tradeGoods: [] },
+    cargoCapacity: 20,
+    probes: 0,
+    heat: 0,
+    contracts: [PIRATE_SMUGGLING],
+    activeContractIds: [],
+    buyTradeGood: () => {},
+    sellTradeGood: () => {},
+    acceptPirateContract: () => {},
+    completePirateContract: () => {},
+    reducePirateHeat: () => {},
+  }),
+);
+const pirateMarkup = renderPirateTab("contracts");
+assert.ok(
+  pirateMarkup.includes("Перевезти контрабанду на другую станцию"),
+  "пиратский контракт обязан отображаться на выбранном языке",
+);
+assert.doesNotMatch(
+  pirateMarkup,
+  /contracts\.desc_pirate_/,
+  "сырой ключ пиратского контракта не должен попадать в UI",
+);
+
+const pirateMarketMarkup = renderPirateTab("market", {
+  buy: 615,
+  sell: 615,
+});
+assert.ok(
+  pirateMarketMarkup.includes("Снизить розыскиваемость на 15 — 500₢"),
+  "кнопка смывки должна объяснять, что именно уменьшится",
+);
+assert.doesNotMatch(
+  pirateMarketMarkup,
+  /\{\{-amount\}\}/,
+  "в кнопке смывки не должен показываться сырой плейсхолдер",
+);
+assert.ok(
+  pirateMarketMarkup.includes("Купить: 160₢/т | Продать: 159₢/т"),
+  "чёрный рынок должен показывать фактический спред контрабанды",
+);
+assert.doesNotMatch(
+  pirateMarketMarkup,
+  /ДОСКА ПИРАТСКИХ ЗАДАЧ/,
+  "во вкладке чёрного рынка не должно быть списка задач",
+);
+
+const pirateContractsMarkup = renderPirateTab("contracts");
+assert.ok(
+  pirateContractsMarkup.includes("ДОСКА ПИРАТСКИХ ЗАДАЧ"),
+  "вкладка заданий должна показывать доску контрактов",
+);
+assert.doesNotMatch(
+  pirateContractsMarkup,
+  /ЧЁРНЫЙ РЫНОК/,
+  "во вкладке заданий не должно быть торговли",
+);
+i18nStore.changeLanguage("en");
+await new Promise((done) => setTimeout(done, 0));
+assert.equal(i18nStore.t("pirate.black_market"), "BLACK MARKET");
+assert.equal(i18nStore.t("pirate.contract_board"), "PIRATE CONTRACT BOARD");
+assert.equal(
+  i18nStore.t(PIRATE_SMUGGLING.desc),
+  "📦 Smuggle contraband to another station",
+  "английское описание пиратского контракта обязано быть переведено",
+);
+i18nStore.changeLanguage("ru");
+
+const generatedPirateContracts = generatePirateContracts(
+  {
+    id: "pirate-station",
+    stationId: "pirate-station",
+    type: "station",
+    name: "Пиратская база",
+  },
+  2,
+);
+assert.ok(
+  generatedPirateContracts.every((contract) =>
+    /^contracts\.desc_pirate_(smuggling|bounty|heist)$/.test(contract.desc),
+  ),
+  "генератор обязан сохранять ключ перевода, а не текст одного языка",
+);
+
+const originalRandom = Math.random;
+let pirateContrabandPrices;
+try {
+  Math.random = () => 0.5;
+  pirateContrabandPrices = initializeStationData([
+    {
+      tier: 2,
+      locations: [
+        {
+          id: "pirate-station",
+          type: "station",
+          stationId: "pirate-station",
+          stationConfig: { isPirate: true, priceDiscount: 0.75 },
+        },
+      ],
+    },
+  ]).prices["pirate-station"].contraband;
+} finally {
+  Math.random = originalRandom;
+}
+assert.ok(
+  pirateContrabandPrices.buy > Math.floor(pirateContrabandPrices.sell * 1.3),
+  "новая пиратская станция не должна позволять купить контрабанду дешевле её фактической цены сдачи",
+);
+
+let contrabandSaleState = {
+  credits: 100,
+  activeCrisis: null,
+  crew: [],
+  raceReputation: {},
+  currentLocation: {
+    stationId: "regular-station",
+    stationConfig: { isPirate: false },
+  },
+  stationPrices: {
+    "regular-station": { contraband: { buy: 300, sell: 200 } },
+  },
+  ship: { tradeGoods: [{ item: "contraband", quantity: 1 }] },
+};
+const contrabandSaleLogs = [];
+const setContrabandSaleState = (update) => {
+  const patch = typeof update === "function"
+    ? update(contrabandSaleState)
+    : update;
+  contrabandSaleState = { ...contrabandSaleState, ...patch };
+};
+const getContrabandSaleState = () => ({
+  ...contrabandSaleState,
+  addLog: (message) => contrabandSaleLogs.push(message),
+});
+
+sellTradeGood(
+  setContrabandSaleState,
+  getContrabandSaleState,
+  "contraband",
+  1,
+);
+assert.equal(
+  contrabandSaleState.credits,
+  100,
+  "обычная станция не должна платить за контрабанду",
+);
+assert.equal(
+  contrabandSaleState.ship.tradeGoods[0]?.quantity,
+  1,
+  "обычная станция не должна забирать контрабанду",
+);
+assert.ok(
+  contrabandSaleLogs.includes(
+    i18nStore.t("game_logs.err_contraband_pirate_only"),
+  ),
+  "игрок должен получить локализованную причину отказа",
+);
+contrabandSaleState = {
+  ...contrabandSaleState,
+  currentLocation: {
+    ...contrabandSaleState.currentLocation,
+    stationConfig: { isPirate: true },
+  },
+};
+sellTradeGood(
+  setContrabandSaleState,
+  getContrabandSaleState,
+  "contraband",
+  1,
+);
+assert.equal(
+  contrabandSaleState.credits,
+  152,
+  "пиратская станция должна покупать контрабанду с чёрнорыночной надбавкой",
+);
+assert.equal(
+  contrabandSaleState.ship.tradeGoods.length,
+  0,
+  "принятую пиратской станцией контрабанду нужно убрать из трюма",
+);
 
 const supplyTurnIn = getSupplyRunTurnInLocation(
   {

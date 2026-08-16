@@ -233,18 +233,33 @@ assert.equal(
 );
 assert.equal(
   techTree.getStrongestRaceTechPerkValue([
-    { race: "human", techPerks: { 3: "C" } },
-    { race: "human", techPerks: { 3: "C", 6: "C" } },
+    { race: "human", techPerks: { 3: "C" }, health: 100 },
+    { race: "human", techPerks: { 3: "C", 6: "C" }, health: 100 },
   ], "human"),
   0.07,
   "same-race C carriers use only the strongest accumulated bonus",
 );
 assert.equal(
   techTree.getStrongestRaceTechPerkValue([
-    { race: "human", techPerks: { 3: "A", 6: "B" } },
+    { race: "human", techPerks: { 3: "A", 6: "B" }, health: 100 },
   ], "human"),
   0,
   "professional A/B selections do not create a race C bonus",
+);
+// Перк даёт кораблю только работающий член экипажа
+assert.equal(
+  techTree.getStrongestRaceTechPerkValue([
+    { race: "human", techPerks: { 3: "C", 6: "C" }, health: 0 },
+  ], "human"),
+  0,
+  "мёртвый носитель ветки C кораблю ничего не даёт",
+);
+assert.equal(
+  techTree.getStrongestRaceTechPerkValue([
+    { race: "human", techPerks: { 3: "C", 6: "C" }, health: 100, outpostId: "base-1" },
+  ], "human"),
+  0,
+  "носитель ветки C на аванпосте кораблю ничего не даёт",
 );
 assert.match(
   expMultiplierSource,

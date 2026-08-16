@@ -290,7 +290,8 @@
         "section_resources": "Ресурсы и жизнеобеспечение",
         "section_navigation": "Навигация",
         "section_weapons": "Вооружение",
-        "section_bonuses": "Бонусы"
+        "section_bonuses": "Бонусы",
+        "section_energy": "Энергетика"
     },
     "header": {
         "tooltip_logbook": "Руководство",
@@ -463,7 +464,9 @@
         "interception": "ПРО",
         "interception_effect": "+5% к перехвату, +1% за уровень",
         "merge": "🧬 Сращивание",
-        "merge_effect": "Нет эффекта в этом модуле"
+        "merge_effect": "Нет эффекта в этом модуле",
+        "maintenance": "Обслуживание",
+        "maintenance_effect": "+5% точность"
     },
     "assignments_panel": {
         "title": "ЭКИПАЖ",
@@ -1084,9 +1087,13 @@
         "desc_cleanse_curse": "✨ Отнести проклятый артефакт Кристальной Гидре в секторе {{sector}}",
         "desc_crisis_response": "🚨 {{crisis}}: доставить {{cargo}} ({{quantity}}т)",
         "desc_fabrication": "🔧 Изготовить и сдать: {{weapon}}",
+        "desc_pirate_smuggling": "📦 Перевезти контрабанду на другую станцию",
+        "desc_pirate_bounty": "🎯 Уничтожить цель для пиратского босса",
+        "desc_pirate_heist": "🔓 Украсть груз со станции соперников",
         "desc_fabrication_offer": "Изготовить и сдать: {{weapon}} ({{progress}}/1) · вернуться к заказчику",
         "desc_crisis_response_offer": "{{crisis}}: доставить {{cargo}} ({{progress}}/{{quantity}}т) заказчику",
-        "desc_cleanse_curse_offer": "✨ Отнести проклятый артефакт Кристальной Гидре (сектор {{sector}}) — она снимет проклятие"
+        "desc_cleanse_curse_offer": "✨ Отнести проклятый артефакт Кристальной Гидре (сектор {{sector}}) — она снимет проклятие",
+        "research_tech_tier": "Завершить исследование технологии {{tier}}+ тира"
     },
     "locations": {
         "outpost_raiders": "Рейдеры на аванпосте",
@@ -1185,7 +1192,8 @@
             "medical": "Медицинская",
             "shipyard": "Верфь",
             "industrial": "Промышленная",
-            "diplomatic": "Дипломатическая"
+            "diplomatic": "Дипломатическая",
+            "pirate": "Пиратская"
         }
     },
     "research": {
@@ -1676,7 +1684,8 @@
         "research_boost_active": "Активно ещё {{turnsRemaining}} х.",
         "research_boost_inactive": "Не активировано",
         "research_boost_activate": "Активировать — {{cost}}₢",
-        "research_boost_extend": "Продлить — {{cost}}₢"
+        "research_boost_extend": "Продлить — {{cost}}₢",
+        "pirate_tab": "ПИРАТЫ"
     },
     "station_discovery": {
         "title": "Новая станция: {{type}}",
@@ -1748,7 +1757,8 @@
             "electronics": "Электроника",
             "minerals": "Минералы",
             "rare_minerals": "Редкие минералы",
-            "spares": "Запчасти"
+            "spares": "Запчасти",
+            "contraband": "Контрабанда"
         }
     },
     "cargo_info": {
@@ -2512,6 +2522,12 @@
             "title": "🕳️ ЧЁРНАЯ ДЫРА",
             "hint": "Нажмите на центр, чтобы телепортироваться",
             "emergency_jump": "⚡ АВАРИЙНЫЙ ПРЫЖОК — урон всем модулям"
+        },
+        "scanner_levels": {
+            "level_4": "4 LVL",
+            "level_3": "3 LVL",
+            "level_2": "2 LVL",
+            "level_1": "1 LVL"
         }
     },
     "turn_skip": "Ход пропущен - задачи выполняются",
@@ -3005,7 +3021,8 @@
             "medical": "Медицинская",
             "shipyard": "Верфь",
             "industrial": "Промышленная",
-            "diplomatic": "Дипломатическая"
+            "diplomatic": "Дипломатическая",
+            "pirate": "Пиратская"
         },
         "scanner_upgrade": "Улучшение сканера",
         "drill_upgrade": "Улучшение бура",
@@ -3331,7 +3348,9 @@
         "banked_so_far": "Уже в трюме",
         "dig_deeper": "КОПАТЬ ГЛУБЖЕ",
         "leave_with_haul": "УЙТИ С ДОБЫЧЕЙ",
-        "drill_damage_total": "Пояс повредил бур"
+        "drill_damage_total": "Пояс повредил бур",
+        "required": "требуется",
+        "drill_required": "Требуется буровой модуль уровня"
     },
     "star_types": {
         "red_dwarf": "Красный карлик",
@@ -3345,7 +3364,8 @@
         "blackhole": "Чёрная дыра",
         "brown_dwarf": "Коричневый карлик",
         "variable_star": "Переменная звезда",
-        "stellar_remnant": "Звёздный остаток"
+        "stellar_remnant": "Звёздный остаток",
+        "gas_giant": "Газовый гигант"
     },
     "star_info": {
         "class": "Спектральный класс",
@@ -3458,6 +3478,14 @@
             "mass": "<0.5 М☉",
             "hazard": "низкая",
             "desc": "Холодный и тёмный остаток давно умершей звезды. Вокруг неё тихо — только пыль и обломки. Идеальное место для укрытия. Обломки прошлого разбросаны повсюду — добыча астероидов и обломков здесь выгоднее."
+        },
+        "gas_giant": {
+            "icon": "🟣",
+            "class": "Коричневый карлик",
+            "temp": "~1 000 K",
+            "mass": "13–80 М♃",
+            "hazard": "низкая",
+            "desc": "«Несостоявшаяся звезда» — объект слишком массивный для планеты, но слишком лёгкий для полноценного термоядерного синтеза. Богат дейтерием."
         }
     },
     "location_types": {
@@ -4593,7 +4621,14 @@
         "ship_label": "Корабль",
         "start_credits": "Стартовые кредиты",
         "insufficient_credits": "Недостаточно стартовых кредитов",
-        "start_button": "Начать"
+        "start_button": "Начать",
+        "modifiers_section": "Модификаторы",
+        "modifiers_hint": "(необязательно)",
+        "crew_composition": "Состав экипажа",
+        "crew_level": "Уровень экипажа",
+        "levels_label": "уровни",
+        "no_final_effects": "модификаторы не выбраны",
+        "none": "нет"
     },
     "ship_templates": {
         "explorer": {
@@ -6543,6 +6578,7 @@
         "err_crew_not_found": "Член экипажа не найден!",
         "err_last_crew": "Нельзя уволить последнего члена экипажа!",
         "err_no_trade": "Недоступно для торговли",
+        "err_contraband_pirate_only": "Контрабанду принимают только пиратские станции",
         "err_no_goods": "Недостаточно товара!",
         "err_station_no_stock": "Недостаточно товара на станции!",
         "err_cargo_off": "Склад отключен или отсутствует!",
@@ -6559,5 +6595,22 @@
         "construction_materials": "Стройматериалы",
         "scientific_equipment": "Научное оборудование",
         "diplomatic_cargo": "Дипломатический груз"
+    },
+    "pirate": {
+        "heat_title": "Разыскиваемость",
+        "heat_low": "Низкая — пока безопасно",
+        "heat_medium": "Средняя — стража заинтересовалась",
+        "heat_high": "Высокая — охотники на хвосте",
+        "heat_critical": "Критическая — немедленно бегите",
+        "smugglers_den": "Приют контрабандистов",
+        "smugglers_den_desc": "Заплатите, чтобы смыть следы и снизить розыскиваемость",
+        "reduce_heat": "Снизить розыскиваемость на {{amount}} — {{cost}}₢",
+        "black_market": "ЧЁРНЫЙ РЫНОК",
+        "contract_board": "ДОСКА ПИРАТСКИХ ЗАДАЧ",
+        "no_contracts": "Нет доступных задач",
+        "accept": "ПРИНЯТЬ",
+        "complete": "СДАТЬ",
+        "illegal": "Нелегально",
+        "contract_accepted": "Пиратская задача принята: {{contract}}"
     }
 }

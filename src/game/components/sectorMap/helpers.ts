@@ -114,6 +114,7 @@ function getStationTypeTranslation(
     medical: t("locations.station_types.medical"),
     industrial: t("locations.station_types.industrial"),
     diplomatic: t("locations.station_types.diplomatic"),
+    pirate: t("locations.station_types.pirate"),
   };
   return map[stationType] || stationType;
 }

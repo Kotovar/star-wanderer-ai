@@ -48,6 +48,7 @@
     "check:tech-actions": "node --no-warnings scripts/check-tech-action-extensions.mjs",
     "check:augmentation-research": "node --no-warnings --experimental-strip-types scripts/check-augmentation-research.mjs",
     "check:station-discovery": "node --no-warnings --experimental-strip-types scripts/check-station-discovery.mjs",
+    "check:station-icons": "node --no-warnings scripts/check-station-icons.mjs",
     "check:sector-readiness": "node --no-warnings --experimental-strip-types scripts/check-sector-readiness.mjs",
     "check:sector-rules": "node --no-warnings scripts/check-sector-rules.mjs",
     "check:sector-access-copy": "node scripts/check-sector-access-copy.mjs",

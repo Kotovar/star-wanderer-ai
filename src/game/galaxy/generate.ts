@@ -25,6 +25,8 @@ import {
     SPACE_MONSTERS,
 } from "@/game/constants/spaceMonsters";
 
+import { generatePirateContracts } from "@/game/slices/pirate/contracts";
+
 const ENEMY_TYPES: EnemyShip[] = ["pirate", "raider", "mercenary", "marauder"];
 
 export const getLocationNameKey = (
@@ -183,13 +185,17 @@ export const generateStar = (tier: GalaxyTierAll): Sector["star"] => {
 export const generateStation = (
     sectorIdx: number,
     locIdx: number,
+    tier: GalaxyTierAll = 1,
 ): Location => {
+    const availableTypes = STATION_TYPES.filter(
+        (type) => type !== "pirate" || tier >= 2,
+    );
     const stationType =
-        STATION_TYPES[Math.floor(Math.random() * STATION_TYPES.length)];
+        availableTypes[Math.floor(Math.random() * availableTypes.length)];
     const dominantRace = getRandomRace([]);
     const stationConfig = STATION_CONFIG[stationType];
 
-    return {
+    const base: Location = {
         id: `${sectorIdx}-${locIdx}`,
         stationId: `station-${sectorIdx}-${locIdx}`,
         type: "station",
@@ -199,6 +205,14 @@ export const generateStation = (
         dominantRace,
         population: 50 + Math.floor(Math.random() * 200),
     };
+
+    if (stationType === "pirate") {
+        base.pirateHeat = 0;
+        base.pirateContracts = generatePirateContracts(base, tier);
+        base.pirateLastRefreshTurn = 0;
+    }
+
+    return base;
 };
 
 /**

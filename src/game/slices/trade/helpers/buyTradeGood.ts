@@ -13,7 +13,13 @@ import type {
 import type { BuyValidation } from "./types";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
 import { applyCrisisMarketModifier } from "@/game/stations/crisisMarket";
-import { REPUTATION_BUY_THRESHOLD } from "../constants";
+import {
+    getPirateContrabandBuyPrice,
+    REPUTATION_BUY_THRESHOLD,
+} from "../constants";
+
+const CONTRABAND_REP_PENALTY = 3;
+const CONTRABAND_HEAT_PER_BUY = 4;
 
 /**
  * Проверяет возможность покупки товара
@@ -46,13 +52,16 @@ const validateBuyTradeGood = (
         state.activeCrisis?.id,
         goodId,
     );
-    const pricePer5 = crisisPrices.buy;
-
     // Применяем модификатор репутации если есть доминирующая раса
     const raceId = state.currentLocation?.dominantRace;
+    const isPirate = state.currentLocation?.stationConfig?.isPirate ?? false;
+    const pricePer5 =
+        isPirate && goodId === "contraband"
+            ? getPirateContrabandBuyPrice(crisisPrices.buy, crisisPrices.sell)
+            : crisisPrices.buy;
     const sellPrice = crisisPrices.sell;
     let price: number;
-    if (raceId) {
+    if (raceId && !isPirate) {
         price = applyReputationPriceModifier(
             state.raceReputation,
             raceId,
@@ -109,6 +118,7 @@ export const buyTradeGood = (
 ): void => {
     const state = get();
     const stationId = state.currentLocation?.stationId;
+    const isPirate = state.currentLocation?.stationConfig?.isPirate ?? false;
 
     if (!stationId) {
         get().addLog( i18nStore.t("game_logs.buyTradeGood_1"), "error");
@@ -131,7 +141,11 @@ export const buyTradeGood = (
         return;
     }
 
-    const pricePer5 = state.stationPrices[stationId][goodId].buy;
+    const prices = state.stationPrices[stationId][goodId];
+    const pricePer5 =
+        isPirate && goodId === "contraband"
+            ? getPirateContrabandBuyPrice(prices.buy, prices.sell)
+            : prices.buy;
 
     // Обновление товаров
     set((s) => {
@@ -184,9 +198,27 @@ export const buyTradeGood = (
         },
     }));
 
-    // Повышение репутации с расой за крупную торговлю (+1 за 20+ единиц)
     const dominantRace = state.currentLocation?.dominantRace;
-    if (dominantRace && quantity >= REPUTATION_BUY_THRESHOLD) {
+
+    // Пиратские станции не дают репутации за торговлю, но контрабанда портит репутацию
+    if (isPirate) {
+        if (goodId === "contraband" && dominantRace) {
+            get().changeReputation(dominantRace, -CONTRABAND_REP_PENALTY);
+            get().addLog(
+                `☠️ Покупка контрабанды: репутация с ${dominantRace} -${CONTRABAND_REP_PENALTY}`,
+                "warning",
+            );
+            set((s) => {
+                if (s.currentLocation) {
+                    s.currentLocation.pirateHeat =
+                        (s.currentLocation.pirateHeat ?? 0) +
+                        CONTRABAND_HEAT_PER_BUY;
+                }
+                return s;
+            });
+        }
+    } else if (dominantRace && quantity >= REPUTATION_BUY_THRESHOLD) {
+        // Повышение репутации с расой за крупную торговлю (+1 за 20+ единиц)
         const reputationGain = Math.floor(quantity / REPUTATION_BUY_THRESHOLD);
         get().changeReputation(dominantRace, reputationGain);
     }

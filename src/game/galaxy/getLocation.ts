@@ -123,7 +123,7 @@ export const generateLocation = (
 
     switch (type) {
         case "station":
-            return generateStation(sectorIdx, locIdx);
+            return generateStation(sectorIdx, locIdx, tier);
         case "friendly_ship":
             return generateFriendlyShip(sectorIdx, locIdx);
         case "planet":

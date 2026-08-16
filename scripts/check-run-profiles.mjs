@@ -117,13 +117,65 @@ assert.deepEqual(
 const tier4Services = makeTier4ServiceFixture();
 ensureStationAnchors(tier4Services, { 4: 2 });
 ensureStationTypes(tier4Services, 4);
-assert.deepEqual(
-  tier4Services[0].locations
-    .filter((location) => location.type === "station")
-    .map((location) => location.stationType)
-    .sort(),
-  ["medical", "shipyard"],
-  "tier 4: one eligible sector must retain both service stations",
+assert.ok(
+  hasStation(tier4Services, 4, "shipyard"),
+  "tier 4: one eligible sector must retain a shipyard",
+);
+assert.ok(
+  hasStation(tier4Services, 4, "medical"),
+  "tier 4: one eligible sector must retain a medical station",
+);
+
+const pirateTier4Services = [
+  {
+    id: 39,
+    tier: 4,
+    star: { type: "red_dwarf", name: "star_types.red_dwarf" },
+    locations: [
+      {
+        id: "39-pirate-a",
+        stationId: "station-39-pirate-a",
+        type: "station",
+        stationType: "pirate",
+        stationConfig: { isPirate: true },
+        pirateHeat: 0,
+        pirateContracts: [],
+        pirateLastRefreshTurn: 0,
+      },
+      {
+        id: "39-pirate-b",
+        stationId: "station-39-pirate-b",
+        type: "station",
+        stationType: "pirate",
+        stationConfig: { isPirate: true },
+        pirateHeat: 0,
+        pirateContracts: [],
+        pirateLastRefreshTurn: 0,
+      },
+    ],
+  },
+  ...[40, 41].map((id) => ({
+    id,
+    tier: 4,
+    star: { type: "blackhole", name: "star_types.blackhole" },
+    locations: [],
+  })),
+];
+ensureStationTypes(pirateTier4Services, 4);
+assert.equal(
+  pirateTier4Services[0].locations.filter(
+    (location) => location.stationType === "pirate",
+  ).length,
+  2,
+  "service guarantees must not convert pirate stations into regular stations",
+);
+assert.ok(
+  hasStation(pirateTier4Services, 4, "shipyard"),
+  "a pirate-only tier must still gain a shipyard",
+);
+assert.ok(
+  hasStation(pirateTier4Services, 4, "medical"),
+  "a pirate-only tier must still gain a medical station",
 );
 
 for (const profile of Object.values(RUN_PROFILES)) {

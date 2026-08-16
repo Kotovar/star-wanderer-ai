@@ -5,6 +5,9 @@ import type {
     TechPerkTier,
 } from "../types/crew";
 import type { RaceId } from "../types/races";
+// Расширение обязательно: этот файл грузят чек-скрипты через
+// --experimental-strip-types, а он не дорезолвит относительный путь без него
+import { isWorkingCrew } from "../crew/stationed.ts";
 
 export const TECH_TREE_TIERS: TechPerkTier[] = [3, 6, 9];
 
@@ -206,14 +209,40 @@ export function getRaceTechPerkValue(
     return total;
 }
 
+/**
+ * Сильнейший расовый перк среди работающего экипажа.
+ *
+ * Фильтр здесь, а не у каждого из восьми вызывающих: все они считают
+ * корабельную пассивку (уклонение, броня, реген щитов, потребление, опыт,
+ * лечение, ремонт), а навык мёртвого или приписанного к аванпосту в неё
+ * входить не должен.
+ */
 export function getStrongestRaceTechPerkValue(
-    crew: Array<Pick<CrewMember, "race" | "techPerks">>,
+    crew: Array<Pick<CrewMember, "race" | "techPerks" | "health" | "outpostId">>,
     race: RaceId,
 ): number {
     return crew.reduce(
         (strongest, crewMember) =>
-            crewMember.race === race
+            crewMember.race === race && isWorkingCrew(crewMember)
                 ? Math.max(strongest, getRaceTechPerkValue(crewMember))
+                : strongest,
+        0,
+    );
+}
+
+/**
+ * Сильнейшая профессиональная ветка среди работающего экипажа этой профессии.
+ * Ветки B инженера и учёного не суммируются между людьми — берётся лучший.
+ */
+export function getStrongestTechPerkValue(
+    crew: Array<Pick<CrewMember, "profession" | "techPerks" | "health" | "outpostId">>,
+    profession: Profession,
+    branch: ProfessionalTechPerkBranch,
+): number {
+    return crew.reduce(
+        (strongest, crewMember) =>
+            crewMember.profession === profession && isWorkingCrew(crewMember)
+                ? Math.max(strongest, getTechPerkValue(crewMember, branch))
                 : strongest,
         0,
     );

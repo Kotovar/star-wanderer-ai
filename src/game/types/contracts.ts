@@ -126,7 +126,10 @@ export type ContractType =
     | "derelict_recovery"
     | "cleanse_curse"
     | "crisis_response"
-    | "fabrication";
+    | "fabrication"
+    | "pirate_smuggling"
+    | "pirate_bounty"
+    | "pirate_heist";
 
 // Special delivery goods (quest items - given to player, not trade goods)
 export type DeliveryGoods =

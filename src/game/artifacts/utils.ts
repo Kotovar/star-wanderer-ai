@@ -1,8 +1,9 @@
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { ARTIFACT_BOOST_BONUS } from "@/game/slices/artifacts/constants";
 import { getTechBonusSum } from "@/game/research";
-import { getTechPerkValue } from "@/game/constants/techTree";
-import { RACES } from "@/game/constants/races";
+import { getStrongestTechPerkValue } from "@/game/constants/techTree";
+import { sumRaceTraitEffect } from "@/game/races";
+import { getLivingShipCrew } from "@/game/crew/stationed";
 import type {
     ActiveEffect,
     Artifact,
@@ -208,7 +209,7 @@ export const getEffectDescription = (
 
 /** Личный бонус экипажа к силе эффектов артефактов (трейт legend, суммируется по всему экипажу) */
 export const getCrewTraitArtifactBonus = (crew: GameState["crew"]): number => {
-    const traitSum = crew.reduce(
+    const traitSum = getLivingShipCrew(crew).reduce(
         (sum, c) =>
             sum +
             (c.traits?.reduce(
@@ -220,14 +221,7 @@ export const getCrewTraitArtifactBonus = (crew: GameState["crew"]): number => {
     // Ветка "Ксеноархеолог": лучший учёный экипажа, не суммируется между
     // несколькими учёными (иначе игрок мог бы нанять несколько с этой
     // веткой и получить неограниченный бонус)
-    const bestScientistTechPerk = Math.max(
-        0,
-        ...crew
-            .filter((c) => c.profession === "scientist")
-            .map((c) => getTechPerkValue(c, "B")),
-        0,
-    );
-    return traitSum + bestScientistTechPerk;
+    return traitSum + getStrongestTechPerkValue(crew, "scientist", "B");
 };
 
 /**
@@ -252,15 +246,7 @@ export const getArtifactBonusMultiplier = (
     }
 
     // Crystalline resonance: +15% per crystalline crew member (стакается)
-    let crystallineBonus = 0;
-    state.crew.forEach((c) => {
-        const resonanceTrait = RACES[c.race]?.specialTraits?.find(
-            (t) => t.id === "resonance",
-        );
-        if (resonanceTrait?.effects.artifactBonus) {
-            crystallineBonus += Number(resonanceTrait.effects.artifactBonus);
-        }
-    });
+    const crystallineBonus = sumRaceTraitEffect(state.crew, "artifactBonus");
     if (crystallineBonus > 0) {
         multiplier *= 1 + crystallineBonus;
     }

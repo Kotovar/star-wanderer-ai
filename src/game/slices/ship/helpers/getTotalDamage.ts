@@ -1,4 +1,4 @@
-import { getRaceCrewBonus } from "@/game/races";
+import { getBestRaceCrewBonus } from "@/game/races";
 import { getTechBonusSum } from "@/game/research";
 import { getArtifactEffectValue } from "@/game/artifacts";
 import {
@@ -57,10 +57,7 @@ function getBaseWeaponDamage(modules: GameState["ship"]["modules"]) {
  * Вычисляет максимальный бонус от расы экипажа
  */
 const getMaxRaceCombatBonus = (crew: GameState["crew"]) =>
-    crew.reduce(
-        (maxBonus, c) => Math.max(maxBonus, getRaceCrewBonus(c.race, "combat")),
-        0,
-    );
+    getBestRaceCrewBonus(crew, "combat");
 
 /**
  * Вычисляет бонус от артефактов на урон

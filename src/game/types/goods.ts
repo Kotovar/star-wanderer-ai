@@ -5,7 +5,8 @@ export type Goods =
     | "electronics"
     | "minerals"
     | "rare_minerals"
-    | "spares";
+    | "spares"
+    | "contraband";
 
 export interface TradeGood {
     item: Goods;

@@ -5,7 +5,7 @@ import {
     getRandomUndiscoveredArtifact,
     getCrewTraitArtifactBonus,
 } from "@/game/artifacts";
-import { RACES } from "@/game/constants/races";
+import { sumRaceTraitEffect } from "@/game/races";
 import { ARTIFACT_FIND_BASE_CHANCE, ARTIFACT_BOOST_BONUS } from "../constants";
 import { getTechBonusSum } from "@/game/research";
 
@@ -76,23 +76,13 @@ export const tryFindArtifact = (
  * @returns Множитель бонуса к поиску
  */
 const calculateArtifactFinderBonus = (state: GameStore) => {
-    let bonus = getBaseArtifactFinderBonus(state);
+    const bonus = getBaseArtifactFinderBonus(state);
+    if (bonus <= 1) return bonus;
 
-    // Применяем бонус кристаллических существ (+15% к эффектам артефактов)
-    state.crew.forEach((c) => {
-        const race = RACES[c.race];
-        if (race?.specialTraits) {
-            const trait = race.specialTraits.find(
-                (t) => t.id === "resonance" && t.effects.artifactBonus,
-            );
-            if (trait && bonus > 1) {
-                bonus =
-                    1 + (bonus - 1) * (1 + Number(trait.effects.artifactBonus));
-            }
-        }
-    });
-
-    return bonus;
+    // Бонус кристаллических существ (+15% к эффектам артефактов) — по одному
+    // множителю на каждого, кто действительно на борту и жив
+    const resonance = sumRaceTraitEffect(state.crew, "artifactBonus");
+    return resonance > 0 ? 1 + (bonus - 1) * (1 + resonance) : bonus;
 };
 
 /**

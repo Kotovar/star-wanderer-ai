@@ -5,8 +5,8 @@ import {
     ARTIFACT_TYPES,
     CREW_DAMAGE_MODIFIERS,
     MODULE_HEALTH_THRESHOLDS,
-    RACES,
 } from "@/game/constants";
+import { sumRaceTraitEffect } from "@/game/races";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getTechBonusSum } from "@/game/research";
 import type { GameState, GameStore, Module } from "@/game/types";
@@ -64,16 +64,7 @@ export function applyModuleDamage(
 
     const damageAfterArtifact = Math.max(1, damageAfterArmor - artifactDefense);
 
-    let crystallineDefense = 0;
-    state.crew
-        .filter((c) => c.race === "crystalline")
-        .forEach((c) => {
-            const race = RACES[c.race];
-            const armorTrait = race?.specialTraits?.find(
-                (t) => t.id === "crystal_armor",
-            );
-            crystallineDefense += armorTrait?.effects.moduleDefense ?? 0;
-        });
+    const crystallineDefense = sumRaceTraitEffect(state.crew, "moduleDefense");
 
     const reducedDamage = Math.max(
         0,

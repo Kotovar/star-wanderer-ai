@@ -39,6 +39,7 @@ export const initializeStationData = (sectors: Sector[]) => {
                 // Цены растут с тиром сектора: дальние станции торгуют дороже
                 const tierMultiplier = getTierPriceMultiplier(sector.tier);
                 const stationConfig = loc.stationConfig;
+                const isPirate = stationConfig?.isPirate ?? false;
                 const mineralDiscount =
                     stationConfig?.mineralDiscount ?? DEFAULT_DISCOUNT;
                 const rareMineralDiscount =
@@ -93,9 +94,22 @@ export const initializeStationData = (sectors: Sector[]) => {
                         buy: buyPrice,
                         sell: sellPrice,
                     };
-                    stock[loc.stationId][goodId] =
+
+                    let stockAmount =
                         MIN_STOCK_AMOUNT +
                         Math.floor(Math.random() * MAX_STOCK_VARIATION);
+
+                    // Pirate stations carry very little contraband in "official" stock
+                    if (isPirate && goodId === "contraband") {
+                        stockAmount = 5 + Math.floor(Math.random() * 11);
+                    }
+
+                    // Contraband is only openly traded at pirate stations
+                    if (!isPirate && goodId === "contraband") {
+                        stockAmount = 0;
+                    }
+
+                    stock[loc.stationId][goodId] = stockAmount;
                 }
             }
         });

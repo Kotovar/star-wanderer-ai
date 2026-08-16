@@ -66,6 +66,7 @@ const TELEPATHY_REVEALED_LOCATIONS: LocationType[] = [
 const PLANET_SPRITE_SHEET = "/assets/plantes/planets.webp";
 const GAS_PLANET_SPRITE_SHEET = "/assets/plantes/gas-planets.webp";
 const STATION_SPRITE_SHEET = "/assets/stations.webp";
+const PIRATE_STATION_ICON = "/assets/station-icons/pirate-station.webp";
 
 const getSectorMapRadius = (width: number, height: number) =>
   Math.min(width, height) * (width < 768 ? 0.7 : 0.45);
@@ -178,6 +179,7 @@ type SectorSpriteImages = {
   planets?: HTMLImageElement;
   gasPlanets?: HTMLImageElement;
   stations?: HTMLImageElement;
+  pirateStation?: HTMLImageElement;
   stars?: HTMLImageElement;
 };
 
@@ -424,6 +426,7 @@ export function SectorMap() {
           loc,
           completed,
           spriteImagesRef.current.stations,
+          spriteImagesRef.current.pirateStation,
         );
       } else if (loc.type === "planet") {
         drawPlanet(
@@ -582,6 +585,7 @@ export function SectorMap() {
       ["planets", PLANET_SPRITE_SHEET],
       ["gasPlanets", GAS_PLANET_SPRITE_SHEET],
       ["stations", STATION_SPRITE_SHEET],
+      ["pirateStation", PIRATE_STATION_ICON],
       ["stars", STAR_SPRITE_SHEET],
     ];
 

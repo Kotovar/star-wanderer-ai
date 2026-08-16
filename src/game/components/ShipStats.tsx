@@ -29,6 +29,7 @@ import { DEUTERIUM_FUEL_PER_UNIT } from "@/game/constants/outposts";
 import { getTechBonusSum } from "@/game/research";
 import { getActiveModules } from "../modules";
 import { RACES } from "@/game/constants/races";
+import { sumRaceTraitEffect } from "@/game/races";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import { getBestByProfession } from "@/game/crew";
@@ -260,18 +261,12 @@ export function ShipStats() {
     [ship],
   );
 
-  const totalDefense = useMemo(() => {
-    let crystallineDefense = 0;
-    crew.filter((c) => c.race === "crystalline").forEach((c) => {
-      const armorTrait = RACES[c.race]?.specialTraits?.find(
-        (trait) => trait.id === "crystal_armor",
-      );
-      if (armorTrait?.effects.moduleDefense) {
-        crystallineDefense += Number(armorTrait.effects.moduleDefense);
-      }
-    });
-    return (ship.armor || 0) + Math.floor(crystallineDefense);
-  }, [ship, crew]);
+  const totalDefense = useMemo(
+    // Тот же помощник, что и в расчёте урона по модулю: панель обязана
+    // показывать ровно ту броню, которая сработает в бою
+    () => (ship.armor || 0) + Math.floor(sumRaceTraitEffect(crew, "moduleDefense")),
+    [ship, crew],
+  );
 
   const engines = getActiveModules(ship.modules, "engine");
   const engineLevel =

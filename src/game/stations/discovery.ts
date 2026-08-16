@@ -8,6 +8,7 @@ export const STATION_DISCOVERY_ICONS = {
   shipyard: "🚧",
   medical: "⚕️",
   diplomatic: "🕊️",
+  pirate: "☠️",
 } satisfies Record<StationName, string>;
 
 type StationRateKey =

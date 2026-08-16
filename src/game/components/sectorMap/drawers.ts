@@ -756,8 +756,31 @@ export function drawStation(
   loc: Location,
   completed: boolean,
   spriteSheet?: HTMLImageElement,
+  pirateSprite?: HTMLImageElement,
 ) {
   const stationType = loc.stationType || "trade";
+  if (stationType === "pirate" && pirateSprite?.complete) {
+    const maxSize = 52;
+    const scale = Math.min(
+      maxSize / pirateSprite.naturalWidth,
+      maxSize / pirateSprite.naturalHeight,
+    );
+    const drawWidth = pirateSprite.naturalWidth * scale;
+    const drawHeight = pirateSprite.naturalHeight * scale;
+
+    ctx.save();
+    ctx.globalAlpha = completed ? 0.4 : 1;
+    ctx.drawImage(
+      pirateSprite,
+      x - drawWidth / 2,
+      y - drawHeight / 2,
+      drawWidth,
+      drawHeight,
+    );
+    ctx.restore();
+    return;
+  }
+
   const sprite = STATION_SPRITES[stationType];
   if (sprite && spriteSheet?.complete) {
     const maxSize = 52;
@@ -794,6 +817,7 @@ export function drawStation(
     shipyard: { primary: "#aa7a4a", secondary: "#4a3a1a", accent: "#ff8800" },
     medical: { primary: "#4aaa7a", secondary: "#1a4a3a", accent: "#00ff88" },
     diplomatic: { primary: "#d4af37", secondary: "#5a4a10", accent: "#ffffff" },
+    pirate: { primary: "#ff4444", secondary: "#5a1a1a", accent: "#ff8800" },
   };
 
   const colors = stationColors[stationType] || stationColors.trade;
@@ -1226,6 +1250,55 @@ export function drawStation(
       ctx.fill();
 
       drawSparkGlyph(ctx, x, y, 4, colors.secondary);
+      break;
+    }
+
+    case "pirate": {
+      // ПИРАТСКАЯ: Агрессивная грубая станция — крестообразные рукава + тлеющее ядро
+      // Jagged outer ring
+      ctx.strokeStyle = colors.primary;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const a = (i * Math.PI) / 4;
+        const r = i % 2 === 0 ? 18 : 14;
+        const px = x + r * Math.cos(a);
+        const py = y + r * Math.sin(a);
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      // Four weapon arms
+      ctx.strokeStyle = colors.secondary;
+      ctx.lineWidth = 2.5;
+      for (let i = 0; i < 4; i++) {
+        const a = (i * Math.PI) / 2;
+        ctx.beginPath();
+        ctx.moveTo(x + 6 * Math.cos(a), y + 6 * Math.sin(a));
+        ctx.lineTo(x + 16 * Math.cos(a), y + 16 * Math.sin(a));
+        ctx.stroke();
+
+        // Weapon muzzle
+        ctx.fillStyle = colors.accent;
+        ctx.beginPath();
+        ctx.arc(x + 16 * Math.cos(a), y + 16 * Math.sin(a), 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Glowing core
+      const pirateGlow = ctx.createRadialGradient(x, y, 0, x, y, 10);
+      pirateGlow.addColorStop(0, colors.primary + "cc");
+      pirateGlow.addColorStop(1, "transparent");
+      ctx.fillStyle = pirateGlow;
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = colors.primary;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
       break;
     }
   }

@@ -18,8 +18,12 @@ export const getShipCrew = (crew: readonly CrewMember[]): CrewMember[] =>
  * несколько секторов отсюда и не должен ни мутировать, ни дезертировать
  * из-за артефакта, лежащего в трюме.
  */
+export const isWorkingCrew = (
+    member: Pick<CrewMember, "health" | "outpostId">,
+): boolean => !member.outpostId && member.health > 0;
+
 export const getLivingShipCrew = (crew: readonly CrewMember[]): CrewMember[] =>
-    crew.filter((member) => !member.outpostId && member.health > 0);
+    crew.filter(isWorkingCrew);
 
 /** Экипаж, приписанный к конкретной постройке */
 export const getOutpostCrew = (

@@ -22,6 +22,7 @@ import { getContractReputationImpact } from "@/game/reputation/utils";
 import { getContractTurnsRemaining } from "@/game/contracts/contractDeadline";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers/calculateFuelCost";
 import {
+    formatContractDescription,
     formatResearchTechRequirement,
 } from "@/game/contracts/formatContractDescription";
 import {
@@ -339,6 +340,10 @@ export function ContractsList() {
                         t,
                     ),
                 })}`;
+            case "pirate_smuggling":
+            case "pirate_bounty":
+            case "pirate_heist":
+                return formatContractDescription(contract, t);
             default:
                 return t("contracts.default");
         }
@@ -1008,20 +1013,22 @@ export function ContractsList() {
                         },
                     ],
                 };
-            default:
+            default: {
+                const description = formatContractDescription(contract, t);
                 return {
                     type: t("contracts.default"),
                     tasks: [
                         {
                             label: t("contracts.task_what"),
-                            value: contract.desc,
+                            value: description,
                         },
                         {
                             label: t("contracts.task_where"),
-                            value: contract.desc,
+                            value: description,
                         },
                     ],
                 };
+            }
         }
     };
 

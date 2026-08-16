@@ -1,5 +1,6 @@
 import { RACES } from "@/game/constants/races";
-import type { PlanetType, Race, RaceId } from "@/game/types";
+import { getLivingShipCrew } from "@/game/crew/stationed";
+import type { CrewMember, PlanetType, Race, RaceId, RaceTrait } from "@/game/types";
 
 /**
  * Расовый бонус экипажа (crewBonuses) с дефолтом 0.
@@ -9,6 +10,39 @@ export const getRaceCrewBonus = (
     raceId: RaceId | undefined,
     bonus: keyof Race["crewBonuses"],
 ): number => (raceId ? (RACES[raceId]?.crewBonuses?.[bonus] ?? 0) : 0);
+
+/**
+ * Сумма расового спец-эффекта (specialTraits) по всему работающему экипажу.
+ *
+ * Считаются только живые и находящиеся на борту: расовая пассивка — это вклад
+ * человека в работу корабля, и ни труп в отсеке, ни приписанный к аванпосту за
+ * несколько секторов его не вносят. Раньше каждая формула перебирала
+ * `state.crew` своим циклом и фильтра не имела ни одна.
+ */
+export const sumRaceTraitEffect = (
+    crew: readonly CrewMember[],
+    effectKey: keyof RaceTrait["effects"],
+): number =>
+    getLivingShipCrew(crew).reduce(
+        (sum, member) =>
+            sum +
+            (RACES[member.race]?.specialTraits?.reduce(
+                (traitSum, trait) =>
+                    traitSum + Number(trait.effects[effectKey] ?? 0),
+                0,
+            ) ?? 0),
+        0,
+    );
+
+/** Лучший расовый бонус (crewBonuses) среди работающего экипажа */
+export const getBestRaceCrewBonus = (
+    crew: readonly CrewMember[],
+    bonus: keyof Race["crewBonuses"],
+): number =>
+    getLivingShipCrew(crew).reduce(
+        (best, member) => Math.max(best, getRaceCrewBonus(member.race, bonus)),
+        0,
+    );
 
 // Get random race weighted by rarity
 export const getRandomRace = (

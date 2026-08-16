@@ -290,7 +290,8 @@
         "section_resources": "Resources & life support",
         "section_navigation": "Navigation",
         "section_weapons": "Weapons",
-        "section_bonuses": "Bonuses"
+        "section_bonuses": "Bonuses",
+        "section_energy": "Energy"
     },
     "header": {
         "tooltip_logbook": "Ship's logbook",
@@ -463,7 +464,9 @@
         "interception": "Point defense",
         "interception_effect": "+5% interception, +1% per level",
         "merge": "🧬 Symbiosis",
-        "merge_effect": "No effect in this module"
+        "merge_effect": "No effect in this module",
+        "maintenance": "Maintenance",
+        "maintenance_effect": "+5% accuracy"
     },
     "assignments_panel": {
         "title": "CREW",
@@ -1084,9 +1087,13 @@
         "desc_cleanse_curse": "✨ Bring a cursed artifact to the Crystal Hydra in {{sector}}",
         "desc_crisis_response": "🚨 {{crisis}}: deliver {{cargo}} ({{quantity}}t)",
         "desc_fabrication": "🔧 Craft and hand over: {{weapon}}",
+        "desc_pirate_smuggling": "📦 Smuggle contraband to another station",
+        "desc_pirate_bounty": "🎯 Eliminate a target for a pirate boss",
+        "desc_pirate_heist": "🔓 Steal cargo from a rival station",
         "desc_fabrication_offer": "Craft and hand over: {{weapon}} ({{progress}}/1) · return to the client",
         "desc_crisis_response_offer": "{{crisis}}: deliver {{cargo}} ({{progress}}/{{quantity}}t) to the client",
-        "desc_cleanse_curse_offer": "✨ Bring a cursed artifact to the Crystal Hydra ({{sector}}) — it will lift the curse"
+        "desc_cleanse_curse_offer": "✨ Bring a cursed artifact to the Crystal Hydra ({{sector}}) — it will lift the curse",
+        "research_tech_tier": "Complete a tier {{tier}}+ technology research"
     },
     "locations": {
         "outpost_raiders": "Outpost raiders",
@@ -1185,7 +1192,8 @@
             "medical": "Medical",
             "shipyard": "Shipyard",
             "industrial": "Industrial",
-            "diplomatic": "Diplomatic"
+            "diplomatic": "Diplomatic",
+            "pirate": "Pirate"
         }
     },
     "research": {
@@ -1676,7 +1684,8 @@
         "research_boost_active": "Active for {{turnsRemaining}} more turn(s)",
         "research_boost_inactive": "Not active",
         "research_boost_activate": "Activate — {{cost}}₢",
-        "research_boost_extend": "Extend — {{cost}}₢"
+        "research_boost_extend": "Extend — {{cost}}₢",
+        "pirate_tab": "PIRATES"
     },
     "station_discovery": {
         "title": "New station: {{type}}",
@@ -1748,7 +1757,8 @@
             "electronics": "Electronics",
             "minerals": "Minerals",
             "rare_minerals": "Rare minerals",
-            "spares": "Spare Parts"
+            "spares": "Spare Parts",
+            "contraband": "Contraband"
         }
     },
     "cargo_info": {
@@ -2512,6 +2522,12 @@
             "title": "🕳️ BLACK HOLE",
             "hint": "Click the center to teleport",
             "emergency_jump": "⚡ EMERGENCY JUMP — all modules take damage"
+        },
+        "scanner_levels": {
+            "level_4": "4 LVL",
+            "level_3": "3 LVL",
+            "level_2": "2 LVL",
+            "level_1": "1 LVL"
         }
     },
     "turn_skip": "Turn skipped - tasks executing",
@@ -3005,7 +3021,8 @@
             "medical": "Medical",
             "shipyard": "Shipyard",
             "industrial": "Industrial",
-            "diplomatic": "Diplomatic"
+            "diplomatic": "Diplomatic",
+            "pirate": "Pirate"
         },
         "scanner_upgrade": "Scanner Upgrade",
         "drill_upgrade": "Drill Upgrade",
@@ -3331,7 +3348,9 @@
         "banked_so_far": "Already in the hold",
         "dig_deeper": "DIG DEEPER",
         "leave_with_haul": "LEAVE WITH THE HAUL",
-        "drill_damage_total": "Belt damage to the drill"
+        "drill_damage_total": "Belt damage to the drill",
+        "required": "required",
+        "drill_required": "Drill module level required"
     },
     "star_types": {
         "red_dwarf": "Red Dwarf",
@@ -3345,7 +3364,8 @@
         "blackhole": "Black Hole",
         "brown_dwarf": "Brown Dwarf",
         "variable_star": "Variable Star",
-        "stellar_remnant": "Stellar Remnant"
+        "stellar_remnant": "Stellar Remnant",
+        "gas_giant": "Gas Giant"
     },
     "star_info": {
         "class": "Spectral class",
@@ -3458,6 +3478,14 @@
             "mass": "<0.5 M☉",
             "hazard": "low",
             "desc": "The cold, dark remnant of a long-dead star. Quiet surroundings — only dust and debris. An ideal hiding spot. Debris from the past litters this system — salvage and mining here pay off more."
+        },
+        "gas_giant": {
+            "icon": "🟣",
+            "class": "Brown Dwarf",
+            "temp": "~1,000 K",
+            "mass": "13–80 MJ",
+            "hazard": "low",
+            "desc": "A 'failed star' — too massive for a planet but too light to sustain fusion. Rich in deuterium and exotic gases."
         }
     },
     "location_types": {
@@ -4593,7 +4621,14 @@
         "ship_label": "Ship",
         "start_credits": "Starting credits",
         "insufficient_credits": "Not enough starting credits",
-        "start_button": "Start"
+        "start_button": "Start",
+        "modifiers_section": "Modifiers",
+        "modifiers_hint": "(optional)",
+        "crew_composition": "Crew composition",
+        "crew_level": "Crew level",
+        "levels_label": "levels",
+        "no_final_effects": "no modifiers selected",
+        "none": "none"
     },
     "ship_templates": {
         "explorer": {
@@ -6543,6 +6578,7 @@
         "err_crew_not_found": "Crew member not found!",
         "err_last_crew": "Cannot dismiss the last crew member!",
         "err_no_trade": "Trading unavailable",
+        "err_contraband_pirate_only": "Only pirate stations buy contraband",
         "err_no_goods": "Not enough goods!",
         "err_station_no_stock": "Not enough goods at the station!",
         "err_cargo_off": "Cargo bay disabled or missing!",
@@ -6559,5 +6595,22 @@
         "construction_materials": "Construction Materials",
         "scientific_equipment": "Scientific Equipment",
         "diplomatic_cargo": "Diplomatic Cargo"
+    },
+    "pirate": {
+        "heat_title": "Wanted Heat",
+        "heat_low": "Low — still safe",
+        "heat_medium": "Medium — authorities are curious",
+        "heat_high": "High — hunters are on your tail",
+        "heat_critical": "Critical — run now",
+        "smugglers_den": "Smuggler's Den",
+        "smugglers_den_desc": "Pay to wipe records and lower your wanted heat",
+        "reduce_heat": "Lower wanted heat by {{amount}} — {{cost}}₢",
+        "black_market": "BLACK MARKET",
+        "contract_board": "PIRATE CONTRACT BOARD",
+        "no_contracts": "No jobs available",
+        "accept": "ACCEPT",
+        "complete": "TURN IN",
+        "illegal": "Illegal",
+        "contract_accepted": "Pirate job accepted: {{contract}}"
     }
 }

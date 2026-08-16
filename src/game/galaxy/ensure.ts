@@ -1,11 +1,17 @@
 import { PLANET_TYPES } from "@/game/constants/planets";
-import type { GalaxyTierAll, GalaxyTierBase, Sector } from "@/game/types";
+import type {
+    GalaxyTierAll,
+    GalaxyTierBase,
+    Location,
+    Sector,
+} from "@/game/types";
 import { bossDistribution } from "./bossDistribution";
 import { ANOMALY_COLORS, MIN_REQUIREMENTS, STATION_CONFIG } from "./config";
 import { STATION_TYPES } from "./consts";
 import { getRandomRace, getDominantRaceForPlanet } from "@/game/races/utils";
 import { getLocationNameKey } from "./generate";
 import { shouldSkipSectorEnsure } from "./sectorRules";
+import { generatePirateContracts } from "@/game/slices/pirate/contracts";
 
 /**
  * Обеспечивает минимальное количество аномалий в секторе
@@ -122,8 +128,11 @@ export const ensureStation = (
 
     if (stationCount >= minimumCount) return;
 
+    const availableTypes = STATION_TYPES.filter(
+        (type) => type !== "pirate" || sector.tier >= 2,
+    );
     const stationType =
-        STATION_TYPES[Math.floor(Math.random() * STATION_TYPES.length)];
+        availableTypes[Math.floor(Math.random() * availableTypes.length)];
 
     // Выбираем доминирующую расу для станции на основе рас планет в секторе
     const planets = sector.locations.filter(
@@ -141,7 +150,7 @@ export const ensureStation = (
         stationRace = getRandomRace([]);
     }
 
-    sector.locations.push({
+    const newStation: Location = {
         id: `${sector.id}-extra-station${stationCount ? `-${stationCount}` : ""}`,
         stationId: `station-${sector.id}-extra${stationCount ? `-${stationCount}` : ""}`,
         type: "station",
@@ -150,7 +159,18 @@ export const ensureStation = (
         stationConfig: STATION_CONFIG[stationType],
         dominantRace: stationRace,
         population: 50 + Math.floor(Math.random() * 200),
-    });
+    };
+
+    if (stationType === "pirate") {
+        newStation.pirateHeat = 0;
+        newStation.pirateContracts = generatePirateContracts(
+            newStation,
+            sector.tier,
+        );
+        newStation.pirateLastRefreshTurn = 0;
+    }
+
+    sector.locations.push(newStation);
 };
 
 export const ensureStationAnchors = (
@@ -219,18 +239,21 @@ export const ensureStationTypes = (
         if (hasType) continue;
 
         // Find a sector with a station that isn't already a service station.
+        let ensured = false;
         for (const sector of tierSectors) {
             let stationIdx = sector.locations.findIndex(
                 (l) =>
                     l.type === "station" &&
                     l.stationType !== "shipyard" &&
-                    l.stationType !== "medical",
+                    l.stationType !== "medical" &&
+                    l.stationType !== "pirate",
             );
 
             if (stationIdx < 0) {
                 stationIdx = sector.locations.findIndex(
                     (l) =>
                         l.type === "station" &&
+                        l.stationType !== "pirate" &&
                         l.stationType !== requiredType &&
                         stationTypes.filter((type) => type === l.stationType).length > 1,
                 );
@@ -244,12 +267,18 @@ export const ensureStationTypes = (
                         (location) =>
                             location.type === "station" &&
                             location.stationType !== "shipyard" &&
-                            location.stationType !== "medical",
+                            location.stationType !== "medical" &&
+                            location.stationType !== "pirate",
                     ),
                 )
             ) {
                 stationIdx = sector.locations.findIndex(
-                    (l) => l.type === "station" && l.stationType !== requiredType,
+                    (l) =>
+                        l.type === "station" &&
+                        l.stationType !== "pirate" &&
+                        l.stationType !== "shipyard" &&
+                        l.stationType !== "medical" &&
+                        l.stationType !== requiredType,
                 );
             }
 
@@ -260,8 +289,27 @@ export const ensureStationTypes = (
                     stationType: requiredType,
                     stationConfig: STATION_CONFIG[requiredType],
                 };
+                ensured = true;
                 break;
             }
+        }
+
+        if (!ensured && tierSectors[0]) {
+            const sector = tierSectors[0];
+            sector.locations.push({
+                id: `${sector.id}-guaranteed-${requiredType}`,
+                stationId: `station-${sector.id}-guaranteed-${requiredType}`,
+                type: "station",
+                name: getLocationNameKey(
+                    "station",
+                    sector.id,
+                    sector.locations.length,
+                ),
+                stationType: requiredType,
+                stationConfig: STATION_CONFIG[requiredType],
+                dominantRace: getRandomRace([]),
+                population: 50 + Math.floor(Math.random() * 200),
+            });
         }
     }
 };
@@ -292,7 +340,8 @@ export const ensureDiplomaticStation = (sectors: Sector[]): void => {
                 l.type === "station" &&
                 l.stationType !== "shipyard" &&
                 l.stationType !== "medical" &&
-                l.stationType !== "military",
+                l.stationType !== "military" &&
+                l.stationType !== "pirate",
         );
 
         if (stationIdx >= 0) {

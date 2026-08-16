@@ -495,6 +495,13 @@ export interface GameReputation {
   hireTranslator: (raceId: RaceId) => void; // Permanent diplomacy cost discount for one race (diplomatic station)
 }
 
+export interface GamePirate {
+  acceptPirateContract: (contractId: string) => void;
+  completePirateContract: (contractId: string) => void;
+  reducePirateHeat: (amount: number, cost: number) => void;
+  refreshPirateStationContracts: () => void;
+}
+
 export interface GamePlanetSpecializations {
   trainCrew: (crewMemberId: number) => void;
   retrainCrew: (crewMemberId: number, profession: CrewMember["profession"]) => void;
@@ -570,6 +577,7 @@ export type GameStore = GameState &
   GameArtifacts &
   GameRaces &
   GameReputation &
+  GamePirate &
   GamePlanetSpecializations &
   GameFinish &
   GameResearch &

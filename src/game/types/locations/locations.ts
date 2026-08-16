@@ -174,7 +174,10 @@ export interface Location {
     bossDefeated?: boolean;
     // Friendly ship pregenerated quest
     pregeneratedQuest?: Contract;
-    // Race fields
+    // Pirate station fields
+    pirateHeat?: number; // Wanted heat from illegal transactions (0-100)
+    pirateContracts?: Contract[]; // Available pirate contracts
+    pirateLastRefreshTurn?: number; // Turn when contracts were last refreshed
 
     population?: number; // Population in thousands
 

@@ -23,10 +23,13 @@ export const getPilotInCockpit = (
             .map((module) => module.id),
     );
 
+    // Живой: мёртвый пилот в кресле продолжал давать кораблю уклонение,
+    // бонус отступления и ветку "Ас пилотирования"
     return crew
         .filter(
             (crewMember) =>
                 crewMember.profession === "pilot" &&
+                crewMember.health > 0 &&
                 cockpitIds.has(crewMember.moduleId),
         )
         .sort((a, b) => (b.level ?? 1) - (a.level ?? 1))[0];

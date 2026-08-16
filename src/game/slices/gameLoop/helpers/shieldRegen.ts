@@ -7,11 +7,11 @@ import {
 } from "@/game/artifacts";
 import {
     ARTIFACT_TYPES,
-    RACES,
     STAR_HAZARD_LEVEL,
     STAR_SHIELD_REGEN_PENALTY_PER_LEVEL,
     STAR_SHIELD_REGEN_PENALTY_THRESHOLD,
 } from "@/game/constants";
+import { sumRaceTraitEffect } from "@/game/races";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getStrongestRaceTechPerkValue } from "@/game/constants/techTree";
 import type { GameState, GameStore, SetState } from "@/game/types";
@@ -59,24 +59,9 @@ const getBaseShieldRegen = (state: GameState) => {
  * Собирает процентные бонусы регенерации от расовых traits
  * @returns множитель регенерации (например, 0.05 = +5%)
  */
-const getRaceRegenMultiplier = (state: GameState): number => {
-    let multiplier = 0;
-
-    state.crew.forEach((c) => {
-        const race = RACES[c.race];
-        if (!race?.specialTraits) return;
-
-        // Бонус от traits (например, void_shield: +5%)
-        const shieldTrait = race.specialTraits.find(
-            (t) => t.effects.shieldRegen,
-        );
-        if (shieldTrait?.effects.shieldRegen) {
-            multiplier += Number(shieldTrait.effects.shieldRegen) / 100;
-        }
-    });
-
-    return multiplier;
-};
+const getRaceRegenMultiplier = (state: GameState): number =>
+    // Бонус от traits (например, void_shield: +5%)
+    sumRaceTraitEffect(state.crew, "shieldRegen") / 100;
 
 /**
  * Собирает бонусы от артефактов

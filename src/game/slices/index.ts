@@ -22,3 +22,4 @@ export * from "./augmentations";
 export * from "./reputation";
 export * from "./navigator/createNavigatorSlice";
 export * from "./outposts";
+export * from "./pirate";

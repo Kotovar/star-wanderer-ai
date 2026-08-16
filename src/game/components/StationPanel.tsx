@@ -32,6 +32,7 @@ import { TradeTab } from "./station/TradeTab";
 import { CrewTab } from "./station/CrewTab";
 import { ServicesTab } from "./station/ServicesTab";
 import { CraftingTab } from "./station/CraftingTab";
+import { PirateTab } from "./station/PirateTab";
 import { ModuleUpgradeModal } from "./station/ModuleUpgradeModal";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
@@ -88,6 +89,7 @@ const STATION_BACKGROUNDS = {
     shipyard: "/assets/station-backgrounds/shipyard-drydock.webp",
     medical: "/assets/station-backgrounds/medical-bay.webp",
     diplomatic: "/assets/station-backgrounds/diplomatic-forum.webp",
+    pirate: "/assets/station-backgrounds/pirate-haven.webp",
 } satisfies Record<StationName, string>;
 
 function StationDiscoveryModal({
@@ -316,7 +318,12 @@ export function StationPanel() {
         (s) => s.completeDeliveryContract,
     );
     const hiredCrew = useGameStore((s) => s.hiredCrew);
-    const [activeTab, setActiveTab] = useState("shop");
+    const acceptPirateContract = useGameStore((s) => s.acceptPirateContract);
+    const completePirateContract = useGameStore((s) => s.completePirateContract);
+    const reducePirateHeat = useGameStore((s) => s.reducePirateHeat);
+    const [activeTab, setActiveTab] = useState(() =>
+        currentLocation?.stationType === "pirate" ? "black-market" : "shop",
+    );
     const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
     const [pendingUpgrade, setPendingUpgrade] = useState<ShopItem | null>(null);
     const [discoveredStationType, setDiscoveredStationType] =
@@ -348,7 +355,17 @@ export function StationPanel() {
         researchedTechs.includes("cybernetic_augmentation");
 
     const isDiplomaticStation = stationType === "diplomatic";
+    const isPirateStation = stationType === "pirate";
     const hasDiplomacy = isDiplomaticStation;
+    const activeStationTab = isPirateStation
+        ? activeTab === "black-market" ||
+          activeTab === "pirate-contracts" ||
+          activeTab === "services"
+            ? activeTab
+            : "black-market"
+        : activeTab === "black-market" || activeTab === "pirate-contracts"
+          ? "shop"
+          : activeTab;
 
     const stationItems = useMemo(
         () =>
@@ -544,6 +561,23 @@ export function StationPanel() {
     const stationBackground =
         STATION_BACKGROUNDS[currentLocation.stationType ?? "trade"] ??
         STATION_BACKGROUNDS.trade;
+    const pirateTabProps = {
+        stationId,
+        stationPrices,
+        stationStock,
+        credits: displayCredits,
+        ship,
+        cargoCapacity: getCargoCapacity(),
+        probes,
+        heat: currentLocation.pirateHeat ?? 0,
+        contracts: currentLocation.pirateContracts ?? [],
+        activeContractIds: activeContracts.map((contract) => contract.id),
+        buyTradeGood,
+        sellTradeGood,
+        acceptPirateContract,
+        completePirateContract,
+        reducePirateHeat,
+    };
 
     return (
         <div className="flex flex-col gap-2 sm:gap-4 lg:h-full">
@@ -592,45 +626,64 @@ export function StationPanel() {
             )}
 
             <Tabs
-                value={activeTab}
+                value={activeStationTab}
                 onValueChange={setActiveTab}
                 className="w-full mt-2 flex-1 min-h-0"
             >
                 <TabsList
                     className="sticky top-0 z-20 flex h-auto w-full overflow-x-auto border border-[#00ff41] bg-[rgba(5,8,16,0.98)]"
                 >
-                    <TabsTrigger
-                        value="shop"
-                        title={t("station.modules_tab_hint")}
-                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
-                    >
-                        🛠 {t("station.modules_tab")}
-                    </TabsTrigger>
-                    {allowsTrade && (
-                        <TabsTrigger
-                            value="trade"
-                            title={t("station.trade_tab_hint")}
-                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
-                        >
-                            💱 {t("station.trade_tab")}
-                        </TabsTrigger>
+                    {isPirateStation ? (
+                        <>
+                            <TabsTrigger
+                                value="black-market"
+                                className="cursor-pointer data-[state=active]:bg-[#ff0040] data-[state=active]:text-[#050810] text-[#ff0040] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                            >
+                                ☠ {t("pirate.black_market")}
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="pirate-contracts"
+                                className="cursor-pointer data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810] text-[#00d4ff] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                            >
+                                📜 {t("pirate.contract_board")}
+                            </TabsTrigger>
+                        </>
+                    ) : (
+                        <>
+                            <TabsTrigger
+                                value="shop"
+                                title={t("station.modules_tab_hint")}
+                                className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                            >
+                                🛠 {t("station.modules_tab")}
+                            </TabsTrigger>
+                            {allowsTrade && (
+                                <TabsTrigger
+                                    value="trade"
+                                    title={t("station.trade_tab_hint")}
+                                    className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                                >
+                                    💱 {t("station.trade_tab")}
+                                </TabsTrigger>
+                            )}
+                            {isMiningStation && (
+                                <TabsTrigger
+                                    value="minerals"
+                                    title={t("station.minerals_tab_hint")}
+                                    className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                                >
+                                    ⛏ {t("station.minerals_tab")}
+                                </TabsTrigger>
+                            )}
+                            <TabsTrigger
+                                value="crew"
+                                title={t("station.crew_tab_hint")}
+                                className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                            >
+                                👥 {t("station.crew_tab")}
+                            </TabsTrigger>
+                        </>
                     )}
-                    {isMiningStation && (
-                        <TabsTrigger
-                            value="minerals"
-                            title={t("station.minerals_tab_hint")}
-                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
-                        >
-                            ⛏ {t("station.minerals_tab")}
-                        </TabsTrigger>
-                    )}
-                    <TabsTrigger
-                        value="crew"
-                        title={t("station.crew_tab_hint")}
-                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
-                    >
-                        👥 {t("station.crew_tab")}
-                    </TabsTrigger>
                     <TabsTrigger
                         value="services"
                         title={t("station.services_tab_hint")}
@@ -638,7 +691,7 @@ export function StationPanel() {
                     >
                         🔧 {t("station.services_tab")}
                     </TabsTrigger>
-                    {allowsCraft && (
+                    {!isPirateStation && allowsCraft && (
                         <TabsTrigger
                             value="crafting"
                             title={t("station.craft_tab_hint")}
@@ -647,7 +700,7 @@ export function StationPanel() {
                             📐 {t("station.craft")}
                         </TabsTrigger>
                     )}
-                    {hasDiplomacy && (
+                    {!isPirateStation && hasDiplomacy && (
                         <TabsTrigger
                             value="diplomacy"
                             title={t("station.diplomacy_tab_hint")}
@@ -658,26 +711,28 @@ export function StationPanel() {
                     )}
                 </TabsList>
 
-                <TabsContent
-                    value="shop"
-                    className="mt-4 min-h-0 overflow-hidden flex flex-col"
-                >
-                    <ShopTab
-                        stationId={stationId}
-                        stationItems={stationItems}
-                        stationInventory={stationInventory}
-                        credits={displayCredits}
-                        ship={ship}
-                        stationConfig={stationConfig}
-                        buyItem={buyItem}
-                        onUpgradeClick={(item) => {
-                            setPendingUpgrade(item);
-                            setUpgradeModalOpen(true);
-                        }}
-                    />
-                </TabsContent>
+                {!isPirateStation && (
+                    <TabsContent
+                        value="shop"
+                        className="mt-4 min-h-0 overflow-hidden flex flex-col"
+                    >
+                        <ShopTab
+                            stationId={stationId}
+                            stationItems={stationItems}
+                            stationInventory={stationInventory}
+                            credits={displayCredits}
+                            ship={ship}
+                            stationConfig={stationConfig}
+                            buyItem={buyItem}
+                            onUpgradeClick={(item) => {
+                                setPendingUpgrade(item);
+                                setUpgradeModalOpen(true);
+                            }}
+                        />
+                    </TabsContent>
+                )}
 
-                {allowsTrade && (
+                {!isPirateStation && allowsTrade && (
                     <TabsContent
                         value="trade"
                         className="mt-4 min-h-0 overflow-hidden flex flex-col"
@@ -695,7 +750,7 @@ export function StationPanel() {
                     </TabsContent>
                 )}
 
-                {isMiningStation && (
+                {!isPirateStation && isMiningStation && (
                     <TabsContent
                         value="minerals"
                         className="mt-4 min-h-0 overflow-hidden flex flex-col"
@@ -715,11 +770,12 @@ export function StationPanel() {
                     </TabsContent>
                 )}
 
-                <TabsContent
-                    value="crew"
-                    className="mt-4 min-h-0 overflow-hidden flex flex-col"
-                >
-                    <CrewTab
+                {!isPirateStation && (
+                    <TabsContent
+                        value="crew"
+                        className="mt-4 min-h-0 overflow-hidden flex flex-col"
+                    >
+                        <CrewTab
                         availableCrew={
                             availableCrew as Array<{
                                 member: {
@@ -748,8 +804,9 @@ export function StationPanel() {
                                 confirmOxygen,
                             )
                         }
-                    />
-                </TabsContent>
+                        />
+                    </TabsContent>
+                )}
 
                 <TabsContent
                     value="services"
@@ -898,7 +955,7 @@ export function StationPanel() {
                         }}
                     />
                 </TabsContent>
-                {allowsCraft && (
+                {!isPirateStation && allowsCraft && (
                     <TabsContent
                         value="crafting"
                         className="mt-4 min-h-0 overflow-hidden flex flex-col"
@@ -906,7 +963,7 @@ export function StationPanel() {
                         <CraftingTab />
                     </TabsContent>
                 )}
-                {hasDiplomacy && (
+                {!isPirateStation && hasDiplomacy && (
                     <TabsContent
                         value="diplomacy"
                         className="mt-4 min-h-0 overflow-y-auto scrollbar-gutter-stable flex flex-col gap-4"
@@ -1097,6 +1154,22 @@ export function StationPanel() {
                             )}
                         </div>
                     </TabsContent>
+                )}
+                {isPirateStation && (
+                    <>
+                        <TabsContent
+                            value="black-market"
+                            className="mt-4 min-h-0 overflow-y-auto flex flex-col gap-4"
+                        >
+                            <PirateTab view="market" {...pirateTabProps} />
+                        </TabsContent>
+                        <TabsContent
+                            value="pirate-contracts"
+                            className="mt-4 min-h-0 overflow-y-auto flex flex-col gap-4"
+                        >
+                            <PirateTab view="contracts" {...pirateTabProps} />
+                        </TabsContent>
+                    </>
                 )}
             </Tabs>
 
