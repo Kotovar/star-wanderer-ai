@@ -1,7 +1,11 @@
 import "./register-ts-loader.mjs";
 import assert from "node:assert/strict";
 
-const { generatePirateContracts } = await import(
+const {
+  generatePirateContracts,
+  PIRATE_CONTRACT_REFRESH_INTERVAL,
+  refreshPirateContracts,
+} = await import(
   "../src/game/slices/pirate/contracts.ts"
 );
 const {
@@ -86,6 +90,44 @@ try {
 } finally {
   Math.random = originalRandom;
 }
+
+const boardStation = {
+  ...pirateStation,
+  pirateContracts: [{ id: "old-offer", type: "pirate_heist" }],
+  pirateLastRefreshTurn: 0,
+};
+const boardSectors = [
+  {
+    id: 1,
+    tier: 2,
+    locations: [boardStation, ...targets.filter(({ id }) => id !== boardStation.id)],
+  },
+];
+assert.equal(
+  PIRATE_CONTRACT_REFRESH_INTERVAL,
+  50,
+  "пиратская доска должна использовать общий интервал в 50 ходов",
+);
+assert.equal(
+  refreshPirateContracts(boardStation, 2, 49, boardSectors),
+  false,
+  "пиратская доска не должна обновляться раньше 50 ходов",
+);
+assert.equal(
+  boardStation.pirateContracts[0]?.id,
+  "old-offer",
+  "ранний вход на станцию не должен заменять предложения доски",
+);
+assert.equal(
+  refreshPirateContracts(boardStation, 2, 50, boardSectors),
+  true,
+  "пиратская доска должна обновляться ровно на 50-м ходу",
+);
+assert.equal(
+  boardStation.pirateLastRefreshTurn,
+  50,
+  "обновлённая доска должна запомнить текущий ход",
+);
 
 assert.equal(
   isWantedCheckpointRequired(49),
@@ -334,8 +376,52 @@ assert.deepEqual(
 );
 assert.equal(
   migratedPirateStation?.pirateLastRefreshTurn,
-  32,
+  -8,
   "очищенная доска должна обновиться при следующем визите",
+);
+
+const migratedEmptyV28PirateBoard = loadWithMigrations(
+  JSON.stringify({
+    version: 28,
+    state: {
+      turn: 42,
+      galaxy: {
+        sectors: [
+          {
+            id: "old-sector",
+            locations: [
+              {
+                id: "empty-pirate-station",
+                type: "station",
+                stationConfig: { isPirate: true },
+                pirateContracts: [],
+                pirateLastRefreshTurn: 32,
+              },
+              {
+                id: "offered-pirate-station",
+                type: "station",
+                stationConfig: { isPirate: true },
+                pirateContracts: [{ id: "real-offer", type: "pirate_heist" }],
+                pirateLastRefreshTurn: 32,
+              },
+            ],
+          },
+        ],
+      },
+    },
+  }),
+);
+assert.equal(
+  migratedEmptyV28PirateBoard?.galaxy?.sectors[0]?.locations[0]
+    ?.pirateLastRefreshTurn,
+  -8,
+  "пустая доска v28 должна обновиться при следующем визите по новому интервалу",
+);
+assert.equal(
+  migratedEmptyV28PirateBoard?.galaxy?.sectors[0]?.locations[1]
+    ?.pirateLastRefreshTurn,
+  32,
+  "миграция не должна сбрасывать реальные предложения существующей доски",
 );
 
 console.log("Pirate wanted gameplay checks passed");

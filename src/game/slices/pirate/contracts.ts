@@ -1,5 +1,7 @@
 import type { Contract, GalaxyTierAll, Location, Sector } from "@/game/types";
 
+export const PIRATE_CONTRACT_REFRESH_INTERVAL = 50;
+
 const PIRATE_CONTRACT_TEMPLATES = [
     {
         type: "pirate_smuggling" as const,
@@ -157,7 +159,7 @@ export function refreshPirateContracts(
     tier: GalaxyTierAll,
     currentTurn: number,
     sectors: Sector[],
-    refreshInterval = 10,
+    refreshInterval = PIRATE_CONTRACT_REFRESH_INTERVAL,
 ): boolean {
     const last = station.pirateLastRefreshTurn ?? 0;
     if (currentTurn - last < refreshInterval) return false;

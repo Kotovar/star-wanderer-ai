@@ -10,6 +10,7 @@ import { DEFAULT_AUDIO_VOLUMES } from "@/sounds";
 import { hydrateNavigatorIntelFromLegacyState } from "@/game/navigator/intel";
 import { hasCombatArmament } from "@/game/contracts/frontierContracts";
 import { PRE_SPACEFARING_CIVILIZATIONS } from "@/game/constants/preSpacefaringCivilizations";
+import { PIRATE_CONTRACT_REFRESH_INTERVAL } from "@/game/slices/pirate/contracts";
 import type { GameState, Location, Sector } from "@/game/types";
 
 interface PersistedState {
@@ -478,7 +479,8 @@ const migrations: Record<number, Migration> = {
       return {
         ...location,
         pirateContracts: [],
-        pirateLastRefreshTurn: (state.turn ?? 0) - 10,
+        pirateLastRefreshTurn:
+          (state.turn ?? 0) - PIRATE_CONTRACT_REFRESH_INTERVAL,
       };
     };
     const clearLegacyPirateBoards = (sector: Sector): Sector => ({
@@ -514,6 +516,45 @@ const migrations: Record<number, Migration> = {
       activeContracts: state.activeContracts?.filter(
         (contract) => !isLegacyPirateContract(contract.type),
       ),
+      galaxy: state.galaxy ? { ...state.galaxy, sectors } : state.galaxy,
+      currentSector,
+      currentLocation,
+    };
+  },
+  28: (raw) => {
+    const state = raw as Partial<GameState>;
+    const retimeEmptyPirateBoard = (location: Location): Location => {
+      if (
+        !location.stationConfig?.isPirate ||
+        (location.pirateContracts?.length ?? 0) > 0
+      ) {
+        return location;
+      }
+      return {
+        ...location,
+        pirateLastRefreshTurn:
+          (state.turn ?? 0) - PIRATE_CONTRACT_REFRESH_INTERVAL,
+      };
+    };
+    const retimeEmptyPirateBoards = (sector: Sector): Sector => ({
+      ...sector,
+      locations: sector.locations.map(retimeEmptyPirateBoard),
+    });
+    const sectors = (state.galaxy?.sectors ?? []).map(retimeEmptyPirateBoards);
+    const currentSector = state.currentSector
+      ? (sectors.find((sector) => sector.id === state.currentSector?.id) ??
+        retimeEmptyPirateBoards(state.currentSector))
+      : null;
+    const currentLocation = state.currentLocation
+      ? (sectors
+          .flatMap((sector) => sector.locations)
+          .find((location) => location.id === state.currentLocation?.id) ??
+        retimeEmptyPirateBoard(state.currentLocation))
+      : null;
+
+    return {
+      ...state,
+      stateVersion: 29,
       galaxy: state.galaxy ? { ...state.galaxy, sectors } : state.galaxy,
       currentSector,
       currentLocation,
