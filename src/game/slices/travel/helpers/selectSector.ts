@@ -3,6 +3,7 @@ import { getSectorName } from "@/lib/translationHelpers";
 import { findActiveArtifact, findArtifactByEffect } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { findRouteNebula } from "@/game/galaxy/nebulae";
+import { getTierAccessRequirements } from "@/game/progression/campaignProgress";
 import {
     PILOT_EXP_SAME_SECTOR,
     PILOT_EXP_PER_TIER,
@@ -25,20 +26,6 @@ import type { GameState, GameStore, GameMode, Artifact, SetState } from "@/game/
 // ============================================================================
 // Константы
 // ============================================================================
-
-/** Минимальный уровень двигателя для доступа к тиру */
-const TIER_ENGINE_REQUIREMENTS: Record<number, number> = {
-    2: 2,
-    3: 3,
-    4: 4,
-};
-
-/** Минимальный уровень капитана для доступа к тиру */
-const TIER_CAPTAIN_REQUIREMENTS: Record<number, number> = {
-    2: 2,
-    3: 3,
-    4: 4,
-};
 
 /** Вероятность повреждения модуля за тир расстояния */
 const MODULE_DAMAGE_CHANCE_PER_TIER = 0.3;
@@ -143,8 +130,8 @@ const checkTierAccess = (
 ): string | null => {
     if (!sector) return null;
 
-    const requiredEngine = TIER_ENGINE_REQUIREMENTS[sector.tier] ?? 1;
-    const requiredCaptain = TIER_CAPTAIN_REQUIREMENTS[sector.tier] ?? 1;
+    const { engineLevel: requiredEngine, captainLevel: requiredCaptain } =
+        getTierAccessRequirements(sector.tier);
     const accessMessage = (engineRequirement: number, captainRequirement: number) =>
         i18nStore.t("travel.access_requires", {
             sectorLevel: sector.tier,

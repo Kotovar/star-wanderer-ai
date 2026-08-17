@@ -12,6 +12,7 @@ import { getSectorRule } from "./sectorRules";
 import { findActiveArtifact } from "../artifacts";
 import { ARTIFACT_TYPES } from "../constants";
 import { ENGINE_MODULE_TYPES, SCANNER_MODULE_TYPES } from "../constants/modules";
+import { getTierAccessRequirements } from "../progression/campaignProgress";
 
 type TierDetails = {
     ring: string;
@@ -107,14 +108,14 @@ export function canAccessTier(
     captainLevel: number,
 ): boolean {
     if (tier === 1) return true;
+    if (tier < 2 || tier > 4) return false;
+
     const engineLevel = getEngineLevel(modules);
-    if (tier === 2) return engineLevel >= 2 && captainLevel >= 2;
-    if (tier === 3) return engineLevel >= 3 && captainLevel >= 3;
-    if (tier === 4) {
-        // Tier 4 requires captain level 4 and engine level 4
-        return engineLevel >= 4 && captainLevel >= 4;
-    }
-    return false;
+    const requirements = getTierAccessRequirements(tier as GalaxyTierAll);
+    return (
+        engineLevel >= requirements.engineLevel &&
+        captainLevel >= requirements.captainLevel
+    );
 }
 
 // Get radius for sector based on tier

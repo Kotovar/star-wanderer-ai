@@ -17,6 +17,7 @@
     "check:data": "node --no-warnings scripts/check-data-consistency.mjs",
     "check:prices": "node --no-warnings scripts/check-price-modifier.mjs",
     "check:victory": "node --no-warnings --experimental-strip-types scripts/check-victory-paths.mjs",
+    "check:campaign-progress": "node --no-warnings scripts/check-campaign-progress.mjs",
     "check:point-defense": "node scripts/check-point-defense.mjs",
     "check:weapons": "node scripts/check-weapons.mjs",
     "check:combat-cinematics": "node scripts/check-combat-cinematics.mjs",

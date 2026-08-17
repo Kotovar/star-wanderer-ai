@@ -1,4 +1,5 @@
 import type { GameState } from "@/game/types";
+import { getHighestReachedTier } from "../progression/campaignProgress.ts";
 
 export type VictoryObjectiveId =
   | "reach_tier4"
@@ -146,9 +147,9 @@ export type CampaignDirective = {
 };
 
 export const canRevealLateCampaign = (
-  currentTier: number,
+  highestReachedTier: number,
   victoryDone: boolean,
-): boolean => currentTier >= 3 || victoryDone;
+): boolean => highestReachedTier >= 3 || victoryDone;
 
 const DOCTRINE_PRIORITY: Record<string, VictoryObjectiveId[]> = {
   doctrine_explorer: ["scientific_ascension"],
@@ -195,12 +196,23 @@ const getDirectiveDetail = (
   }
 };
 
+const isObjectiveDone = (
+  objective: VictoryObjective,
+  state: VictoryObjectiveState,
+): boolean =>
+  state.completedVictoryObjectiveIds.includes(objective.id) ||
+  objective.isComplete(state);
+
 export const getCampaignDirective = (
   state: CampaignDirectiveState,
 ): CampaignDirective | null => {
   const frontier = VICTORY_OBJECTIVES.reach_tier4;
-  if (!frontier.isComplete(state)) {
-    const hasReachedOuterRim = (state.currentSector?.tier ?? 1) >= 3;
+  const highestReachedTier = getHighestReachedTier(
+    state.galaxy.sectors,
+    state.currentSector,
+  );
+  if (!isObjectiveDone(frontier, state) && highestReachedTier < 4) {
+    const hasReachedOuterRim = highestReachedTier >= 3;
 
     return {
       objective: frontier,
@@ -217,7 +229,7 @@ export const getCampaignDirective = (
     id.startsWith("doctrine_"),
   );
   const unfinishedEndings = Object.values(VICTORY_OBJECTIVES).filter(
-    (objective) => objective.isEnding !== false && !objective.isComplete(state),
+    (objective) => objective.isEnding !== false && !isObjectiveDone(objective, state),
   );
   const preferred = doctrineId
     ? DOCTRINE_PRIORITY[doctrineId]?.map((id) => VICTORY_OBJECTIVES[id]).find(

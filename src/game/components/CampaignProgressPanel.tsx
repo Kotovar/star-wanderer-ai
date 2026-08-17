@@ -15,6 +15,7 @@ import {
   SCIENCE_TECH_TARGET,
   canRevealLateCampaign,
   countAlliedRaces,
+  getCampaignDirective,
   getVictoryObjectives,
 } from "@/game/constants/victoryObjectives";
 import { WEAPON_TYPES } from "@/game/constants/weapons";
@@ -22,13 +23,15 @@ import { getBestByProfession } from "@/game/crew";
 import { canSeeTier4 } from "@/game/galaxy/galaxy-map-utils";
 import { getRunProfileArcProgress } from "@/game/galaxy/runProfileArcs";
 import { getRunProfile } from "@/game/galaxy/runProfiles";
+import {
+  getHighestReachedTier,
+  getNextTierAccessRequirements,
+} from "@/game/progression/campaignProgress";
 import { isLocationCountedAsVisited } from "@/game/progression/locationProgress";
+import { getEffectiveScanRange } from "@/game/slices/scanner/helpers/getEffectiveScanRange";
 import { ENGINE_MODULE_TYPES } from "@/game/constants/modules";
 import { useTranslation } from "@/lib/useTranslation";
-import {
-    getSectorName,
-    getWeaponTypeName,
-} from "@/lib/translationHelpers";
+import { getSectorName, getWeaponTypeName } from "@/lib/translationHelpers";
 
 type Tone = "good" | "warning" | "danger" | "neutral";
 
@@ -143,13 +146,6 @@ function Milestone({
   );
 }
 
-const REGION_NAMES: Record<number, string> = {
-  1: "Внутренние миры",
-  2: "Срединный пояс",
-  3: "Внешние рубежи",
-  4: "Дальний рубеж",
-};
-
 export function CampaignProgressPanel() {
   const { t } = useTranslation();
   const sectors = useGameStore((s) => s.galaxy.sectors);
@@ -180,9 +176,8 @@ export function CampaignProgressPanel() {
     (s) => s.runProfileArcRewardClaimed,
   );
   const runProfileArcTarget = useGameStore((s) => s.runProfileArcTarget);
-  const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
 
-  const scanRange = getEffectiveScanRange();
+  const scanRange = useGameStore((s) => getEffectiveScanRange(s));
   const runProfile = getRunProfile(runProfileId);
   const profileArcProgress = useMemo(
     () =>
@@ -192,7 +187,14 @@ export function CampaignProgressPanel() {
   const profileArcTargetSector = runProfileArcTarget
     ? sectors.find((sector) => sector.id === runProfileArcTarget.sectorId)
     : null;
+  const profileArcConfirmedSectors = profileArcProgress
+    ? sectors.filter((sector) =>
+        profileArcProgress.confirmedSectorIds.includes(sector.id),
+      )
+    : [];
   const currentTier = currentSector?.tier ?? 1;
+  const highestReachedTier = getHighestReachedTier(sectors, currentSector);
+  const nextTierAccess = getNextTierAccessRequirements(highestReachedTier);
   const engineLevel = Math.max(
     1,
     ...shipModules
@@ -208,15 +210,15 @@ export function CampaignProgressPanel() {
   const victoryDone = completedVictoryObjectiveIds.length > 0;
   const canSeeHiddenRim =
     victoryDone ||
-    currentTier === 4 ||
+    highestReachedTier === 4 ||
     canSeeTier4(shipModules, artifacts, scanRange);
   const revealLateCampaign = canRevealLateCampaign(
-    currentTier,
+    highestReachedTier,
     victoryDone,
   );
   const showHiddenRim = revealLateCampaign && canSeeHiddenRim;
 
-  const stats = useMemo(() => {
+  const stats = (() => {
     const visibleSectors = showHiddenRim
       ? sectors
       : sectors.filter((sector) => sector.tier < 4);
@@ -261,7 +263,7 @@ export function CampaignProgressPanel() {
       researchedArtifacts,
       activeArtifacts,
     };
-  }, [artifacts, completedLocations, sectors, showHiddenRim]);
+  })();
   const selectedDoctrineId = startModifierIds.find((id) =>
     id.startsWith("doctrine_"),
   );
@@ -278,6 +280,7 @@ export function CampaignProgressPanel() {
       knownRaces,
       raceReputation,
       research,
+      startModifierIds,
     }),
     [
       artifacts,
@@ -291,6 +294,7 @@ export function CampaignProgressPanel() {
       raceReputation,
       research,
       sectors,
+      startModifierIds,
     ],
   );
   const alliedRaces = countAlliedRaces(victoryState);
@@ -305,6 +309,7 @@ export function CampaignProgressPanel() {
       })),
     [completedVictoryObjectiveIds],
   );
+  const campaignDirective = getCampaignDirective(victoryState);
 
   const techTotal = Object.keys(RESEARCH_TREE).length;
   const techDone = research.researchedTechs.length;
@@ -373,7 +378,9 @@ export function CampaignProgressPanel() {
                   </div>
                   <p className="mt-1">
                     {t("run_profile_arcs.coordinates_target", {
-                      sector: profileArcTargetSector?.name ?? "—",
+                      sector: profileArcTargetSector
+                        ? getSectorName(profileArcTargetSector.name, t)
+                        : "—",
                       tier: runProfileArcTarget.tier,
                     })}
                   </p>
@@ -398,20 +405,16 @@ export function CampaignProgressPanel() {
                       color="#00d4ff"
                     />
                   </div>
-                  <div className="mt-2 grid grid-cols-3 gap-1 text-[9px] uppercase tracking-wide">
-                    {[1, 2, 3].map((mark) => (
-                      <div
-                        key={mark}
-                        className={
-                          profileArcProgress.confirmed >= mark
-                            ? "text-[#9ef2ff]"
-                            : "text-[#52666b]"
-                        }
-                      >
-                        {profileArcProgress.confirmed >= mark ? "✓" : "□"} {mark}
+                  {profileArcConfirmedSectors.length > 0 && (
+                    <div className="mt-2 space-y-1 text-[10px] text-[#9eb5bd]">
+                      <div className="uppercase tracking-[0.16em] text-[#76dff5]">
+                        {t("campaign_progress.confirmed_sectors")}
                       </div>
-                    ))}
-                  </div>
+                      {profileArcConfirmedSectors.map((sector) => (
+                        <div key={sector.id}>✓ {getSectorName(sector.name, t)}</div>
+                      ))}
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -419,10 +422,27 @@ export function CampaignProgressPanel() {
         </section>
       )}
 
-      {revealLateCampaign ? (
+      {campaignDirective && (
         <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.06)] p-3">
           <div className="font-['Orbitron'] text-[10px] uppercase tracking-[0.16em] text-accent">
-            Способы победы
+            {t("campaign_directive.label")}
+          </div>
+          <div className="mt-1 text-xs font-bold text-[#ffe0a0]">
+            {t(
+              campaignDirective.displayTitleKey ??
+                campaignDirective.objective.titleKey,
+            )}
+          </div>
+          <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            {t(campaignDirective.detail.key, campaignDirective.detail.params)}
+          </div>
+        </div>
+      )}
+
+      {revealLateCampaign && (
+        <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.06)] p-3">
+          <div className="font-['Orbitron'] text-[10px] uppercase tracking-[0.16em] text-accent">
+            {t("campaign_progress.victory_paths")}
           </div>
           <div className="mt-2 grid gap-2">
             {victoryObjectives.map((objective) => (
@@ -457,48 +477,38 @@ export function CampaignProgressPanel() {
             ))}
           </div>
         </div>
-      ) : (
-        <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.06)] p-3">
-          <div className="font-['Orbitron'] text-[10px] uppercase tracking-[0.16em] text-accent">
-            {t("campaign_directive.label")}
-          </div>
-          <div className="mt-1 text-xs font-bold text-[#ffe0a0]">
-            {t("campaign_directive.explore.title")}
-          </div>
-          <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            {t("campaign_directive.explore.description")}
-          </div>
-        </div>
       )}
 
       <div className="grid grid-cols-2 gap-2">
         <MetricCard
-          label="Текущая область"
-          value={REGION_NAMES[currentTier] ?? "Неизвестный сектор"}
+          label={t("campaign_progress.current_region")}
+          value={t(`campaign_progress.regions.${currentTier}`)}
           hint={currentSector ? getSectorName(currentSector.name, t) : "—"}
           tone={currentTier >= 3 ? "warning" : "good"}
         />
         <MetricCard
-          label="Секторы"
+          label={t("campaign_progress.sectors")}
           value={`${stats.visitedSectors}/${stats.totalSectors}`}
-          hint="посещено"
+          hint={t("campaign_progress.visited")}
           tone="good"
         />
         <MetricCard
-          label="Технологии"
+          label={t("campaign_progress.technologies")}
           value={`${techDone}/${techTotal}`}
-          hint="исследовано"
+          hint={t("campaign_progress.researched")}
           tone={techDone > 0 ? "good" : "neutral"}
         />
         {revealLateCampaign && (
           <MetricCard
-            label="Боссы"
+            label={t("campaign_progress.bosses")}
             value={
               stats.defeatedBosses > 0
-                ? `${stats.defeatedBosses} побеждено`
-                : "не побеждены"
+                ? t("campaign_progress.bosses_defeated", {
+                    count: stats.defeatedBosses,
+                  })
+                : t("campaign_progress.bosses_undefeated")
             }
-            hint="древние угрозы"
+            hint={t("campaign_progress.ancient_threats")}
             tone={stats.defeatedBosses > 0 ? "warning" : "neutral"}
           />
         )}
@@ -516,7 +526,7 @@ export function CampaignProgressPanel() {
         </Section>
       )}
 
-      <Section title="Маршрут по галактике">
+      <Section title={t("campaign_progress.galaxy_route")}>
         <div className="space-y-3">
           {stats.tiers.map((tier) => (
             <div key={tier.tier}>
@@ -526,7 +536,7 @@ export function CampaignProgressPanel() {
                     currentTier === tier.tier ? "text-accent" : "text-[#888]"
                   }
                 >
-                  {REGION_NAMES[tier.tier] ?? `Область ${tier.tier}`}
+                  {t(`campaign_progress.regions.${tier.tier}`)}
                 </span>
                 <span className="text-muted-foreground">
                   {tier.visited}/{tier.total}
@@ -542,51 +552,59 @@ export function CampaignProgressPanel() {
           {revealLateCampaign && !showHiddenRim && (
             <div className="border border-[#333] bg-[rgba(255,255,255,0.02)] p-2 text-xs">
               <div className="font-['Orbitron'] text-[10px] uppercase tracking-[0.16em] text-[#666]">
-                Неразмеченный рубеж
+                {t("campaign_progress.unmapped_rim")}
               </div>
               <div className="mt-1 leading-relaxed text-[#555]">
-                Дальние сектора скрыты от навигационной карты. Они появятся
-                после глубокого сканирования: сканер IV, эффективная дальность
-                25+ или артефакт всевидения.
+                {t("campaign_progress.unmapped_rim_description")}
               </div>
               <div className="mt-1 text-[#444]">
-                Текущая дальность сканера: {scanRange}
+                {t("campaign_progress.scan_range", { range: scanRange })}
               </div>
             </div>
           )}
         </div>
       </Section>
 
-      <Section title="Ключевые этапы">
+      <Section title={t("campaign_progress.milestones")}>
         <div className="grid gap-2">
           <Milestone
-            label="Закрепиться в центральных секторах"
+            label={t("campaign_progress.inner_foothold")}
             done={innerWorldsFootholdDone}
-            detail={`${innerWorldsVisited}/3 внутренних сектора`}
+            detail={t("campaign_progress.inner_foothold_progress", {
+              current: innerWorldsVisited,
+            })}
           />
           <Milestone
-            label="Покинуть внутренние миры"
+            label={t("campaign_progress.leave_inner")}
             done={stats.tiers.some(
               (tier) => tier.tier >= 2 && tier.visited > 0,
             )}
           />
-          {currentTier < 2 && (
+          {nextTierAccess && (
             <>
               <Milestone
-                label={t("campaign_progress.tier2_engine", { level: engineLevel })}
-                done={engineLevel >= 2}
-                detail={t("campaign_progress.tier2_engine_hint")}
+                label={t("campaign_progress.tier_engine", {
+                  requiredLevel: nextTierAccess.engineLevel,
+                  tierName: t(`galaxy.tiers.tier${nextTierAccess.tier}`),
+                  level: engineLevel,
+                })}
+                done={engineLevel >= nextTierAccess.engineLevel}
+                detail={t("campaign_progress.tier_engine_hint")}
               />
               <Milestone
-                label={t("campaign_progress.tier2_captain", { level: captainLevel })}
-                done={captainLevel >= 2}
-                detail={t("campaign_progress.tier2_captain_hint")}
+                label={t("campaign_progress.tier_captain", {
+                  requiredLevel: nextTierAccess.captainLevel,
+                  tierName: t(`galaxy.tiers.tier${nextTierAccess.tier}`),
+                  level: captainLevel,
+                })}
+                done={captainLevel >= nextTierAccess.captainLevel}
+                detail={t("campaign_progress.tier_captain_hint")}
               />
             </>
           )}
-          {currentTier >= 2 && (
+          {highestReachedTier >= 2 && (
             <Milestone
-              label="Достичь внешних рубежей"
+              label={t("campaign_progress.reach_outer")}
               done={stats.tiers.some(
                 (tier) => tier.tier >= 3 && tier.visited > 0,
               )}
@@ -595,34 +613,36 @@ export function CampaignProgressPanel() {
           {revealLateCampaign && (
             <>
               <Milestone
-                label="Победить первого древнего босса"
+                label={t("campaign_progress.first_ancient_boss")}
                 done={stats.defeatedBosses > 0}
                 detail={
                   stats.defeatedBosses > 0
-                    ? `побеждено: ${stats.defeatedBosses}`
-                    : "любой древний босс"
+                    ? t("campaign_progress.bosses_defeated_detail", {
+                        count: stats.defeatedBosses,
+                      })
+                    : t("campaign_progress.any_ancient_boss")
                 }
               />
               <Milestone
-                label="Открыть неразмеченный рубеж"
+                label={t("campaign_progress.unlock_unmapped_rim")}
                 done={showHiddenRim}
-                detail="глубокое сканирование или артефакт всевидения"
+                detail={t("campaign_progress.unmapped_rim_hint")}
               />
               <Milestone
-                label="Финал"
+                label={t("campaign_progress.finale")}
                 done={victoryDone}
-                detail="выполнить любой способ победы"
+                detail={t("campaign_progress.finale_hint")}
               />
             </>
           )}
         </div>
       </Section>
 
-      <Section title="Системы прогресса">
+      <Section title={t("campaign_progress.progress_systems")}>
         <div className="grid gap-2">
           <div>
             <div className="mb-1 flex justify-between text-xs">
-              <span className="text-[#888]">Исследования</span>
+              <span className="text-[#888]">{t("campaign_progress.research")}</span>
               <span className="text-muted-foreground">
                 {techDone}/{techTotal}
               </span>
@@ -631,7 +651,9 @@ export function CampaignProgressPanel() {
           </div>
           <div>
             <div className="mb-1 flex justify-between text-xs">
-              <span className="text-[#888]">Рецепты оружия</span>
+              <span className="text-[#888]">
+                {t("campaign_progress.weapon_recipes")}
+              </span>
               <span className="text-muted-foreground">
                 {unlockedWeaponRecipes.length}/{weaponRecipes.length}
               </span>
@@ -674,7 +696,7 @@ export function CampaignProgressPanel() {
           </div>
           <div>
             <div className="mb-1 flex justify-between text-xs">
-              <span className="text-[#888]">Артефакты</span>
+              <span className="text-[#888]">{t("campaign_progress.artifacts")}</span>
               <span className="text-muted-foreground">
                 {stats.discoveredArtifacts}/{artifacts.length}
               </span>
@@ -685,13 +707,15 @@ export function CampaignProgressPanel() {
               color="#ff00ff"
             />
             <div className="mt-1 text-[10px] text-[#555]">
-              изучено: {stats.researchedArtifacts}, активно:{" "}
-              {stats.activeArtifacts}
+              {t("campaign_progress.artifacts_detail", {
+                researched: stats.researchedArtifacts,
+                active: stats.activeArtifacts,
+              })}
             </div>
           </div>
           <div>
             <div className="mb-1 flex justify-between text-xs">
-              <span className="text-[#888]">Локации</span>
+              <span className="text-[#888]">{t("campaign_progress.locations")}</span>
               <span className="text-muted-foreground">
                 {stats.visitedLocations}/{stats.totalLocations}
               </span>
@@ -702,21 +726,21 @@ export function CampaignProgressPanel() {
               color="#00d4ff"
             />
             <div className="mt-1 text-[10px] text-[#555]">
-              засчитываются открытые, посещённые и завершённые локации
+              {t("campaign_progress.locations_detail")}
             </div>
           </div>
         </div>
       </Section>
 
-      <Section title="Задания">
+      <Section title={t("campaign_progress.tasks")}>
         <div className="grid grid-cols-2 gap-2">
           <MetricCard
-            label="Активные задания"
+            label={t("campaign_progress.active_tasks")}
             value={String(activeContracts.length)}
             tone={activeContracts.length > 0 ? "warning" : "neutral"}
           />
           <MetricCard
-            label="Завершённые"
+            label={t("campaign_progress.completed")}
             value={String(completedContractIds.length)}
             tone={completedContractIds.length > 0 ? "good" : "neutral"}
           />
