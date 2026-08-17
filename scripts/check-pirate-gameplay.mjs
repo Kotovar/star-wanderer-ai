@@ -265,14 +265,16 @@ assert.equal(
 
 // Отказ от досмотра: стрелять по страже можно на любом уровне розыска, но за
 // это платят репутацией сразу — иначе отступление уводило бы от счёта
+const breakoutLocation = {
+  id: "legal-station",
+  type: "station",
+  dominantRace: "human",
+  stationConfig: { isPirate: false },
+};
 const breakoutState = {
-  currentLocation: {
-    id: "legal-station",
-    type: "station",
-    dominantRace: "human",
-    stationConfig: { isPirate: false },
-  },
-  currentSector: { id: 1, tier: 2 },
+  currentLocation: breakoutLocation,
+  currentSector: { id: 1, tier: 2, locations: [breakoutLocation] },
+  galaxy: { sectors: [{ id: 1, tier: 2, locations: [breakoutLocation] }] },
   wantedHeat: WANTED_CHECKPOINT_HEAT,
   credits: 0,
   // Бой поднимается настоящий, через startDefenderCombat — фиктивной заглушки
@@ -337,6 +339,26 @@ assert.ok(
 assert.ok(
   WANTED_HEAT_ON_BREAKOUT > 0,
   "победа над стражей обязана добавлять розыск, а не снимать его как победа над погоней",
+);
+// Станция закрывается прямо в момент выстрела: иначе после боя игрок
+// возвращался к тому же досмотру и переигрывал его взяткой
+assert.equal(
+  breakoutState.currentLocation.checkpointFought,
+  true,
+  "стрельба на досмотре обязана закрывать доки станции",
+);
+assert.equal(
+  breakoutState.galaxy.sectors[0].locations[0].checkpointFought,
+  true,
+  "флаг обязан лечь и в galaxy: currentSector пересобирается из неё при входе в сектор",
+);
+const selectLocationSource = readFileSync(
+  new URL("../src/game/slices/travel/helpers/selectLocation.ts", import.meta.url),
+  "utf8",
+).replace(/^\s*\/\/.*$/gm, "");
+assert.ok(
+  /checkpointFought/.test(selectLocationSource),
+  "закрытую после стрельбы станцию обязан отсекать вход в локацию",
 );
 // Разбор исхода живёт в playerVictory рядом с погоней — проверяем, что ветка
 // прорыва там есть и разошлась с ней

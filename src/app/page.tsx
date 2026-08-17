@@ -551,7 +551,7 @@ export default function Home() {
           {isMobile && (
             <nav className="relative shrink-0 z-30 border-t border-[#00ff4155] bg-[rgba(1,8,12,0.97)] backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
               {moreOpen && (
-                <div className="grid grid-cols-3 gap-1 p-2 border-b border-[#00ff4155]">
+                <div className="absolute bottom-full left-0 right-0 grid grid-cols-3 gap-1 p-2 border-t border-b border-[#00ff4155] bg-[rgba(1,8,12,0.97)] backdrop-blur-sm">
                   {leftTabs
                     .filter((tab) => ["progress", "blueprints", "log"].includes(tab.id))
                     .map((tab) => {

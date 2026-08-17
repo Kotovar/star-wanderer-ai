@@ -159,6 +159,13 @@ export const selectLocation = (
         return;
     }
 
+    // После стрельбы на досмотре станция закрыта: без этого бой можно было
+    // отыграть заново и выбрать на том же досмотре другой исход
+    if (loc.checkpointFought) {
+        get().addLog(i18nStore.t("pirate.checkpoint_docks_closed"), "warning");
+        return;
+    }
+
     // Локация уже посещена
     if (state.completedLocations.includes(loc.id)) {
         get().addLog( i18nStore.t("game_logs.selectLocation_1", { loc_name: loc.name }), "warning");

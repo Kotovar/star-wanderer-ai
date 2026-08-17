@@ -181,6 +181,8 @@ export interface Location {
     pirateLastRefreshTurn?: number; // Turn when contracts were last refreshed
     /** База уничтожена по подряду на зачистку: от неё остались обломки */
     pirateBaseDestroyed?: boolean;
+    /** На досмотре была стрельба: станция больше не пускает к докам */
+    checkpointFought?: boolean;
 
     population?: number; // Population in thousands
 

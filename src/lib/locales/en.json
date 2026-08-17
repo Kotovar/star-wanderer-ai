@@ -6679,6 +6679,7 @@
         "checkpoint_breakout_done": "Security is down, but the station stands and there were plenty of witnesses: +{{amount}} wanted heat.",
         "checkpoint_leave": "RETREAT",
         "checkpoint_left": "You backed away from the station without clearing inspection.",
+        "checkpoint_docks_closed": "The station ignores your docking request: after the shootout its docks are closed to you",
         "checkpoint_bribed": "Inspection closed with a bribe: −{{cost}}₢.",
         "checkpoint_dumped": "Contraband dumped: {{quantity}}t lost.",
         "faction_name": "Pirate Syndicate",

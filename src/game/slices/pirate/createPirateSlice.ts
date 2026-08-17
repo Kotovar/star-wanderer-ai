@@ -441,6 +441,11 @@ export const createPirateSlice = (
             playSound("ui_notification");
             return;
         }
+        // Стрельба на досмотре закрывает станцию насовсем: иначе после боя
+        // можно было вернуться к тому же выбору и переиграть его взяткой
+        const closeStationDocks = () =>
+            set((s) => patchLocation(s, location.id, { checkpointFought: true }));
+
         if (choice === "breakout") {
             // Отказ от досмотра с боем. Стража станции — не охотники за
             // головами: за неё платят репутацией с расой, и платят сразу,
@@ -457,6 +462,7 @@ export const createPirateSlice = (
                 );
             }
             get().addLog(i18nStore.t("pirate.checkpoint_breakout"), "error");
+            closeStationDocks();
             startCheckpointBreakout(race, set, get);
             return;
         }
@@ -468,6 +474,7 @@ export const createPirateSlice = (
 
         // Не засада: на прорыв игрок идёт сам и подготовленным, в отличие
         // от перехвата на подлёте к сектору
+        closeStationDocks();
         startWantedPursuit(set, get);
     },
 
