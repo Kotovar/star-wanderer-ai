@@ -1,5 +1,9 @@
 import type { CrewMemberAssignment, ModuleType } from "@/game/types";
-import { LAB_MODULE_TYPES } from "@/game/constants/modules";
+import {
+    LAB_MODULE_TYPES,
+    REACTOR_MODULE_TYPES,
+    SCANNER_MODULE_TYPES,
+} from "@/game/constants/modules";
 
 /**
  * Требования к модулям для конкретных задач
@@ -14,7 +18,7 @@ export const TASK_MODULE_REQUIREMENTS: Record<
     navigation: ["cockpit"],
 
     // Инженер
-    reactor_overload: ["reactor"],
+    reactor_overload: REACTOR_MODULE_TYPES,
     repair: [],
     calibration: ["weaponbay"],
     overclock: ["weaponbay"],
@@ -32,7 +36,7 @@ export const TASK_MODULE_REQUIREMENTS: Record<
 
     // Учёный
     research: LAB_MODULE_TYPES,
-    analyzing: ["scanner"],
+    analyzing: SCANNER_MODULE_TYPES,
     analysis: [],
 
     // Стрелок

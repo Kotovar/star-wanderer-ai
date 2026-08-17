@@ -13,6 +13,7 @@ import { GoodInfoModal } from "./GoodInfoModal";
 import { JettisonDialog } from "./JettisonDialog";
 import { WeaponDetailDialog } from "./WeaponDetailDialog";
 import { ModuleDetailDialog } from "./ModuleList";
+import { canPlaceModule } from "@/game/slices/ship/helpers/canPlaceModule";
 import {
     Dialog,
     DialogDescription,
@@ -30,18 +31,19 @@ function findFreeGridPosition(
     moduleWidth: number,
     moduleHeight: number,
 ): { x: number; y: number } | null {
+    const placementModule = {
+        id: Number.MIN_SAFE_INTEGER,
+        x: 0,
+        y: 0,
+        width: moduleWidth,
+        height: moduleHeight,
+    };
+
     for (let y = 0; y <= gridSize - moduleHeight; y++) {
         for (let x = 0; x <= gridSize - moduleWidth; x++) {
-            const occupied = modules.some(
-                (m) =>
-                    !m.disabled &&
-                    m.health > 0 &&
-                    x < m.x + (m.width || 2) &&
-                    x + moduleWidth > m.x &&
-                    y < m.y + (m.height || 2) &&
-                    y + moduleHeight > m.y,
-            );
-            if (!occupied) return { x, y };
+            if (canPlaceModule(placementModule, x, y, { ship: { modules, gridSize } })) {
+                return { x, y };
+            }
         }
     }
     return null;

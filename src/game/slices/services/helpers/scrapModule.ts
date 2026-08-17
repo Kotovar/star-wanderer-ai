@@ -2,7 +2,11 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore, ModuleType } from "@/game/types";
 import { playSound } from "@/sounds";
 import { MODULES_BY_LEVEL } from "@/game/components/station/station-data";
-import { MODULES_FROM_BOSSES } from "@/game/constants/modules";
+import {
+    ESSENTIAL_MODULE_TYPE_GROUPS,
+    MODULES_FROM_BOSSES,
+} from "@/game/constants/modules";
+import { isModuleActive } from "@/game/modules/utils";
 
 /**
  * Получает базовую цену модуля по его типу и уровню
@@ -76,25 +80,19 @@ export const scrapModule = (
         return;
     }
 
-    // Essential modules that must have at least 1
-    const essentialTypes: ModuleType[] = [
-        "cockpit",
-        "reactor",
-        "fueltank",
-        "engine",
-        "lifesupport",
-    ];
+    const isLastEssentialModule = ESSENTIAL_MODULE_TYPE_GROUPS.some(
+        (moduleTypes) =>
+            moduleTypes.includes(mod.type) &&
+            state.ship.modules.filter(
+                (candidate) =>
+                    moduleTypes.includes(candidate.type) &&
+                    isModuleActive(candidate),
+            ).length <= 1,
+    );
 
-    if (essentialTypes.includes(mod.type)) {
-        // Count how many of this type exist (excluding disabled ones)
-        const sameTypeCount = state.ship.modules.filter(
-            (m) => m.type === mod.type && !m.disabled,
-        ).length;
-
-        if (sameTypeCount <= 1) {
-            get().addLog( i18nStore.t("game_logs.scrapModule_2", { mod_name: mod.name }), "error");
-            return;
-        }
+    if (isLastEssentialModule) {
+        get().addLog( i18nStore.t("game_logs.scrapModule_2", { mod_name: mod.name }), "error");
+        return;
     }
 
     // Calculate scrap value (70% of module base price)

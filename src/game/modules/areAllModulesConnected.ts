@@ -1,6 +1,8 @@
 import type { Module } from "@/game/types";
 
-export const areAllModulesConnected = (modules: Module[]) => {
+type ModulePlacement = Pick<Module, "id" | "x" | "y" | "width" | "height">;
+
+export const areAllModulesConnected = (modules: ModulePlacement[]) => {
     if (modules.length === 0) return true;
 
     const visited = new Set<number>();

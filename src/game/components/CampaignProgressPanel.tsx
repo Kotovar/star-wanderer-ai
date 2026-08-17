@@ -23,6 +23,7 @@ import { canSeeTier4 } from "@/game/galaxy/galaxy-map-utils";
 import { getRunProfileArcProgress } from "@/game/galaxy/runProfileArcs";
 import { getRunProfile } from "@/game/galaxy/runProfiles";
 import { isLocationCountedAsVisited } from "@/game/progression/locationProgress";
+import { ENGINE_MODULE_TYPES } from "@/game/constants/modules";
 import { useTranslation } from "@/lib/useTranslation";
 import {
     getSectorName,
@@ -197,7 +198,7 @@ export function CampaignProgressPanel() {
     ...shipModules
       .filter(
         (module) =>
-          module.type === "engine" &&
+          ENGINE_MODULE_TYPES.includes(module.type) &&
           module.health > 0 &&
           !module.disabled &&
           !module.manualDisabled,

@@ -1,6 +1,11 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState, CraftingWeapon } from "@/game/types";
-import { CRAFTING_RECIPES, MODULE_RECIPES, HYBRID_MODULE_SHOP_ITEMS } from "@/game/constants/crafting";
+import {
+    CRAFTING_RECIPES,
+    getMissingModuleRecipeGas,
+    HYBRID_MODULE_SHOP_ITEMS,
+    MODULE_RECIPES,
+} from "@/game/constants/crafting";
 import type { ModuleRecipeId } from "@/game/types/crafting";
 import type { GasType } from "@/game/types/outposts";
 
@@ -175,21 +180,19 @@ export const createCraftingSlice = (
             }
         }
 
-        // Газ: гибриды собираются на синтез-полимерах, и без них рецепт
-        // остаётся в списке, а не сгорает
-        for (const [gasId, required] of Object.entries(recipe.gases ?? {})) {
+        const missingGas = getMissingModuleRecipeGas(recipe, state.gases);
+        if (missingGas) {
+            const [gasId, required] = missingGas;
             const available = state.gases?.[gasId as GasType] ?? 0;
-            if (available < (required ?? 0)) {
-                get().addLog(
-                    i18nStore.t("game_logs.craftingSlice_13", {
-                        goodName: i18nStore.t(`gases.${gasId}.name`),
-                        required,
-                        available,
-                    }),
-                    "error",
-                );
-                return;
-            }
+            get().addLog(
+                i18nStore.t("game_logs.craftingSlice_13", {
+                    goodName: i18nStore.t(`gases.${gasId}.name`),
+                    required,
+                    available,
+                }),
+                "error",
+            );
+            return;
         }
 
         set((s) => {

@@ -2,6 +2,20 @@ import type { ModuleType, PartialModuleType, ShopItem } from "../types";
 
 /** Все типы модулей, считающихся лабораторией для целей исследования */
 export const LAB_MODULE_TYPES: ModuleType[] = ["lab", "bio_research_lab", "deep_survey_array"];
+export const MEDICAL_MODULE_TYPES: ModuleType[] = ["medical", "bio_research_lab", "habitat_module"];
+export const QUARTERS_MODULE_TYPES: ModuleType[] = ["quarters", "habitat_module"];
+export const REACTOR_MODULE_TYPES: ModuleType[] = ["reactor", "pulse_drive"];
+export const ENGINE_MODULE_TYPES: ModuleType[] = ["engine", "pulse_drive"];
+export const SCANNER_MODULE_TYPES: ModuleType[] = ["scanner", "deep_survey_array"];
+
+/** Группы модулей, без которых корабль не должен оставаться после утилизации. */
+export const ESSENTIAL_MODULE_TYPE_GROUPS: ModuleType[][] = [
+    ["cockpit"],
+    REACTOR_MODULE_TYPES,
+    ["fueltank"],
+    ENGINE_MODULE_TYPES,
+    ["lifesupport"],
+];
 
 export const MODULE_TYPES: Record<
     PartialModuleType,

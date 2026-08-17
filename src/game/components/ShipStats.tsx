@@ -28,6 +28,7 @@ import { getCurrentCargo } from "@/game/slices/ship/helpers/getCurrentCargo";
 import { DEUTERIUM_FUEL_PER_UNIT } from "@/game/constants/outposts";
 import { getTechBonusSum } from "@/game/research";
 import { getActiveModules } from "../modules";
+import { ENGINE_MODULE_TYPES } from "@/game/constants/modules";
 import { RACES } from "@/game/constants/races";
 import { sumRaceTraitEffect } from "@/game/races";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
@@ -268,7 +269,7 @@ export function ShipStats() {
     [ship, crew],
   );
 
-  const engines = getActiveModules(ship.modules, "engine");
+  const engines = getActiveModules(ship.modules, ENGINE_MODULE_TYPES);
   const engineLevel =
     engines.length > 0 ? Math.max(...engines.map((e) => e.level || 1)) : 1;
 

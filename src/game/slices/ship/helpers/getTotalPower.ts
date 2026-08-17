@@ -8,6 +8,7 @@ import { getReactorOverloadPower } from "@/game/slices/gameLoop/processors/crewA
 import { getStrongestTechPerkValue } from "@/game/constants/techTree";
 import { getStarTypeEffect } from "@/game/constants/starEffects";
 import { getLivingShipCrew } from "@/game/crew/stationed";
+import { REACTOR_MODULE_TYPES } from "@/game/constants/modules";
 import type { GameState } from "@/game/types/game";
 
 /**
@@ -40,7 +41,7 @@ export function getTotalPower(state: GameState): number {
     );
     if (bestEngineerPowerBonus > 0) {
         const reactorCount = modules.filter(
-            (m) => m.type === "reactor" && isModuleFunctional(m),
+            (m) => REACTOR_MODULE_TYPES.includes(m.type) && isModuleFunctional(m),
         ).length;
         power += bestEngineerPowerBonus * reactorCount;
     }
@@ -49,7 +50,7 @@ export function getTotalPower(state: GameState): number {
     // Считается динамически (не накапливается в state)
     const reactorIds = new Set(
         modules
-            .filter((m) => m.type === "reactor" && isModuleFunctional(m))
+            .filter((m) => REACTOR_MODULE_TYPES.includes(m.type) && isModuleFunctional(m))
             .map((m) => m.id),
     );
     // Живой: смерть не снимает назначение, и труп продолжал разгонять реактор

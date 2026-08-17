@@ -13,6 +13,7 @@ import { useTranslation } from "@/lib/useTranslation";
 import { StatIcon } from "../StatIcon";
 import { useGameStore } from "@/game/store";
 import { getProjectedModuleEnergyBalance } from "@/game/slices/shop/helpers/getProjectedModuleEnergyBalance";
+import { QUARTERS_MODULE_TYPES } from "@/game/constants/modules";
 
 // Helper to get translated module name
 function getTranslatedModuleName(
@@ -35,6 +36,10 @@ function getTranslatedModuleName(
         lab: "module_names.lab",
         quarters: "module_names.quarters",
         repair_bay: "module_names.repair_bay",
+        bio_research_lab: "module_names.bio_research_lab",
+        pulse_drive: "module_names.pulse_drive",
+        habitat_module: "module_names.habitat_module",
+        deep_survey_array: "module_names.deep_survey_array",
     };
     const key = nameMap[moduleType];
     return key ? t(key) : moduleType;
@@ -426,7 +431,7 @@ function ModuleUpgradeCard({
                             type={
                                 module.type === "fueltank"
                                     ? "capacity"
-                                    : module.type === "quarters"
+                                    : QUARTERS_MODULE_TYPES.includes(module.type)
                                       ? "crew"
                                       : "cargo"
                             }

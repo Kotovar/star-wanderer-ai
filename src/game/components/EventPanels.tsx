@@ -44,6 +44,7 @@ import { CrewPerkChoiceModal } from "./CrewPerkChoiceModal";
 import { RiskRewardPreview } from "./RiskRewardPreview";
 import type { TravelEventType } from "@/game/types";
 import { getActiveModule } from "@/game/modules";
+import { LAB_MODULE_TYPES } from "@/game/constants/modules";
 import { getBestByProfession, getPilotInCockpit } from "@/game/crew";
 import { getPendingCrewPerkChoice } from "@/game/crew/techPerks";
 import { RESEARCH_TREE } from "@/game/constants";
@@ -371,7 +372,7 @@ export function EventDisplay() {
         (eventType === "asteroids" &&
           getActiveModule(shipModules, "drill") !== undefined) ||
         (eventType === "anomaly" &&
-          getActiveModule(shipModules, "lab") !== undefined);
+          getActiveModule(shipModules, LAB_MODULE_TYPES) !== undefined);
       const lacksFuel =
         !overrideActive &&
         meta.cautiousFuelCost !== undefined &&

@@ -113,6 +113,14 @@ const decide = (crew, modules, overrides = {}) => {
   assert.equal(scannerOnly?.targetModuleId, 2, "scientist uses a scanner when no laboratory exists");
   assert.equal(scannerOnly?.task, "analyzing", "scanner scientist analyzes by default");
 
+  const surveyOnlyModules = [
+    shipModule(1, "cockpit", 0, 0),
+    shipModule(2, "deep_survey_array", 1, 0),
+  ];
+  const surveyOnly = decide([crewMember(1, "scientist", 1)], surveyOnlyModules).get(1);
+  assert.equal(surveyOnly?.targetModuleId, 2, "scientist uses a deep survey array as a scanner");
+  assert.equal(surveyOnly?.task, "analyzing", "deep survey array supports analyzing");
+
   const modules = [
     shipModule(1, "cockpit", 0, 0),
     shipModule(2, "lab", 1, 0),
@@ -536,8 +544,8 @@ const decide = (crew, modules, overrides = {}) => {
   assert.equal(decisions.get(3)?.task, null, "extra scientist rests without a task");
   assert.match(
     taskModuleRequirementsSource,
-    /analyzing:\s*\["scanner"\]/,
-    "analyzing requires a scanner",
+    /analyzing:\s*SCANNER_MODULE_TYPES/,
+    "analyzing requires a scanner capability",
   );
 }
 

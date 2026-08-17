@@ -4,48 +4,7 @@ import type { GameStore, SetState, Module, CargoItem } from "@/game/types";
 import { playSound } from "@/sounds";
 import { createModuleFromShopItem } from "@/game/modules/createModuleFromShopItem";
 import { applyTechBonusesToNewModule } from "@/game/slices/research/helpers/researchHelpers";
-
-/**
- * Результат проверки позиции
- */
-interface PositionCheck {
-    /** Позиция занята */
-    isOccupied: boolean;
-    /** Модуль, занимающий позицию (если есть) */
-    occupyingModule?: Module;
-}
-
-/**
- * Проверяет, занята ли позиция другим модулем
- * @param state - Текущее состояние игры
- * @param x - Координата X
- * @param y - Координата Y
- * @param width - Ширина модуля
- * @param height - Высота модуля
- * @returns Результат проверки
- */
-const checkPositionOccupied = (
-    state: GameStore,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-): PositionCheck => {
-    const occupyingModule = state.ship.modules.find(
-        (m) =>
-            !m.disabled &&
-            m.health > 0 &&
-            x < m.x + (m.width || 2) &&
-            x + width > m.x &&
-            y < m.y + (m.height || 2) &&
-            y + height > m.y,
-    );
-
-    return {
-        isOccupied: !!occupyingModule,
-        occupyingModule,
-    };
-};
+import { canPlaceModule } from "@/game/slices/ship/helpers/canPlaceModule";
 
 /**
  * Создаёт модуль из грузового элемента
@@ -109,43 +68,28 @@ export const installModuleFromCargo = (
         return;
     }
 
-    const shopItem = cargoItem.module;
-
-    // Проверка: позиция свободна
-    const { isOccupied, occupyingModule } = checkPositionOccupied(
-        state,
-        x,
-        y,
-        shopItem.width ?? 2,
-        shopItem.height ?? 2,
-    );
-
-    if (isOccupied) {
-        get().addLog( i18nStore.t("game_logs.installModuleFromCargo_2", { name: occupyingModule?.name ?? "" }),
-            "error",
-        );
-        return;
-    }
-
     // Создание модуля (с одноразовыми бонусами изученных технологий)
     const newModule = applyTechBonuses(
         createModuleFromCargo(cargoItem, x, y, getExtraWeaponSlots(state)),
         state,
     );
 
-    // Установка модуля
-    if (newModule) {
-        set((s) => ({
-            ship: {
-                ...s.ship,
-                cargo: s.ship.cargo.filter((_, idx) => idx !== cargoIndex),
-                modules: [...s.ship.modules, newModule],
-            },
-        }));
-        get().addLog( i18nStore.t("game_logs.installModuleFromCargo_3", { item: cargoItem.module?.name || cargoItem.item, x, y }),
-            "info",
-        );
-        playSound("world_install");
-        get().updateShipStats();
+    if (!newModule || !canPlaceModule(newModule, x, y, state)) {
+        get().addLog(i18nStore.t("game_logs.installModuleFromCargo_4"), "error");
+        return;
     }
+
+    // Установка модуля
+    set((s) => ({
+        ship: {
+            ...s.ship,
+            cargo: s.ship.cargo.filter((_, idx) => idx !== cargoIndex),
+            modules: [...s.ship.modules, newModule],
+        },
+    }));
+    get().addLog( i18nStore.t("game_logs.installModuleFromCargo_3", { item: cargoItem.module?.name || cargoItem.item, x, y }),
+        "info",
+    );
+    playSound("world_install");
+    get().updateShipStats();
 };

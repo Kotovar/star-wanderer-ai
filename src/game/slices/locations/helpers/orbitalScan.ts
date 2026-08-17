@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import { planetHasFeature } from "@/game/planets";
 import { patchLocation } from "@/game/utils/patchLocation";
+import { SCANNER_MODULE_TYPES } from "@/game/constants/modules";
 
 /**
  * Орбитальное сканирование пустой планеты сканером корабля.
@@ -18,7 +19,7 @@ export const orbitalScan = (
 
     const hasScanner = state.ship.modules.some(
         (m) =>
-            m.type === "scanner" &&
+            SCANNER_MODULE_TYPES.includes(m.type) &&
             m.health > 0 &&
             !m.disabled &&
             !m.manualDisabled,

@@ -1,6 +1,11 @@
 import type { Module, GameState } from "@/game/types";
 import { areAllModulesConnected } from "@/game/modules";
 
+type ModulePlacement = Pick<Module, "id" | "x" | "y" | "width" | "height">;
+type PlacementState = {
+    ship: Pick<GameState["ship"], "gridSize" | "modules">;
+};
+
 /**
  * Проверяет, можно ли разместить модуль на указанных координатах
  *
@@ -11,10 +16,10 @@ import { areAllModulesConnected } from "@/game/modules";
  * @returns true если размещение возможно
  */
 export const canPlaceModule = (
-    module: Module,
+    module: ModulePlacement,
     x: number,
     y: number,
-    state: GameState,
+    state: PlacementState,
 ): boolean => {
     // Check grid bounds
     if (
@@ -41,13 +46,17 @@ export const canPlaceModule = (
         }
     }
 
-    // If only one module, no need to check connectivity
-    if (state.ship.modules.length === 1) return true;
+    const isExistingModule = state.ship.modules.some((m) => m.id === module.id);
 
-    // Check connectivity with temporary module position
-    const tempModules = state.ship.modules.map((m) =>
-        m.id === module.id ? { ...m, x, y } : m,
-    );
+    // Moving the only module cannot disconnect the ship.
+    if (isExistingModule && state.ship.modules.length === 1) return true;
+
+    const positionedModule = { ...module, x, y };
+    const tempModules = isExistingModule
+        ? state.ship.modules.map((m) =>
+              m.id === module.id ? positionedModule : m,
+          )
+        : [...state.ship.modules, positionedModule];
 
     return areAllModulesConnected(tempModules);
 };

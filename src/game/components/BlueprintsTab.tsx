@@ -196,50 +196,50 @@ function ModulePreview({
         <div className="flex flex-col gap-0.5 text-[10px] mb-2">
           {shopItem.researchOutput && (
             <div className="flex justify-between gap-2">
-              <span className="text-[#555]">Наука</span>
+              <span className="text-[#555]">{t("crafting.stat_research")}</span>
               <span className="text-[#a855f7] font-bold">
-                +{shopItem.researchOutput}/ход
+                +{shopItem.researchOutput}{t("crafting.per_turn")}
               </span>
             </div>
           )}
           {shopItem.healing && (
             <div className="flex justify-between gap-2">
-              <span className="text-[#555]">Лечение</span>
+              <span className="text-[#555]">{t("crafting.stat_healing")}</span>
               <span className="text-[#00ff41] font-bold">
-                +{shopItem.healing} HP/ход
+                +{shopItem.healing} HP{t("crafting.per_turn")}
               </span>
             </div>
           )}
           {shopItem.power && (
             <div className="flex justify-between gap-2">
-              <span className="text-[#555]">Мощность</span>
+              <span className="text-[#555]">{t("crafting.stat_power")}</span>
               <span className="text-[#ffb000] font-bold">+{shopItem.power}</span>
             </div>
           )}
           {shopItem.capacity && (
             <div className="flex justify-between gap-2">
-              <span className="text-[#555]">Экипаж</span>
+              <span className="text-[#555]">{t("crafting.stat_crew")}</span>
               <span className="text-[#00d4ff] font-bold">
-                +{shopItem.capacity} мест
+                +{shopItem.capacity} {t("crafting.crew_slots")}
               </span>
             </div>
           )}
           {shopItem.scanRange && (
             <div className="flex justify-between gap-2">
-              <span className="text-[#555]">Дальность скана</span>
+              <span className="text-[#555]">{t("crafting.stat_scan")}</span>
               <span className="text-[#00d4ff] font-bold">+{shopItem.scanRange}</span>
             </div>
           )}
           {shopItem.fuelEfficiency && (
             <div className="flex justify-between gap-2">
-              <span className="text-[#555]">Экономия топлива</span>
+              <span className="text-[#555]">{t("crafting.stat_fuel")}</span>
               <span className="text-[#ffaa00] font-bold">
                 -{Math.round((1 - shopItem.fuelEfficiency / 10) * 100)}%
               </span>
             </div>
           )}
           <div className="flex justify-between gap-2">
-            <span className="text-[#555]">Прочность</span>
+            <span className="text-[#555]">{t("crafting.stat_health")}</span>
             <span className="text-[#666] font-bold">{shopItem.maxHealth} HP</span>
           </div>
         </div>

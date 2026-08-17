@@ -30,6 +30,7 @@ import {
 } from "@/game/crew";
 import { showHintOnce } from "@/game/hints/showHint";
 import { getActiveModule } from "@/game/modules";
+import { LAB_MODULE_TYPES } from "@/game/constants/modules";
 import { getAnomalyResources } from "@/game/research/utils";
 import { addTradeGood } from "@/game/slices/ship/helpers";
 import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
@@ -518,7 +519,7 @@ const applySpecialEventChoice = (
             return true;
         }
         case "anomaly": {
-            const lab = getActiveModule(getState().ship.modules, "lab");
+            const lab = getActiveModule(getState().ship.modules, LAB_MODULE_TYPES);
             if (!lab) {
                 getState().addLog( i18nStore.t("game_logs.processTravel_20"), "error");
                 return false;

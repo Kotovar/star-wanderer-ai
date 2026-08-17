@@ -1,6 +1,12 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { playSound } from "@/sounds";
-import { isModuleActive } from "@/game/modules";
+import { getActiveModule } from "@/game/modules";
+import {
+  LAB_MODULE_TYPES,
+  MEDICAL_MODULE_TYPES,
+  QUARTERS_MODULE_TYPES,
+  SCANNER_MODULE_TYPES,
+} from "@/game/constants/modules";
 import type {
   GameState,
   GameStore,
@@ -8,6 +14,7 @@ import type {
   RandomEventChoiceId,
   RandomEventType,
   SetState,
+  ModuleType,
 } from "@/game/types";
 import { grantTimedEffect } from "@/game/effects/timedEffects";
 import {
@@ -73,11 +80,8 @@ const findLivingCrew = (
 
 const findActiveModule = (
   state: RandomEventState,
-  type: GameState["ship"]["modules"][number]["type"],
-) =>
-  state.ship.modules.find(
-    (module) => module.type === type && isModuleActive(module),
-  );
+  type: ModuleType | readonly ModuleType[],
+) => getActiveModule(state.ship.modules, type);
 
 // ─── Choice availability ──────────────────────────────────────
 
@@ -120,7 +124,7 @@ export function canUseRandomEventChoice(
       return !!findActiveModule(state, "repair_bay");
     case "crew_dispute":
       if (choice === "specialist") return !!findLivingCrew(state, "pilot");
-      return !!findActiveModule(state, "quarters");
+      return !!findActiveModule(state, QUARTERS_MODULE_TYPES);
     case "biohazard":
       if (choice === "specialist") return !!findLivingCrew(state, "medic");
       return !!findActiveModule(state, "lifesupport");
@@ -133,30 +137,30 @@ export function canUseRandomEventChoice(
       return !!findLivingCrew(state, "gunner");
     case "distress_signal":
       if (choice === "specialist") return !!findLivingCrew(state, "medic");
-      return !!findActiveModule(state, "medical");
+      return !!findActiveModule(state, MEDICAL_MODULE_TYPES);
     case "trader":
       if (choice === "specialist") return !!findLivingCrew(state, "scientist");
       return !!findActiveModule(state, "cargo");
     case "derelict":
       if (choice === "specialist") return !!findLivingCrew(state, "scientist");
-      return !!findActiveModule(state, "scanner");
+      return !!findActiveModule(state, SCANNER_MODULE_TYPES);
     case "ancient_signal":
       if (choice === "specialist") {
-        const lab = findActiveModule(state, "lab");
+        const lab = findActiveModule(state, LAB_MODULE_TYPES);
         const scientist = findLivingCrew(state, "scientist");
         return !!lab && scientist?.moduleId === lab.id;
       }
-      return !!findActiveModule(state, "scanner");
+      return !!findActiveModule(state, SCANNER_MODULE_TYPES);
     case "research_breakthrough":
       if (choice === "specialist") {
-        const lab = findActiveModule(state, "lab");
+        const lab = findActiveModule(state, LAB_MODULE_TYPES);
         const scientist = findLivingCrew(state, "scientist");
         return !!lab && scientist?.moduleId === lab.id;
       }
-      return !!findActiveModule(state, "scanner");
+      return !!findActiveModule(state, SCANNER_MODULE_TYPES);
     case "artifact_resonance":
       if (choice === "specialist") return !!findLivingCrew(state, "scientist");
-      return !!findActiveModule(state, "lab");
+      return !!findActiveModule(state, LAB_MODULE_TYPES);
   }
 }
 

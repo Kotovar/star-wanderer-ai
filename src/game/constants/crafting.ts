@@ -5,6 +5,7 @@ import type {
   ModuleRecipeId,
 } from "@/game/types";
 import type { ShopItem } from "@/game/types/shops";
+import type { GasType } from "@/game/types/outposts";
 
 export const CRAFTING_RECIPES: Record<CraftingWeapon, CraftingRecipe> = {
   plasma: {
@@ -111,6 +112,15 @@ export const MODULE_RECIPES: Record<ModuleRecipeId, ModuleRecipe> = {
     credits: 850,
   },
 };
+
+export const getMissingModuleRecipeGas = (
+  recipe: ModuleRecipe,
+  gases: Partial<Record<GasType, number>> | undefined,
+) =>
+  Object.entries(recipe.gases ?? {}).find(
+    ([gasId, required]) =>
+      (gases?.[gasId as GasType] ?? 0) < (required ?? 0),
+  );
 
 // ShopItem templates for crafted hybrid modules (added to cargo on craft)
 export const HYBRID_MODULE_SHOP_ITEMS: Record<ModuleRecipeId, ShopItem> = {

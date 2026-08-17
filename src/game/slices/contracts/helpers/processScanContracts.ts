@@ -1,5 +1,6 @@
 import type { GameState, LogCategory, LogEntry } from "@/game/types";
 import { isModuleActive } from "@/game/modules/utils";
+import { SCANNER_MODULE_TYPES } from "@/game/constants/modules";
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getLocationName, getPlanetTypeName } from "@/lib/translationHelpers";
 
@@ -35,7 +36,7 @@ export const processScanContracts = (state: GameState) => {
 
     // Проверка наличия сканера
     const hasScanner = state.ship.modules.some(
-        (m) => m.type === "scanner" && isModuleActive(m),
+        (m) => SCANNER_MODULE_TYPES.includes(m.type) && isModuleActive(m),
     );
 
     if (!hasScanner) {

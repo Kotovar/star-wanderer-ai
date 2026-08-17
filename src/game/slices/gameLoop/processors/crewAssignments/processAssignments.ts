@@ -5,7 +5,11 @@ import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getStrongestRaceTechPerkValue } from "@/game/constants/techTree";
 import { hasRunModifierFlag } from "@/game/constants/launchModifiers";
-import { LAB_MODULE_TYPES } from "@/game/constants/modules";
+import {
+    LAB_MODULE_TYPES,
+    MEDICAL_MODULE_TYPES,
+    REACTOR_MODULE_TYPES,
+} from "@/game/constants/modules";
 import {
     getMergeEffectsBonus,
     calculateHealthRegen,
@@ -436,7 +440,7 @@ const processPowerAssignment = (
     get: () => GameStore,
 ): void => {
     // Проверяем что экипаж в реакторе
-    if (currentModule.type !== "reactor") {
+    if (!REACTOR_MODULE_TYPES.includes(currentModule.type)) {
         get().addLog( i18nStore.t("game_logs.processAssignments_9", { crewMember_name: getCrewDisplayName(crewMember) }),
             "warning",
         );
@@ -791,7 +795,7 @@ export const processMedicalModule = (
 
     // Находим все АКТИВНЫЕ медотсеки (включая гибридные модули с лечением)
     const medicalModules = modules.filter(
-        (m) => (m.type === "medical" || m.type === "bio_research_lab" || m.type === "habitat_module") && isModuleActive(m),
+        (m) => MEDICAL_MODULE_TYPES.includes(m.type) && isModuleActive(m),
     );
 
     if (medicalModules.length === 0) return;

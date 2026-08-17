@@ -6,6 +6,7 @@ import {
 } from "@/game/constants/launchModifiers";
 import { RESEARCH_TREE } from "@/game/constants/research";
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
+import { ENGINE_MODULE_TYPES, REACTOR_MODULE_TYPES } from "@/game/constants/modules";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import type {
   Artifact,
@@ -56,7 +57,7 @@ function applyStartingModuleLevels(
     const level = requestedLevels[module.type];
     if (level !== 2) return module;
 
-    if (module.type === "engine") {
+    if (ENGINE_MODULE_TYPES.includes(module.type)) {
       return {
         ...module,
         level,
@@ -155,7 +156,7 @@ export function buildStartingState(
   );
   if (reactorPenalty > 0) {
     modules = modules.map((m) =>
-      m.type === "reactor" && m.power !== undefined
+      REACTOR_MODULE_TYPES.includes(m.type) && m.power !== undefined
         ? { ...m, power: Math.max(1, m.power - reactorPenalty) }
         : m,
     );

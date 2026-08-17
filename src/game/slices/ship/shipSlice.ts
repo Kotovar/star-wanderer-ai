@@ -23,6 +23,7 @@ import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
 import { burnDeuterium, refuel } from "./helpers/fuel";
 import { areModulesAdjacent } from "@/game/modules/adjacency";
+import { ENGINE_MODULE_TYPES } from "@/game/constants/modules";
 
 /**
  * Расширенный интерфейс ShipSlice с геттерами
@@ -259,7 +260,7 @@ export const createShipSlice = (
 
     areEnginesFunctional: () => {
         const state = get();
-        return areModulesFunctional(state, "engine");
+        return areModulesFunctional(state, ENGINE_MODULE_TYPES);
     },
 
     areFuelTanksFunctional: () => {

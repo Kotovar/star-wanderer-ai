@@ -12,7 +12,7 @@ import type { GameState, ModuleType } from "@/game/types";
  */
 export const areModulesFunctional = (
     state: GameState,
-    moduleType: ModuleType,
+    moduleType: ModuleType | readonly ModuleType[],
 ) => {
     const modules = getActiveModules(state.ship.modules, moduleType);
     return modules.length > 0;

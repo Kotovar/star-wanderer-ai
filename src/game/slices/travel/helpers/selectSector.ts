@@ -8,6 +8,7 @@ import {
     PILOT_EXP_PER_TIER,
 } from "@/game/constants/experience";
 import { getActiveModule, getActiveModules } from "@/game/modules";
+import { ENGINE_MODULE_TYPES } from "@/game/constants/modules";
 import { getBestByProfession, getPilotInCockpit } from "@/game/crew";
 import { playSound } from "@/sounds";
 import {
@@ -112,7 +113,7 @@ const checkPropulsionSystems = (get: () => GameStore): boolean => {
  * @returns Уровень двигателя
  */
 const getEngineLevel = (state: GameState): number => {
-    const engines = getActiveModules(state.ship.modules, "engine");
+    const engines = getActiveModules(state.ship.modules, ENGINE_MODULE_TYPES);
     return engines.length > 0
         ? Math.max(...engines.map((e: { level?: number }) => e.level ?? 1))
         : 1;
@@ -161,7 +162,7 @@ const checkTierAccess = (
 
     // Проверка для Тир 4 - победа
     if (sector.tier === 4) {
-        const engines = getActiveModules(state.ship.modules, "engine");
+        const engines = getActiveModules(state.ship.modules, ENGINE_MODULE_TYPES);
         const hasTier4Engine = engines.some(
             (e: { level?: number }) => (e.level ?? 1) >= 4,
         );

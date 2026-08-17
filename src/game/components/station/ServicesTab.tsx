@@ -6,8 +6,11 @@ import { useTranslation } from "@/lib/useTranslation";
 import { RESEARCH_RESOURCES } from "@/game/constants/research/resources";
 import type { ResearchResourceType } from "@/game/types/research";
 import { MODULES_BY_LEVEL } from "@/game/components/station/station-data";
-import { MODULES_FROM_BOSSES } from "@/game/constants/modules";
-import type { ModuleType, Module, WeaponType } from "@/game/types";
+import {
+    ESSENTIAL_MODULE_TYPE_GROUPS,
+    MODULES_FROM_BOSSES,
+} from "@/game/constants/modules";
+import type { CargoItem, ModuleType, Module, WeaponType } from "@/game/types";
 import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { WEAPON_SCRAP_VALUES } from "@/game/slices/services/helpers/removeWeapon";
 import { SectionPanel } from "../SectionPanel";
@@ -31,6 +34,8 @@ import {
     NEBULA_FRONT_STABILIZER_COST,
     type NebulaFrontProgress,
 } from "@/game/crises/nebulaFront";
+import { canPlaceModule } from "@/game/slices/ship/helpers/canPlaceModule";
+import { isModuleActive } from "@/game/modules/utils";
 
 const AUGMENTATION_RARITY_COLORS: Record<AugmentationRarity, string> = {
     common: "text-[#8a8a8a]",
@@ -110,20 +115,7 @@ interface ServicesTabProps {
     credits: number;
     ship: {
         modules: Module[];
-        cargo: Array<{
-            item: string;
-            quantity: number;
-            isModule?: boolean;
-            isCraftedWeapon?: boolean;
-            weaponType?: WeaponType;
-            module?: {
-                name?: string;
-                moduleType: string;
-                level?: number;
-                width?: number;
-                height?: number;
-            };
-        }>;
+        cargo: CargoItem[];
         gridSize: number;
     };
     crew: Array<{
@@ -847,33 +839,21 @@ function ScrapModuleSection({
     onScrap: (moduleId: number) => void;
 }) {
     const { t } = useTranslation();
-    // Essential modules that must have at least 1
-    const essentialTypes: ModuleType[] = [
-        "cockpit",
-        "reactor",
-        "fueltank",
-        "engine",
-        "lifesupport",
-    ];
-
-    // Count enabled modules by type
-    const moduleCounts: Record<string, number> = {};
-    ship.modules.forEach((m) => {
-        if (!(m.disabled ?? false) && !(m.manualDisabled ?? false)) {
-            moduleCounts[m.type] = (moduleCounts[m.type] || 0) + 1;
-        }
-    });
-
     // Get modules that can be scrapped (not the last essential one, and no crew)
     const scrappableModules = ship.modules.filter((m) => {
-        if (m.disabled ?? false) return false;
-        if (m.manualDisabled ?? false) return false;
-        if (!essentialTypes.includes(m.type)) return true;
-        if ((moduleCounts[m.type] || 0) <= 1) return false;
-        // Check if any crew member is in this module
-        const hasCrew = crew.some((c) => c.moduleId === m.id);
-        if (hasCrew) return false;
-        return true;
+        if (m.disabled || m.manualDisabled || crew.some((c) => c.moduleId === m.id)) {
+            return false;
+        }
+
+        return !ESSENTIAL_MODULE_TYPE_GROUPS.some(
+            (moduleTypes) =>
+                moduleTypes.includes(m.type) &&
+                ship.modules.filter(
+                    (candidate) =>
+                        moduleTypes.includes(candidate.type) &&
+                        isModuleActive(candidate),
+                ).length <= 1,
+        );
     });
 
     if (scrappableModules.length === 0) return null;
@@ -929,30 +909,24 @@ function InstallModuleSection({
 
     // Find a valid position for a module on the ship grid
     const findValidPosition = (
-        width: number,
-        height: number,
+        module: CargoItem["module"],
     ): { x: number; y: number } | null => {
+        if (!module) return null;
+
         const gridSize = ship.gridSize || 5;
+        const width = module.width ?? 2;
+        const height = module.height ?? 2;
+        const placementModule = {
+            id: Number.MIN_SAFE_INTEGER,
+            x: 0,
+            y: 0,
+            width,
+            height,
+        };
 
         for (let y = 0; y < gridSize; y++) {
             for (let x = 0; x < gridSize; x++) {
-                // Check if module fits within grid bounds
-                if (x + width > gridSize || y + height > gridSize) continue;
-
-                // Check if position is occupied by existing module
-                const isOccupied = ship.modules.some((m) => {
-                    if (m.disabled || m.manualDisabled) return false;
-                    const mWidth = m.width || 2;
-                    const mHeight = m.height || 2;
-                    return (
-                        x < m.x + mWidth &&
-                        x + width > m.x &&
-                        y < m.y + mHeight &&
-                        y + height > m.y
-                    );
-                });
-
-                if (!isOccupied) {
+                if (canPlaceModule(placementModule, x, y, { ship })) {
                     return { x, y };
                 }
             }
@@ -973,8 +947,10 @@ function InstallModuleSection({
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                     {moduleCargo.map((item, idx) => {
                         const cargoIndex = ship.cargo.indexOf(item);
-                        const validPosition = findValidPosition(2, 2);
+                        const validPosition = findValidPosition(item.module);
                         const canInstall = validPosition !== null;
+                        const width = item.module?.width ?? 2;
+                        const height = item.module?.height ?? 2;
 
                         return (
                             <div
@@ -997,7 +973,7 @@ function InstallModuleSection({
                                         {item.module?.level ?? 4})
                                     </div>
                                     <div className="text-[#888]">
-                                        {t("services.size_label")} 2x2 |{" "}
+                                        {t("services.size_label")} {width}x{height} |{" "}
                                         {validPosition
                                             ? `${t("services.position_label")} (${validPosition.x}, ${validPosition.y})`
                                             : t("services.no_space")}

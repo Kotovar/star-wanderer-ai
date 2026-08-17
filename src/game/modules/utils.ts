@@ -32,8 +32,11 @@ export const isModuleCritical = (module: Module): boolean =>
  */
 export const getActiveModule = <T extends ModuleType>(
     modules: Module[],
-    type: T,
-) => modules.find((module) => module.type === type && isModuleActive(module));
+    type: T | readonly ModuleType[],
+) => modules.find((module) =>
+    (Array.isArray(type) ? type : [type]).includes(module.type) &&
+    isModuleActive(module),
+);
 
 /**
  * Фильтрует активные модули указанного типа
@@ -44,8 +47,11 @@ export const getActiveModule = <T extends ModuleType>(
  */
 export const getActiveModules = <T extends ModuleType>(
     modules: Module[],
-    type: T,
-) => modules.filter((m) => m.type === type && isModuleActive(m));
+    type: T | readonly ModuleType[],
+) => modules.filter((m) =>
+    (Array.isArray(type) ? type : [type]).includes(m.type) &&
+    isModuleActive(m),
+);
 
 /**
  * Фильтрует модули указанного типа

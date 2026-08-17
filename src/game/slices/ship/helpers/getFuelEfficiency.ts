@@ -1,4 +1,5 @@
 import { initialModules } from "@/game/modules";
+import { ENGINE_MODULE_TYPES } from "@/game/constants/modules";
 import type { GameState } from "@/game/types/game";
 import { isModuleFunctional } from "@/game/slices/ship/utils";
 
@@ -15,7 +16,7 @@ const fuelEfficiencyDefault =
  */
 export const getFuelEfficiency = (state: GameState) => {
     const engines = state.ship.modules.filter(
-        (m) => (m.type === "engine" || m.type === "pulse_drive") && isModuleFunctional(m),
+        (m) => ENGINE_MODULE_TYPES.includes(m.type) && isModuleFunctional(m),
     );
     if (engines.length === 0) return 20;
     // Используем лучшую (наименьшую) эффективность топлива

@@ -11,6 +11,7 @@ import type { TravelCost } from "@/game/slices/travel/helpers/calculateFuelCost"
 import { getSectorRule } from "./sectorRules";
 import { findActiveArtifact } from "../artifacts";
 import { ARTIFACT_TYPES } from "../constants";
+import { ENGINE_MODULE_TYPES, SCANNER_MODULE_TYPES } from "../constants/modules";
 
 type TierDetails = {
     ring: string;
@@ -60,7 +61,7 @@ const TIER_COLORS: Record<GalaxyTierAll, TierDetails> = {
 function getEngineLevel(modules: Module[]): number {
     const engines = modules.filter(
         (m) =>
-            m.type === "engine" &&
+            ENGINE_MODULE_TYPES.includes(m.type) &&
             !m.disabled &&
             !m.manualDisabled &&
             m.health > 0,
@@ -73,7 +74,7 @@ function getEngineLevel(modules: Module[]): number {
 function getScannerLevel(modules: Module[]): number {
     const scanners = modules.filter(
         (m) =>
-            m.type === "scanner" &&
+            SCANNER_MODULE_TYPES.includes(m.type) &&
             !m.disabled &&
             !m.manualDisabled &&
             m.health > 0,

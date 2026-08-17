@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useGameStore } from "@/game/store";
 import { PLANET_POINT_OF_INTERESTS } from "@/game/constants/planets";
 import { RESEARCH_RESOURCES } from "@/game/constants";
+import { SCANNER_MODULE_TYPES } from "@/game/constants/modules";
 import { getMaxExtraScoutAttempts } from "@/game/constants/augmentations";
 import { Button } from "@/components/ui/button";
 import { PlanetExpeditionSetup } from "./PlanetExpeditionSetup";
@@ -255,7 +256,7 @@ export function EmptyPlanetPanel() {
         (!!currentLocation.orbitalScanned && !ionosphereBlocked);
     const hasWorkingScanner = ship.modules.some(
         (m) =>
-            m.type === "scanner" &&
+            SCANNER_MODULE_TYPES.includes(m.type) &&
             m.health > 0 &&
             !m.disabled &&
             !m.manualDisabled,

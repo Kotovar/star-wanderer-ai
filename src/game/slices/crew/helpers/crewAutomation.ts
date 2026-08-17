@@ -8,6 +8,11 @@ import type {
   EmergencyFuelTarget,
 } from "../../../types/crew";
 import type { Module, ModuleType } from "../../../types/modules";
+import {
+  LAB_MODULE_TYPES,
+  REACTOR_MODULE_TYPES,
+  SCANNER_MODULE_TYPES,
+} from "../../../constants/modules.ts";
 
 export type { CrewAutomationMemory, CrewAutomationMemoryEntry, CrewAutomationMode, CrewAutomationTask };
 
@@ -71,12 +76,6 @@ const REST_MODULE_TYPES = new Set<ModuleType>([
   "habitat_module",
   "medical",
   "bio_research_lab",
-]);
-
-const LAB_MODULE_TYPES = new Set<ModuleType>([
-  "lab",
-  "bio_research_lab",
-  "deep_survey_array",
 ]);
 
 const isActive = (module: Module) =>
@@ -468,8 +467,8 @@ export const planCrewAutomation = ({
     ),
   ).forEach(assign);
 
-  const labs = activeModules.filter((module) => LAB_MODULE_TYPES.has(module.type));
-  const scannerTargets = activeModules.filter((module) => module.type === "scanner");
+  const labs = activeModules.filter((module) => LAB_MODULE_TYPES.includes(module.type));
+  const scannerTargets = activeModules.filter((module) => SCANNER_MODULE_TYPES.includes(module.type));
   if (mode === "civilian") {
     const scientists = unassigned("scientist");
     const initialScannerCandidates = candidatesFor(
@@ -536,7 +535,7 @@ export const planCrewAutomation = ({
     ).forEach(assign);
   }
 
-  const reactorTargets = activeModules.filter((module) => module.type === "reactor");
+  const reactorTargets = activeModules.filter((module) => REACTOR_MODULE_TYPES.includes(module.type));
   if (mode === "civilian") {
     selectUniqueCandidates(
       candidatesFor(unassigned("engineer"), reactorTargets, "reactor_overload", PRIORITY.work),
@@ -593,9 +592,9 @@ export const planCrewAutomation = ({
         if (module.type === "cockpit") return 3;
         return 1;
       }
-      if (module.type === "reactor") return 7;
-      if (LAB_MODULE_TYPES.has(module.type)) return 6;
-      if (module.type === "scanner" || module.type === "deep_survey_array") return 5;
+      if (REACTOR_MODULE_TYPES.includes(module.type)) return 7;
+      if (LAB_MODULE_TYPES.includes(module.type)) return 6;
+      if (SCANNER_MODULE_TYPES.includes(module.type)) return 5;
       if (MEDICAL_MODULE_TYPES.has(module.type)) return 4;
       if (module.type === "weaponbay") return 3;
       return 1;

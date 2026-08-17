@@ -4,16 +4,17 @@ import { useState } from "react";
 import { useGameStore } from "@/game/store";
 import {
   CRAFTING_RECIPES,
+  getMissingModuleRecipeGas,
   HYBRID_MODULE_SHOP_ITEMS,
   MODULE_RECIPES,
 } from "@/game/constants/crafting";
-import { TRADE_GOODS } from "@/game/constants/goods";
 import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import {
   getModuleRecipeName,
   getRecipeDescription,
+  getTradeGoodName,
   getWeaponTypeName,
 } from "@/lib/translationHelpers";
 
@@ -22,6 +23,7 @@ export function CraftingTab() {
   const research = useGameStore((s) => s.research);
   const credits = useGameStore((s) => s.credits);
   const tradeGoods = useGameStore((s) => s.ship.tradeGoods);
+  const gases = useGameStore((s) => s.gases);
   const moduleRecipes = useGameStore((s) => s.moduleRecipes);
   const craftWeapon = useGameStore((s) => s.craftWeapon);
   const craftModule = useGameStore((s) => s.craftModule);
@@ -303,7 +305,8 @@ export function CraftingTab() {
                   return available >= (required ?? 0);
                 },
               );
-              const canCraft = hasEnoughCredits && goodsMet;
+              const gasesMet = !getMissingModuleRecipeGas(recipe, gases);
+              const canCraft = hasEnoughCredits && goodsMet && gasesMet;
 
               return (
                 <div
@@ -341,27 +344,27 @@ export function CraftingTab() {
                             {shopItem.researchOutput && (
                               <div>
                                 <span className="text-[#555]">
-                                  Наука{" "}
+                                  {t("crafting.stat_research")} {" "}
                                 </span>
                                 <span className="text-[#a855f7] font-bold">
-                                  +{shopItem.researchOutput}/ход
+                                  +{shopItem.researchOutput}{t("crafting.per_turn")}
                                 </span>
                               </div>
                             )}
                             {shopItem.healing && (
                               <div>
                                 <span className="text-[#555]">
-                                  Лечение{" "}
+                                  {t("crafting.stat_healing")} {" "}
                                 </span>
                                 <span className="text-[#00ff41] font-bold">
-                                  +{shopItem.healing} HP/ход
+                                  +{shopItem.healing} HP{t("crafting.per_turn")}
                                 </span>
                               </div>
                             )}
                             {shopItem.power && (
                               <div>
                                 <span className="text-[#555]">
-                                  Мощность{" "}
+                                  {t("crafting.stat_power")} {" "}
                                 </span>
                                 <span className="text-[#ffb000] font-bold">
                                   +{shopItem.power}
@@ -371,17 +374,17 @@ export function CraftingTab() {
                             {shopItem.capacity && (
                               <div>
                                 <span className="text-[#555]">
-                                  Экипаж{" "}
+                                  {t("crafting.stat_crew")} {" "}
                                 </span>
                                 <span className="text-[#00d4ff] font-bold">
-                                  +{shopItem.capacity} мест
+                                  +{shopItem.capacity} {t("crafting.crew_slots")}
                                 </span>
                               </div>
                             )}
                             {shopItem.scanRange && (
                               <div>
                                 <span className="text-[#555]">
-                                  Скан{" "}
+                                  {t("crafting.stat_scan")} {" "}
                                 </span>
                                 <span className="text-[#00d4ff] font-bold">
                                   +{shopItem.scanRange}
@@ -391,7 +394,7 @@ export function CraftingTab() {
                             {shopItem.fuelEfficiency && (
                               <div>
                                 <span className="text-[#555]">
-                                  Топливо{" "}
+                                  {t("crafting.stat_fuel")} {" "}
                                 </span>
                                 <span className="text-[#ffaa00] font-bold">
                                   -{Math.round((1 - shopItem.fuelEfficiency / 10) * 100)}%
@@ -400,7 +403,7 @@ export function CraftingTab() {
                             )}
                             <div>
                               <span className="text-[#555]">
-                                HP{" "}
+                                {t("crafting.stat_health")} {" "}
                               </span>
                               <span className="text-[#666] font-bold">
                                 {shopItem.maxHealth}
@@ -431,10 +434,7 @@ export function CraftingTab() {
                           const enough =
                             available >=
                             (required ?? 0);
-                          const goodName =
-                            TRADE_GOODS[
-                              goodId as keyof typeof TRADE_GOODS
-                            ]?.name ?? goodId;
+                          const goodName = getTradeGoodName(goodId, t, goodId);
                           return (
                             <span
                               key={goodId}
@@ -450,6 +450,26 @@ export function CraftingTab() {
                             </span>
                           );
                         })}
+                        {Object.entries(recipe.gases ?? {}).map(
+                          ([gasId, required]) => {
+                            const available =
+                              gases[gasId as keyof typeof gases] ?? 0;
+                            const enough = available >= (required ?? 0);
+                            return (
+                              <span
+                                key={gasId}
+                                className={
+                                  enough
+                                    ? "text-[#a855f7]"
+                                    : "text-red-400"
+                                }
+                              >
+                                {t(`gases.${gasId}.name`)}: {available}/
+                                {required}
+                              </span>
+                            );
+                          },
+                        )}
                       </div>
                     </div>
                     <Button
