@@ -33,10 +33,25 @@ export const createReputationSlice = (
             amount,
         );
         const excludedRippleRaceIds = new Set(options?.excludeRippleRaceIds);
-        const affectedRaces = result.affectedRaces.filter(
-            ({ raceId: affectedRaceId }) =>
-                !excludedRippleRaceIds.has(affectedRaceId),
-        );
+        const knownRaceIds = new Set(currentState.knownRaces);
+        const affectedRaces = result.affectedRaces
+            .filter(
+                ({ raceId: affectedRaceId }) =>
+                    knownRaceIds.has(affectedRaceId) &&
+                    !excludedRippleRaceIds.has(affectedRaceId),
+            )
+            .map(({ raceId: affectedRaceId, change }) => {
+                const currentRep = getRaceReputation(
+                    currentState.raceReputation,
+                    affectedRaceId,
+                );
+                const nextRep = Math.max(
+                    -100,
+                    Math.min(100, currentRep + change),
+                );
+                return { raceId: affectedRaceId, change: nextRep - currentRep };
+            })
+            .filter(({ change }) => change !== 0);
 
         set((state) => {
             // Обновляем основную расу
@@ -56,21 +71,22 @@ export const createReputationSlice = (
             return state;
         });
 
-        // Логируем изменение
-        if (amount !== 0) {
-            const sign = amount > 0 ? "+" : "";
+        // Логируем фактически применённое изменение
+        const appliedAmount = result.newValue - result.oldValue;
+        if (appliedAmount !== 0) {
+            const sign = appliedAmount > 0 ? "+" : "";
             const raceName = i18nStore.t(`races.${raceId}.plural`);
             const logType: "info" | "warning" | "error" =
-                amount > 0 ? "info" : "warning";
+                appliedAmount > 0 ? "info" : "warning";
 
             if (result.levelChanged) {
                 const oldLevelName = getReputationLevelName(result.oldLevel);
                 const newLevelName = getReputationLevelName(result.newLevel);
-                get().addLog( i18nStore.t("game_logs.createReputationSlice_1", { raceName, sign, amount, oldLevelName, newLevelName }),
+                get().addLog( i18nStore.t("game_logs.createReputationSlice_1", { raceName, sign, amount: appliedAmount, oldLevelName, newLevelName }),
                     logType,
                 );
             } else {
-                get().addLog( i18nStore.t("game_logs.createReputationSlice_2", { raceName, sign, amount }),
+                get().addLog( i18nStore.t("game_logs.createReputationSlice_2", { raceName, sign, amount: appliedAmount }),
                     logType,
                 );
             }
@@ -80,9 +96,9 @@ export const createReputationSlice = (
                 raceId: affectedRaceId,
                 change,
             } of affectedRaces) {
-                const affectedRaceName =
-                    affectedRaceId.charAt(0).toUpperCase() +
-                    affectedRaceId.slice(1);
+                const affectedRaceName = i18nStore.t(
+                    `races.${affectedRaceId}.plural`,
+                );
                 const changeSign = change > 0 ? "+" : "";
                 get().addLog(
                     `${affectedRaceName}: ${changeSign}${Math.round(change)}`,

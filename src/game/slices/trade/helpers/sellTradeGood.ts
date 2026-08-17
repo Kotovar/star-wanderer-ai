@@ -58,6 +58,17 @@ const validateSellTradeGood = (
     // Применяем модификатор репутации если есть доминирующая раса
     const raceId = state.currentLocation?.dominantRace;
     const buyPrice = crisisPrices.buy;
+    const maxSellPrice =
+        raceId && !isPirate
+            ? applyReputationPriceModifier(
+                  state.raceReputation,
+                  raceId,
+                  buyPrice,
+                  "buy",
+                  pricePer5,
+                  quantity,
+              ) - 1
+            : undefined;
     let price: number;
     if (raceId && !isPirate) {
         price = applyReputationPriceModifier(
@@ -104,6 +115,9 @@ const validateSellTradeGood = (
     }, 0);
     if (traderBonus > 0) {
         price = Math.floor(price * (1 + traderBonus));
+    }
+    if (maxSellPrice !== undefined) {
+        price = Math.min(price, Math.max(0, maxSellPrice));
     }
 
     return { canSell: true, price: Math.floor(price), greedyCrewCount };

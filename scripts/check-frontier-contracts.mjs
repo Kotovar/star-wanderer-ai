@@ -265,7 +265,11 @@ assert.ok(friendlyBounty, "friendly bounty fixture must generate a bounty");
 assert.equal(friendlyBounty.reward, Math.floor(normalBounty.reward * 1.25));
 assert.equal(friendlyBounty.bountyTier, "friendly");
 assert.equal(friendlyBounty.reputationReward, 4);
-assert.deepEqual(getContractReputationImpact(friendlyBounty), [
+assert.deepEqual(getContractReputationImpact(
+  friendlyBounty,
+  { human: 0, synthetic: 0, xenosymbiont: 0, krylorian: 0, voidborn: 0, crystalline: 0 },
+  ["human", "synthetic", "crystalline"],
+), [
   { raceId: "human", change: 4 },
   { raceId: "synthetic", change: -1 },
   { raceId: "crystalline", change: 1 },

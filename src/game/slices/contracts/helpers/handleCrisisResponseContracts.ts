@@ -2,17 +2,12 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
 import { getReputationChanges } from "@/game/contracts/completionRewards";
-import type { GameState, GameStore, Location, RaceId } from "@/game/types";
+import { getContractReputationChangeRequests } from "@/game/reputation/utils";
+import type { GameState, GameStore, Location } from "@/game/types";
 
 type SetState = {
     (partial: Partial<GameState> | ((state: GameState) => Partial<GameState>)): void;
 };
-
-/** Репутация расе-заказчику за снятый кризис */
-const SOURCE_REPUTATION = 4;
-
-/** Репутация всем прочим известным расам — помощь замечают все */
-const BYSTANDER_REPUTATION = 2;
 
 /**
  * Завершает контракты отклика на кризис при возврате на планету-заказчика.
@@ -71,17 +66,12 @@ export const handleCrisisResponseContracts = (
         );
 
         const reputationBefore = { ...get().raceReputation };
-        if (c.sourceDominantRace) {
-            get().changeReputation(c.sourceDominantRace, SOURCE_REPUTATION);
+        for (const { raceId, amount } of getContractReputationChangeRequests(
+            c,
+            get().knownRaces,
+        )) {
+            get().changeReputation(raceId, amount);
         }
-        // Помощь в кризисе видит вся галактика, а не только заказчик
-        get()
-            .knownRaces.filter(
-                (raceId: RaceId) => raceId !== c.sourceDominantRace,
-            )
-            .forEach((raceId: RaceId) => {
-                get().changeReputation(raceId, BYSTANDER_REPUTATION);
-            });
 
         get().showContractCompletion({
             contract: c,

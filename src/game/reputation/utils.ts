@@ -8,7 +8,7 @@ import { calculateReputationRippleEffects } from "./ripple";
 /**
  * Ограничение репутации в диапазоне [-100, 100]
  */
-function clampReputation(value: number): number {
+export function clampReputation(value: number): number {
     return Math.max(-100, Math.min(100, value));
 }
 
@@ -52,8 +52,11 @@ export function changeReputation(
     const oldLevel = getReputationLevel(oldValue);
     const newValue = clampReputation(oldValue + amount);
 
-    // Получаем список затронутых рас (без мутации)
-    const affectedRaces = getReputationRippleEffects(raceId, amount);
+    // Рябь строится только от реально применённого изменения после лимита.
+    const affectedRaces = getReputationRippleEffects(
+        raceId,
+        newValue - oldValue,
+    );
 
     const newLevel = getReputationLevel(newValue);
     const levelChanged = oldLevel !== newLevel;
@@ -84,20 +87,79 @@ function getReputationRippleEffects(
     ).map(({ id, change }) => ({ raceId: id, change }));
 }
 
-export function getContractReputationImpact(
-    contract: Pick<
-        Contract,
-        "isRaceQuest" | "requiredRace" | "sourceDominantRace" | "reputationReward"
-    >,
-): Array<{ raceId: RaceId; change: number }> {
+type ReputationContract = Pick<
+    Contract,
+    | "type"
+    | "isRaceQuest"
+    | "requiredRace"
+    | "sourceDominantRace"
+    | "reputationReward"
+>;
+
+export function getContractReputationChangeRequests(
+    contract: ReputationContract,
+    knownRaces: readonly RaceId[] = [],
+): Array<{ raceId: RaceId; amount: number }> {
+    if (contract.type === "crisis_response") {
+        return [
+            ...(contract.sourceDominantRace
+                ? [{ raceId: contract.sourceDominantRace, amount: 4 }]
+                : []),
+            ...knownRaces
+                .filter((raceId) => raceId !== contract.sourceDominantRace)
+                .map((raceId) => ({ raceId, amount: 2 })),
+        ];
+    }
+
     const raceId = contract.requiredRace ?? contract.sourceDominantRace;
     if (!raceId) return [];
 
-    const amount = contract.reputationReward ?? (contract.isRaceQuest ? 10 : 2);
     return [
-        { raceId, change: amount },
-        ...getReputationRippleEffects(raceId, amount),
+        {
+            raceId,
+            amount:
+                contract.reputationReward ?? (contract.isRaceQuest ? 10 : 2),
+        },
     ];
+}
+
+export function getContractReputationImpact(
+    contract: ReputationContract,
+    raceReputation: Record<RaceId, number>,
+    knownRaces: readonly RaceId[] = [],
+): Array<{ raceId: RaceId; change: number }> {
+    const preview = { ...raceReputation };
+    const knownRaceIds = new Set(knownRaces);
+    const changes = new Map<RaceId, number>();
+
+    const applyChange = (raceId: RaceId, value: number) => {
+        const oldValue = getRaceReputation(preview, raceId);
+        const newValue = clampReputation(value);
+        if (newValue === oldValue) return;
+
+        preview[raceId] = newValue;
+        changes.set(raceId, (changes.get(raceId) ?? 0) + newValue - oldValue);
+    };
+
+    for (const { raceId, amount } of getContractReputationChangeRequests(
+        contract,
+        knownRaces,
+    )) {
+        const result = changeReputation(preview, raceId, amount);
+        applyChange(raceId, result.newValue);
+
+        for (const affected of result.affectedRaces) {
+            if (!knownRaceIds.has(affected.raceId)) continue;
+            applyChange(
+                affected.raceId,
+                getRaceReputation(preview, affected.raceId) + affected.change,
+            );
+        }
+    }
+
+    return [...changes]
+        .filter(([, change]) => change !== 0)
+        .map(([raceId, change]) => ({ raceId, change }));
 }
 
 /**

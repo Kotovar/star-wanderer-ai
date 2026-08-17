@@ -7,7 +7,6 @@ import {
     getReputationLevel,
     REPUTATION_COLORS,
     REPUTATION_ICONS,
-    REPUTATION_DESCRIPTIONS,
 } from "../types/reputation";
 import { getRaceReputation } from "../reputation/utils";
 import { BUY_MODIFIERS, SELL_MODIFIERS } from "../reputation/priceModifier";
@@ -83,7 +82,9 @@ export function ReputationPanel() {
                     const level = getReputationLevel(reputation);
                     const color = REPUTATION_COLORS[level];
                     const icon = REPUTATION_ICONS[level];
-                    const description = REPUTATION_DESCRIPTIONS[level];
+                    const description = t(`reputation.descriptions.${level}`);
+                    const raceName = t(`races.${raceId}.name`);
+                    const raceHomeworld = t(`races.${raceId}.homeworld`);
                     const expanded = expandedRaceId === raceId;
                     const bonuses = formatCrewBonuses(
                         race.crewBonuses ?? {},
@@ -115,14 +116,14 @@ export function ReputationPanel() {
                                     <RaceSprite
                                         race={raceId}
                                         size={42}
-                                        title={race.name}
+                                        title={raceName}
                                     />
                                     <div>
                                         <div
                                             className="font-bold"
                                             style={{ color: race.color }}
                                         >
-                                            {race.name}
+                                            {raceName}
                                         </div>
                                         <div
                                             className="text-xs font-bold"
@@ -218,7 +219,7 @@ export function ReputationPanel() {
                                     <div className="text-[#888]">
                                         {t("race_discovery.homeworld_label")}:{" "}
                                         <span className="text-gray-300">
-                                            {race.homeworld}
+                                            {raceHomeworld}
                                         </span>
                                     </div>
 
@@ -236,10 +237,10 @@ export function ReputationPanel() {
                                                             knownSet.has(
                                                                 relId as RaceId,
                                                             );
+                                                        const relatedRaceId =
+                                                            relId as RaceId;
                                                         const relRace =
-                                                            RACES[
-                                                                relId as RaceId
-                                                            ];
+                                                            RACES[relatedRaceId];
                                                         const relColor =
                                                             REPUTATION_COLORS[
                                                                 getReputationLevel(
@@ -257,7 +258,7 @@ export function ReputationPanel() {
                                                                 }}
                                                             >
                                                                 {relKnown
-                                                                    ? `${relRace.icon} ${relRace.name}`
+                                                                    ? `${relRace.icon} ${t(`races.${relatedRaceId}.name`)}`
                                                                     : t(
                                                                           "reputation.unknown_name",
                                                                       )}{" "}

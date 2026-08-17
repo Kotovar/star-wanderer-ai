@@ -13,6 +13,9 @@ const jiti = require("jiti")(scriptPath, {
 const { applyReputationPriceModifier } = jiti(
   "../src/game/reputation/priceModifier.ts",
 );
+const { sellTradeGood } = jiti(
+  "../src/game/slices/trade/helpers/sellTradeGood.ts",
+);
 
 const repAt = (value) => ({ human: value });
 
@@ -42,5 +45,42 @@ for (const rep of [-100, -30, 0, 30, 100]) {
 
 // Цена никогда не падает ниже 1
 assert.equal(applyReputationPriceModifier(repAt(-100), "human", 1, "sell"), 1);
+
+const traderSaleState = {
+  credits: 0,
+  activeCrisis: null,
+  crew: [
+    {
+      health: 100,
+      traits: [{ effect: { sellPriceBonus: 0.1 } }],
+    },
+  ],
+  raceReputation: repAt(100),
+  currentLocation: {
+    stationId: "allied-station",
+    dominantRace: "human",
+    stationConfig: { isPirate: false },
+  },
+  stationPrices: {
+    "allied-station": { minerals: { buy: 160, sell: 100 } },
+  },
+  ship: { tradeGoods: [{ item: "minerals", quantity: 5 }] },
+};
+const setTraderSaleState = (update) => {
+  const patch =
+    typeof update === "function" ? update(traderSaleState) : update;
+  if (patch && patch !== traderSaleState) Object.assign(traderSaleState, patch);
+};
+const getTraderSaleState = () => ({
+  ...traderSaleState,
+  addLog: () => undefined,
+  changeReputation: () => undefined,
+});
+sellTradeGood(setTraderSaleState, getTraderSaleState, "minerals", 5);
+assert.equal(
+  traderSaleState.credits,
+  127,
+  "a trader bonus must not turn an allied station's buy/sell spread into profit",
+);
 
 console.log("Price modifier checks passed");

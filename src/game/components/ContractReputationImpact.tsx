@@ -1,11 +1,18 @@
 import type { Contract } from "@/game/types";
 import { RACES } from "@/game/constants/races";
 import { getContractReputationImpact } from "@/game/reputation/utils";
+import { useGameStore } from "@/game/store";
 import { useTranslation } from "@/lib/useTranslation";
 
 export function ContractReputationImpact({ contract }: { contract: Contract }) {
   const { t } = useTranslation();
-  const impact = getContractReputationImpact(contract);
+  const raceReputation = useGameStore((s) => s.raceReputation);
+  const knownRaces = useGameStore((s) => s.knownRaces ?? []);
+  const impact = getContractReputationImpact(
+    contract,
+    raceReputation,
+    knownRaces,
+  );
 
   if (impact.length <= 1) return null;
 

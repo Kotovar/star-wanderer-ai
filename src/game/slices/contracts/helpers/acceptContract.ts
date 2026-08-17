@@ -137,7 +137,11 @@ export const acceptContract = (
         value: formatContractDescription(contract, i18nStore.t.bind(i18nStore)),
     }), "info");
 
-    const reputationImpact = getContractReputationImpact(contract);
+    const reputationImpact = getContractReputationImpact(
+        contract,
+        state.raceReputation,
+        state.knownRaces,
+    );
     if (reputationImpact.length > 1) {
         get().addLog(
             i18nStore.t("game_logs.diplomacy_consequences", {

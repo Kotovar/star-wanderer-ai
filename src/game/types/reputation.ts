@@ -40,14 +40,3 @@ export const REPUTATION_ICONS: Record<ReputationLevel, string> = {
     friendly: "😊",
     allied: "🤝",
 };
-
-/**
- * Описания уровней репутации для UI
- */
-export const REPUTATION_DESCRIPTIONS: Record<ReputationLevel, string> = {
-    hostile: "Враждебный — атакуют при встрече",
-    unfriendly: "Недружелюбный — высокие цены, нет контрактов",
-    neutral: "Нейтральный — обычные отношения",
-    friendly: "Дружелюбный — скидки, доступны контракты",
-    allied: "Союзный — максимальные скидки, все контракты",
-};

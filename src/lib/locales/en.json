@@ -1589,10 +1589,10 @@
         "reputation_text": "Relations with races affect trade, available contracts, and behavior in space.",
         "reputation_levels": "Reputation levels:",
         "reputation_hostile": "⚔️ Hostile (-100 to -51) — attack on sight, prices ×2.0",
-        "reputation_unfriendly": "😠 Unfriendly (-50 to -11) — high prices, no contracts",
-        "reputation_neutral": "😐 Neutral (-10 to 10) — normal relations",
-        "reputation_friendly": "😊 Friendly (11 to 50) — discounts, contracts available",
-        "reputation_allied": "🤝 Allied (51 to 100) — maximum discounts, all contracts",
+        "reputation_unfriendly": "😠 Unfriendly (-50 to -11) — high prices; race contracts unavailable",
+        "reputation_neutral": "😐 Neutral (-10 to 10) — normal relations; race contracts available",
+        "reputation_friendly": "😊 Friendly (11 to 50) — discounts and higher bounty rewards",
+        "reputation_allied": "🤝 Allied (51 to 100) — maximum discounts and best selling prices",
         "reputation_change": "Changing reputation:",
         "reputation_trade": "• Trade: buying/selling goods affects relations",
         "reputation_diplomacy": "• Diplomacy: improve relations at Diplomatic Station for credits",
@@ -3240,10 +3240,10 @@
         },
         "descriptions": {
             "hostile": "Hostile — attack on sight",
-            "unfriendly": "Unfriendly — high prices, no contracts",
-            "neutral": "Neutral — normal relations",
-            "friendly": "Friendly — discounts, contracts available",
-            "allied": "Allied — maximum discounts, all contracts"
+            "unfriendly": "Unfriendly — high prices; race contracts unavailable",
+            "neutral": "Neutral — normal relations; race contracts available",
+            "friendly": "Friendly — discounts and higher bounty rewards",
+            "allied": "Allied — maximum discounts and best selling prices"
         },
         "effects": {
             "price_modifier": "Trade: {{value}}",

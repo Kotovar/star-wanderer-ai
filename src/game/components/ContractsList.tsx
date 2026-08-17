@@ -129,6 +129,8 @@ export function ContractsList() {
     const frontierChainClosed = useGameStore((s) => s.frontierChainClosed);
     const frontierSubsidy = useGameStore((s) => s.frontierSubsidy);
     const galaxy = useGameStore((s) => s.galaxy);
+    const raceReputation = useGameStore((s) => s.raceReputation);
+    const knownRaces = useGameStore((s) => s.knownRaces ?? []);
     const get = useGameStore.getState;
     const addLog = useGameStore((s) => s.addLog);
     const { t } = useTranslation();
@@ -1233,7 +1235,11 @@ export function ContractsList() {
                         getStatusText(contract),
                         contract.isRaceQuest,
                     );
-                    const repImpact = getContractReputationImpact(contract);
+                    const repImpact = getContractReputationImpact(
+                        contract,
+                        raceReputation,
+                        knownRaces,
+                    );
                     const friendlyBountyReputation =
                         contract.bountyTier === "friendly"
                             ? repImpact.find(({ change }) => change > 0)?.change

@@ -4,9 +4,8 @@ import type { ReputationLevel } from "@/game/types/reputation";
 
 // Buy modifiers: hostile×2.0, unfriendly×1.4, neutral×1.0, friendly×0.9, allied×0.8
 // Sell modifiers: hostile×0.7, unfriendly×0.85, neutral×1.0, friendly×1.1, allied×1.2
-// Anti-arbitrage proof (station spread ×1.6): sell_mod × 1.6 < buy_mod at each level:
-//   hostile: 0.7×1.6=1.12 < 2.0 ✓  unfriendly: 0.85×1.6=1.36 < 1.4 ✓
-//   neutral: 1.0×1.6=1.6 > 1.0 ✓   friendly: 1.1×1.6=1.76 > 0.9 ✓  allied: 1.2×1.6=1.92 > 0.8 ✓
+// Базовая защита от арбитража учитывает встречную цену; бонусы экипажа
+// дополнительно ограничиваются в sellTradeGood реальной ценой покупки.
 export const BUY_MODIFIERS: Record<ReputationLevel, number> = {
     hostile: 2.0,
     unfriendly: 1.4,
