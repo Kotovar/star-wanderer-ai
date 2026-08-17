@@ -122,9 +122,40 @@ try {
   Math.random = originalRandom;
 }
 
+// При единственной легальной станции доступны ровно два разных дела. Повтор
+// одного случайного выбора не должен съедать слот доски.
+const onlyLegalStation = {
+  id: "only-legal-station",
+  stationId: "only-legal-station",
+  type: "station",
+  name: "Единственный узел",
+  stationConfig: { isPirate: false },
+};
+const originalUniqueRandom = Math.random;
+try {
+  Math.random = () => 0.99;
+  const uniqueContracts = generatePirateContracts(pirateStation, 2, [
+    pirateStation,
+    onlyLegalStation,
+  ]);
+  assert.deepEqual(
+    uniqueContracts.map((contract) => contract.type).sort(),
+    ["pirate_heist", "pirate_smuggling"],
+    "доска должна заполнить все доступные уникальные пиратские задания",
+  );
+} finally {
+  Math.random = originalUniqueRandom;
+}
+
 const boardStation = {
   ...pirateStation,
-  pirateContracts: [{ id: "old-offer", type: "pirate_heist" }],
+  pirateContracts: [
+    {
+      id: "old-offer",
+      type: "pirate_heist",
+      targetLocationId: "trade-station",
+    },
+  ],
   pirateLastRefreshTurn: 0,
 };
 const boardSectors = [
@@ -158,6 +189,46 @@ assert.equal(
   boardStation.pirateLastRefreshTurn,
   50,
   "обновлённая доска должна запомнить текущий ход",
+);
+
+// Цель bounty может погибнуть до очередного интервала. Такую карточку нельзя
+// оставлять на доске ещё на 49 ходов, если принять её всё равно нельзя.
+const staleBountyStation = {
+  ...pirateStation,
+  pirateContracts: [
+    {
+      id: "stale-bounty",
+      type: "pirate_bounty",
+      targetLocationId: "stale-defeated-trader",
+    },
+  ],
+  pirateLastRefreshTurn: 48,
+};
+const staleBountySectors = [
+  {
+    id: 1,
+    tier: 2,
+    locations: [
+      staleBountyStation,
+      onlyLegalStation,
+      {
+        id: "stale-defeated-trader",
+        type: "friendly_ship",
+        defeated: true,
+      },
+    ],
+  },
+];
+assert.equal(
+  refreshPirateContracts(staleBountyStation, 2, 49, staleBountySectors),
+  true,
+  "доска должна сразу обновить задачу с уничтоженной целью",
+);
+assert.ok(
+  staleBountyStation.pirateContracts.every(
+    (contract) => contract.targetLocationId !== "stale-defeated-trader",
+  ),
+  "после внеочередного обновления на доске не должно остаться погибшей цели",
 );
 
 assert.equal(
@@ -588,7 +659,11 @@ const migratedLegacyPirateJobs = loadWithMigrations(
       turn: 42,
       activeContracts: [
         { id: "old-pirate-bounty", type: "pirate_bounty" },
-        { id: "ordinary-contract", type: "delivery" },
+        {
+          id: "ordinary-contract",
+          type: "delivery",
+          targetLocationId: "ordinary-delivery-target",
+        },
       ],
       galaxy: {
         sectors: [
@@ -604,6 +679,7 @@ const migratedLegacyPirateJobs = loadWithMigrations(
                 ],
                 pirateLastRefreshTurn: 42,
               },
+              { id: "ordinary-delivery-target", type: "station" },
             ],
           },
         ],
@@ -1039,7 +1115,7 @@ const cargoJobLocation = {
     },
   ],
 };
-const makeCargoState = (capacity) => ({
+const makeCargoState = (capacity, logs = []) => ({
   currentLocation: cargoJobLocation,
   galaxy: {
     sectors: [{ id: 1, locations: [{ id: "trade-station", type: "station" }] }],
@@ -1058,7 +1134,7 @@ const makeCargoState = (capacity) => ({
       { id: 1, type: "cargo", capacity, health: 100, active: true },
     ],
   },
-  addLog: () => {},
+  addLog: (message) => logs.push(message),
 });
 
 const cargoState = makeCargoState(100);
@@ -1081,6 +1157,18 @@ assert.equal(
   cargoState.ship.tradeGoods.length,
   0,
   "подрядный груз идёт в контрактный отсек, а не в продаваемый трюм",
+);
+
+const acceptanceLogs = [];
+const acceptanceLogState = makeCargoState(100, acceptanceLogs);
+createPirateSlice(
+  (update) => applyStateUpdate(acceptanceLogState, update),
+  () => acceptanceLogState,
+).acceptPirateContract("cargo-job");
+assert.doesNotMatch(
+  acceptanceLogs.join("\n"),
+  /\{\{\w+\}\}/,
+  "лог принятия пиратской задачи не должен показывать неподставленные плейсхолдеры",
 );
 
 const crampedState = makeCargoState(10);

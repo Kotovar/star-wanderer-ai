@@ -8,11 +8,7 @@ import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
 import { PlanetSpecializationPanel } from "./PlanetSpecializationPanel";
 import { SectionPanel } from "./SectionPanel";
-import { DELIVERY_GOODS } from "@/game/constants/contracts";
 import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "@/game/slices/contracts/constants";
-import type { DeliveryGoods } from "@/game/types/contracts";
-import { TRADE_GOODS } from "@/game/constants/goods";
-import type { Goods } from "@/game/types/goods";
 import type { Contract, GameStore } from "@/game/types";
 import { EmptyPlanetPanel } from "./EmptyPlanetPanel";
 import { PlanetExpeditionSetup } from "./PlanetExpeditionSetup";
@@ -20,6 +16,7 @@ import { PlanetExplorationPanel } from "./PlanetExplorationPanel";
 import { getPlanetBackgroundClass } from "@/game/planets";
 import { useTranslation } from "@/lib/useTranslation";
 import {
+    getDeliveryGoodName,
     getLocationName,
     getPlanetDescription,
     getPlanetTypeName,
@@ -34,6 +31,7 @@ import {
 } from "@/game/reputation/utils";
 import { isContractTargetAvailable } from "@/game/contracts/targetAvailability";
 import {
+    formatContractDescription,
     formatResearchTechRequirement,
 } from "@/game/contracts/formatContractDescription";
 import {
@@ -108,7 +106,7 @@ function ContractDescription({
             {c.type === "delivery" && c.cargo && (
                 <>
                     {t("contracts.desc_delivery", {
-                        cargo: DELIVERY_GOODS[c.cargo as DeliveryGoods].name,
+                        cargo: getDeliveryGoodName(c.cargo, t),
                         amount: String(c.quantity ?? DELIVERY_CONTRACT_CARGO_AMOUNT),
                     })}
                     <span className="ml-1">
@@ -133,7 +131,9 @@ function ContractDescription({
             {c.type === "diplomacy" &&
                 t("contracts.desc_diplomacy", {
                     planet: getLocationName(c.targetPlanetName || "", t),
-                    type: c.targetPlanetType || "",
+                    type: c.targetPlanetType
+                        ? getPlanetTypeName(c.targetPlanetType, t)
+                        : "",
                     sector: getLocationName(c.targetSectorName || "", t),
                 })}
             {c.type === "patrol" &&
@@ -163,17 +163,21 @@ function ContractDescription({
                 ((c.requiresVisit ?? 1) > 1
                     ? t("contracts.desc_scan_multi", {
                           count: String(c.requiresVisit),
-                          planetType: c.planetType || "",
+                          planetType: c.planetType
+                              ? getPlanetTypeName(c.planetType, t)
+                              : "",
                       })
                     : t("contracts.desc_scan", {
-                          planetType: c.planetType || "",
+                          planetType: c.planetType
+                              ? getPlanetTypeName(c.planetType, t)
+                              : "",
                           sector: getLocationName(c.targetSectorName || "", t),
                       }))}
             {c.type === "supply_run" && c.cargo && (() => {
                 const cargoOwned =
                     get().ship.tradeGoods.find((g) => g.item === c.cargo)?.quantity ?? 0;
                 return t("contracts.desc_supply", {
-                    cargo: TRADE_GOODS[c.cargo as Goods]?.name || "",
+                    cargo: getTradeGoodName(c.cargo, t),
                     quantity: c.quantity || 0,
                     progress: cargoOwned,
                     destination:
@@ -246,16 +250,7 @@ function AvailableContractCard({
     t: TFn;
 }) {
     const raceInfo = c.requiredRace ? RACES[c.requiredRace] : null;
-    const rawTitle = c.desc.startsWith("contracts.")
-        ? t(c.desc, {
-              planetType: c.planetType ? getPlanetTypeName(c.planetType, t) : "",
-              sector: getLocationName(c.targetSectorName ?? "", t),
-              weapon: getWeaponTypeName(c.requiredWeaponType, t),
-              crisis: c.crisisName ? t(c.crisisName) : "",
-              cargo: getTradeGoodName(c.cargo, t),
-              quantity: c.quantity ?? 0,
-          })
-        : c.desc;
+    const rawTitle = formatContractDescription(c, t);
     const title = c.isRaceQuest ? stripLeadingEmoji(rawTitle) : rawTitle;
 
     return (
@@ -649,19 +644,8 @@ export function PlanetPanel() {
                                 >
                                     <div className="flex-1">
                                         <div className="text-ring font-bold">
-                                            {c.desc}
+                                            {formatContractDescription(c, t)}
                                         </div>
-                                        {c.cargo && (
-                                            <div className="text-[11px] mt-1 text-[#00ff41]">
-                                                📦 {t("contracts.cargo")}:{" "}
-                                                {DELIVERY_GOODS[
-                                                    c.cargo as DeliveryGoods
-                                                ]?.name} (
-                                                {c.quantity ??
-                                                    DELIVERY_CONTRACT_CARGO_AMOUNT}
-                                                т)
-                                            </div>
-                                        )}
                                         <div className="text-accent text-xs mt-1">
                                             💰 {c.reward}₢
                                         </div>

@@ -103,9 +103,10 @@ export const completeDeliveryContract = (
     const state = get();
     const contract = state.activeContracts.find((c) => c.id === contractId);
     if (!contract || contract.type !== "delivery") return;
+    if (!isDeliveryReady(state, contract)) return;
 
     if (contract.factionDelivery) {
-        if (!isDeliveryReady(state, contract) || state.pendingContractDecision) {
+        if (state.pendingContractDecision) {
             return;
         }
         set({ pendingContractDecision: { contractId } });

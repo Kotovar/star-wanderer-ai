@@ -344,6 +344,7 @@ const makeReciprocalDecisionState = () => {
     credits: 100,
     crew: [],
     raceReputation: { human: 0, crystalline: 0, xenosymbiont: 0 },
+    knownRaces: ["human", "crystalline", "xenosymbiont"],
     frontierChainClosed: false,
     frontierContractsCompleted: 0,
     addLog: () => {},
@@ -409,6 +410,17 @@ const makeSavedGame = (activeContracts, pendingContractDecision) => {
     id: "saved-target",
     type: "planet",
     name: "Saved target",
+  };
+  saved.galaxy = {
+    ...saved.galaxy,
+    sectors: saved.galaxy.sectors.map((sector, index) =>
+      index === 0
+        ? {
+            ...sector,
+            locations: [...sector.locations, saved.currentLocation],
+          }
+        : sector,
+    ),
   };
   saved.ship = {
     ...saved.ship,

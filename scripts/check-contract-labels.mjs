@@ -710,6 +710,7 @@ const FRONTIER_DELIVERY = {
   reward: 100,
   cargo: "fuel",
   quantity: 1,
+  targetLocationId: "frontier-target",
   targetSectorName: "Меридиан-1",
   targetLocationName: "Гелиос",
   targetLocationType: "planet",
@@ -733,7 +734,12 @@ setUiState({
   activeContracts: [],
   completedContractIds: [],
   raceReputation: { human: 0 },
-  galaxy: { sectors: [] },
+  galaxy: {
+    sectors: [{
+      id: 1,
+      locations: [{ id: "frontier-target", type: "station" }],
+    }],
+  },
   completedLocations: [],
   artifacts: [],
   research: { researchedTechs: [], unlockedRecipes: [] },
@@ -807,5 +813,93 @@ assert.doesNotMatch(
   /Поручение дальнего рубежа/,
   "после закрытия цепочки оставшееся предложение не должно выглядеть как следующее поручение",
 );
+
+// Старые сохранения хранят русские desc, типы планет и имена грузов. Они не
+// должны протекать на английский ни на доску планеты, ни в активные задания.
+const LEGACY_DELIVERY = {
+  id: "legacy-delivery",
+  type: "delivery",
+  desc: "📦 Доставка: Запчасти",
+  reward: 120,
+  cargo: "spares",
+  quantity: 10,
+  targetLocationId: "legacy-target-station",
+  targetLocationName: "location_names.station_01",
+  targetLocationType: "station",
+  targetSectorName: "sector_names.sector_11_1",
+};
+const LEGACY_SUPPLY = {
+  id: "legacy-supply",
+  type: "supply_run",
+  desc: "📦 Поставка: Вода",
+  reward: 90,
+  cargo: "water",
+  quantity: 5,
+  sourcePlanetName: "location_names.planet_01",
+  sourceSectorName: "sector_names.sector_11_1",
+  sourceType: "planet",
+};
+const LEGACY_SCAN = {
+  id: "legacy-scan",
+  type: "scan_planet",
+  desc: "contracts.desc_scan",
+  reward: 100,
+  planetType: "Ледяная",
+  requiresVisit: 1,
+};
+setUiState({
+  currentLocation: {
+    id: "legacy-source-planet",
+    type: "planet",
+    name: "location_names.planet_01",
+    planetType: "Ледяная",
+    dominantRace: "human",
+    contracts: [LEGACY_DELIVERY, LEGACY_SUPPLY, LEGACY_SCAN],
+  },
+  activeContracts: [],
+  completedContractIds: [],
+  credits: 0,
+  raceReputation: { human: 0 },
+  galaxy: {
+    sectors: [{
+      id: 1,
+      locations: [{ id: "legacy-target-station", type: "station" }],
+    }],
+  },
+  completedLocations: [],
+  artifacts: [],
+  research: { researchedTechs: [], unlockedRecipes: [] },
+  activeCrisis: null,
+  acceptContract: () => {},
+  completeDeliveryContract: () => {},
+  showSectorMap: () => {},
+  discoverRace: () => {},
+  knownRaces: ["human"],
+  ship: { cargo: [], tradeGoods: [] },
+  activeExpedition: null,
+  planetCooldowns: {},
+  frontierChainClosed: false,
+  frontierContractsCompleted: 0,
+  frontierSubsidy: null,
+  cancelContract: () => {},
+  turn: 5,
+  addLog: () => {},
+});
+i18nStore.changeLanguage("en");
+await new Promise((done) => setTimeout(done, 0));
+const legacyPlanetMarkup = renderToStaticMarkup(createElement(PlanetPanel));
+patchUiState({ activeContracts: [LEGACY_DELIVERY, LEGACY_SUPPLY, LEGACY_SCAN] });
+const legacyContractsMarkup = renderToStaticMarkup(createElement(ContractsList));
+assert.doesNotMatch(
+  legacyPlanetMarkup,
+  /Доставка|Поставка|Запчасти|Вода|Ледяная/,
+  "старые планетные задания не должны показывать русский текст в английской доске",
+);
+assert.doesNotMatch(
+  legacyContractsMarkup,
+  /Доставка|Поставка|Запчасти|Вода|Ледяная/,
+  "старые планетные задания не должны показывать русский текст в английском списке",
+);
+i18nStore.changeLanguage("ru");
 
 console.log("Contract label checks passed");

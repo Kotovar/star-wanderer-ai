@@ -560,6 +560,55 @@ const migrations: Record<number, Migration> = {
       currentLocation,
     };
   },
+  29: (raw) => {
+    const state = raw as Partial<GameState>;
+    const sectors = state.galaxy?.sectors;
+    const activeContracts = state.activeContracts ?? [];
+    if (!sectors || activeContracts.length === 0) {
+      return { ...state, stateVersion: 30 };
+    }
+
+    const invalidDeliveryIds = new Set(
+      activeContracts.flatMap((contract) =>
+        contract.type === "delivery" &&
+        !isContractTargetAvailable(
+          contract,
+          sectors,
+          state.completedLocations ?? [],
+          {
+            artifacts: state.artifacts ?? [],
+            researchedTechs: state.research?.researchedTechs ?? [],
+          },
+        )
+          ? [contract.id]
+          : [],
+      ),
+    );
+    if (invalidDeliveryIds.size === 0) {
+      return { ...state, stateVersion: 30 };
+    }
+
+    return {
+      ...state,
+      stateVersion: 30,
+      activeContracts: activeContracts.filter(
+        (contract) => !invalidDeliveryIds.has(contract.id),
+      ),
+      ship: state.ship
+        ? {
+            ...state.ship,
+            cargo: state.ship.cargo.filter(
+              (cargo) => !invalidDeliveryIds.has(cargo.contractId ?? ""),
+            ),
+          }
+        : state.ship,
+      pendingContractDecision: invalidDeliveryIds.has(
+        state.pendingContractDecision?.contractId ?? "",
+      )
+        ? null
+        : state.pendingContractDecision,
+    };
+  },
 };
 
 /**

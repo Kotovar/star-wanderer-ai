@@ -25,7 +25,9 @@ export function getPlanetTypeName(
 
     // Use provided t function or fallback to the translation store
     const translate = t || store.t.bind(store);
-    return translate(`locations.planet_types.${key}`);
+    const translationKey = `locations.planet_types.${key}`;
+    const translated = translate(translationKey);
+    return translated === translationKey ? planetType : translated;
 }
 
 // Helper function to get translated planet description
@@ -159,6 +161,18 @@ export function getTradeGoodName(
 ): string {
     if (!good) return fallback;
     const key = `trade.goods.${good}`;
+    const translated = i18nT(key);
+    return translated === key ? fallback || good : translated;
+}
+
+/** Название контрактного груза доставки. */
+export function getDeliveryGoodName(
+    good: string | undefined,
+    i18nT: (key: string) => string,
+    fallback = "",
+): string {
+    if (!good) return fallback;
+    const key = `delivery_goods.${good}`;
     const translated = i18nT(key);
     return translated === key ? fallback || good : translated;
 }

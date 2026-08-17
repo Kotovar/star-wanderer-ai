@@ -68,8 +68,6 @@ import {
     generateStationItems,
     generateStationCrew,
 } from "./station/station-data";
-import { DELIVERY_GOODS } from "@/game/constants";
-import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "@/game/slices/contracts/constants";
 import { RESEARCH_BOOST_EFFECT_ID } from "@/game/slices/research/methods/activateResearchBoost";
 import {
     getStationRateValue,
@@ -1515,7 +1513,7 @@ function DeliveryContracts({
 }: {
     contracts: Contract[];
     onComplete: (id: string) => void;
-    t: (key: string) => string;
+    t: (key: string, params?: Record<string, string | number>) => string;
 }) {
     const [completingId, setCompletingId] = useState<string | null>(null);
 
@@ -1547,18 +1545,7 @@ function DeliveryContracts({
                     >
                         <div className="flex-1">
                             <div className="text-ring font-bold">
-                                {c.desc}
-                            </div>
-                            <div className="text-[11px] mt-1 text-[#00ff41]">
-                                📦 Груз &quot;
-                                {c.cargo
-                                    ? (DELIVERY_GOODS[
-                                          c.cargo as keyof typeof DELIVERY_GOODS
-                                      ]?.name ?? c.cargo)
-                                    : ""}
-                                &quot; (
-                                {c.quantity ?? DELIVERY_CONTRACT_CARGO_AMOUNT}
-                                т)
+                                {formatContractDescription(c, t)}
                             </div>
                             <div className="text-accent text-xs mt-1">
                                 💰 {c.reward}₢

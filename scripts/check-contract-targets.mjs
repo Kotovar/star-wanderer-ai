@@ -58,6 +58,7 @@ const { completeBattleContracts } = await import(
 const { createContractsSlice } = await import(
   "../src/game/slices/contracts/contractsSlice.ts"
 );
+const { useGameStore } = await import("../src/game/store.ts");
 
 const legacySyntheticResearch = {
   type: "research",
@@ -104,6 +105,54 @@ assert.equal(
   syntheticQuest.timeLimit,
   undefined,
   "новый анализ данных Древних не должен получать срок",
+);
+
+// Неудачный тип задания не должен съедать единственный слот доски: в этой
+// сцене research невозможен, но scan_planet и supply_run выполнимы.
+const retrySource = {
+  id: 201,
+  name: "Retry source",
+  tier: 1,
+  locations: [
+    {
+      id: "retry-source-planet",
+      type: "planet",
+      name: "location_names.planet_01",
+      planetType: "Ледяная",
+    },
+  ],
+};
+const retryTarget = {
+  id: 202,
+  name: "Retry target",
+  tier: 1,
+  locations: [
+    {
+      id: "retry-target-planet",
+      type: "planet",
+      name: "location_names.planet_02",
+      planetType: "Лесная",
+    },
+  ],
+};
+const retryRandomValues = [0, 0.45, 0, 0, 0, 0];
+const originalRetryRandom = Math.random;
+Math.random = () => retryRandomValues.shift() ?? 0;
+const retriedContracts = generatePlanetContracts(
+  "Ледяная",
+  retrySource,
+  "retry-source-planet",
+  0,
+  [retrySource, retryTarget],
+  undefined,
+  undefined,
+  { canOfferCombat: false, allowFrontier: false },
+);
+Math.random = originalRetryRandom;
+assert.equal(
+  retriedContracts.length,
+  1,
+  "невалидный случайный тип не должен оставлять планетную доску пустой",
 );
 
 const locationTranslations = {
@@ -182,6 +231,34 @@ const defaultContext = { artifacts: [], researchedTechs: [] };
 const ok = (c, completed = [], context = defaultContext) =>
   isContractTargetAvailable(c, sectors, completed, context);
 
+const deliveryTargetSectors = [
+  {
+    id: 9,
+    locations: [
+      { id: "delivery-live", type: "friendly_ship" },
+      { id: "delivery-defeated", type: "friendly_ship", defeated: true },
+    ],
+  },
+];
+assert.ok(
+  isContractTargetAvailable(
+    { type: "delivery", targetLocationId: "delivery-live" },
+    deliveryTargetSectors,
+    [],
+    defaultContext,
+  ),
+  "доставка к живому торговцу должна оставаться доступной",
+);
+assert.ok(
+  !isContractTargetAvailable(
+    { type: "delivery", targetLocationId: "delivery-defeated" },
+    deliveryTargetSectors,
+    [],
+    defaultContext,
+  ),
+  "доставка к уничтоженному торговцу не должна приниматься",
+);
+
 const visitedPlanet = {
   id: "refresh-visited",
   type: "planet",
@@ -189,7 +266,11 @@ const visitedPlanet = {
   planetType: "Ледяная",
   visited: true,
   contracts: [
-    { id: "refresh-open", type: "delivery" },
+    {
+      id: "refresh-open",
+      type: "delivery",
+      targetLocationId: "refresh-target",
+    },
     { id: "refresh-active", type: "delivery" },
     { id: "refresh-completed", type: "delivery" },
     { id: "refresh-stale", type: "combat", sectorId: 2 },
@@ -536,8 +617,12 @@ assert.ok(
   "derelict_recovery: отсутствующая цель засчитана",
 );
 
+// Доставка требует существующей точки назначения, а не только номера сектора.
+assert.ok(
+  !ok({ type: "delivery", targetSector: 2 }),
+  "delivery без конкретной точки назначения не должен быть доступен",
+);
 // прочие типы не трогаем
-assert.ok(ok({ type: "delivery", targetSector: 2 }), "delivery не должен фильтроваться");
 assert.ok(ok({ type: "combat" }), "combat без сектора не должен фильтроваться");
 
 assert.equal(
@@ -685,8 +770,15 @@ assert.equal(
 );
 assert.equal(
   formatContractDescription(
-    { desc: "contracts.desc_scan", planetType: "Ледяная" },
-    (_key, params) => `📡 Сканирование: ${params?.planetType}`,
+    {
+      type: "scan_planet",
+      desc: "contracts.desc_scan",
+      planetType: "Ледяная",
+    },
+    (key, params) =>
+      key === "locations.planet_types.ice"
+        ? "Ледяная"
+        : `📡 Сканирование: ${params?.planetType}`,
   ),
   "📡 Сканирование: Ледяная",
   "описание контракта не передаёт параметры перевода",
@@ -1001,6 +1093,67 @@ assert.deepEqual(
   "миграция должна снять только недостижимые контракты",
 );
 
+// Старые сохранения могли содержать доставку к уже уничтоженному торговцу.
+// При миграции снимаем такое задание вместе с привязанным грузом.
+const migratedInvalidDelivery = loadWithMigrations(
+  JSON.stringify({
+    version: 29,
+    state: {
+      stateVersion: 29,
+      galaxy: {
+        sectors: [
+          {
+            id: 9,
+            locations: [
+              { id: "legacy-defeated-trader", type: "friendly_ship", defeated: true },
+              { id: "legacy-live-trader", type: "friendly_ship" },
+            ],
+          },
+        ],
+      },
+      completedLocations: [],
+      artifacts: [],
+      research: { researchedTechs: [] },
+      ship: {
+        cargo: [
+          { item: "spares", quantity: 10, contractId: "legacy-invalid-delivery" },
+          { item: "fuel", quantity: 10, contractId: "legacy-valid-delivery" },
+          { item: "ore", quantity: 1 },
+        ],
+      },
+      activeContracts: [
+        {
+          id: "legacy-invalid-delivery",
+          type: "delivery",
+          targetLocationId: "legacy-defeated-trader",
+        },
+        {
+          id: "legacy-valid-delivery",
+          type: "delivery",
+          targetLocationId: "legacy-live-trader",
+        },
+      ],
+      pendingContractDecision: { contractId: "legacy-invalid-delivery" },
+    },
+  }),
+);
+assert.ok(migratedInvalidDelivery, "сохранение с устаревшей доставкой не загрузилось");
+assert.deepEqual(
+  migratedInvalidDelivery.activeContracts.map((contract) => contract.id),
+  ["legacy-valid-delivery"],
+  "миграция должна снять доставку к уничтоженной цели",
+);
+assert.deepEqual(
+  migratedInvalidDelivery.ship.cargo.map((cargo) => cargo.contractId ?? cargo.item),
+  ["legacy-valid-delivery", "ore"],
+  "миграция должна убрать только груз снятой доставки",
+);
+assert.equal(
+  migratedInvalidDelivery.pendingContractDecision,
+  null,
+  "миграция должна закрыть решение по снятой доставке",
+);
+
 const mapObjectives = getGalaxyMapObjectives({
   sectors: [
     {
@@ -1116,5 +1269,42 @@ const friendlyBountyGet = () => ({
 completeBattleContracts(friendlyBountySet, friendlyBountyGet, 2, false);
 assert.equal(friendlyBountyState.raceReputation.human, 15, "friendly bounty must add +4 primary reputation");
 assert.equal(friendlyBountyState.raceReputation.synthetic, -1, "friendly bounty must keep the existing reputation ripple");
+
+// Кнопка показывается только у цели, но стор тоже обязан отвергать прямой
+// вызов из другого места или без выданного контрактного груза.
+useGameStore.setState({
+  credits: 0,
+  crew: [],
+  completedContractIds: [],
+  currentLocation: { id: "wrong-delivery-location", type: "planet" },
+  ship: { cargo: [], tradeGoods: [] },
+  activeContracts: [
+    {
+      id: "guarded-delivery",
+      type: "delivery",
+      desc: "contracts.name_delivery",
+      reward: 777,
+      cargo: "spares",
+      quantity: 10,
+      targetLocationId: "actual-delivery-target",
+    },
+  ],
+});
+useGameStore.getState().completeDeliveryContract("guarded-delivery");
+const guardedDeliveryState = useGameStore.getState();
+assert.equal(
+  guardedDeliveryState.credits,
+  0,
+  "доставку нельзя сдать вне точки назначения",
+);
+assert.equal(
+  guardedDeliveryState.activeContracts.length,
+  1,
+  "доставку без контрактного груза нельзя закрыть",
+);
+assert.ok(
+  !guardedDeliveryState.completedContractIds.includes("guarded-delivery"),
+  "несданная доставка не должна помечаться выполненной",
+);
 
 console.log("✅ check-contract-targets: валидация целей контрактов в порядке");

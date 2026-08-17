@@ -72,6 +72,18 @@ export const isContractTargetAvailable = (
                     (l.threat ?? 1) >= (contract.targetThreat ?? 1),
             );
         }
+        case "delivery": {
+            if (!contract.targetLocationId) return false;
+            const target = sectors
+                .flatMap((sector) => sector.locations)
+                .find((location) => location.id === contract.targetLocationId);
+            return Boolean(
+                target &&
+                    ((target.type === "planet" && !target.isEmpty) ||
+                        target.type === "station" ||
+                        (target.type === "friendly_ship" && !target.defeated)),
+            );
+        }
         case "rescue": {
             // Вход в шторм нужной силы — штормы одноразовы
             if (contract.targetLocationId) {

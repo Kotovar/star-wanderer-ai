@@ -432,7 +432,7 @@ export const generatePlanetContracts = (
                 return {
                     id: `c-${planetId}-supply-${Date.now()}-${Math.random()}`,
                     type: "supply_run",
-                    desc: `📦 Поставка: ${cargo.name}`,
+                    desc: "contracts.name_supply",
                     cargo: cargoKey,
                     quantity,
                     sourcePlanetId: planetId,
@@ -453,14 +453,13 @@ export const generatePlanetContracts = (
                 const goodsKeys = typedKeys(DELIVERY_GOODS);
                 const cargoKey =
                     goodsKeys[Math.floor(Math.random() * goodsKeys.length)];
-                const cargoName = DELIVERY_GOODS[cargoKey].name;
 
                 // Pick a specific destination: inhabited planet, station, or friendly ship
                 const validDestinations = tgtSector.locations.filter(
                     (l) =>
                         (l.type === "planet" && !l.isEmpty) ||
                         l.type === "station" ||
-                        l.type === "friendly_ship",
+                        (l.type === "friendly_ship" && !l.defeated),
                 );
 
                 if (validDestinations.length === 0) return null;
@@ -499,7 +498,7 @@ export const generatePlanetContracts = (
                 return {
                     id: `c-${planetId}-${Date.now()}-${Math.random()}`,
                     type: "delivery",
-                    desc: `📦 Доставка: ${cargoName}`,
+                    desc: "contracts.name_delivery",
                     cargo: cargoKey, // Store the key, not the name
                     quantity,
                     targetSector: tgtSector.id,
@@ -747,8 +746,8 @@ export const generatePlanetContracts = (
 
     const remaining = [...standardQuests];
     const numNeeded = Math.max(1, numContracts - contracts.length);
-    let selections = 0;
-    while (selections < numNeeded && remaining.length > 0) {
+    let generated = 0;
+    while (generated < numNeeded && remaining.length > 0) {
         let roll = Math.random() * remaining.reduce(
             (total, quest) => total + (profile?.contractWeights[quest.type] ?? 1),
             0,
@@ -759,8 +758,11 @@ export const generatePlanetContracts = (
         });
         const [quest] = remaining.splice(index >= 0 ? index : remaining.length - 1, 1);
         const contract = quest.gen();
-        if (contract) contracts.push(dominantRace ? { ...contract, sourceDominantRace: dominantRace } : contract);
-        selections += 1;
+        if (!contract) continue;
+        contracts.push(
+            dominantRace ? { ...contract, sourceDominantRace: dominantRace } : contract,
+        );
+        generated += 1;
     }
 
     if (context.allowFrontier && (sector.tier ?? 1) === 1) {

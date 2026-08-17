@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useGameStore } from "@/game/store";
 import { showHintOnce } from "@/game/hints/showHint";
-import type { ArtifactRarity, Contract, Goods } from "@/game/types";
+import type { ArtifactRarity, Contract } from "@/game/types";
 import {
     Dialog,
     DialogDescription,
@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { GameDialogContent } from "./GameDialog";
 import { Button } from "@/components/ui/button";
-import { TRADE_GOODS, DELIVERY_GOODS } from "@/game/constants";
 import { RACES } from "@/game/constants/races";
 import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "@/game/slices/contracts/constants";
 import { useTranslation } from "@/lib/useTranslation";
@@ -27,7 +26,9 @@ import {
     formatResearchTechRequirement,
 } from "@/game/contracts/formatContractDescription";
 import {
+    getDeliveryGoodName,
     getLocationName,
+    getPlanetTypeName,
     getSectorNames,
     getTradeGoodName,
     getWeaponTypeName,
@@ -426,10 +427,7 @@ export function ContractsList() {
         switch (contract.type) {
             case "delivery":
                 if (contract.cargo) {
-                    const cargoName =
-                        DELIVERY_GOODS[
-                            contract.cargo as keyof typeof DELIVERY_GOODS
-                        ]?.name || contract.cargo;
+                    const cargoName = getDeliveryGoodName(contract.cargo, t);
                     return t("contracts.name_delivery", { cargo: cargoName });
                 }
                 return t("contracts.name_delivery", {
@@ -441,11 +439,15 @@ export function ContractsList() {
                     ? t("contracts.name_scan_multi", {
                           count: String(scanReq),
                           planetType:
-                              contract.planetType || t("contracts.unknown"),
+                              (contract.planetType &&
+                                  getPlanetTypeName(contract.planetType, t)) ||
+                              t("contracts.unknown"),
                       })
                     : t("contracts.name_scan", {
                           planetType:
-                              contract.planetType || t("contracts.unknown"),
+                              (contract.planetType &&
+                                  getPlanetTypeName(contract.planetType, t)) ||
+                              t("contracts.unknown"),
                       });
             }
             case "combat":
@@ -468,9 +470,7 @@ export function ContractsList() {
                 return t("contracts.name_mining");
             case "supply_run":
                 if (contract.cargo) {
-                    const cargoName =
-                        TRADE_GOODS[contract.cargo as Goods]?.name ||
-                        contract.cargo;
+                    const cargoName = getTradeGoodName(contract.cargo, t);
                     return t("contracts.name_supply", { cargo: cargoName });
                 }
                 return t("contracts.name_supply", {
@@ -527,35 +527,23 @@ export function ContractsList() {
 
         switch (contract.type) {
             case "delivery":
-                // Handle both key (new format) and name (old format)
-                let deliveryCargoName = "Груз";
-                if (contract.cargo) {
-                    // Try to look up by key first (new format: "construction_materials")
-                    const cargoByKey =
-                        DELIVERY_GOODS[
-                            contract.cargo as keyof typeof DELIVERY_GOODS
-                        ]?.name;
-                    if (cargoByKey) {
-                        deliveryCargoName = cargoByKey;
-                    } else {
-                        // Fallback: format the key (capitalize and replace underscores)
-                        deliveryCargoName =
-                            contract.cargo.charAt(0).toUpperCase() +
-                            contract.cargo.slice(1).replace(/_/g, " ");
-                    }
-                }
+                const deliveryCargoName = getDeliveryGoodName(
+                    contract.cargo,
+                    t,
+                    t("contracts.cargo"),
+                );
                 return {
                     type: t("contracts.type_delivery"),
                     tasks: [
                         {
                             label: t("contracts.task_what"),
-                            value: t("contracts.delivery_cargo")
-                                .replace("{{cargo}}", deliveryCargoName)
-                                .replace(
-                                    "{{amount}}",
-                                    String(DELIVERY_CONTRACT_CARGO_AMOUNT),
-                                )
-                                .replace("{{destination}}", getDestText()),
+                            value: t("contracts.delivery_cargo", {
+                                cargo: deliveryCargoName,
+                                amount:
+                                    contract.quantity ??
+                                    DELIVERY_CONTRACT_CARGO_AMOUNT,
+                                destination: getDestText(),
+                            }),
                         },
                         {
                             label: t("contracts.task_destination"),
@@ -584,15 +572,21 @@ export function ContractsList() {
                                           )
                                           .replace(
                                               "{{type}}",
-                                              contract.planetType?.toLowerCase() ||
-                                                  "",
+                                              contract.planetType
+                                                  ? getPlanetTypeName(
+                                                        contract.planetType,
+                                                        t,
+                                                    )
+                                                  : "",
                                           )
                                     : t("contracts.scan_planet"),
                         },
                         {
                             label: t("contracts.task_target"),
                             value: t("contracts.task_planet_type_value", {
-                                type: contract.planetType?.toLowerCase() || "",
+                                type: contract.planetType
+                                    ? getPlanetTypeName(contract.planetType, t)
+                                    : "",
                             }),
                         },
                         {
@@ -624,7 +618,7 @@ export function ContractsList() {
             case "supply_run":
                 if (!contract.cargo) return;
 
-                const cargoName = TRADE_GOODS[contract.cargo as Goods]?.name;
+                const cargoName = getTradeGoodName(contract.cargo, t);
 
                 // Calculate how much cargo the player currently has
                 const state = get();
@@ -638,12 +632,10 @@ export function ContractsList() {
                     tasks: [
                         {
                             label: t("contracts.task_what"),
-                            value: t("contracts.supply_find")
-                                .replace("{{cargo}}", cargoName || "")
-                                .replace(
-                                    "{{quantity}}",
-                                    String(contract.quantity),
-                                ),
+                            value: t("contracts.supply_find", {
+                                cargo: cargoName,
+                                quantity: contract.quantity ?? 0,
+                            }),
                         },
                         {
                             label: t("contracts.task_progress"),
@@ -1104,19 +1096,18 @@ export function ContractsList() {
                     tasks: [
                         {
                             label: t("contracts.task_what"),
-                            value: t("contracts.diplomacy_visit")
-                                .replace(
-                                    "{{planet}}",
+                            value: t("contracts.diplomacy_visit", {
+                                planet:
                                     (contract.targetPlanetName
                                         ? getLocationName(contract.targetPlanetName, t)
-                                        : undefined) ||
-                                        t("contracts.unknown"),
-                                )
-                                .replace(
-                                    "{{type}}",
-                                    contract.targetPlanetType ||
-                                        t("events.planet"),
-                                ),
+                                        : undefined) || t("contracts.unknown"),
+                                type: contract.targetPlanetType
+                                    ? getPlanetTypeName(
+                                          contract.targetPlanetType,
+                                          t,
+                                      )
+                                    : t("events.planet"),
+                            }),
                         },
                         {
                             label: t("contracts.task_target"),

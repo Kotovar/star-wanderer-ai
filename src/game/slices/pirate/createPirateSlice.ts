@@ -13,9 +13,13 @@ import type {
     TraitId,
 } from "@/game/types";
 import { patchLocation } from "@/game/utils/patchLocation";
+import { formatContractDescription } from "@/game/contracts/formatContractDescription";
 import { store as i18nStore } from "@/lib/useTranslation";
 import { playSound } from "@/sounds";
-import { refreshPirateContracts } from "./contracts";
+import {
+    isPirateContractTargetAvailable,
+    refreshPirateContracts,
+} from "./contracts";
 import {
     startCheckpointBreakout,
     startWantedPursuit,
@@ -108,10 +112,10 @@ export const createPirateSlice = (
             return;
         }
 
-        const target = state.galaxy.sectors
-            .flatMap((sector) => sector.locations)
-            .find((candidate) => candidate.id === contract.targetLocationId);
-        if (!target || (contract.type === "pirate_bounty" && target.defeated)) {
+        const targets = state.galaxy.sectors.flatMap(
+            (sector) => sector.locations,
+        );
+        if (!isPirateContractTargetAvailable(contract, targets)) {
             get().addLog(i18nStore.t("pirate.err_target_unavailable"), "error");
             return;
         }
@@ -183,7 +187,10 @@ export const createPirateSlice = (
 
         get().addLog(
             i18nStore.t("pirate.contract_accepted", {
-                contract: i18nStore.t(contract.desc),
+                contract: formatContractDescription(
+                    contract,
+                    i18nStore.t.bind(i18nStore),
+                ),
             }),
             "warning",
         );

@@ -1,7 +1,10 @@
 import type { Contract } from "@/game/types";
 import {
+  getDeliveryGoodName,
   getLocationName,
+  getPlanetTypeName,
   getSectorNames,
+  getTradeGoodName,
   getWeaponTypeName,
 } from "@/lib/translationHelpers";
 
@@ -27,6 +30,7 @@ type ContractDescription = Pick<
   | "targetSectorName"
   | "targetSectors"
   | "targetThreat"
+  | "type"
   | "visited"
   | "visitedAnomalies"
   | "visitedSectors"
@@ -69,16 +73,28 @@ export const formatPirateReturnInstruction = (
 export const formatContractDescription = (
   contract: ContractDescription,
   t: Translate,
-): string =>
-  t(contract.desc, {
-    planetType: contract.planetType ?? "",
+): string => {
+  const descriptionKey =
+    contract.type === "delivery"
+      ? "contracts.name_delivery"
+      : contract.type === "supply_run"
+        ? "contracts.name_supply"
+        : contract.desc;
+
+  return t(descriptionKey, {
+    planetType: contract.planetType
+      ? getPlanetTypeName(contract.planetType, t)
+      : "",
     count:
       contract.requiresVisit ??
       contract.requiresAnomalies ??
       contract.requiredDiscoveries ??
       contract.requiredMembranes ??
       0,
-    cargo: contract.cargo ?? "",
+    cargo:
+      contract.type === "delivery"
+        ? getDeliveryGoodName(contract.cargo, t)
+        : getTradeGoodName(contract.cargo, t),
     progress: contract.visited ?? contract.visitedAnomalies ?? 0,
     quantity: contract.quantity ?? "",
     amount: contract.quantity ?? "",
@@ -88,7 +104,9 @@ export const formatContractDescription = (
     ),
     threat: contract.targetThreat ?? "",
     planet: getLocationName(contract.targetPlanetName ?? "", t),
-    type: contract.targetPlanetType ?? "",
+    type: contract.targetPlanetType
+      ? getPlanetTypeName(contract.targetPlanetType, t)
+      : "",
     sectors: getSectorNames(contract.targetSectorNames ?? "", t),
     visited: contract.visitedSectors?.length ?? 0,
     target:
@@ -101,3 +119,4 @@ export const formatContractDescription = (
     crisis: contract.crisisName ? t(contract.crisisName) : "",
     weapon: getWeaponTypeName(contract.requiredWeaponType, t),
   });
+};

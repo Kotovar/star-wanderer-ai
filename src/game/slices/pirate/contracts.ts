@@ -1,4 +1,5 @@
 import type { Contract, GalaxyTierAll, Location, Sector } from "@/game/types";
+import { shuffle } from "@/game/utils/shuffle";
 
 export const PIRATE_CONTRACT_REFRESH_INTERVAL = 50;
 
@@ -34,8 +35,26 @@ export const getPirateContractTimeLimit = (
     targetTier: GalaxyTierAll = sourceTier,
 ): number => 12 + sourceTier * 2 + Math.abs(targetTier - sourceTier) * 2;
 
-const pick = <T>(items: T[]): T =>
-    items[Math.floor(Math.random() * items.length)];
+export const isPirateContractTargetAvailable = (
+    contract: Pick<Contract, "type" | "targetLocationId">,
+    locations: Location[],
+): boolean => {
+    const target = locations.find(
+        (location) => location.id === contract.targetLocationId,
+    );
+    if (!target) return false;
+
+    if (contract.type === "pirate_bounty") {
+        return target.type === "friendly_ship" && !target.defeated;
+    }
+    if (
+        contract.type === "pirate_smuggling" ||
+        contract.type === "pirate_heist"
+    ) {
+        return target.type === "station" && !target.stationConfig?.isPirate;
+    }
+    return false;
+};
 
 const withTargetSector = (
     contract: Contract,
@@ -101,65 +120,60 @@ export function generatePirateContracts(
                 ? bountyTargets.length > 0
                 : stationTargets.length > 0,
     );
-    if (templates.length === 0) return [];
+    const candidates = templates.flatMap((template) =>
+        (template.type === "pirate_bounty" ? bountyTargets : stationTargets).map(
+            (target) => ({ template, target }),
+        ),
+    );
+    if (candidates.length === 0) return [];
+    const count = Math.min(
+        candidates.length,
+        2 + Math.floor(Math.random() * 2),
+    );
 
-    const contracts: Contract[] = [];
-    const count = Math.min(3, 2 + Math.floor(Math.random() * 2));
-    // Доска не должна дважды предлагать одно и то же: пара «тип + цель»
-    // выбиралась независимыми pick, и три одинаковых заказа были обычным делом
-    const offered = new Set<string>();
+    return shuffle(candidates)
+        .slice(0, count)
+        .map(({ template, target }, index) => {
+            const reward =
+                template.baseReward +
+                template.rewardPerTier * tier +
+                Math.floor(Math.random() * 200);
 
-    for (let i = 0; i < count; i++) {
-        const template = pick(templates);
-        const reward =
-            template.baseReward +
-            template.rewardPerTier * tier +
-            Math.floor(Math.random() * 200);
+            const contract: Contract = {
+                id: `${station.stationId}-pirate-${index}-${Date.now()}`,
+                type: template.type,
+                desc: template.desc,
+                reward,
+                sourcePlanetId: station.id,
+                sourcePlanetName: station.name,
+                sourceDominantRace: station.dominantRace,
+                timeLimit: getPirateContractTimeLimit(tier),
+            };
 
-        const contract: Contract = {
-            id: `${station.stationId}-pirate-${i}-${Date.now()}`,
-            type: template.type,
-            desc: template.desc,
-            reward,
-            sourcePlanetId: station.id,
-            sourcePlanetName: station.name,
-            sourceDominantRace: station.dominantRace,
-            timeLimit: getPirateContractTimeLimit(tier),
-        };
+            if (template.type === "pirate_bounty") {
+                // Угроза — от охраны, которую поднимет раса торговца
+                // (см. attackFriendlyShip), а не от самого корабля
+                contract.targetThreat = Math.min(3, tier);
+                contract.targetLocationId = target.id;
+                contract.targetLocationName = target.name;
+                contract.sourceDominantRace = station.dominantRace;
+            }
 
-        if (template.type === "pirate_bounty") {
-            const target = pick(bountyTargets);
-            // Угроза — от охраны, которую поднимет раса торговца
-            // (см. attackFriendlyShip), а не от самого корабля
-            contract.targetThreat = Math.min(3, tier);
-            contract.targetLocationId = target.id;
-            contract.targetLocationName = target.name;
-            contract.sourceDominantRace = station.dominantRace;
-        }
+            if (template.type === "pirate_heist") {
+                contract.targetStationId = target.stationId ?? target.id;
+                contract.targetStationName = target.name;
+                contract.targetLocationId = target.id;
+                contract.targetLocationName = target.name;
+            }
 
-        if (template.type === "pirate_heist") {
-            const target = pick(stationTargets);
-            contract.targetStationId = target.stationId ?? target.id;
-            contract.targetStationName = target.name;
-            contract.targetLocationId = target.id;
-            contract.targetLocationName = target.name;
-        }
-
-        if (template.type === "pirate_smuggling") {
-            const target = pick(stationTargets);
-            contract.cargo = "contraband";
-            contract.quantity = 10 + tier * 5;
-            contract.targetLocationId = target.id;
-            contract.targetLocationName = target.name;
-        }
-
-        const offer = `${contract.type}:${contract.targetLocationId}`;
-        if (offered.has(offer)) continue;
-        offered.add(offer);
-        contracts.push(contract);
-    }
-
-    return contracts;
+            if (template.type === "pirate_smuggling") {
+                contract.cargo = "contraband";
+                contract.quantity = 10 + tier * 5;
+                contract.targetLocationId = target.id;
+                contract.targetLocationName = target.name;
+            }
+            return contract;
+        });
 }
 
 /** Заполняет доски после полной сборки галактики, когда реальные цели уже существуют. */
@@ -188,7 +202,14 @@ export function refreshPirateContracts(
     refreshInterval = PIRATE_CONTRACT_REFRESH_INTERVAL,
 ): boolean {
     const last = station.pirateLastRefreshTurn ?? 0;
-    if (currentTurn - last < refreshInterval) return false;
+    const locations = sectors.flatMap((sector) => sector.locations);
+    const hasUnavailableOffer =
+        station.pirateContracts?.some(
+            (contract) => !isPirateContractTargetAvailable(contract, locations),
+        ) ?? false;
+    if (!hasUnavailableOffer && currentTurn - last < refreshInterval) {
+        return false;
+    }
 
     station.pirateContracts = generatePirateStationContracts(station, tier, sectors);
     station.pirateLastRefreshTurn = currentTurn;

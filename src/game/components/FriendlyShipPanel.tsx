@@ -21,6 +21,7 @@ import { ContractReputationImpact } from "./ContractReputationImpact";
 import { CrewTab } from "./station/CrewTab";
 import { TradeGoodRow } from "./station/TradeTab";
 import { GoodInfoModal } from "./GoodInfoModal";
+import { formatContractDescription } from "@/game/contracts/formatContractDescription";
 
 const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
 
@@ -37,13 +38,6 @@ export function FriendlyShipPanel() {
   const displayCredits = Math.floor(credits);
 
   const { t } = useTranslation();
-  const getDeliveryCargoName = (cargo: string | undefined): string => {
-    if (!cargo) return "";
-    const key = `delivery_goods.${cargo}`;
-    const translated = t(key);
-    return translated === key ? cargo : translated;
-  };
-
   const hireCrew = useGameStore((s) => s.hireCrew);
   const getCrewCapacity = useGameStore((s) => s.getCrewCapacity);
   const acceptContract = useGameStore((s) => s.acceptContract);
@@ -414,10 +408,7 @@ export function FriendlyShipPanel() {
               >
                 <div className="flex-1">
                   <div className="text-[#00d4ff] font-bold text-sm">
-                    {c.desc}
-                  </div>
-                  <div className="text-[11px] mt-1 text-[#00ff41]">
-                    📦 {t("friendly_ship.cargo_label")}: {getDeliveryCargoName(c.cargo)} ({c.quantity ?? 10}т)
+                    {formatContractDescription(c, t)}
                   </div>
                   <div className="text-[#ffb000] text-xs mt-1">
                     💰 {c.reward}₢
