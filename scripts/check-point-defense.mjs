@@ -41,6 +41,7 @@ const raceConstants = sourceOf("src/game/constants/races.ts");
 const moduleTypes = sourceOf("src/game/types/modules.ts");
 const weaponConstants = sourceOf("src/game/constants/weapons.ts");
 const playerAttackSource = sourceOf("src/game/slices/combat/helpers/playerAttack.ts");
+const playerDamageSource = sourceOf("src/game/slices/combat/helpers/playerDamage.ts");
 const enemyAttackSource = sourceOf(
   "src/game/slices/combat/helpers/enemyCounterAttack.ts",
 );
@@ -384,18 +385,16 @@ assert.doesNotMatch(
   /point_defense_chance", \{ chance: 20 \}/,
   "enemy point defense must not advertise a hardcoded missile-only chance",
 );
-for (const weapon of ["kinetic", "missile", "siege_torpedo"]) {
-  const guard = weapon === "kinetic"
-    ? new RegExp(`result\\.missedShots < weaponCounts\\.${weapon}`)
-    : new RegExp(
-      `result\\.missedShots \\+ result\\.interceptedCount < weaponCounts\\.${weapon}`,
-    );
-  assert.match(
-    playerAttackSource,
-    guard,
-    `${weapon} must only strip armor when a shot actually reached the hull`,
-  );
-}
+assert.match(
+  playerAttackSource,
+  /resolveProjectileHullDamage\(/,
+  "the attack resolver must delegate armor to the shared projectile resolver",
+);
+assert.match(
+  playerDamageSource,
+  /if \(projectile\.hullDamage <= 0\) return;/,
+  "shield-only or intercepted shots must not enter an armor group",
+);
 assert.match(
   enemyAttackSource,
   /finalDamage \* launcherShare/,

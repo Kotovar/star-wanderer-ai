@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
+import { removeContractCargo } from "@/game/contracts/contractCargo";
 
 /**
  * Отменяет контракт
@@ -17,16 +18,8 @@ export const cancelContract = (
     const contract = get().activeContracts.find((c) => c.id === contractId);
     if (!contract) return;
 
-    if (contract.type === "delivery") {
-        set((s) => ({
-            ship: {
-                ...s.ship,
-                cargo: s.ship.cargo.filter((c) => c.contractId !== contractId),
-            },
-        }));
-    }
-
     set((s) => ({
+        ...removeContractCargo(s.ship, s.outposts, new Set([contractId])),
         activeContracts: s.activeContracts.filter((c) => c.id !== contractId),
     }));
     get().addLog( i18nStore.t("game_logs.cancelContract_1", {

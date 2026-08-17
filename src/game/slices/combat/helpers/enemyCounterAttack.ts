@@ -216,7 +216,7 @@ export function performEnemyAttack(
     const aliveBossMods = combat.enemy.modules.filter((m) => m.health > 0);
     const bossModifiers = getBossAttackModifiers(
         aliveBossMods,
-        combat.enemy.bossAttackCount ?? 0,
+        (combat.enemy.bossAttackCount ?? 0) + 1,
     );
 
     // Apply guaranteed crit and multi_hit

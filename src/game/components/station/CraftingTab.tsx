@@ -17,6 +17,7 @@ import {
   getTradeGoodName,
   getWeaponTypeName,
 } from "@/lib/translationHelpers";
+import { getFreeCargoSpace } from "@/game/slices/ship/helpers/getCargoCapacity";
 
 export function CraftingTab() {
   const { t } = useTranslation();
@@ -24,6 +25,7 @@ export function CraftingTab() {
   const credits = useGameStore((s) => s.credits);
   const tradeGoods = useGameStore((s) => s.ship.tradeGoods);
   const gases = useGameStore((s) => s.gases);
+  const freeCargoSpace = useGameStore(getFreeCargoSpace);
   const moduleRecipes = useGameStore((s) => s.moduleRecipes);
   const craftWeapon = useGameStore((s) => s.craftWeapon);
   const craftModule = useGameStore((s) => s.craftModule);
@@ -109,7 +111,7 @@ export function CraftingTab() {
                   ] ?? 0;
                 return available >= (required ?? 0);
               });
-              const canCraft = hasEnoughCredits && resourcesMet;
+              const canCraft = hasEnoughCredits && resourcesMet && freeCargoSpace >= 1;
 
               return (
                 <div
@@ -168,7 +170,7 @@ export function CraftingTab() {
                         <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[10px]">
                           <div>
                             <span className="text-[#555]">
-                              Урон{" "}
+                              {t("weapon_info.damage")}{" "}
                             </span>
                             <span className="text-[#ff4444] font-bold">
                               {weaponDetails?.damage}
@@ -177,7 +179,7 @@ export function CraftingTab() {
                           {weaponDetails?.shieldBonus && (
                             <div>
                               <span className="text-[#555]">
-                                По щитам{" "}
+                                {t("crafting.stat_shield_damage")}{" "}
                               </span>
                               <span className="text-[#4488ff] font-bold">
                                 ×{weaponDetails.shieldBonus}
@@ -187,7 +189,7 @@ export function CraftingTab() {
                           {weaponDetails?.armorPenetration && (
                             <div>
                               <span className="text-[#555]">
-                                Пробитие{" "}
+                                {t("crafting.stat_armor_penetration")}{" "}
                               </span>
                               <span className="text-[#ffb000] font-bold">
                                 {weaponDetails.armorPenetration * 100}%
@@ -197,30 +199,10 @@ export function CraftingTab() {
                           {weaponDetails?.shieldBypass && (
                             <div>
                               <span className="text-[#555]">
-                                Щиты{" "}
+                                {t("combat.shields")}{" "}
                               </span>
                               <span className="text-[#00ff41] font-bold">
-                                игнорирует
-                              </span>
-                            </div>
-                          )}
-                          {weaponDetails?.dualShot && (
-                            <div>
-                              <span className="text-[#555]">
-                                Залп{" "}
-                              </span>
-                              <span className="text-[#00ff41] font-bold">
-                                ×2
-                              </span>
-                            </div>
-                          )}
-                          {weaponDetails?.shieldOnly && (
-                            <div>
-                              <span className="text-[#555]">
-                                Цель{" "}
-                              </span>
-                              <span className="text-[#4488ff] font-bold">
-                                только щиты
+                                {t("crafting.ignores")}
                               </span>
                             </div>
                           )}

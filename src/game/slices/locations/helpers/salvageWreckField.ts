@@ -130,11 +130,11 @@ export function salvageWreckField(
     const usedCargo = getCurrentCargo(state);
     let available  = Math.max(0, capacity - usedCargo);
 
-    const spares = Math.min(sparesRaw, available);
-    available -= spares;
+    const rareMinerals = Math.min(rareMineralsRaw, available);
+    available -= rareMinerals;
     const electronics = Math.min(electronicsRaw, available);
     available -= electronics;
-    const rareMinerals = Math.min(rareMineralsRaw, available);
+    const spares = Math.min(sparesRaw, available);
 
     const cargoTrimmed =
         spares < sparesRaw ||

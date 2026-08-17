@@ -151,6 +151,7 @@ interface ServicesTabProps {
     onInstallAugmentation: (crewId: number, augId: AugmentationId) => void;
     onRemoveAugmentation: (crewId: number) => void;
     probes: number;
+    freeCargoSpace: number;
     onBuyProbe: (count: number) => void;
     isResearchStation?: boolean;
     researchResources?: Partial<Record<ResearchResourceType, number>>;
@@ -203,6 +204,7 @@ export function ServicesTab({
     onInstallAugmentation,
     onRemoveAugmentation,
     probes,
+    freeCargoSpace,
     onBuyProbe,
     isResearchStation,
     researchResources,
@@ -233,6 +235,7 @@ export function ServicesTab({
             <ProbeSection
                 probes={probes}
                 credits={credits}
+                freeCargoSpace={freeCargoSpace}
                 onBuyProbe={onBuyProbe}
             />
 
@@ -397,10 +400,12 @@ function NebulaStabilizerSection({
 function ProbeSection({
     probes,
     credits,
+    freeCargoSpace,
     onBuyProbe,
 }: {
     probes: number;
     credits: number;
+    freeCargoSpace: number;
     onBuyProbe: (count: number) => void;
 }) {
     return (
@@ -419,7 +424,10 @@ function ProbeSection({
                     <Button
                         key={count}
                         onClick={() => onBuyProbe(count)}
-                        disabled={credits < PROBE_PRICE * count}
+                        disabled={
+                            credits < PROBE_PRICE * count ||
+                            freeCargoSpace < count
+                        }
                         className="bg-transparent border border-[#7b4fff] text-[#7b4fff] hover:bg-[#7b4fff] hover:text-[#050810] text-xs cursor-pointer disabled:opacity-40 disabled:cursor-default"
                     >
                         ×{count} ({PROBE_PRICE * count}₢)
@@ -750,7 +758,7 @@ function RemoveWeaponSection({
     const { t } = useTranslation();
 
     const weaponBays = ship.modules.filter(
-        (m) => m.type === "weaponbay" && !m.disabled && !m.manualDisabled,
+        (m) => m.type === "weaponbay" && isModuleActive(m),
     );
 
     const installedWeapons: {
@@ -1026,7 +1034,7 @@ function InstallWeaponSection({
     if (craftedWeapons.length === 0) return null;
 
     const weaponBays = ship.modules.filter(
-        (m) => m.type === "weaponbay" && !m.disabled && !m.manualDisabled,
+        (m) => m.type === "weaponbay" && isModuleActive(m),
     );
     const baysWithSlots = weaponBays.filter((bay) =>
         bay.weapons?.some((w) => !w),

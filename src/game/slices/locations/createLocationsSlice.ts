@@ -347,6 +347,8 @@ export const createLocationsSlice = (
 
     buyProbe: (count: number) => {
         const PROBE_PRICE = 150;
+        if (!Number.isSafeInteger(count) || count <= 0) return;
+
         const state = get();
         const total = PROBE_PRICE * count;
         if (state.credits < total) {

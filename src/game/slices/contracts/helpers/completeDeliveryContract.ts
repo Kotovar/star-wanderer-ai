@@ -9,11 +9,15 @@ import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
 import { getReputationChanges } from "@/game/contracts/completionRewards";
 import { getFactionDeliveryReward } from "@/game/contracts/factionDelivery";
+import {
+    hasRequiredDeliveryCargo,
+    removeContractCargo,
+} from "@/game/contracts/contractCargo";
 import { playSound } from "@/sounds";
 
 const isDeliveryReady = (state: GameStore, contract: Contract): boolean =>
     state.currentLocation?.id === contract.targetLocationId &&
-    state.ship.cargo.some((cargo) => cargo.contractId === contract.id);
+    hasRequiredDeliveryCargo(state.ship.cargo, contract);
 
 const settleDeliveryContract = (
     contract: Contract,
@@ -27,10 +31,7 @@ const settleDeliveryContract = (
             : contract.reward;
 
     set((s) => ({
-        ship: {
-            ...s.ship,
-            cargo: s.ship.cargo.filter((cargo) => cargo.contractId !== contract.id),
-        },
+        ...removeContractCargo(s.ship, s.outposts, new Set([contract.id])),
         credits: s.credits + credits,
         activeContracts: s.activeContracts.filter((active) => active.id !== contract.id),
         completedContractIds: [...s.completedContractIds, contract.id],

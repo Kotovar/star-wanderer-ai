@@ -829,7 +829,7 @@ export function EnemyCodexPanel() {
                           {t("enemy_codex.weapon_damage", { value: weapon.damage })}
                         </div>
                         <div className="mt-1 text-xs text-[#8fa0aa]">
-                          {weapon.description}
+                          {t(`weapon_info.${weaponType}_feature`)}
                         </div>
                       </div>
                     </div>

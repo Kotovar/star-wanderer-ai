@@ -22,6 +22,8 @@ import { CrewTab } from "./station/CrewTab";
 import { TradeGoodRow } from "./station/TradeTab";
 import { GoodInfoModal } from "./GoodInfoModal";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
+import { hasRequiredDeliveryCargo } from "@/game/contracts/contractCargo";
+import { getFreeCargoSpace } from "@/game/slices/ship/helpers/getCargoCapacity";
 
 const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
 
@@ -115,24 +117,7 @@ export function FriendlyShipPanel() {
     return stock[goodId] || 0;
   };
 
-  // Calculate available cargo space
-  const cargoModules = ship.modules.filter(
-    (m) =>
-      m.type === "cargo" &&
-      !m.disabled &&
-      !m.manualDisabled &&
-      m.health > 0,
-  );
-  const totalCargoCapacity = cargoModules.reduce(
-    (sum, m) => sum + (m.capacity || 0),
-    0,
-  );
-  const probes = useGameStore((s) => s.probes);
-  const currentCargo =
-    ship.cargo.reduce((s, c) => s + c.quantity, 0) +
-    ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
-    probes;
-  const availSpace = totalCargoCapacity - currentCargo;
+  const availSpace = useGameStore(getFreeCargoSpace);
 
   // Memoize crew data to prevent regeneration on every render
   const crewData = useMemo(() => {
@@ -227,7 +212,7 @@ export function FriendlyShipPanel() {
     (c) =>
       c.type === "delivery" &&
       c.targetLocationId === currentLocation.id &&
-      ship.cargo.some((cargo) => cargo.contractId === c.id),
+      hasRequiredDeliveryCargo(ship.cargo, c),
   );
 
   // Цены торговца привязаны к тиру сектора, как и у станций (анти-арбитраж)
@@ -331,23 +316,38 @@ export function FriendlyShipPanel() {
               const sellPriceFor5 = dominantRace
                 ? applyReputationPriceModifier(raceReputation, dominantRace, baseSellPrice, "sell", baseBuyPrice, 5)
                 : baseSellPrice;
-              const buyPricePerUnit = Math.floor(buyPriceFor5 / 5);
-              const sellPricePerUnit = Math.floor(sellPriceFor5 / 5);
-
-              const makeBuy = (qty: number, cost: number) => () => {
-                useGameStore.setState((s) => ({
-                  friendlyShipStock: { ...s.friendlyShipStock, [shipId]: { ...s.friendlyShipStock[shipId], [g.id]: (s.friendlyShipStock[shipId]?.[g.id] || 0) - qty } },
-                  credits: s.credits - cost,
-                  ship: { ...s.ship, tradeGoods: s.ship.tradeGoods.some((tg: TradeGood) => tg.item === g.id) ? s.ship.tradeGoods.map((tg: TradeGood) => tg.item === g.id ? { ...tg, quantity: tg.quantity + qty } : tg) : [...s.ship.tradeGoods, { item: g.id, quantity: qty, buyPrice: g.price }] },
-                }));
+              const makeBuy = (qty: number) => () => {
+                if (!Number.isSafeInteger(qty) || qty <= 0) return;
+                useGameStore.setState((s) => {
+                  const cost = dominantRace
+                    ? applyReputationPriceModifier(s.raceReputation, dominantRace, baseBuyPrice, "buy", baseSellPrice, qty)
+                    : Math.floor(baseBuyPrice * qty / 5);
+                  const stock = s.friendlyShipStock[shipId]?.[g.id] ?? 0;
+                  if (stock < qty || s.credits < cost || getFreeCargoSpace(s) < qty) {
+                    return s;
+                  }
+                  return {
+                    friendlyShipStock: { ...s.friendlyShipStock, [shipId]: { ...s.friendlyShipStock[shipId], [g.id]: stock - qty } },
+                    credits: s.credits - cost,
+                    ship: { ...s.ship, tradeGoods: s.ship.tradeGoods.some((tg: TradeGood) => tg.item === g.id) ? s.ship.tradeGoods.map((tg: TradeGood) => tg.item === g.id ? { ...tg, quantity: tg.quantity + qty } : tg) : [...s.ship.tradeGoods, { item: g.id, quantity: qty, buyPrice: baseBuyPrice }] },
+                  };
+                });
               };
-              const makeSell = (qty: number, revenue: number) => () => {
-                useGameStore.setState((s) => ({
-                  friendlyShipStock: { ...s.friendlyShipStock, [shipId]: { ...s.friendlyShipStock[shipId], [g.id]: (s.friendlyShipStock[shipId]?.[g.id] || 0) + qty } },
-                  credits: s.credits + revenue,
-                  creditsEarnedThisRun: s.creditsEarnedThisRun + revenue,
-                  ship: { ...s.ship, tradeGoods: s.ship.tradeGoods.map((tg: TradeGood) => tg.item === g.id ? { ...tg, quantity: tg.quantity - qty } : tg).filter((tg: TradeGood) => tg.quantity > 0) },
-                }));
+              const makeSell = (qty: number) => () => {
+                if (!Number.isSafeInteger(qty) || qty <= 0) return;
+                useGameStore.setState((s) => {
+                  const held = s.ship.tradeGoods.find((tg: TradeGood) => tg.item === g.id);
+                  if (!held || held.quantity < qty) return s;
+                  const revenue = dominantRace
+                    ? applyReputationPriceModifier(s.raceReputation, dominantRace, baseSellPrice, "sell", baseBuyPrice, qty)
+                    : Math.floor(baseSellPrice * qty / 5);
+                  return {
+                    friendlyShipStock: { ...s.friendlyShipStock, [shipId]: { ...s.friendlyShipStock[shipId], [g.id]: (s.friendlyShipStock[shipId]?.[g.id] ?? 0) + qty } },
+                    credits: s.credits + revenue,
+                    creditsEarnedThisRun: (s.creditsEarnedThisRun ?? 0) + revenue,
+                    ship: { ...s.ship, tradeGoods: s.ship.tradeGoods.map((tg: TradeGood) => tg.item === g.id ? { ...tg, quantity: tg.quantity - qty } : tg).filter((tg: TradeGood) => tg.quantity > 0) },
+                  };
+                });
               };
 
               return (
@@ -360,8 +360,8 @@ export function FriendlyShipPanel() {
                   playerGood={playerGood}
                   credits={displayCredits}
                   availSpace={availSpace}
-                  onBuy={(_goodId, qty) => makeBuy(qty, buyPricePerUnit * qty)()}
-                  onSell={(_goodId, qty) => makeSell(qty, sellPricePerUnit * qty)()}
+                  onBuy={(_goodId, qty) => makeBuy(qty)()}
+                  onSell={(_goodId, qty) => makeSell(qty)()}
                   crisisMultiplier={1}
                   onShowInfo={() => setInfoGood(g.id)}
                 />

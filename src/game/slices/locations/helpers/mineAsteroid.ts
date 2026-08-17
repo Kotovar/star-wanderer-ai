@@ -21,6 +21,7 @@ import { resolveAsteroidPass } from "./resolveAsteroidPass";
 import { patchLocation } from "@/game/utils/patchLocation";
 import { DEFAULT_MAX_HEALTH_MODULE } from "@/game/constants/modules";
 import { getActiveModules } from "@/game/modules/utils";
+import { getLivingShipCrew } from "@/game/crew/stationed";
 import type { AsteroidTier, GameState, GameStore, SetState } from "@/game/types";
 
 /** Результат распределения грузового пространства */
@@ -152,7 +153,9 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
     const surfaceOnly = drillLevel < asteroidTier;
 
     // Проверка наличия инженера
-    const hasEngineer = state.crew.some((c) => c.profession === "engineer");
+    const hasEngineer = getLivingShipCrew(state.crew).some(
+        (c) => c.profession === "engineer",
+    );
     if (!hasEngineer) {
         get().addLog( i18nStore.t("game_logs.mineAsteroid_6"), "error");
         playSound("ui_error");
@@ -359,7 +362,9 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
     }
 
     // Опыт инженеру — делится между проходами, чтобы полный пояс давал столько же
-    const engineer = state.crew.find((c) => c.profession === "engineer");
+    const engineer = getLivingShipCrew(state.crew).find(
+        (c) => c.profession === "engineer",
+    );
     if (engineer) {
         get().gainExp(
             engineer,

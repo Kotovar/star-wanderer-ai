@@ -18,6 +18,8 @@ export function sellGas(
     set: SetState,
     get: () => GameStore,
 ): void {
+    if (!Number.isFinite(quantity)) return;
+
     const state = get();
     const price = Math.round(GAS_BASE_PRICE[gas] * GAS_SELL_RATE);
     if (price <= 0) {
@@ -58,6 +60,8 @@ export function buyGas(
     set: SetState,
     get: () => GameStore,
 ): void {
+    if (!Number.isFinite(quantity)) return;
+
     const state = get();
     const price = Math.round(GAS_BASE_PRICE[gas] * GAS_BUY_RATE);
     if (price <= 0) return;

@@ -17,4 +17,5 @@ export * from "./enableAllModules";
 export * from "./moveModule";
 export * from "./canPlaceModule";
 export * from "./addTradeGood";
+export * from "./takeCargoItem";
 export * from "./jettison";

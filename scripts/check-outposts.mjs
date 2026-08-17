@@ -343,7 +343,7 @@ for (const [resource, amount] of Object.entries(GAS_COLLECTOR_COST.resources)) {
 const { getCurrentCargo, getGasVolume } = await import(
   "../src/game/slices/ship/helpers/getCurrentCargo.ts"
 );
-const { buyGas } = await import(
+const { buyGas, sellGas } = await import(
   "../src/game/slices/outposts/helpers/sellGas.ts"
 );
 assert.equal(getGasVolume(undefined), 0, "сейв до миграции не должен падать");
@@ -391,6 +391,7 @@ const gasBuyer = (polymers) => {
   const get = () => state;
   return {
     buy: (quantity) => buyGas("polymers", quantity, set, get),
+    sell: (quantity) => sellGas("polymers", quantity, set, get),
     getState: () => state,
   };
 };
@@ -412,6 +413,22 @@ const fullBuyer = gasBuyer(40);
 fullBuyer.buy(5);
 assert.equal(fullBuyer.getState().gases.polymers, 40, "газ покупается в полный трюм");
 assert.equal(fullBuyer.getState().credits, 1_000, "за не поместившийся газ списаны кредиты");
+
+const invalidGasTrade = gasBuyer(10);
+const gasTradeBeforeInvalidQuantity = {
+  credits: invalidGasTrade.getState().credits,
+  gases: structuredClone(invalidGasTrade.getState().gases),
+};
+invalidGasTrade.buy(Number.NaN);
+invalidGasTrade.sell(Number.NaN);
+assert.deepEqual(
+  {
+    credits: invalidGasTrade.getState().credits,
+    gases: invalidGasTrade.getState().gases,
+  },
+  gasTradeBeforeInvalidQuantity,
+  "NaN в сделке с газом не должен портить кредиты или объём газа",
+);
 
 // Ни одно место больше не считает занятый трюм в обход помощника: иначе газ
 // остался бы бесплатным в восьми проверках вместимости из девяти

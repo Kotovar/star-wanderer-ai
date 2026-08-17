@@ -26,7 +26,7 @@ export interface CombatState {
     loot: Loot;
     // Separate tactical time inside combat. Campaign turn is charged on combat exit.
     round: number;
-    // Drone stack counter: +5% damage per hit, resets after combat (max 20 stacks = +100%)
+    // Drone stack counter: +10% damage per hit, resets after combat (max 10 stacks = +100%)
     droneStacks: number;
     // Кто уже получил опыт за боевое назначение в этом бою: раунды ходов не
     // стоят, поэтому награда даётся раз за бой, а не раз за раунд

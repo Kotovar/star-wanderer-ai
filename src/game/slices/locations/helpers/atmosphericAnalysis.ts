@@ -8,6 +8,7 @@ import {
     getFreeCargoSpace,
 } from "@/game/slices/ship/helpers";
 import { getBestByProfession } from "@/game/crew";
+import { getLivingShipCrew } from "@/game/crew/stationed";
 import { appendSurfaceLog } from "./sendScoutingMission";
 import { planetHasFeature } from "@/game/planets";
 import { patchLocation } from "@/game/utils/patchLocation";
@@ -90,7 +91,10 @@ export const atmosphericAnalysis = (
     }
 
     // Проверка учёного
-    const scientist = getBestByProfession(state.crew, "scientist");
+    const scientist = getBestByProfession(
+        getLivingShipCrew(state.crew),
+        "scientist",
+    );
     if (!scientist) {
         get().addLog( i18nStore.t("game_logs.atmosphericAnalysis_2"), "error");
         return;

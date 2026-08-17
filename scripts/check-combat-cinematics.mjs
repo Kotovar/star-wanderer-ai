@@ -500,8 +500,8 @@ assert.match(
 );
 assert.match(
   playerAttackSource,
-  /applyBossTakeDamageEffects\(get\(\), set, get, damage\.totalModuleDamage, timeline\)/,
-  "the cinematic player attack passes its timeline to boss take-damage effects",
+  /if \(combatNow\.enemy\.isBoss && finalModuleDamage > 0\) \{\s*\n\s*applyBossTakeDamageEffects\(get\(\), set, get, finalModuleDamage, timeline\);/,
+  "the cinematic player attack passes post-armor hull damage and its timeline to boss effects",
 );
 assert.match(
   playerAttackSource,

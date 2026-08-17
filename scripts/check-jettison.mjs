@@ -106,6 +106,14 @@ const makeStore = () => {
   jettisonCargo({ kind: "probes" }, -5, set, get);
   assert.equal(state.probes, 4, "нулевой и отрицательный выброс не должны ничего менять");
 
+  const beforeInvalidQuantity = structuredClone(state);
+  jettisonCargo({ kind: "cargo", index: 0 }, Number.NaN, set, get);
+  assert.deepEqual(
+    state,
+    beforeInvalidQuantity,
+    "NaN в количестве не должен удалить стек груза или оставить запись в журнале",
+  );
+
   jettisonCargo({ kind: "gas", gas: "deuterium" }, 999, set, get);
   assert.equal(
     state.gases.deuterium,

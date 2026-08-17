@@ -486,8 +486,19 @@ const smugglingState = {
   ],
   ship: {
     tradeGoods: [{ item: "contraband", quantity: 10 }],
-    cargo: [{ item: "contraband", quantity: 10, contractId: "smuggling-job" }],
+    cargo: [
+      { item: "contraband", quantity: 4, contractId: "smuggling-job" },
+      { item: "contraband", quantity: 6, contractId: "smuggling-job" },
+    ],
   },
+  outposts: [
+    {
+      id: "smuggling-cache",
+      storedCargo: [
+        { item: "contraband", quantity: 1, contractId: "smuggling-job" },
+      ],
+    },
+  ],
   wantedHeat: 0,
   probes: 0,
   addLog: () => {},
@@ -506,6 +517,11 @@ assert.equal(
   smugglingState.ship.tradeGoods[0]?.quantity,
   10,
   "купленная игроком контрабанда к делу отношения не имеет и остаётся в трюме",
+);
+assert.deepEqual(
+  smugglingState.outposts[0].storedCargo,
+  [],
+  "сданный пиратский груз не должен оставаться на складе",
 );
 assert.equal(
   smugglingState.activeContracts[0]?.pirateObjectiveComplete,

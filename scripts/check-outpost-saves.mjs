@@ -31,6 +31,42 @@ assert.ok(legacy, "сейв предыдущей версии не загруз�
 assert.deepEqual(legacy.outposts, [], "миграция не добавила outposts");
 assert.deepEqual(legacy.gases, {}, "миграция не добавила gases");
 
+// ── Сиротский контрактный груз из старого сейва удаляется ─────────────────
+const staleContractCargo = loadWithMigrations(
+  JSON.stringify({
+    version: 31,
+    state: {
+      stateVersion: 31,
+      activeContracts: [{ id: "active-contract" }],
+      ship: {
+        cargo: [
+          { item: "fuel", quantity: 2, contractId: "expired-contract" },
+          { item: "ore", quantity: 1, contractId: "active-contract" },
+        ],
+      },
+      outposts: [
+        {
+          id: "b-stale",
+          storedCargo: [
+            { item: "fuel", quantity: 2, contractId: "expired-contract" },
+            { item: "ore", quantity: 1, contractId: "active-contract" },
+          ],
+        },
+      ],
+    },
+  }),
+);
+assert.deepEqual(
+  staleContractCargo?.ship.cargo,
+  [{ item: "ore", quantity: 1, contractId: "active-contract" }],
+  "сиротский контрактный груз должен уйти из трюма при миграции",
+);
+assert.deepEqual(
+  staleContractCargo?.outposts[0].storedCargo,
+  [{ item: "ore", quantity: 1, contractId: "active-contract" }],
+  "сиротский контрактный груз должен уйти со склада при миграции",
+);
+
 // ── Постройка со всеми полями переживает круг без потерь ───────────────────
 // Перечислено намеренно всё: забытое при сериализации поле означает молча
 // пропавший прогресс, склад или захват

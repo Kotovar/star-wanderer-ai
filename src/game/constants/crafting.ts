@@ -16,7 +16,7 @@ export const CRAFTING_RECIPES: Record<CraftingWeapon, CraftingRecipe> = {
     resources: { energy_samples: 5, tech_salvage: 8 },
     credits: 600,
     unlockedBy: "plasma_weapons",
-    description: "Пробивает 25% брони и наносит +30% урона по щитам",
+    description: "Наносит +30% урона по щитам и навсегда разрушает броню модуля с каждым попаданием",
   },
   drones: {
     id: "drones",
@@ -65,7 +65,7 @@ export const CRAFTING_RECIPES: Record<CraftingWeapon, CraftingRecipe> = {
     credits: 700,
     unlockedBy: "ion_cannon",
     description:
-      "×4 урона по щитам, не повреждает корпус — снимает щиты мгновенно",
+      "×4 урона по щитам, но всего 1 урон корпусу после снятия щитов",
   },
 };
 

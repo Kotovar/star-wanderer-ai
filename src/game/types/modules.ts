@@ -63,7 +63,7 @@ export interface Module {
     researchOutput?: number; // For lab - research points per turn
     disabled?: boolean; // Disabled due to power deficit (auto-disabled)
     manualDisabled?: boolean; // Manually disabled by player
-    weapons?: Weapon[];
+    weapons?: (Weapon | null)[];
     healing?: number;
     repairAmount?: number;  // HP restored per drone (repair_bay)
     repairTargets?: number; // Number of modules repaired per turn (repair_bay)
@@ -83,7 +83,5 @@ export interface WeaponDetails {
     armorPenetration?: number;
     shieldBonus?: number;
     interceptChance?: number;
-    dualShot?: boolean; // Fires twice per weapon per attack (drones)
     shieldBypass?: boolean; // Ignores shields entirely (quantum torpedoes)
-    shieldOnly?: boolean; // Deals damage ONLY to shields, never overflows to hull (ion cannon)
 }

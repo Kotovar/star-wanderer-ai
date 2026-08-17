@@ -23,6 +23,7 @@ import {
 } from "@/game/slices/locations/constants";
 import { isModuleActive } from "@/game/modules/utils";
 import { getRunModifierValue } from "@/game/constants/launchModifiers";
+import { getLivingShipCrew } from "@/game/crew/stationed";
 
 // Шанс найти рецепт модуля при исследовании обломков (10%)
 const DERELICT_RECIPE_CHANCE = 0.99;
@@ -55,16 +56,17 @@ export const getDerelictApproachBlockReason = (
     crew: CrewMember[],
     modules: Module[],
 ): DerelictApproachBlockReason | null => {
-    if (!crew.some((member) => member.profession === "scout")) return "scout";
+    const activeCrew = getLivingShipCrew(crew);
+    if (!activeCrew.some((member) => member.profession === "scout")) return "scout";
     if (
         approach === "engineering" &&
-        !crew.some((member) => member.profession === "engineer")
+        !activeCrew.some((member) => member.profession === "engineer")
     ) {
         return "engineer";
     }
     if (
         approach === "archive" &&
-        !crew.some((member) => member.profession === "scientist")
+        !activeCrew.some((member) => member.profession === "scientist")
     ) {
         return "scientist";
     }
@@ -87,10 +89,11 @@ export const exploreDerelictShip = (
 ): void => {
     const state = get();
 
-    const scouts = state.crew.filter((c) => c.profession === "scout");
+    const activeCrew = getLivingShipCrew(state.crew);
+    const scouts = activeCrew.filter((c) => c.profession === "scout");
     const blockedReason = getDerelictApproachBlockReason(
         approach,
-        state.crew,
+        activeCrew,
         state.ship.modules,
     );
     if (blockedReason) {
@@ -163,24 +166,24 @@ export const exploreDerelictShip = (
               )
             : 0;
     let cargoSpace = getFreeCargoSpace(state);
-    const sparesCargo = addTradeGoodWithinCapacity(
+    const rareMineralsCargo = addTradeGoodWithinCapacity(
         state.ship.tradeGoods,
-        "spares",
-        sparesQty,
+        "rare_minerals",
+        rareMineralsQty,
         cargoSpace,
     );
-    cargoSpace -= sparesCargo.accepted;
+    cargoSpace -= rareMineralsCargo.accepted;
     const electronicsCargo = addTradeGoodWithinCapacity(
-        sparesCargo.tradeGoods,
+        rareMineralsCargo.tradeGoods,
         "electronics",
         electronicsQty,
         cargoSpace,
     );
     cargoSpace -= electronicsCargo.accepted;
-    const rareMineralsCargo = addTradeGoodWithinCapacity(
+    const sparesCargo = addTradeGoodWithinCapacity(
         electronicsCargo.tradeGoods,
-        "rare_minerals",
-        rareMineralsQty,
+        "spares",
+        sparesQty,
         cargoSpace,
     );
     const foundRecipe =
@@ -240,7 +243,7 @@ export const exploreDerelictShip = (
     };
 
     set((s) => {
-        const newTradeGoods = rareMineralsCargo.tradeGoods;
+        const newTradeGoods = sparesCargo.tradeGoods;
 
         const newResources = { ...s.research.resources };
         if (ancientData > 0)

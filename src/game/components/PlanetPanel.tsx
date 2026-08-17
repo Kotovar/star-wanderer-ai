@@ -41,6 +41,7 @@ import {
 } from "@/game/types/reputation";
 import { RaceSprite } from "./RaceSprite";
 import { ContractReputationImpact } from "./ContractReputationImpact";
+import { hasRequiredDeliveryCargo } from "@/game/contracts/contractCargo";
 
 const RACE_PLANET_BACKGROUNDS = {
     human: "/assets/planet-races/human-settlement.webp",
@@ -401,7 +402,7 @@ export function PlanetPanel() {
         (c) =>
             c.type === "delivery" &&
             c.targetLocationId === currentLocation.id &&
-            ship.cargo.some((cargo) => cargo.contractId === c.id), // Must have the cargo
+            hasRequiredDeliveryCargo(ship.cargo, c),
     );
 
     // Filter available contracts - exclude completed ones, race quests with

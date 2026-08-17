@@ -637,6 +637,35 @@ const migrations: Record<number, Migration> = {
       ...(log ? { log } : {}),
     };
   },
+  31: (raw) => {
+    const state = raw as Partial<GameState>;
+    const activeContractIds = new Set(
+      (state.activeContracts ?? []).map((contract) => contract.id),
+    );
+    const isStaleContractCargo = (cargo: { contractId?: string }): boolean =>
+      cargo.contractId !== undefined && !activeContractIds.has(cargo.contractId);
+
+    return {
+      ...state,
+      stateVersion: 32,
+      ship: state.ship
+        ? {
+            ...state.ship,
+            cargo: (state.ship.cargo ?? []).filter(
+              (cargo) => !isStaleContractCargo(cargo),
+            ),
+          }
+        : state.ship,
+      outposts: state.outposts?.map((outpost) => {
+        const storedCargo = outpost.storedCargo;
+        if (!storedCargo?.some(isStaleContractCargo)) return outpost;
+        return {
+          ...outpost,
+          storedCargo: storedCargo.filter((cargo) => !isStaleContractCargo(cargo)),
+        };
+      }),
+    };
+  },
 };
 
 /**

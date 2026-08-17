@@ -83,6 +83,8 @@ import {
 } from "@/game/stations/researchMaterials";
 import { getNebulaFrontProgress } from "@/game/crises/nebulaFront";
 import { getPirateRank } from "@/game/slices/pirate/standing";
+import { hasRequiredDeliveryCargo } from "@/game/contracts/contractCargo";
+import { getFreeCargoSpace } from "@/game/slices/ship/helpers/getCargoCapacity";
 
 const STATION_BACKGROUNDS = {
     trade: "/assets/station-backgrounds/trade-hub.webp",
@@ -300,6 +302,7 @@ export function StationPanel() {
     const hireCrew = useGameStore((s) => s.hireCrew);
     const refuel = useGameStore((s) => s.refuel);
     const probes = useGameStore((s) => s.probes);
+    const freeCargoSpace = useGameStore(getFreeCargoSpace);
     const buyProbe = useGameStore((s) => s.buyProbe);
     const research = useGameStore((s) => s.research);
     const activateResearchBoost = useGameStore((s) => s.activateResearchBoost);
@@ -530,7 +533,7 @@ export function StationPanel() {
         (c) =>
             c.type === "delivery" &&
             c.targetLocationId === currentLocation?.id &&
-            ship.cargo.some((cargo) => cargo.contractId === c.id),
+            hasRequiredDeliveryCargo(ship.cargo, c),
     );
     // Подряд на эту базу: пираты не знают, что ты за ними пришёл, поэтому
     // стыковка обычная — а решение принимается здесь
@@ -984,6 +987,7 @@ export function StationPanel() {
                         onInstallAugmentation={installAugmentation}
                         onRemoveAugmentation={removeAugmentation}
                         probes={probes}
+                        freeCargoSpace={freeCargoSpace}
                         onBuyProbe={buyProbe}
                         isResearchStation={isResearchStation}
                         researchResources={research.resources}

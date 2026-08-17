@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import * as wreckConstants from "../src/game/slices/locations/constants.ts";
 import {
   getWreckScannerRareChanceMultiplier,
@@ -38,5 +39,17 @@ assert.equal(typeof wreckConstants.getRadiationModuleDamage, "function");
 assert.equal(wreckConstants.getRadiationModuleDamage(12), 6);
 assert.equal(wreckConstants.getRadiationModuleDamage(1), 1);
 assert.equal(wreckConstants.getRadiationModuleDamage(0), 0);
+
+const wreckSource = readFileSync(
+  new URL("../src/game/slices/locations/helpers/salvageWreckField.ts", import.meta.url),
+  "utf8",
+);
+assert.ok(
+  wreckSource.indexOf("const rareMinerals = Math.min") <
+    wreckSource.indexOf("const electronics = Math.min") &&
+    wreckSource.indexOf("const electronics = Math.min") <
+      wreckSource.indexOf("const spares = Math.min"),
+  "при ограниченном трюме поле обломков должно сохранять редкие минералы раньше обычных деталей",
+);
 
 console.log("Wreck field approach checks passed");

@@ -46,27 +46,25 @@ const COMBAT_PHASES: { id: CombatPhaseId; label: string; caption: string }[] = [
 function getWeaponHints(
   type: string,
   w: (typeof WEAPON_TYPES)[keyof typeof WEAPON_TYPES] | undefined,
+  t: TFn,
 ): WeaponHint[] {
   if (!w) return [];
   const hints: WeaponHint[] = [];
-  if (w.shieldOnly) {
-    hints.push({ text: "×4 щиты", color: "#4488ff" });
-    hints.push({ text: "без корпуса", color: "#666" });
-  } else if (w.shieldBypass) {
-    hints.push({ text: "обход щитов", color: "#00d4ff" });
+  if (w.shieldBypass) {
+    hints.push({ text: t("crafting.ignores_shields"), color: "#00d4ff" });
   } else {
     if (w.shieldBonus && w.shieldBonus >= 2)
-      hints.push({ text: `×${w.shieldBonus} щиты`, color: "#4488ff" });
+      hints.push({ text: t("combat.weapon_hint_shield_multiplier", { value: w.shieldBonus }), color: "#4488ff" });
     else if (w.shieldBonus && w.shieldBonus > 1)
-      hints.push({ text: `+${Math.round((w.shieldBonus - 1) * 100)}% щиты`, color: "#4488ff" });
+      hints.push({ text: t("combat.weapon_hint_shield_bonus", { value: Math.round((w.shieldBonus - 1) * 100) }), color: "#4488ff" });
     if (w.armorPenetration && w.armorPenetration > 0)
-      hints.push({ text: `-${Math.round(w.armorPenetration * 100)}% броня`, color: "#ffb000" });
+      hints.push({ text: t("combat.weapon_hint_armor_penetration", { value: Math.round(w.armorPenetration * 100) }), color: "#ffb000" });
     if (w.interceptChance && w.interceptChance > 0)
-      hints.push({ text: `${Math.round(w.interceptChance * 100)}% перехват`, color: "#ff6600" });
+      hints.push({ text: t("combat.weapon_hint_intercept", { value: Math.round(w.interceptChance * 100) }), color: "#ff6600" });
   }
   // drones: stack mechanic
   if (type === "drones")
-    hints.push({ text: `+${DRONE_STACK_BONUS * 100}%/стак (макс ${DRONE_MAX_STACKS} = ×2)`, color: "#00ff41" });
+    hints.push({ text: t("combat.weapon_hint_drone_stacks", { bonus: DRONE_STACK_BONUS * 100, max: DRONE_MAX_STACKS }), color: "#00ff41" });
   return hints;
 }
 
@@ -195,16 +193,16 @@ function WeaponBayTargetRow({
           })}
         </div>
         <span className={`shrink-0 ${targetMod ? "border-accent" : "text-[#444]"}`}>
-          → {targetMod ? targetMod.name : "случайная цель"}
+          → {targetMod ? targetMod.name : t("combat.random_target")}
         </span>
       </div>
       {/* Bottom row: bonus hints */}
       {weaponGroups.some(
-        (g) => getWeaponHints(g.type, weaponDefsByType.get(g.type)).length > 0,
+        (g) => getWeaponHints(g.type, weaponDefsByType.get(g.type), t).length > 0,
       ) && (
         <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1">
           {weaponGroups.flatMap((g) =>
-            getWeaponHints(g.type, weaponDefsByType.get(g.type)).map((hint, i) => (
+            getWeaponHints(g.type, weaponDefsByType.get(g.type), t).map((hint, i) => (
               <span key={`${g.type}-${i}`} style={{ color: hint.color }} className="opacity-70">
                 {hint.text}
               </span>
@@ -317,27 +315,26 @@ export function CombatPanel() {
     () => getBossAbilityIntent(presentedCombat),
     [presentedCombat],
   );
-  const selectedModuleIds = useMemo(
-    () => [
-      ...new Set(
-        Object.values(bayTargets).filter(
-          (targetId): targetId is number => typeof targetId === "number",
-        ),
-      ),
-    ],
-    [bayTargets],
-  );
-
   const { weaponBays, hasWeaponBay } = getWeaponBayStats(ship);
 
   const pDmg = getTotalDamage();
   const hasGunner = crew.some(
     (crewMember) =>
       crewMember.profession === "gunner" &&
+      crewMember.health > 0 &&
       weaponBays.some((bay) => bay.id === crewMember.moduleId),
   );
+  const selectedModuleIds = hasGunner
+    ? [
+      ...new Set(
+        Object.values(bayTargets).filter(
+          (targetId): targetId is number => typeof targetId === "number",
+        ),
+      ),
+    ]
+    : [];
   // The same multiplier as the attack resolver, including the active gunner bonus.
-  const dmgBaseSum = (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "quantum_torpedo", "ion_cannon"] as const)
+  const dmgBaseSum = (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "siege_torpedo", "quantum_torpedo", "ion_cannon"] as const)
     .reduce((s, k) => s + pDmg[k], 0);
   const combatDamageTotal = calculateFinalDamagePerWeapon(pDmg.total, hasGunner);
   const dmgMultiplier = dmgBaseSum > 0 ? combatDamageTotal / dmgBaseSum : 1;
@@ -357,7 +354,7 @@ export function CombatPanel() {
   if (!presentedCombat) return null;
 
   const handleEnemyModuleClick = (moduleId: number) => {
-    if (isPlaybackActive) return;
+    if (isPlaybackActive || !hasGunner) return;
     selectEnemyModule(moduleId);
 
     if (activeBayId !== null) {
@@ -409,17 +406,19 @@ export function CombatPanel() {
     (bayId) => bayTargets[bayId] !== undefined,
   ).length;
   const targetingProgress =
-    armedBayIds.length > 0
+    hasGunner && armedBayIds.length > 0
       ? `${Math.min(assignedTargetCount, armedBayIds.length)}/${armedBayIds.length}`
-      : "0/0";
+      : "—";
   const activeCombatPhase = computeCombatPhase(
     presentedCombat,
-    activeBayId,
-    assignedTargetCount,
+    hasGunner ? activeBayId : null,
+    hasGunner ? assignedTargetCount : armedBayIds.length,
     armedBayIds.length,
   );
-  const phaseNote = getPhaseNote(activeCombatPhase, activeBayId, targetingProgress);
-  const selectableModuleIds = !isPlaybackActive &&
+  const phaseNote = !hasGunner && activeCombatPhase !== "counter"
+    ? t("combat.no_gunner")
+    : getPhaseNote(activeCombatPhase, activeBayId, targetingProgress);
+  const selectableModuleIds = hasGunner && !isPlaybackActive &&
     (activeBayId !== null || weaponBays.length === 1)
     ? presentedCombat.enemy.modules
       .filter((module) => module.health > 0)
@@ -460,7 +459,7 @@ export function CombatPanel() {
           onClick={handleAttack}
           className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
         >
-          {t("combat.attack")}
+          {t(hasGunner ? "combat.attack" : "combat.attack_random")}
         </Button>
         <Button
           disabled={isPlaybackActive}
@@ -486,7 +485,7 @@ export function CombatPanel() {
             {weaponBays.length > 1 ? "Цели по отсекам:" : "Цель:"}
           </div>
           {weaponBays.map((bay) => {
-            const targetId = bayTargets[bay.id] ?? null;
+            const targetId = hasGunner ? bayTargets[bay.id] ?? null : null;
             const targetMod = targetId !== null
               ? presentedCombat.enemy.modules.find((m) => m.id === targetId)
               : null;
@@ -504,7 +503,7 @@ export function CombatPanel() {
                 isActive={isActive}
                 dmgMultiplier={dmgMultiplier}
                 bayAccuracyModifier={bayAccuracyModifier}
-                disabled={isPlaybackActive}
+                disabled={isPlaybackActive || !hasGunner}
                 onSelect={() => setActiveBayId(isActive ? null : bay.id)}
                 t={t}
               />
@@ -517,7 +516,7 @@ export function CombatPanel() {
                 <button
                   key={module.id}
                   type="button"
-                  disabled={isPlaybackActive || module.health <= 0}
+                  disabled={isPlaybackActive || !hasGunner || module.health <= 0}
                   onClick={() => handleEnemyModuleClick(module.id)}
                   className={`min-w-0 border px-2 py-1.5 text-left text-[10px] transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${isTargeted
                     ? "border-[#ffcb57] bg-[rgba(255,203,87,0.12)] text-[#ffcb57]"
@@ -544,7 +543,7 @@ export function CombatPanel() {
               );
             })}
           </div>
-          {!isPlaybackActive && activeBayId !== null && (
+          {!isPlaybackActive && hasGunner && activeBayId !== null && (
             <div className="text-[10px] text-ring text-center pt-0.5">
               Нажмите на модуль врага чтобы назначить цель
             </div>

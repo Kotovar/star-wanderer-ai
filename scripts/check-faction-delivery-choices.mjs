@@ -208,6 +208,7 @@ const makeDecisionState = () => {
     type: "delivery",
     reward: 1000,
     cargo: "fuel",
+    quantity: 10,
     targetLocationId: "synthetic-target",
     sourceDominantRace: "human",
     factionDelivery: { localRace: "synthetic", context: "relief" },
@@ -221,6 +222,7 @@ const makeDecisionState = () => {
     pendingContractDecision: null,
     currentLocation: { id: "synthetic-target", type: "planet" },
     ship: { cargo: [{ item: "fuel", quantity: 10, contractId: contract.id }] },
+    outposts: [],
     credits: 100,
     crew: [],
     raceReputation: { human: 0, synthetic: 0 },
@@ -252,6 +254,17 @@ const makeDecisionState = () => {
   return { contract, reputationCalls, saveSnapshots, state };
 };
 
+const partial = makeDecisionState();
+partial.state.ship.cargo[0].quantity = 1;
+partial.state.completeDeliveryContract(partial.contract.id);
+assert.equal(
+  partial.state.pendingContractDecision,
+  null,
+  "одной тонны контрактного груза недостаточно для полной сдачи доставки",
+);
+assert.equal(partial.state.activeContracts.length, 1);
+assert.equal(partial.state.ship.cargo[0].quantity, 1);
+
 const issuer = makeDecisionState();
 issuer.state.completeDeliveryContract(issuer.contract.id);
 assert.deepEqual(
@@ -278,6 +291,27 @@ assert.deepEqual(issuer.reputationCalls, [{ raceId: "human", amount: 2 }]);
 assert.equal(issuer.state.ship.cargo.length, 0);
 assert.equal(issuer.state.pendingContractDecision, null);
 assert.equal(issuer.state.pendingContractCompletions[0].credits, 1000);
+
+const storedAtBase = makeDecisionState();
+storedAtBase.state.outposts = [
+  {
+    id: "delivery-base",
+    storedCargo: [
+      {
+        item: "fuel",
+        quantity: 1,
+        contractId: storedAtBase.contract.id,
+      },
+    ],
+  },
+];
+storedAtBase.state.completeDeliveryContract(storedAtBase.contract.id);
+storedAtBase.state.resolveFactionDeliveryDecision("issuer");
+assert.deepEqual(
+  storedAtBase.state.outposts[0].storedCargo,
+  [],
+  "сданный контракт не должен оставлять груз на базе",
+);
 
 const local = makeDecisionState();
 local.state.completeDeliveryContract(local.contract.id);
@@ -330,6 +364,7 @@ const makeReciprocalDecisionState = () => {
     type: "delivery",
     reward: 1000,
     cargo: "fuel",
+    quantity: 10,
     targetLocationId: "human-target",
     sourceDominantRace: "crystalline",
     factionDelivery: { localRace: "human", context: "diplomatic_claim" },
@@ -341,6 +376,7 @@ const makeReciprocalDecisionState = () => {
     pendingContractDecision: null,
     currentLocation: { id: "human-target", type: "planet" },
     ship: { cargo: [{ item: "fuel", quantity: 10, contractId: contract.id }] },
+    outposts: [],
     credits: 100,
     crew: [],
     raceReputation: { human: 0, crystalline: 0, xenosymbiont: 0 },

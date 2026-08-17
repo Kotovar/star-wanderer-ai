@@ -1020,7 +1020,7 @@ function WeaponsDetail({
                             </span>
                         </div>
                         <div className="text-[10px] text-[#888] mt-1">
-                            {WEAPON_TYPES[weapon.type].description}
+                            {t(`weapon_info.${weapon.type}_feature`)}
                         </div>
                     </div>
                 ) : (

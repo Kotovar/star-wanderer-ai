@@ -2,7 +2,6 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type {
   GameState,
   GameStore,
-  Module,
   WeaponCounts,
   WeaponType,
 } from "@/game/types";
@@ -15,6 +14,7 @@ import { isModuleActive } from "@/game/modules/utils";
 import {
   getWeaponAccuracy,
   getPlayerCritChance,
+  getCrewLaserDamageBonus,
   calculateFinalDamagePerWeapon,
   computeBayAccuracyModifier,
   processLaserDamage,
@@ -26,6 +26,7 @@ import {
   processAntimatterDamage,
   processQuantumTorpedoDamage,
   processIonCannonDamage,
+  resolveProjectileHullDamage,
 } from "./playerDamage";
 import { handleVictory } from "./playerVictory";
 import { handleEnemyCounterAttack } from "./enemyCounterAttack";
@@ -49,7 +50,6 @@ import {
   createMissProjectileResolutions,
   createCombatCinematicSnapshot,
   createCombatTimelineCollector,
-  finalizeProjectileHullDamage,
   splitVolleyAtHullDestruction,
   type CombatTimelineCollector,
 } from "./combatTimeline";
@@ -61,38 +61,14 @@ import { getAugmentationBonus } from "@/game/constants/augmentations";
 import type { CrewMember } from "@/game/types";
 import type { EnemyModule } from "@/game/types/enemy";
 
-// Призматическая линза работает только из оружейной палубы с лазером.
-const getCrewLaserDamageBonus = (
-  crew: CrewMember[],
-  modules: Module[],
-): number => {
-  const laserWeaponBayIds = new Set(
-    modules
-      .filter(
-        (module) =>
-          module.type === "weaponbay" &&
-          module.weapons?.some((weapon) => weapon?.type === "laser"),
-      )
-      .map((module) => module.id),
-  );
-
-  return crew.reduce(
-    (bonus, crewMember) =>
-      laserWeaponBayIds.has(crewMember.moduleId)
-        ? bonus + getAugmentationBonus(crewMember, "laserDamageBonus")
-        : bonus,
-    0,
-  );
-};
-
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const OVERCLOCK_ARMOR_REDUCTION = 0.1;
-
 const getCoreDestroyedLog = (isBiological?: boolean): string =>
-  isBiological
-    ? "💥 ЖИВОЕ ЯДРО УНИЧТОЖЕНО! Существо погибает!"
-    : "💥 РЕАКТОР ВРАГА УНИЧТОЖЕН! Корабль разрушен!";
+  i18nStore.t(
+    isBiological
+      ? "game_logs.weapon_core_destroyed_bio"
+      : "game_logs.weapon_core_destroyed",
+  );
 
 /** Finds the enemy's core/reactor module — its destruction = instant victory */
 const findEnemyCore = (
@@ -101,9 +77,11 @@ const findEnemyCore = (
   modules.find((m) => m.type === "reactor" || m.type.includes("core"));
 
 const getBarrierDestroyedLog = (isBiological?: boolean): string =>
-  isBiological
-    ? "💥 Последняя защитная мембрана разрушена! Биобарьер рассеян!"
-    : "💥 Последний щитовой модуль уничтожен! Щиты врага обнулены!";
+  i18nStore.t(
+    isBiological
+      ? "game_logs.weapon_barrier_destroyed_bio"
+      : "game_logs.weapon_barrier_destroyed",
+  );
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -117,7 +95,6 @@ interface DamageResult {
   totalModuleDamage: number;
   remainingShields: number;
   missedShots: WeaponCounts;
-  armorPenetration: number;
   plasmaHitCount: number;
   droneHitCount: number;
   logs: string[];
@@ -192,7 +169,7 @@ function applyXenoLifesteal(
 ): void {
   if (totalDealt <= 0) return;
   crew.forEach((c) => {
-    if (c.race !== "xenosymbiont") return;
+    if (c.race !== "xenosymbiont" || c.health <= 0) return;
     const damageToHp = getAugmentationBonus(c, "damageToHp");
     if (!damageToHp) return;
     const healAmount = Math.floor(totalDealt * damageToHp);
@@ -363,6 +340,7 @@ function getWeaponBayCrew(state: GameState) {
   const crewInWeaponBays = state.crew.filter(
     (c) =>
       weaponBays.some((wb) => wb.id === c.moduleId) &&
+      c.health > 0 &&
       (c.profession === "gunner" || c.profession === "engineer"),
   );
 
@@ -437,7 +415,6 @@ function calculateAllDamage(
   let remainingShields = enemyShields;
   let totalShieldDamage = 0;
   let totalModuleDamage = 0;
-  let armorPenetration = 0;
   let plasmaHitCount = 0;
   let droneHitCount = 0;
   const logs: string[] = [];
@@ -546,7 +523,6 @@ function calculateAllDamage(
       remainingShields,
       enemyShields,
       getAccuracy("kinetic"),
-      WEAPON_TYPES.kinetic.armorPenetration ?? 0.5,
       projectiles,
     );
     totalShieldDamage += result.totalShieldDamage;
@@ -554,11 +530,6 @@ function calculateAllDamage(
     remainingShields = result.remainingShields;
     logs.push(...result.logs);
     missedShots.kinetic = result.missedShots;
-    // Броню режет только долетевший снаряд: иначе один промазавший ствол
-    // снимал защиту для всего залпа.
-    if (result.missedShots < weaponCounts.kinetic) {
-      armorPenetration = Math.max(armorPenetration, result.kineticArmorPenetration);
-    }
   }
 
   if (weaponCounts.drones > 0) {
@@ -597,9 +568,6 @@ function calculateAllDamage(
     remainingShields = result.remainingShields;
     logs.push(...result.logs);
     missedShots.missile = result.missedShots;
-    if (result.missedShots + result.interceptedCount < weaponCounts.missile) {
-      armorPenetration = Math.max(armorPenetration, WEAPON_TYPES.missile.armorPenetration ?? 0);
-    }
   }
 
   if (weaponCounts.siege_torpedo > 0) {
@@ -619,12 +587,6 @@ function calculateAllDamage(
     remainingShields = result.remainingShields;
     logs.push(...result.logs);
     missedShots.siege_torpedo = result.missedShots;
-    if (result.missedShots + result.interceptedCount < weaponCounts.siege_torpedo) {
-      armorPenetration = Math.max(
-        armorPenetration,
-        WEAPON_TYPES.siege_torpedo.armorPenetration ?? 0,
-      );
-    }
   }
 
   if (weaponCounts.quantum_torpedo > 0) {
@@ -642,42 +604,21 @@ function calculateAllDamage(
     missedShots.quantum_torpedo = result.missedShots;
   }
 
-  // Missed shot logs
-  if (missedShots.laser > 0)
-    logs.push(`❌ ${missedShots.laser} лазер(а) промахнул(ись)!`);
-  if (missedShots.kinetic > 0)
+  for (const weapon of Object.keys(missedShots) as WeaponType[]) {
+    if (missedShots[weapon] <= 0) continue;
     logs.push(
-      `❌ ${missedShots.kinetic} кинетических снаряда промахнулось!`,
+      i18nStore.t("game_logs.weapon_missed", {
+        count: missedShots[weapon],
+        weapon: i18nStore.t(`weapon_types.${weapon}`),
+      }),
     );
-  if (missedShots.missile > 0)
-    logs.push(`❌ ${missedShots.missile} ракета(ы) промахнул(ись)!`);
-  if (missedShots.plasma > 0)
-    logs.push(
-      `❌ ${missedShots.plasma} плазмен(ных) выстр. промахнул(ись)!`,
-    );
-  if (missedShots.drones > 0)
-    logs.push(`❌ ${missedShots.drones} дрон(ов) промахнул(ись)!`);
-  if (missedShots.antimatter > 0)
-    logs.push(
-      `❌ ${missedShots.antimatter} антиматер. выстр. промахнул(ись)!`,
-    );
-  if (missedShots.siege_torpedo > 0)
-    logs.push(
-      `❌ ${missedShots.siege_torpedo} осадная торпеда(ы) промахнул(ась)!`,
-    );
-  if (missedShots.quantum_torpedo > 0)
-    logs.push(
-      `❌ ${missedShots.quantum_torpedo} торпеда(ы) промахнул(ась)!`,
-    );
-  if (missedShots.ion_cannon > 0)
-    logs.push(`❌ ${missedShots.ion_cannon} ион. выстр. промахнул(ись)!`);
+  }
 
   return {
     totalShieldDamage,
     totalModuleDamage,
     remainingShields,
     missedShots,
-    armorPenetration,
     plasmaHitCount,
     droneHitCount,
     logs,
@@ -695,7 +636,6 @@ function applyDamageToEnemy(
   damage: DamageResult,
   enemyShields: number,
   combatFlags: CombatFlags,
-  weaponCounts: WeaponCounts,
   isCrit = false,
 ): number {
   let finalModuleDamage = 0;
@@ -739,7 +679,10 @@ function applyDamageToEnemy(
     });
 
     damage.logs.push(
-      `🔥 Плазма разрушает броню: -${totalReduction} (${damage.plasmaHitCount} попад.)`,
+      i18nStore.t("game_logs.weapon_plasma_armor_destroyed", {
+        reduction: totalReduction,
+        hits: damage.plasmaHitCount,
+      }),
     );
   }
 
@@ -753,42 +696,28 @@ function applyDamageToEnemy(
         s.currentCombat.droneStacks = newStacks;
       });
       damage.logs.push(
-        `🤖 Стак дронов: ${newStacks}/${DRONE_MAX_STACKS} (+${Math.round(newStacks * DRONE_STACK_BONUS * 100)}% урон)`,
+        i18nStore.t("game_logs.weapon_drone_stack", {
+          stacks: newStacks,
+          maxStacks: DRONE_MAX_STACKS,
+          bonus: Math.round(newStacks * DRONE_STACK_BONUS * 100),
+        }),
       );
     }
   }
 
   // Apply module damage (only if there is actual overflow past shields)
   if (damage.totalModuleDamage > 0) {
-    let moduleDefense =
-      get()
-        .currentCombat?.enemy.modules.filter((m) => m.health > 0)
-        .reduce((sum, m) => sum + (m.defense ?? 0), 0) ?? 0;
-
-    if (damage.armorPenetration > 0) {
-      const reduced = Math.floor(
-        moduleDefense * (1 - damage.armorPenetration),
-      );
-      damage.logs.push(
-        `🛡 Броня снижена на ${Math.round(damage.armorPenetration * 100)}%: ${moduleDefense} → ${reduced}`,
-      );
-      moduleDefense = reduced;
-    }
-
-    if (combatFlags.hasOverclock) {
-      const reduced = Math.floor(
-        moduleDefense * (1 - OVERCLOCK_ARMOR_REDUCTION),
-      );
-      damage.logs.push(
-        `⚠️ Перегрузка: броня -${OVERCLOCK_ARMOR_REDUCTION * 100}% (${moduleDefense} → ${reduced})`,
-      );
-      moduleDefense = reduced;
-    }
-
-    const finalDamage = Math.max(
-      1,
-      damage.totalModuleDamage - moduleDefense,
+    const currentTargetDefense =
+      get().currentCombat?.enemy.modules.find((module) => module.id === tgtMod.id)
+        ?.defense ?? tgtMod.defense ?? 0;
+    const hullResolution = resolveProjectileHullDamage(
+      damage.projectiles,
+      currentTargetDefense,
+      combatFlags.hasOverclock,
     );
+    damage.projectiles = hullResolution.projectiles;
+    damage.totalModuleDamage = hullResolution.totalHullDamage;
+    const finalDamage = hullResolution.totalHullDamage;
     finalModuleDamage = finalDamage;
 
     set((s) => {
@@ -803,7 +732,9 @@ function applyDamageToEnemy(
       i18nStore.t("game_logs.pierce_hit", {
         name: tgtMod.name,
         damage: finalDamage,
-        armor: damage.armorPenetration > 0 ? i18nStore.t("game_logs.pierce_armor", { moduleDefense }) : "",
+        armor: hullResolution.armorApplied
+          ? i18nStore.t("game_logs.pierce_armor")
+          : "",
       }),
       "combat",
     );
@@ -955,7 +886,10 @@ function resolveCombatFlags(
       (c) => c.profession === "engineer" && c.combatAssignment === "calibration",
     ),
     hasAnalysis: state.crew.some(
-      (c) => c.profession === "scientist" && c.combatAssignment === "analysis",
+      (c) =>
+        c.health > 0 &&
+        c.profession === "scientist" &&
+        c.combatAssignment === "analysis",
     ),
     hasGunnerWithTargeting: crewInWeaponBays.some(
       (c) =>
@@ -1011,6 +945,10 @@ export function executePlayerAttackWithBayTargets(
   // 1. Crew & weapon setup
   const { weaponBays, crewInWeaponBays } = getWeaponBayCrew(currentState);
   const combatFlags = resolveCombatFlags(currentState, crewInWeaponBays);
+  const canManuallyTarget = crewInWeaponBays.some(
+    (crewMember) =>
+      crewMember.profession === "gunner" && crewMember.health > 0,
+  );
   const activeBays = weaponBays.filter(
     (b) => b.weapons?.some((w) => w),
   );
@@ -1088,7 +1026,7 @@ export function executePlayerAttackWithBayTargets(
     if (aliveModules.length === 0) break;
 
     // Resolve target for this bay
-    const assignedId = bayTargets[bay.id] ?? null;
+    const assignedId = canManuallyTarget ? bayTargets[bay.id] ?? null : null;
     let tgtMod = assignedId !== null
       ? aliveModules.find((m) => m.id === assignedId) ?? null
       : null;
@@ -1195,7 +1133,6 @@ export function executePlayerAttackWithBayTargets(
       damage,
       shieldsBeforeBay,
       combatFlags,
-      bayWeapons,
       bayCrit.isCrit && bayDamageMultiplier > 1,
     );
     const targetHealthAfter = get().currentCombat?.enemy.modules.find(
@@ -1209,10 +1146,7 @@ export function executePlayerAttackWithBayTargets(
       findEnemyCore(combatNow.enemy.modules)?.id === tgtMod.id ||
       get().currentCombat?.enemy.modules.every((module) => module.health <= 0) === true
     );
-    const volley = finalizeProjectileHullDamage(
-      damage.projectiles,
-      finalModuleDamage,
-    );
+    const volley = damage.projectiles;
     const bayIsCrit = bayCrit.isCrit && bayDamageMultiplier > 1;
     let destroyedModuleIds: number[] = [];
     if (destroysEnemyVessel) {
@@ -1250,15 +1184,15 @@ export function executePlayerAttackWithBayTargets(
     }
 
     // Boss take-damage effects
-    if (combatNow.enemy.isBoss && damage.totalModuleDamage > 0) {
-      applyBossTakeDamageEffects(get(), set, get, damage.totalModuleDamage, timeline);
+    if (combatNow.enemy.isBoss && finalModuleDamage > 0) {
+      applyBossTakeDamageEffects(get(), set, get, finalModuleDamage, timeline);
     }
 
     damage.logs.forEach((log) => get().addLog(log, "combat"));
 
     // Symbiotic armor heal
     applyXenoLifesteal(
-      damage.totalShieldDamage + damage.totalModuleDamage,
+      damage.totalShieldDamage + finalModuleDamage,
       currentState.crew,
       set,
       get,

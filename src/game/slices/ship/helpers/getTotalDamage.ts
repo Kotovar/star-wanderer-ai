@@ -106,12 +106,13 @@ const applyDamageBonus = (damage: number, bonus: number) => {
  */
 export function getTotalDamage(state: GameState) {
     const { crew, artifacts, research, ship } = state;
+    const livingCrew = crew.filter((crewMember) => crewMember.health > 0);
 
     // === Базовый урон от оружия ===
     const damage = getBaseWeaponDamage(ship.modules);
 
     // === Расовые боевые бонусы ===
-    const combatBonus = getMaxRaceCombatBonus(crew);
+    const combatBonus = getMaxRaceCombatBonus(livingCrew);
     damage.total = applyDamageBonus(damage.total, combatBonus);
 
     // === Временный бонус от планетарных эффектов (Крилориане) и правил сектора ===
@@ -139,22 +140,22 @@ export function getTotalDamage(state: GameState) {
             )
             .map((m) => m.id),
     );
-    const overclockEngineer = crew.find(
+    const overclockEngineer = livingCrew.find(
         (c) =>
             c.profession === "engineer" &&
             c.combatAssignment === "overclock" &&
             activeWeaponBayIds.has(c.moduleId),
     );
-    const rapidfireGunner = crew.find(
+    const rapidfireGunner = livingCrew.find(
         (c) =>
             c.profession === "gunner" &&
             c.combatAssignment === "rapidfire" &&
             activeWeaponBayIds.has(c.moduleId),
     );
-    const analysisScientist = crew.find(
+    const analysisScientist = livingCrew.find(
         (c) => c.profession === "scientist" && c.combatAssignment === "analysis",
     );
-    const hasTargetingGunner = crew.some(
+    const hasTargetingGunner = livingCrew.some(
         (c) =>
             c.profession === "gunner" &&
             c.combatAssignment === "targeting" &&
@@ -189,7 +190,7 @@ export function getTotalDamage(state: GameState) {
     }
 
     // === Бонус от сращивания ксеноморфов с weaponbay ===
-    const mergeBonus = getMergeEffectsBonus(crew, ship.modules);
+    const mergeBonus = getMergeEffectsBonus(livingCrew, ship.modules);
     if (mergeBonus.weaponDamage) {
         damage.total = applyDamageBonus(
             damage.total,

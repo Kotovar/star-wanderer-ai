@@ -74,7 +74,6 @@ export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
         icon: "⚡",
         description: "×4 урона по щитам, но всего 1 урон корпусу, когда щиты уже сняты — не ставьте им весь отсек, комбинируйте с оружием по корпусу",
         shieldBonus: 4.0,
-        shieldOnly: true,
     },
 };
 

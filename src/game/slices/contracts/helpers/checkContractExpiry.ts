@@ -3,6 +3,7 @@ import type { GameStore, SetState } from "@/game/types";
 import { toast } from "sonner";
 import { isContractExpired } from "@/game/contracts/contractDeadline";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
+import { removeContractCargo } from "@/game/contracts/contractCargo";
 import { clampWantedHeat } from "@/game/slices/pirate/wanted";
 import {
     clampPirateStanding,
@@ -41,6 +42,11 @@ export const checkContractExpiry = (
             : offers;
 
     set((s) => {
+        const contractCargo = removeContractCargo(
+            s.ship,
+            s.outposts,
+            expiredIds,
+        );
         const removeFromLocation = (location: (typeof s.galaxy.sectors)[number]["locations"][number]) => {
             const contracts = removeExpiredOffers(location.contracts);
             const pirateContracts = removeExpiredOffers(location.pirateContracts);
@@ -64,6 +70,7 @@ export const checkContractExpiry = (
             : null;
 
         return {
+            ...contractCargo,
             activeContracts: s.activeContracts.filter(
                 (contract) => !expiredIds.has(contract.id),
             ),
@@ -79,12 +86,6 @@ export const checkContractExpiry = (
             galaxy: { ...s.galaxy, sectors },
             currentSector,
             currentLocation,
-            ship: {
-                ...s.ship,
-                cargo: s.ship.cargo.filter(
-                    (cargo) => !expiredIds.has(cargo.contractId ?? ""),
-                ),
-            },
         };
     });
 

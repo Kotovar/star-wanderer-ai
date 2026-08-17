@@ -693,6 +693,15 @@ let expiryState = {
       { item: "ore", quantity: 1 },
     ],
   },
+  outposts: [
+    {
+      id: "expiry-base",
+      storedCargo: [
+        { item: "fuel", quantity: 2, contractId: "expired-standard" },
+        { item: "ore", quantity: 1, contractId: "still-active" },
+      ],
+    },
+  ],
   galaxy: {
     sectors: [
       {
@@ -729,6 +738,11 @@ assert.deepEqual(
   expiryState.ship.cargo,
   [{ item: "ore", quantity: 1 }],
   "груз просроченной доставки должен покинуть трюм",
+);
+assert.deepEqual(
+  expiryState.outposts[0].storedCargo,
+  [{ item: "ore", quantity: 1, contractId: "still-active" }],
+  "груз просроченного контракта не должен оставаться на базе",
 );
 assert.deepEqual(
   expiryState.galaxy.sectors[0].locations[0].contracts.map((contract) => contract.id),

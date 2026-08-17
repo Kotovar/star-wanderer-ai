@@ -1,6 +1,7 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { BASE_SERVICE_VALUES } from "@/game/constants/baseModules";
 import { getFreeCargoSpace } from "@/game/slices/ship/helpers/getCargoCapacity";
+import { takeCargoItem } from "@/game/slices/ship/helpers/takeCargoItem";
 import type { CargoItem, GameStore, SetState } from "@/game/types";
 import type { Outpost, OutpostResource } from "@/game/types/outposts";
 import { hasBaseService } from "./baseServices";
@@ -47,15 +48,6 @@ const merge = (list: CargoItem[], item: CargoItem): CargoItem[] => {
         : [...list, item];
 };
 
-const take = (list: CargoItem[], index: number, amount: number): CargoItem[] =>
-    list.flatMap((entry, i) =>
-        i !== index
-            ? [entry]
-            : entry.quantity > amount
-              ? [{ ...entry, quantity: entry.quantity - amount }]
-              : [],
-    );
-
 /**
  * Положить груз из трюма на склад базы.
  *
@@ -70,6 +62,8 @@ export function storeCargoAtBase(
     set: SetState,
     get: () => GameStore,
 ): void {
+    if (!Number.isFinite(quantity)) return;
+
     const state = get();
     const outpost = state.outposts.find((o) => o.id === outpostId);
     if (!outpost || !hasBaseService(outpost, "storage")) return;
@@ -93,7 +87,10 @@ export function storeCargoAtBase(
     }
 
     set((s) => ({
-        ship: { ...s.ship, cargo: take(s.ship.cargo, cargoIndex, amount) },
+        ship: {
+            ...s.ship,
+            cargo: takeCargoItem(s.ship.cargo, cargoIndex, amount),
+        },
         outposts: s.outposts.map((o) =>
             o.id === outpostId
                 ? {
@@ -122,6 +119,8 @@ export function withdrawCargoFromBase(
     set: SetState,
     get: () => GameStore,
 ): void {
+    if (!Number.isFinite(quantity)) return;
+
     const state = get();
     const outpost = state.outposts.find((o) => o.id === outpostId);
     if (!outpost) return;
@@ -153,7 +152,11 @@ export function withdrawCargoFromBase(
             o.id === outpostId
                 ? {
                       ...o,
-                      storedCargo: take(o.storedCargo ?? [], storedIndex, amount),
+                    storedCargo: takeCargoItem(
+                        o.storedCargo ?? [],
+                        storedIndex,
+                        amount,
+                    ),
                   }
                 : o,
         ),

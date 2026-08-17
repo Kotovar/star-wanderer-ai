@@ -42,6 +42,12 @@ const { PLANET_FEATURES, getPlanetFeatures } = await import(
 const { RESEARCH_RESOURCES } = await import(
   "../src/game/constants/research/resources.ts"
 );
+const { storeCargoAtBase, withdrawCargoFromBase } = await import(
+  "../src/game/slices/outposts/helpers/baseStorage.ts"
+);
+const { storeAtBase, withdrawFromBase } = await import(
+  "../src/game/slices/outposts/helpers/storeAtBase.ts"
+);
 
 const source = (path) =>
   readFileSync(new URL(`../src/${path}`, import.meta.url), "utf8");
@@ -450,6 +456,11 @@ assert.match(
 for (const fn of ["storeCargoAtBase", "withdrawCargoFromBase"]) {
   assert.ok(storage.includes(fn), `нет ${fn}: склад работает в одну сторону`);
 }
+assert.doesNotMatch(
+  source("game/components/CargoDisplay.tsx"),
+  /if \(cargoModules\.length === 0\)/,
+  "отключённый грузовой модуль скрывает уже лежащий в трюме груз и сброс",
+);
 assert.match(
   storage,
   /a\.contractId === b\.contractId/,
@@ -460,6 +471,69 @@ assert.match(
   /withdrawCargoFromBase\(/,
   "со склада нечем забрать положенное",
 );
+
+// Некорректное количество приходит не только из ползунка: публичные действия
+// хранилища доступны и через сохранённые/автоматические сценарии.
+const storageState = () => {
+  let state = {
+    currentLocation: { id: "storage-test" },
+    gases: { deuterium: 2 },
+    probes: 0,
+    crew: [],
+    research: { researchedTechs: [], resources: {} },
+    ship: {
+      cargo: [{ item: "medicine_crate", quantity: 2 }],
+      tradeGoods: [{ item: "minerals", quantity: 3, buyPrice: 0 }],
+      modules: [
+        {
+          id: 1,
+          type: "cargo",
+          capacity: 40,
+          health: 100,
+          maxHealth: 100,
+          disabled: false,
+          manualDisabled: false,
+        },
+      ],
+    },
+    outposts: [
+      {
+        id: "storage-base",
+        kind: "base",
+        locationId: "storage-test",
+        sectorId: 1,
+        builtAtTurn: 1,
+        bunker: {},
+        modules: ["warehouse"],
+        storedCargo: [{ item: "artifact_cache", quantity: 2 }],
+        storedGoods: { minerals: 3 },
+      },
+    ],
+  };
+  const set = (update) => {
+    state = { ...state, ...(typeof update === "function" ? update(state) : update) };
+  };
+  const get = () => ({ ...state, addLog: () => {}, updateShipStats: () => {} });
+  return { get, set, state: () => state };
+};
+
+for (const invalidQuantity of [Number.NaN, Number.POSITIVE_INFINITY]) {
+  for (const [name, action] of [
+    ["storeCargoAtBase", (test) => storeCargoAtBase("storage-base", 0, invalidQuantity, test.set, test.get)],
+    ["withdrawCargoFromBase", (test) => withdrawCargoFromBase("storage-base", 0, invalidQuantity, test.set, test.get)],
+    ["storeAtBase", (test) => storeAtBase("storage-base", "minerals", invalidQuantity, test.set, test.get)],
+    ["withdrawFromBase", (test) => withdrawFromBase("storage-base", "minerals", invalidQuantity, test.set, test.get)],
+  ]) {
+    const test = storageState();
+    const beforeInvalidQuantity = structuredClone(test.state());
+    action(test);
+    assert.deepEqual(
+      test.state(),
+      beforeInvalidQuantity,
+      `${name}: некорректное количество не должно менять трюм или склад`,
+    );
+  }
+}
 
 // ── Гарнизон базы должен быть достижим ─────────────────────────────────────
 // Панель показывала «Гарнизон: 0/1» без единой кнопки: множитель базы

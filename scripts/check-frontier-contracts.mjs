@@ -24,6 +24,7 @@ const { generateStationItems } = await import("../src/game/components/station/st
 const { refreshVisitedPlanetContracts } = await import("../src/game/contracts/refreshPlanetContracts.ts");
 const { createShopSlice } = await import("../src/game/slices/shop/createShopSlice.ts");
 const { createCraftingSlice } = await import("../src/game/slices/crafting/craftingSlice.ts");
+const { installModuleFromCargo } = await import("../src/game/slices/services/helpers/installModuleFromCargo.ts");
 const { createContractsSlice } = await import("../src/game/slices/contracts/contractsSlice.ts");
 const { createServicesSlice } = await import("../src/game/slices/services/createServicesSlice.ts");
 const { createShipSlice } = await import("../src/game/slices/ship/shipSlice.ts");
@@ -822,6 +823,46 @@ const successfulCraft = makeStoreStub({
 });
 createCraftingSlice(successfulCraft.set, successfulCraft.get).installCraftedWeapon(0, 1);
 assert.equal(successfulCraft.syncCalls(), 1, "crafted weapon install must sync once");
+const stackedModule = makeStoreStub({
+  research: { researchedTechs: [] },
+  ship: {
+    cargo: [{
+      item: "spare_cargo_module",
+      quantity: 2,
+      isModule: true,
+      module: {
+        id: "spare_cargo_module",
+        type: "module",
+        moduleType: "cargo",
+        name: "Spare cargo module",
+        level: 1,
+        price: 1,
+        width: 1,
+        height: 1,
+      },
+    }],
+    gridSize: 2,
+    modules: [],
+  },
+});
+installModuleFromCargo(stackedModule.set, stackedModule.get, 0, 0, 0);
+assert.equal(
+  stackedModule.state.ship.cargo[0].quantity,
+  1,
+  "установка одного модуля не должна удалять весь стек",
+);
+const stackedCraft = makeStoreStub({
+  ship: {
+    cargo: [{ item: "crafted_weapon_plasma", quantity: 2, isCraftedWeapon: true, weaponType: "plasma" }],
+    modules: [{ id: 1, type: "weaponbay", health: 100, weapons: [null] }],
+  },
+});
+createCraftingSlice(stackedCraft.set, stackedCraft.get).installCraftedWeapon(0, 1);
+assert.deepEqual(
+  stackedCraft.state.ship.cargo,
+  [{ item: "crafted_weapon_plasma", quantity: 1, isCraftedWeapon: true, weaponType: "plasma" }],
+  "установка одного орудия не должна удалять весь стек",
+);
 const noSlotCraft = makeStoreStub({
   ship: {
     cargo: [{ item: "crafted_weapon_plasma", quantity: 1, isCraftedWeapon: true, weaponType: "plasma" }],
@@ -830,6 +871,39 @@ const noSlotCraft = makeStoreStub({
 });
 createCraftingSlice(noSlotCraft.set, noSlotCraft.get).installCraftedWeapon(0, 1);
 assert.equal(noSlotCraft.syncCalls(), 0, "full crafted-weapon bay must not sync");
+const destroyedBayCraft = makeStoreStub({
+  ship: {
+    cargo: [{ item: "crafted_weapon_plasma", quantity: 1, isCraftedWeapon: true, weaponType: "plasma" }],
+    modules: [{ id: 1, type: "weaponbay", health: 0, weapons: [null] }],
+  },
+});
+createCraftingSlice(destroyedBayCraft.set, destroyedBayCraft.get).installCraftedWeapon(0, 1);
+assert.equal(
+  destroyedBayCraft.state.ship.cargo.length,
+  1,
+  "уничтоженная палуба не должна поглощать собранное орудие",
+);
+assert.equal(destroyedBayCraft.syncCalls(), 0);
+
+const fullCargoCraft = makeStoreStub({
+  credits: 600,
+  crew: [],
+  gases: {},
+  probes: 0,
+  research: {
+    unlockedRecipes: ["plasma"],
+    researchedTechs: [],
+    resources: { energy_samples: 5, tech_salvage: 8 },
+  },
+  ship: {
+    cargo: [{ item: "delivery_case", quantity: 40 }],
+    tradeGoods: [],
+    modules: [{ id: 1, type: "cargo", capacity: 40, health: 100 }],
+  },
+});
+createCraftingSlice(fullCargoCraft.set, fullCargoCraft.get).craftWeapon("plasma");
+assert.equal(fullCargoCraft.state.credits, 600, "крафт не должен обходить вместимость трюма");
+assert.equal(fullCargoCraft.state.ship.cargo.length, 1);
 
 const frontierContactState = {
   activeEffects: [],

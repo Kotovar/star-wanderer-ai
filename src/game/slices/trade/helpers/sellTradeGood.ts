@@ -136,6 +136,8 @@ export const sellTradeGood = (
     goodId: Goods,
     quantity: number = 5,
 ): void => {
+    if (!Number.isSafeInteger(quantity) || quantity <= 0) return;
+
     const state = get();
     const stationId = state.currentLocation?.stationId;
     const isPirate = state.currentLocation?.stationConfig?.isPirate ?? false;

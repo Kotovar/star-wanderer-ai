@@ -3,6 +3,10 @@ import { getReputationChanges } from "@/game/contracts/completionRewards";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
 import { shiftHappiness } from "@/game/crew/happiness";
 import { getLivingShipCrew } from "@/game/crew/stationed";
+import {
+    getContractCargoQuantity,
+    removeContractCargo,
+} from "@/game/contracts/contractCargo";
 import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
 import { getCurrentCargo } from "@/game/slices/ship/helpers/getCurrentCargo";
 import type {
@@ -230,10 +234,10 @@ export const createPirateSlice = (
 
         if (contract.type === "pirate_smuggling") {
             const quantity = contract.quantity ?? 1;
-            const carried = state.ship.cargo.find(
-                (item) => item.contractId === contract.id,
-            );
-            if ((carried?.quantity ?? 0) < quantity) {
+            if (
+                getContractCargoQuantity(state.ship.cargo, contract.id) <
+                quantity
+            ) {
                 get().addLog(
                     i18nStore.t("pirate.err_need_contraband", { quantity }),
                     "error",
@@ -241,12 +245,7 @@ export const createPirateSlice = (
                 return;
             }
             set((s) => ({
-                ship: {
-                    ...s.ship,
-                    cargo: s.ship.cargo.filter(
-                        (item) => item.contractId !== contract.id,
-                    ),
-                },
+                ...removeContractCargo(s.ship, s.outposts, new Set([contract.id])),
                 activeContracts: s.activeContracts.map((active) =>
                     active.id === contractId
                         ? { ...active, pirateObjectiveComplete: true }

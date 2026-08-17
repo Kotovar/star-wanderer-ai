@@ -8,6 +8,9 @@ import {
 } from "@/game/constants/crafting";
 import type { ModuleRecipeId } from "@/game/types/crafting";
 import type { GasType } from "@/game/types/outposts";
+import { isModuleActive } from "@/game/modules";
+import { getFreeCargoSpace } from "@/game/slices/ship/helpers/getCargoCapacity";
+import { takeCargoItem } from "@/game/slices/ship/helpers/takeCargoItem";
 
 export interface CraftingSlice {
     craftWeapon: (recipeId: CraftingWeapon) => void;
@@ -37,6 +40,11 @@ export const createCraftingSlice = (
             get().addLog( i18nStore.t("game_logs.craftingSlice_3", { credits: recipe.credits }),
                 "error",
             );
+            return;
+        }
+
+        if (getFreeCargoSpace(state) < 1) {
+            get().addLog(i18nStore.t("game_logs.err_no_space"), "error");
             return;
         }
 
@@ -99,7 +107,10 @@ export const createCraftingSlice = (
         }
 
         const weaponBay = state.ship.modules.find(
-            (m) => m.id === weaponBayId && m.type === "weaponbay",
+            (m) =>
+                m.id === weaponBayId &&
+                m.type === "weaponbay" &&
+                isModuleActive(m),
         );
 
         if (!weaponBay) {
@@ -118,7 +129,7 @@ export const createCraftingSlice = (
         const weaponType = cargoItem.weaponType;
 
         set((s) => {
-            const newCargo = s.ship.cargo.filter((_, i) => i !== cargoIndex);
+            const newCargo = takeCargoItem(s.ship.cargo, cargoIndex);
             const newModules = s.ship.modules.map((m) => {
                 if (
                     m.id === weaponBayId &&
@@ -144,7 +155,9 @@ export const createCraftingSlice = (
             };
         });
 
-        get().addLog( i18nStore.t("game_logs.craftingSlice_9", { value: cargoItem.item.replace("crafted_weapon_", "") }),
+        get().addLog( i18nStore.t("game_logs.craftingSlice_9", {
+            value: i18nStore.t(`weapon_types.${weaponType}`),
+        }),
             "info",
         );
         get().updateShipStats();

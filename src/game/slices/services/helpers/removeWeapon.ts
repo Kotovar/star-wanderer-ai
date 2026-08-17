@@ -48,8 +48,7 @@ export const removeWeapon = (
         const newModules = s.ship.modules.map((m) => {
             if (m.id !== moduleId || !m.weapons) return m;
             const newWeapons = [...m.weapons];
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            newWeapons[weaponIndex] = null as any;
+            newWeapons[weaponIndex] = null;
             return { ...m, weapons: newWeapons };
         });
         return {
@@ -58,7 +57,10 @@ export const removeWeapon = (
         };
     });
 
-    get().addLog( i18nStore.t("game_logs.removeWeapon_3", { weaponType, scrapValue }),
+    get().addLog( i18nStore.t("game_logs.removeWeapon_3", {
+        weaponType: i18nStore.t(`weapon_types.${weaponType}`),
+        scrapValue,
+    }),
         "info",
     );
     playSound("world_scrap");

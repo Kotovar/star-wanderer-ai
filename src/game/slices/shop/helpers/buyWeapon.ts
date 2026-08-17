@@ -1,6 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState, ShopItem } from "@/game/types";
-import { WEAPON_TYPES } from "@/game/constants";
 import { playSound } from "@/sounds";
 import { getModulesFromState } from "@/game/modules";
 
@@ -108,7 +107,9 @@ export const buyWeapon = (
         },
     }));
 
-    get().addLog( i18nStore.t("game_logs.buyWeapon_4", { name: WEAPON_TYPES[weaponType].name }), "info");
+    get().addLog( i18nStore.t("game_logs.buyWeapon_4", {
+        name: i18nStore.t(`weapon_types.${weaponType}`),
+    }), "info");
     playSound("ui_purchase");
     return true;
 };

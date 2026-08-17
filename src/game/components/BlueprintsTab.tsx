@@ -79,15 +79,12 @@ function WeaponPreview({
           <div className="font-bold text-[11px] truncate" style={{ color }}>
             {getWeaponTypeName(recipe.weaponType, t, recipe.name)}
           </div>
-          <div className="text-[#555] text-[9px] uppercase tracking-wider">
-            {weaponDetails?.name}
-          </div>
         </div>
         <div className="text-right shrink-0">
           <div className="text-[#ff4444] font-bold text-base leading-none">
             {weaponDetails?.damage}
           </div>
-          <div className="text-[#555] text-[9px]">урон</div>
+          <div className="text-[#555] text-[9px]">{t("weapon_info.damage")}</div>
         </div>
       </div>
 
@@ -95,7 +92,7 @@ function WeaponPreview({
       <div className="flex flex-col gap-0.5 text-[10px] mb-2">
         {weaponDetails?.shieldBonus && (
           <div className="flex justify-between gap-2">
-            <span className="text-[#555]">По щитам</span>
+            <span className="text-[#555]">{t("crafting.stat_shield_damage")}</span>
             <span className="text-[#4488ff] font-bold">
               ×{weaponDetails.shieldBonus}
             </span>
@@ -103,7 +100,7 @@ function WeaponPreview({
         )}
         {weaponDetails?.armorPenetration && (
           <div className="flex justify-between gap-2">
-            <span className="text-[#555]">Пробитие брони</span>
+            <span className="text-[#555]">{t("crafting.stat_armor_penetration")}</span>
             <span className="text-[#ffb000] font-bold">
               {weaponDetails.armorPenetration * 100}%
             </span>
@@ -111,25 +108,13 @@ function WeaponPreview({
         )}
         {weaponDetails?.shieldBypass && (
           <div className="flex justify-between gap-2">
-            <span className="text-[#555]">Щиты</span>
-            <span className="text-[#00ff41] font-bold">игнорирует</span>
-          </div>
-        )}
-        {weaponDetails?.dualShot && (
-          <div className="flex justify-between gap-2">
-            <span className="text-[#555]">Залп</span>
-            <span className="text-[#00ff41] font-bold">×2 атаки</span>
-          </div>
-        )}
-        {weaponDetails?.shieldOnly && (
-          <div className="flex justify-between gap-2">
-            <span className="text-[#555]">Цель</span>
-            <span className="text-[#4488ff] font-bold">только щиты</span>
+            <span className="text-[#555]">{t("combat.shields")}</span>
+            <span className="text-[#00ff41] font-bold">{t("crafting.ignores")}</span>
           </div>
         )}
         {weaponDetails?.interceptChance && (
           <div className="flex justify-between gap-2">
-            <span className="text-[#555]">Риск перехвата</span>
+            <span className="text-[#555]">{t("crafting.stat_intercept_risk")}</span>
             <span className="text-[#ff6666] font-bold">
               {weaponDetails.interceptChance * 100}%
             </span>

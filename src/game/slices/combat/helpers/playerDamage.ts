@@ -1,5 +1,6 @@
 import type { GameState, WeaponType } from "@/game/types";
 import type { CombatProjectileResolution } from "@/game/types/combatCinematics";
+import { store as i18nStore } from "@/lib/useTranslation";
 import {
     getGunnerAccuracyBonus,
     getGunnerCritBonus,
@@ -13,15 +14,45 @@ import {
     COMBAT_DAMAGE_MODIFIERS,
     ARTIFACT_TYPES,
     BASE_CRIT_CHANCE,
+    DRONE_MAX_STACKS,
     DRONE_STACK_BONUS,
 } from "@/game/constants";
 import { isModuleActive } from "@/game/modules/utils";
+import { getAugmentationBonus } from "@/game/constants/augmentations";
 import {
     findActiveArtifact,
     getArtifactEffectValue,
 } from "@/game/artifacts/utils";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getProjectileOutcome } from "./combatTimeline";
+
+export const OVERCLOCK_ARMOR_REDUCTION = 0.1;
+
+export interface ProjectileHullDamageResolution {
+    projectiles: CombatProjectileResolution[];
+    totalHullDamage: number;
+    armorApplied: boolean;
+}
+
+const getWeaponName = (weapon: WeaponType): string =>
+    i18nStore.t(`weapon_types.${weapon}`);
+
+const addShieldHitLog = (
+    logs: string[],
+    weapon: WeaponType,
+    damage: number,
+): void => {
+    logs.push(
+        i18nStore.t("game_logs.weapon_shield_hit", {
+            weapon: getWeaponName(weapon),
+            damage,
+        }),
+    );
+};
+
+const addOverflowLog = (logs: string[], damage: number): void => {
+    logs.push(i18nStore.t("game_logs.weapon_overflow", { damage }));
+};
 
 function recordProjectileHit(
     projectiles: CombatProjectileResolution[],
@@ -59,6 +90,82 @@ function recordProjectileInterception(
         hullDamage: 0,
         ...(interceptorModuleId === undefined ? {} : { interceptorModuleId }),
     });
+}
+
+/**
+ * Applies the selected target's armor to the projectile groups that actually
+ * reached its hull. A weapon that only hit shields cannot lend its penetration
+ * to another weapon type in the same bay volley.
+ */
+export function resolveProjectileHullDamage(
+    projectiles: readonly CombatProjectileResolution[],
+    targetDefense: number,
+    hasOverclock: boolean,
+): ProjectileHullDamageResolution {
+    const resolved = projectiles.map((projectile) => ({ ...projectile }));
+    const groups = new Map<number, number[]>();
+
+    resolved.forEach((projectile, index) => {
+        if (projectile.hullDamage <= 0) return;
+        const armorPenetration =
+            projectile.weapon === "enemy"
+                ? 0
+                : (WEAPON_TYPES[projectile.weapon].armorPenetration ?? 0);
+        const group = groups.get(armorPenetration) ?? [];
+        group.push(index);
+        groups.set(armorPenetration, group);
+    });
+
+    const normalizedDefense = Math.max(0, Math.floor(targetDefense));
+    let armorApplied = false;
+
+    for (const [armorPenetration, indexes] of groups) {
+        const rawHullDamage = indexes.reduce(
+            (total, index) => total + resolved[index].hullDamage,
+            0,
+        );
+        if (rawHullDamage <= 0) continue;
+
+        let effectiveDefense = Math.floor(
+            normalizedDefense * (1 - armorPenetration),
+        );
+        if (hasOverclock) {
+            effectiveDefense = Math.floor(
+                effectiveDefense * (1 - OVERCLOCK_ARMOR_REDUCTION),
+            );
+        }
+        const finalHullDamage = Math.max(1, rawHullDamage - effectiveDefense);
+        armorApplied ||= finalHullDamage < rawHullDamage;
+
+        let remainingRawDamage = rawHullDamage;
+        let remainingFinalDamage = finalHullDamage;
+        indexes.forEach((index, groupIndex) => {
+            const projectile = resolved[index];
+            const isLastProjectile = groupIndex === indexes.length - 1;
+            const hullDamage = isLastProjectile
+                ? remainingFinalDamage
+                : Math.floor(
+                    (projectile.hullDamage / remainingRawDamage) *
+                        remainingFinalDamage,
+                );
+            remainingRawDamage -= projectile.hullDamage;
+            remainingFinalDamage -= hullDamage;
+            projectile.hullDamage = hullDamage;
+            projectile.outcome =
+                hullDamage > 0 || projectile.shieldDamage > 0
+                    ? getProjectileOutcome(projectile.shieldDamage, hullDamage)
+                    : "blocked";
+        });
+    }
+
+    return {
+        projectiles: resolved,
+        totalHullDamage: resolved.reduce(
+            (total, projectile) => total + projectile.hullDamage,
+            0,
+        ),
+        armorApplied,
+    };
 }
 
 /**
@@ -111,6 +218,33 @@ export function getPlayerCritChance(state: GameState): number {
     );
 
     return Math.min(0.5, critChance + bestGunnerCritBonus);
+}
+
+/** Призматическая линза работает только у живого члена экипажа в активной палубе с лазером. */
+export function getCrewLaserDamageBonus(
+    crew: GameState["crew"],
+    modules: GameState["ship"]["modules"],
+): number {
+    const laserWeaponBayIds = new Set(
+        modules
+            .filter(
+                (module) =>
+                    module.type === "weaponbay" &&
+                    isModuleActive(module) &&
+                    module.weapons?.some(
+                        (weapon) => weapon?.type === "laser",
+                    ),
+            )
+            .map((module) => module.id),
+    );
+
+    return crew.reduce(
+        (bonus, crewMember) =>
+            crewMember.health > 0 && laserWeaponBayIds.has(crewMember.moduleId)
+                ? bonus + getAugmentationBonus(crewMember, "laserDamageBonus")
+                : bonus,
+        0,
+    );
 }
 
 /**
@@ -274,8 +408,8 @@ export function processLaserDamage(
         }
 
         if (enemyShields > 0) {
-            logs.push(`Лазер: -${actualShieldDmg} щитам`);
-            if (overflow > 0) logs.push(`(перелёт: ${overflow})`);
+            addShieldHitLog(logs, "laser", actualShieldDmg);
+            if (overflow > 0) addOverflowLog(logs, overflow);
         }
         recordProjectileHit(projectiles, "laser", actualShieldDmg, overflow);
     }
@@ -299,7 +433,6 @@ export function processKineticDamage(
     remainingShields: number,
     enemyShields: number,
     accuracy: number,
-    armorPenetration: number,
     projectiles: CombatProjectileResolution[],
 ): {
     totalShieldDamage: number;
@@ -307,7 +440,6 @@ export function processKineticDamage(
     remainingShields: number;
     logs: string[];
     missedShots: number;
-    kineticArmorPenetration: number;
 } {
     let totalShieldDamage = 0;
     let totalModuleDamage = 0;
@@ -330,7 +462,7 @@ export function processKineticDamage(
         totalModuleDamage += overflow;
 
         if (enemyShields > 0 && shieldDmg > 0) {
-            logs.push(`Кинетика: -${shieldDmg} щитам`);
+            addShieldHitLog(logs, "kinetic", shieldDmg);
         }
         recordProjectileHit(projectiles, "kinetic", shieldDmg, overflow);
     }
@@ -341,7 +473,6 @@ export function processKineticDamage(
         remainingShields,
         logs,
         missedShots,
-        kineticArmorPenetration: armorPenetration,
     };
 }
 
@@ -359,7 +490,6 @@ type InterceptableDamageResult = {
 
 function processInterceptableProjectileDamage(
     weapon: "missile" | "siege_torpedo",
-    label: string,
     weaponCount: number,
     finalDamagePerWeapon: number,
     damageMultiplier: number,
@@ -400,13 +530,18 @@ function processInterceptableProjectileDamage(
         totalModuleDamage += overflow;
 
         if (enemyShields > 0 && shieldDmg > 0) {
-            logs.push(`${label}: -${shieldDmg} щитам`);
+            addShieldHitLog(logs, weapon, shieldDmg);
         }
         recordProjectileHit(projectiles, weapon, shieldDmg, overflow);
     }
 
     if (interceptedCount > 0) {
-        logs.push(`🛡️ ${interceptedCount} ${label.toLowerCase()} сбита(ы)!`);
+        logs.push(
+            i18nStore.t("game_logs.weapon_intercepted", {
+                count: interceptedCount,
+                weapon: getWeaponName(weapon),
+            }),
+        );
     }
 
     return {
@@ -432,7 +567,6 @@ export function processMissileDamage(
 ): InterceptableDamageResult {
     return processInterceptableProjectileDamage(
         "missile",
-        "Ракета",
         weaponCount,
         finalDamagePerWeapon,
         damageMultiplier,
@@ -458,7 +592,6 @@ export function processSiegeTorpedoDamage(
 ): InterceptableDamageResult {
     return processInterceptableProjectileDamage(
         "siege_torpedo",
-        "Осадная торпеда",
         weaponCount,
         finalDamagePerWeapon,
         damageMultiplier,
@@ -517,8 +650,8 @@ export function processPlasmaDamage(
         if (overflow > 0) plasmaHitCount++;
 
         if (enemyShields > 0) {
-            logs.push(`Плазма: -${actualShieldDmg} щитам`);
-            if (overflow > 0) logs.push(`(перелёт: ${Math.floor(overflow)})`);
+            addShieldHitLog(logs, "plasma", actualShieldDmg);
+            if (overflow > 0) addOverflowLog(logs, Math.floor(overflow));
         }
         recordProjectileHit(projectiles, "plasma", actualShieldDmg, overflow);
     }
@@ -561,11 +694,14 @@ export function processDronesDamage(
     let missedShots = 0;
     let droneHitCount = 0;
 
-    const stackBonus = 1 + droneStacks * DRONE_STACK_BONUS;
+    let currentStacks = Math.min(DRONE_MAX_STACKS, droneStacks);
 
-    if (droneStacks > 0) {
+    if (currentStacks > 0) {
         logs.push(
-            `🤖 Дроны разогнаны: x${stackBonus.toFixed(2)} урон (${droneStacks} стак.)`,
+            i18nStore.t("game_logs.weapon_drones_boosted", {
+                multiplier: (1 + currentStacks * DRONE_STACK_BONUS).toFixed(2),
+                stacks: currentStacks,
+            }),
         );
     }
 
@@ -577,6 +713,7 @@ export function processDronesDamage(
         }
 
         droneHitCount++;
+        const stackBonus = 1 + currentStacks * DRONE_STACK_BONUS;
         const droneDmg = Math.floor(
             finalDamagePerWeapon * damageMultiplier * stackBonus,
         );
@@ -588,9 +725,10 @@ export function processDronesDamage(
         totalModuleDamage += overflow;
 
         if (enemyShields > 0 && shieldDmg > 0) {
-            logs.push(`Дрон: -${Math.floor(shieldDmg)} щитам`);
+            addShieldHitLog(logs, "drones", Math.floor(shieldDmg));
         }
         recordProjectileHit(projectiles, "drones", shieldDmg, overflow);
+        currentStacks = Math.min(DRONE_MAX_STACKS, currentStacks + 1);
     }
 
     return {
@@ -645,8 +783,8 @@ export function processAntimatterDamage(
         totalModuleDamage += overflow;
 
         if (enemyShields > 0) {
-            logs.push(`Антиматерия: -${actualShieldDmg} щитам`);
-            if (overflow > 0) logs.push(`(перелёт: ${overflow})`);
+            addShieldHitLog(logs, "antimatter", actualShieldDmg);
+            if (overflow > 0) addOverflowLog(logs, overflow);
         }
         recordProjectileHit(projectiles, "antimatter", actualShieldDmg, overflow);
     }
@@ -704,12 +842,22 @@ export function processQuantumTorpedoDamage(
             Math.floor(finalDamagePerWeapon * damageMultiplier),
         );
         totalModuleDamage += torpedoDmg;
-        logs.push(`Квант. торпеда: ${torpedoDmg} прямо по модулям!`);
+        logs.push(
+            i18nStore.t("game_logs.weapon_direct_hull_hit", {
+                weapon: getWeaponName("quantum_torpedo"),
+                damage: torpedoDmg,
+            }),
+        );
         recordProjectileHit(projectiles, "quantum_torpedo", 0, torpedoDmg);
     }
 
     if (interceptedCount > 0) {
-        logs.push(`🛡️ ${interceptedCount} квант. торпеда(ы) сбита(ы)!`);
+        logs.push(
+            i18nStore.t("game_logs.weapon_intercepted", {
+                count: interceptedCount,
+                weapon: getWeaponName("quantum_torpedo"),
+            }),
+        );
     }
 
     return {
@@ -760,12 +908,17 @@ export function processIonCannonDamage(
 
         let hullDamage = 0;
         if (shieldsBeforeShot > 0) {
-            logs.push(`⚡ Ионная пушка: -${actualShieldDmg} щитам`);
+            addShieldHitLog(logs, "ion_cannon", actualShieldDmg);
         } else {
             // Ионизация наносит минимальный урон корпусу даже без щитов
             hullDamage = 1;
             totalModuleDamage += hullDamage;
-            logs.push(`⚡ Ионная пушка: щиты сняты, ионизация -1 корпусу`);
+            logs.push(
+                i18nStore.t("game_logs.weapon_ion_hull_hit", {
+                    weapon: getWeaponName("ion_cannon"),
+                    damage: hullDamage,
+                }),
+            );
         }
         recordProjectileHit(projectiles, "ion_cannon", actualShieldDmg, hullDamage);
     }

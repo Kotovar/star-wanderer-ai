@@ -21,6 +21,8 @@ export function storeAtBase(
     set: SetState,
     get: () => GameStore,
 ): void {
+    if (!Number.isFinite(quantity)) return;
+
     const state = get();
     const outpost = state.outposts.find((o) => o.id === outpostId);
     if (!outpost || !hasBaseService(outpost, "storage")) return;
@@ -106,6 +108,8 @@ export function withdrawFromBase(
     set: SetState,
     get: () => GameStore,
 ): void {
+    if (!Number.isFinite(quantity)) return;
+
     const state = get();
     const outpost = state.outposts.find((o) => o.id === outpostId);
     if (!outpost) return;

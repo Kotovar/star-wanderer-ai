@@ -18,6 +18,7 @@
     "check:prices": "node --no-warnings scripts/check-price-modifier.mjs",
     "check:victory": "node --no-warnings --experimental-strip-types scripts/check-victory-paths.mjs",
     "check:point-defense": "node scripts/check-point-defense.mjs",
+    "check:weapons": "node scripts/check-weapons.mjs",
     "check:combat-cinematics": "node scripts/check-combat-cinematics.mjs",
     "check:boss-generation": "node --no-warnings --experimental-strip-types scripts/check-galaxy-boss-generation.mjs",
     "check:run-profiles": "node --no-warnings scripts/check-run-profiles.mjs",

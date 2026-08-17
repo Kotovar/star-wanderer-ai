@@ -437,8 +437,9 @@ export function createMissProjectileResolutions(
 }
 
 /**
- * Armor is resolved once for the whole bay. Keep that total exact while only
- * assigning the remaining hull damage to projectiles that actually reached it.
+ * Reconciles a precomputed hull total with its projectile visuals. The live
+ * resolver applies armor before calling the timeline, grouped by weapon
+ * penetration; this utility remains useful for presentation-only callers.
  */
 export function finalizeProjectileHullDamage(
   projectiles: readonly CombatProjectileResolution[],

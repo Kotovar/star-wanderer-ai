@@ -19,6 +19,7 @@ import {
 import {
   calculateFinalDamagePerWeapon,
   computeBayAccuracyModifier,
+  getCrewLaserDamageBonus,
   getWeaponAccuracy,
   getPlayerCritChance,
 } from "@/game/slices/combat/helpers/playerDamage";
@@ -31,7 +32,6 @@ import { getActiveModules } from "../modules";
 import { ENGINE_MODULE_TYPES } from "@/game/constants/modules";
 import { RACES } from "@/game/constants/races";
 import { sumRaceTraitEffect } from "@/game/races";
-import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import { getBestByProfession } from "@/game/crew";
 import {
@@ -205,34 +205,21 @@ export function ShipStats() {
 
   const { displayLaserDamage, displayDamageTotal, damage, dmgMultiplier } = useMemo(() => {
     const dmg = getTotalDamage();
-    const weaponTypeKeys = ["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "quantum_torpedo", "ion_cannon"] as const;
+    const weaponTypeKeys = ["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "siege_torpedo", "quantum_torpedo", "ion_cannon"] as const;
     const rawBaseSum = weaponTypeKeys.reduce((s, type) => s + dmg[type], 0);
     const activeWeaponBayIds = new Set(
       getActiveModules(ship.modules, "weaponbay").map((bay) => bay.id),
     );
     const hasGunnerInBay = crew.some(
       (crewMember) =>
-        crewMember.profession === "gunner" && activeWeaponBayIds.has(crewMember.moduleId),
+        crewMember.profession === "gunner" &&
+        crewMember.health > 0 &&
+        activeWeaponBayIds.has(crewMember.moduleId),
     );
     const combatDamageTotal = calculateFinalDamagePerWeapon(dmg.total, hasGunnerInBay);
     // The same multiplier as the attack resolver: global damage bonuses plus the gunner bonus.
     const multiplier = rawBaseSum > 0 ? combatDamageTotal / rawBaseSum : 1;
-    const laserWeaponBayIds = new Set(
-      ship.modules
-        .filter(
-          (module) =>
-            module.type === "weaponbay" &&
-            module.weapons?.some((weapon) => weapon?.type === "laser"),
-        )
-        .map((module) => module.id),
-    );
-    const laserDamageBonus = crew.reduce(
-      (bonus, crewMember) =>
-        laserWeaponBayIds.has(crewMember.moduleId)
-          ? bonus + getAugmentationBonus(crewMember, "laserDamageBonus")
-          : bonus,
-      0,
-    );
+    const laserDamageBonus = getCrewLaserDamageBonus(crew, ship.modules);
     const laserDisplay =
       laserDamageBonus > 0
         ? Math.floor(dmg.laser * multiplier * (1 + laserDamageBonus))
@@ -682,6 +669,15 @@ export function ShipStats() {
               >
                 <span>{t("ship_stats.antimatter")}</span>
                 <span>{Math.floor(damage.antimatter * dmgMultiplier)}</span>
+              </div>
+            )}
+            {damage.siege_torpedo > 0 && (
+              <div
+                className="flex justify-between text-xs"
+                style={{ color: "#ff8844" }}
+              >
+                <span>{t("weapon_types.siege_torpedo")}</span>
+                <span>{Math.floor(damage.siege_torpedo * dmgMultiplier)}</span>
               </div>
             )}
             {damage.ion_cannon > 0 && (

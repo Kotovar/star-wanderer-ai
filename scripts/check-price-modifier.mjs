@@ -16,6 +16,9 @@ const { applyReputationPriceModifier } = jiti(
 const { sellTradeGood } = jiti(
   "../src/game/slices/trade/helpers/sellTradeGood.ts",
 );
+const { buyTradeGood } = jiti(
+  "../src/game/slices/trade/helpers/buyTradeGood.ts",
+);
 
 const repAt = (value) => ({ human: value });
 
@@ -82,5 +85,44 @@ assert.equal(
   127,
   "a trader bonus must not turn an allied station's buy/sell spread into profit",
 );
+
+const invalidTradeState = {
+  credits: 100,
+  activeCrisis: null,
+  crew: [],
+  gases: {},
+  probes: 0,
+  research: { researchedTechs: [] },
+  raceReputation: {},
+  currentLocation: {
+    stationId: "trade-station",
+    stationConfig: { isPirate: false },
+  },
+  stationPrices: {
+    "trade-station": { water: { buy: 100, sell: 60 } },
+  },
+  stationStock: { "trade-station": { water: 5 } },
+  ship: {
+    cargo: [],
+    tradeGoods: [{ item: "water", quantity: 5 }],
+    modules: [{ type: "cargo", capacity: 40, health: 100 }],
+  },
+};
+const setInvalidTradeState = (update) => {
+  const patch =
+    typeof update === "function" ? update(invalidTradeState) : update;
+  if (patch && patch !== invalidTradeState) Object.assign(invalidTradeState, patch);
+};
+const getInvalidTradeState = () => ({
+  ...invalidTradeState,
+  addLog: () => undefined,
+  changeReputation: () => undefined,
+  getCargoCapacity: () => 40,
+});
+buyTradeGood(setInvalidTradeState, getInvalidTradeState, "water", -1);
+sellTradeGood(setInvalidTradeState, getInvalidTradeState, "water", -1);
+assert.equal(invalidTradeState.credits, 100, "отрицательная сделка не должна менять кредиты");
+assert.equal(invalidTradeState.stationStock["trade-station"].water, 5);
+assert.equal(invalidTradeState.ship.tradeGoods[0].quantity, 5);
 
 console.log("Price modifier checks passed");

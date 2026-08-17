@@ -5,6 +5,7 @@ import { playSound } from "@/sounds";
 import { createModuleFromShopItem } from "@/game/modules/createModuleFromShopItem";
 import { applyTechBonusesToNewModule } from "@/game/slices/research/helpers/researchHelpers";
 import { canPlaceModule } from "@/game/slices/ship/helpers/canPlaceModule";
+import { takeCargoItem } from "@/game/slices/ship/helpers/takeCargoItem";
 
 /**
  * Создаёт модуль из грузового элемента
@@ -83,7 +84,7 @@ export const installModuleFromCargo = (
     set((s) => ({
         ship: {
             ...s.ship,
-            cargo: s.ship.cargo.filter((_, idx) => idx !== cargoIndex),
+            cargo: takeCargoItem(s.ship.cargo, cargoIndex),
             modules: [...s.ship.modules, newModule],
         },
     }));

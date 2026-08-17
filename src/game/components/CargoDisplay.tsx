@@ -14,6 +14,7 @@ import { JettisonDialog } from "./JettisonDialog";
 import { WeaponDetailDialog } from "./WeaponDetailDialog";
 import { ModuleDetailDialog } from "./ModuleList";
 import { canPlaceModule } from "@/game/slices/ship/helpers/canPlaceModule";
+import { isModuleActive } from "@/game/modules";
 import {
     Dialog,
     DialogDescription,
@@ -241,20 +242,6 @@ export function CargoDisplay() {
         null,
     );
 
-    const cargoModules = ship.modules.filter(
-        (m) =>
-            m.type === "cargo" &&
-            !m.disabled &&
-            !m.manualDisabled &&
-            m.health > 0,
-    );
-
-    if (cargoModules.length === 0) {
-        return (
-            <div className="text-xs text-[#888]">{t("cargo.no_module")}</div>
-        );
-    }
-
     const totalCapacity = getCargoCapacity();
     // Место в трюме занимает весь ship.cargo, но в сводке это три разные
     // строки: скрафченное оружие и модули лежат там же, где грузы заданий,
@@ -296,12 +283,15 @@ export function CargoDisplay() {
         (sum, { item }) => sum + item.quantity,
         0,
     );
+    const moduleCargo = moduleItems.reduce(
+        (sum, { item }) => sum + item.quantity,
+        0,
+    );
 
     const weaponBaysWithSlots = ship.modules.filter(
         (m) =>
             m.type === "weaponbay" &&
-            !m.disabled &&
-            !m.manualDisabled &&
+            isModuleActive(m) &&
             m.weapons?.some((w) => !w),
     );
 
@@ -345,11 +335,16 @@ export function CargoDisplay() {
                         🗑 {t("cargo.jettison_title")}
                     </button>
                 )}
+                {totalCapacity === 0 && (
+                    <div className="mt-2 text-[11px] text-[#888]">
+                        {t("cargo.no_module")}
+                    </div>
+                )}
                 <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[10px] sm:grid-cols-6">
                     <CargoMetric label={t("cargo.section_contracts")} value={contractCargo} />
                     <CargoMetric label={t("cargo.section_trade")} value={tradeCargo} />
                     <CargoMetric label={t("cargo.section_weapons")} value={weaponCargo} />
-                    <CargoMetric label={t("cargo.section_modules")} value={moduleItems.length} />
+                    <CargoMetric label={t("cargo.section_modules")} value={moduleCargo} />
                     <CargoMetric label={t("cargo.section_gases")} value={gasCargo} />
                     <CargoMetric label={t("cargo.section_probes")} value={probes} />
                 </div>
@@ -366,7 +361,7 @@ export function CargoDisplay() {
                         <div>
                             <SectionHeader
                                 label={t("cargo.section_weapons")}
-                                count={craftedWeapons.length}
+                                count={weaponCargo}
                                 color="#00d4ff"
                                 collapsed={collapsed.weapons}
                                 onToggle={() => toggle("weapons")}
@@ -418,6 +413,7 @@ export function CargoDisplay() {
                                                         )}
                                                     </span>{" "}
                                                     <span className="text-[#666]">
+                                                        x{c.quantity}т {" "}
                                                         {t(
                                                             "cargo.crafted_label",
                                                         )}
@@ -497,7 +493,7 @@ export function CargoDisplay() {
                         <div>
                             <SectionHeader
                                 label={t("cargo.section_modules")}
-                                count={moduleItems.length}
+                                count={moduleCargo}
                                 color="#00d4ff"
                                 collapsed={collapsed.modules}
                                 onToggle={() => toggle("modules")}

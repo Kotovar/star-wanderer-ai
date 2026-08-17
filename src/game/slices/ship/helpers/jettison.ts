@@ -45,6 +45,8 @@ export function jettisonCargo(
     set: SetState,
     get: () => GameStore,
 ): void {
+    if (!Number.isFinite(quantity)) return;
+
     const state = get();
     const max = getJettisonMax(state, target);
     const amount = Math.min(max, Math.max(0, Math.floor(quantity)));

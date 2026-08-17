@@ -158,5 +158,25 @@ assert.doesNotMatch(
   /mineAsteroid_5/,
   "жёсткий гейт по тиру бура снят — локация больше не тупик",
 );
+assert.match(
+  mineAsteroidSource,
+  /getLivingShipCrew\(state\.crew\)\.some\(\s*\(c\) => c\.profession === "engineer",?\s*\)/,
+  "только живой инженер на борту должен открывать добычу",
+);
+assert.match(
+  mineAsteroidSource,
+  /getLivingShipCrew\(state\.crew\)\.find\(\s*\(c\) => c\.profession === "engineer",?\s*\)/,
+  "опыт добычи должен получать живой инженер на борту",
+);
+
+const atmosphereSource = readFileSync(
+  new URL("../src/game/slices/locations/helpers/atmosphericAnalysis.ts", import.meta.url),
+  "utf8",
+);
+assert.match(
+  atmosphereSource,
+  /getBestByProfession\(\s*getLivingShipCrew\(state\.crew\),\s*"scientist",?\s*\)/,
+  "погибший или приписанный к базе учёный не должен запускать атмосферный анализ",
+);
 
 console.log("Asteroid belt checks passed");
