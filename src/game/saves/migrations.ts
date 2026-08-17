@@ -12,6 +12,11 @@ import { hasCombatArmament } from "@/game/contracts/frontierContracts";
 import { PRE_SPACEFARING_CIVILIZATIONS } from "@/game/constants/preSpacefaringCivilizations";
 import { PIRATE_CONTRACT_REFRESH_INTERVAL } from "@/game/slices/pirate/contracts";
 import type { GameState, Location, Sector } from "@/game/types";
+import translationRU from "@/lib/locales/ru.json";
+import {
+  inferLocalizedLogMessage,
+  type TranslationCatalog,
+} from "@/game/slices/logs/utils";
 
 interface PersistedState {
   version: number;
@@ -607,6 +612,29 @@ const migrations: Record<number, Migration> = {
       )
         ? null
         : state.pendingContractDecision,
+    };
+  },
+  30: (raw) => {
+    const state = raw as Partial<GameState>;
+    const log = state.log?.map((entry) => {
+      if (!entry.message || entry.messageKey) return entry;
+
+      const localized = inferLocalizedLogMessage(entry.message, [
+        translationRU as TranslationCatalog,
+      ]);
+      return localized
+        ? {
+            ...entry,
+            messageKey: localized.key,
+            ...(localized.params ? { messageParams: localized.params } : {}),
+          }
+        : entry;
+    });
+
+    return {
+      ...state,
+      stateVersion: 31,
+      ...(log ? { log } : {}),
     };
   },
 };

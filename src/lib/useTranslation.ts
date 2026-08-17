@@ -6,19 +6,36 @@ import { useCallback, useSyncExternalStore, useEffect } from "react";
 // английский подгружается лениво отдельным чанком.
 import translationRU from "./locales/ru.json";
 
-const resources: Record<"ru" | "en", Record<string, unknown> | null> = {
+export type TranslationCatalog = Record<string, unknown>;
+
+const resources: Record<"ru" | "en", TranslationCatalog | null> = {
     ru: translationRU,
     en: null,
 };
 
+let englishLoad: Promise<void> | null = null;
+
 const loadEnglish = () => {
-    if (resources.en) return;
-    import("./locales/en.json").then((m) => {
-        resources.en = m.default;
-        store.rev++;
-        store.listeners.forEach((l) => l());
-    });
+    if (resources.en || englishLoad) return;
+    englishLoad = import("./locales/en.json")
+        .then((m) => {
+            resources.en = m.default;
+            store.rev++;
+            store.listeners.forEach((l) => l());
+        })
+        .finally(() => {
+            englishLoad = null;
+        });
 };
+
+/**
+ * Журналу нужен доступ к уже загруженным каталогам, чтобы восстановить ключ
+ * из старой сохранённой строки. Английский при этом остаётся ленивым.
+ */
+export const getLoadedTranslationCatalogs = (): TranslationCatalog[] =>
+    Object.values(resources).filter(
+        (catalog): catalog is TranslationCatalog => catalog !== null,
+    );
 
 // Simple translation store
 export const store = {

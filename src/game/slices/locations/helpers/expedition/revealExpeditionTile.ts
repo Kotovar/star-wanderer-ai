@@ -207,6 +207,7 @@ export function revealExpeditionTile(
                 get().addLog(
                     i18nStore.t("game_logs.pre_spacefaring_discovery_unavailable"),
                     "warning",
+                    "exploration",
                 );
                 break;
             }
@@ -232,6 +233,7 @@ export function revealExpeditionTile(
             get().addLog(
                 i18nStore.t("game_logs.pre_spacefaring_discovered"),
                 "info",
+                "exploration",
             );
             break;
         }

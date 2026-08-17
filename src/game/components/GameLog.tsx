@@ -2,37 +2,31 @@
 
 import { useMemo, useState } from "react";
 import { useGameStore } from "../store";
-import { useTranslation } from "@/lib/useTranslation";
-import type { LogEntry } from "@/game/types";
+import {
+    getLoadedTranslationCatalogs,
+    useTranslation,
+} from "@/lib/useTranslation";
+import {
+    LOG_CATEGORIES,
+    type LogCategory,
+    type LogEntry,
+} from "@/game/types";
+import { getLogMessage } from "@/game/slices/logs/utils";
 
 type TFunction = (
     key: string,
     params?: Record<string, string | number>,
 ) => string;
 
-type JournalFilter =
-    | "all"
-    | "combat"
-    | "crew"
-    | "research"
-    | "contracts"
-    | "exploration"
-    | "reputation"
-    | "system";
+type JournalFilter = "all" | LogCategory;
 
 const JOURNAL_FILTERS: JournalFilter[] = [
     "all",
-    "combat",
-    "crew",
-    "research",
-    "contracts",
-    "exploration",
-    "reputation",
-    "system",
+    ...LOG_CATEGORIES,
 ];
 
 const CATEGORY_COLORS: Record<
-    Exclude<JournalFilter, "all">,
+    LogCategory,
     { text: string; border: string; bg: string }
 > = {
     combat: {
@@ -263,7 +257,10 @@ function JournalEntryCard({
     const { t } = useTranslation();
     const color = CATEGORY_COLORS[category];
     const typeClass = getTypeClass(entry.type);
-    const message = formatJournalMessage(entry.message, t);
+    const message = formatJournalMessage(
+        getLogMessage(entry, t, getLoadedTranslationCatalogs()),
+        t,
+    );
 
     return (
         <div
@@ -313,9 +310,9 @@ function getTypeClass(type: LogEntry["type"]): string {
     }
 }
 
-function getJournalCategory(
-    entry: LogEntry,
-): Exclude<JournalFilter, "all"> {
+export function getJournalCategory(entry: LogEntry): LogCategory {
+    if (entry.category) return entry.category;
+
     const message = entry.message.toLowerCase();
 
     if (hasAny(message, EXPEDITION_TILE_LOG_MARKERS)) {

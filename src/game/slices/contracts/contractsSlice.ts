@@ -178,7 +178,7 @@ export const createContractsSlice = (
         if (result.logs) {
             result.logs.forEach((log) => {
                 const fullMessage = i18nStore.t("game_logs.contractsSlice_1", { message: log.message });
-                get().addLog(fullMessage, log.type);
+                get().addLog(fullMessage, log.type, log.category);
                 if (log.toast) toast(fullMessage);
             });
         }

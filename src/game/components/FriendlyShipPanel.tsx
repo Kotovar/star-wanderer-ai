@@ -604,8 +604,16 @@ export function FriendlyShipPanel() {
               };
             });
             addLog(
-              `🆘 Помогли кораблю в бедствии. Получено: ${creditReward}₢${hasResearchReward ? ` + ${researchRewardAmount}× исследовательский ресурс` : ""}`,
+              t("game_logs.distress_ship_helped", {
+                credits: creditReward,
+                research: hasResearchReward
+                  ? t("game_logs.distress_ship_research_reward", {
+                      amount: researchRewardAmount,
+                    })
+                  : "",
+              }),
               "info",
+              "exploration",
             );
           };
 

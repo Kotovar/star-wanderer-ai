@@ -24,7 +24,7 @@ export const repairShip = (set: SetState, get: () => GameStore): void => {
 
     // Проверка возможности ремонта
     if (!canUse) {
-        get().addLog("services.not_needed_repair", "warning");
+        get().addLog(i18nStore.t("services.not_needed"), "warning", "system");
         return;
     }
 

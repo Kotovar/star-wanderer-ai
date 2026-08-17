@@ -25,7 +25,7 @@ import type {
   SurfaceLogEntry,
   WreckApproach,
 } from "./locations/locations";
-import type { LogEntry } from "./logs";
+import type { LogEntry, LogMessage } from "./logs";
 import type { GasType, Outpost } from "./outposts";
 import type { PreSpacefaringActionStep } from "./planets";
 import type { JettisonTarget } from "@/game/slices/ship/helpers/jettison";
@@ -268,7 +268,11 @@ export interface GameState {
 }
 
 export interface GameActions {
-  addLog: (message: string, type?: LogEntry["type"]) => void;
+  addLog: (
+    message: LogMessage,
+    type?: LogEntry["type"],
+    category?: LogEntry["category"],
+  ) => void;
   updateShipStats: () => void;
   getTotalPower: () => number;
   getTotalConsumption: () => number;

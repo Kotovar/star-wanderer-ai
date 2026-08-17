@@ -1,7 +1,18 @@
 import { toast } from "sonner";
-import type { LogEntry } from "@/game/types/logs";
+import {
+    getLoadedTranslationCatalogs,
+    store as i18nStore,
+} from "@/lib/useTranslation";
+import type { LogCategory, LogEntry, LogMessage } from "@/game/types/logs";
 import type { GameState } from "@/game/types/game";
-import { LOG_TYPES, createLogEntry, updateLog } from "./utils";
+import {
+    LOG_TYPES,
+    createLogEntry,
+    inferLocalizedLogMessage,
+    isLocalizedLogMessage,
+    renderLocalizedLogMessage,
+    updateLog,
+} from "./utils";
 
 /**
  * Интерфейс LogSlice
@@ -27,7 +38,11 @@ export interface LogSlice {
      * addLog("Получено повреждение щита", "combat");
      * ```
      */
-    addLog: (message: string, type?: LogEntry["type"]) => void;
+    addLog: (
+        message: LogMessage,
+        type?: LogEntry["type"],
+        category?: LogCategory,
+    ) => void;
 }
 
 /**
@@ -62,16 +77,32 @@ export const createLogSlice = (
 ): LogSlice => ({
     ...logInitialState,
 
-    addLog: (message, type = LOG_TYPES.INFO) => {
+    addLog: (message, type = LOG_TYPES.INFO, category) => {
+        const localized = isLocalizedLogMessage(message)
+            ? message
+            : inferLocalizedLogMessage(message, getLoadedTranslationCatalogs());
+        const renderedMessage = isLocalizedLogMessage(message)
+            ? renderLocalizedLogMessage(
+                  message,
+                  i18nStore.t.bind(i18nStore),
+              )
+            : message;
+
         set((state) => {
-            const newEntry = createLogEntry(message, type, state.turn);
+            const newEntry = createLogEntry(
+                renderedMessage,
+                type,
+                state.turn,
+                category,
+                localized,
+            );
             state.log = updateLog(state.log, newEntry);
         });
 
         // Критические события дублируются попапом, чтобы их нельзя было
         // пропустить в ленте лога
         if (type === LOG_TYPES.ERROR) {
-            toast.error(message);
+            toast.error(renderedMessage);
         }
     },
 });

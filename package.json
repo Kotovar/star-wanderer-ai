@@ -10,6 +10,7 @@
     "type-check": "tsc --noEmit --pretty false",
     "audio:generate": "node --no-warnings scripts/generate-audio.mjs",
     "check:log-placeholders": "node --no-warnings scripts/check-log-placeholders.mjs",
+    "check:game-log": "node --no-warnings scripts/check-game-log.mjs",
     "check:audio": "node --no-warnings --experimental-strip-types scripts/check-audio.mjs",
     "check:planet-specializations": "node --no-warnings --experimental-strip-types scripts/check-planet-specialization-bonuses.mjs",
     "check:planet-specialization-access": "node --no-warnings --experimental-strip-types scripts/check-planet-specialization-access.mjs",

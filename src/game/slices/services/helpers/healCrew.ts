@@ -21,7 +21,7 @@ export const healCrew = (set: SetState, get: () => GameStore): void => {
 
     // Проверка возможности лечения
     if (!canUse) {
-        get().addLog("services.not_needed_heal", "warning");
+        get().addLog(i18nStore.t("services.not_needed"), "warning", "system");
         return;
     }
 

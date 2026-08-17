@@ -1,7 +1,7 @@
-import type { GameState, LogEntry } from "@/game/types";
+import type { GameState, LogCategory, LogEntry } from "@/game/types";
 import { isModuleActive } from "@/game/modules/utils";
 import { store as i18nStore } from "@/lib/useTranslation";
-import { getLocationName } from "@/lib/translationHelpers";
+import { getLocationName, getPlanetTypeName } from "@/lib/translationHelpers";
 
 /**
  * Обрабатывает сканирование планеты при посещении локации
@@ -47,16 +47,28 @@ export const processScanContracts = (state: GameState) => {
     }
 
     let newActiveContracts = state.activeContracts;
-    const logs: { message: string; type: LogEntry["type"]; toast?: boolean }[] = [];
+    const logs: {
+        message: string;
+        type: LogEntry["type"];
+        category: LogCategory;
+        toast?: boolean;
+    }[] = [];
 
     scanContracts.forEach((c) => {
         const required = c.requiresVisit ?? 1;
+        const t = i18nStore.t.bind(i18nStore);
+        const currentPlanetType = getPlanetTypeName(
+            location.planetType ?? "",
+            t,
+        );
+        const targetPlanetType = getPlanetTypeName(c.planetType ?? "", t);
 
         // Проверяем, не выполнен ли уже контракт
         if (c.visited && c.visited >= required) {
             logs.push({
-                message: "планета уже отсканирована по этому контракту",
+                message: i18nStore.t("game_logs.scan_contract_already_scanned"),
                 type: "info",
+                category: "contracts",
             });
             return;
         }
@@ -64,8 +76,9 @@ export const processScanContracts = (state: GameState) => {
         // Каждая планета засчитывается один раз — повторный визит не фармится
         if (c.scannedPlanetIds?.includes(location.id)) {
             logs.push({
-                message: "эта планета уже засчитана — найдите другую",
+                message: i18nStore.t("game_logs.scan_contract_duplicate_planet"),
                 type: "info",
+                category: "contracts",
             });
             return;
         }
@@ -82,22 +95,36 @@ export const processScanContracts = (state: GameState) => {
 
         if (newVisited >= required) {
             // Все планеты отсканированы — возвращаемся
-            const t = i18nStore.t.bind(i18nStore);
             const returnLocation = c.sourcePlanetName
                 ? `${getLocationName(c.sourceSectorName ?? "", t)}, ${getLocationName(c.sourcePlanetName, t)}`
                 : c.sourceName && c.sourceSectorName
                   ? `${c.sourceName} (${getLocationName(c.sourceSectorName, t)})`
-                  : getLocationName(c.sourceSectorName || "базу", t);
+                  : getLocationName(
+                        c.sourceSectorName ||
+                            i18nStore.t("game_logs.scan_contract_base"),
+                        t,
+                    );
             logs.push({
-                message: `${location.planetType} отсканирована! Возвращайтесь на ${returnLocation}`,
+                message: i18nStore.t("game_logs.scan_contract_complete", {
+                    planetType: currentPlanetType,
+                    returnLocation,
+                }),
                 type: "info",
+                category: "contracts",
                 toast: true,
             });
         } else {
             // Ещё нужно сканировать
             logs.push({
-                message: `${location.planetType} отсканирована (${newVisited}/${required}). Найдите ещё ${required - newVisited} планет${required - newVisited > 1 ? "ы" : "у"} типа "${c.planetType}"`,
+                message: i18nStore.t("game_logs.scan_contract_progress", {
+                    planetType: currentPlanetType,
+                    visited: newVisited,
+                    required,
+                    remaining: required - newVisited,
+                    targetPlanetType,
+                }),
                 type: "info",
+                category: "contracts",
             });
         }
     });

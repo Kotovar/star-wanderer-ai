@@ -84,10 +84,12 @@ export const createReputationSlice = (
                 const newLevelName = getReputationLevelName(result.newLevel);
                 get().addLog( i18nStore.t("game_logs.createReputationSlice_1", { raceName, sign, amount: appliedAmount, oldLevelName, newLevelName }),
                     logType,
+                    "reputation",
                 );
             } else {
                 get().addLog( i18nStore.t("game_logs.createReputationSlice_2", { raceName, sign, amount: appliedAmount }),
                     logType,
+                    "reputation",
                 );
             }
 
@@ -103,6 +105,7 @@ export const createReputationSlice = (
                 get().addLog(
                     `${affectedRaceName}: ${changeSign}${Math.round(change)}`,
                     "info",
+                    "reputation",
                 );
             }
         }
@@ -129,6 +132,7 @@ export const createReputationSlice = (
         if (currentRep >= MAX_DIPLOMATIC_REP) {
             get().addLog( i18nStore.t("game_logs.createReputationSlice_3"),
                 "warning",
+                "reputation",
             );
             return;
         }
@@ -140,7 +144,7 @@ export const createReputationSlice = (
         const hasTranslator = get().diplomaticTranslatorRaceIds.includes(raceId);
         const cost = getDiplomacyCost(currentRep, effectiveAmount, hasTranslator);
         if (get().credits < cost) {
-            get().addLog( i18nStore.t("game_logs.createReputationSlice_4", { cost }), "error");
+            get().addLog( i18nStore.t("game_logs.createReputationSlice_4", { cost }), "error", "reputation");
             return;
         }
         set((state) => {
@@ -150,6 +154,7 @@ export const createReputationSlice = (
         get().changeReputation(raceId, effectiveAmount);
         get().addLog( i18nStore.t("game_logs.createReputationSlice_5"),
             "info",
+            "reputation",
         );
     },
 
@@ -158,11 +163,12 @@ export const createReputationSlice = (
         if (get().credits < COST) {
             get().addLog( i18nStore.t("game_logs.createReputationSlice_6", { COST }),
                 "error",
+                "reputation",
             );
             return;
         }
         if (!get().bannedPlanets.includes(locationId)) {
-            get().addLog( i18nStore.t("game_logs.createReputationSlice_7"), "warning");
+            get().addLog( i18nStore.t("game_logs.createReputationSlice_7"), "warning", "reputation");
             return;
         }
         set((state) => {
@@ -172,7 +178,7 @@ export const createReputationSlice = (
             );
             return state;
         });
-        get().addLog( i18nStore.t("game_logs.createReputationSlice_8"), "info");
+        get().addLog( i18nStore.t("game_logs.createReputationSlice_8"), "info", "reputation");
     },
 
     hireTranslator: (raceId: RaceId) => {
@@ -185,6 +191,7 @@ export const createReputationSlice = (
                     cost: TRANSLATOR_HIRE_COST,
                 }),
                 "error",
+                "reputation",
             );
             return;
         }
@@ -201,6 +208,7 @@ export const createReputationSlice = (
                 raceName: i18nStore.t(`races.${raceId}.plural`),
             }),
             "info",
+            "reputation",
         );
     },
 

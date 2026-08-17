@@ -201,6 +201,7 @@ export function advancePreSpacefaringContact(
         get().addLog(
             i18nStore.t(`game_logs.pre_spacefaring_action_${blocker}`),
             "warning",
+            "exploration",
         );
         return;
     }
@@ -252,6 +253,10 @@ export function advancePreSpacefaringContact(
             },
         }),
     }));
-    get().addLog(i18nStore.t("game_logs.pre_spacefaring_action_done"), "info");
+    get().addLog(
+        i18nStore.t("game_logs.pre_spacefaring_action_done"),
+        "info",
+        "exploration",
+    );
     get().nextTurn();
 }

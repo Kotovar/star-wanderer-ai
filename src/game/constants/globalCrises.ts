@@ -2,9 +2,9 @@ import type { ActiveCrisisState, GlobalCrisis } from "@/game/types/crisis";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
 import type { GameState } from "@/game/types";
 import { RACES } from "@/game/constants/races";
-import { TRADE_GOODS } from "@/game/constants/goods";
 import { getCrisisStage } from "@/game/crises/escalation";
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getTradeGoodName } from "@/lib/translationHelpers";
 import { generateNebulaFrontNebulae } from "@/game/galaxy/nebulae";
 import {
   canStartNebulaFront,
@@ -106,6 +106,12 @@ const setModulesManualDisabled = (
 };
 
 const formatNames = (names: string[]) => names.join(", ");
+
+const getLocalizedModuleName = (module: { type: string; name: string }) => {
+  const key = `module_names.${module.type}`;
+  const translated = i18nStore.t(key);
+  return translated === key ? module.name : translated;
+};
 
 const randomInt = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
@@ -331,14 +337,25 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
           },
         }));
         get().addLog(
-          `🏴‍☠️ Рейдеры прорвали периметр и похитили ${TRADE_GOODS[cargoLoss.item]?.name ?? cargoLoss.item} x${stolenQty}`,
+          i18nStore.t("game_logs.crisis_raider_cargo_stolen", {
+            cargo: getTradeGoodName(
+              cargoLoss.item,
+              i18nStore.t.bind(i18nStore),
+              cargoLoss.item,
+            ),
+            quantity: stolenQty,
+          }),
           "error",
+          "system",
         );
       }
       if (targets.length > 0) {
         get().addLog(
-          `🏴‍☠️ Под ударом внешние системы: ${formatNames(targets.map((module) => module.name))}`,
+          i18nStore.t("game_logs.crisis_raider_modules_hit", {
+            modules: formatNames(targets.map(getLocalizedModuleName)),
+          }),
           "warning",
+          "system",
         );
       }
     },
@@ -393,9 +410,15 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
           5,
         ),
       );
-      const targetName = targets[0]?.name;
-      const lossLabel =
-        state.credits > 0 ? `-${creditLoss}₢` : `-${fuelLoss} топлива`;
+      const targetName = targets[0]
+        ? getLocalizedModuleName(targets[0])
+        : undefined;
+      const loss = i18nStore.t(
+        state.credits > 0
+          ? "game_logs.crisis_loss_credits"
+          : "game_logs.crisis_loss_fuel",
+        { value: state.credits > 0 ? creditLoss : fuelLoss },
+      );
       set((s: GameState) => ({
         crew: s.crew.map((crewMember) => ({
           ...crewMember,
@@ -412,10 +435,16 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
         })),
       }));
       get().addLog(
-        targetName
-          ? `🏴‍☠️ Рейдерский налёт: ${lossLabel}, повреждён ${targetName}`
-          : `🏴‍☠️ Рейдерский налёт: ${lossLabel}, экипаж на взводе`,
+        i18nStore.t("game_logs.crisis_raider_turn", {
+          loss,
+          status: targetName
+            ? i18nStore.t("game_logs.crisis_raider_module_damaged", {
+                module: targetName,
+              })
+            : i18nStore.t("game_logs.crisis_raider_crew_alert"),
+        }),
         "warning",
+        "system",
       );
     },
   },
@@ -460,8 +489,11 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       }));
       if (disrupted.length > 0) {
         get().addLog(
-          `☀️ Электроника ослеплена вспышкой: ${formatNames(disrupted.map((module) => module.name))}`,
+          i18nStore.t("game_logs.crisis_solar_modules_disabled", {
+            modules: formatNames(disrupted.map(getLocalizedModuleName)),
+          }),
           "warning",
+          "system",
         );
       }
       return { disabledModuleIds: disruptedIds };
@@ -482,10 +514,13 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
         },
       }));
       get().addLog(
-        disruptedIds.length > 0
-          ? "☀️ Солнечная вспышка: экраны перегружены, чувствительные модули продолжают страдать"
-          : "☀️ Солнечная вспышка: щиты сорваны, сенсоры захлёбываются помехами",
+        i18nStore.t(
+          disruptedIds.length > 0
+            ? "game_logs.crisis_solar_turn_with_modules"
+            : "game_logs.crisis_solar_turn_without_modules",
+        ),
         "warning",
+        "system",
       );
     },
     onEndEffect: (set, get, activeCrisis) => {
@@ -494,8 +529,9 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       setModulesManualDisabled(set, disruptedIds, false);
       if (disruptedIds.length > 0) {
         get().addLog(
-          "☀️ Солнечная активность спала, бортовая электроника возвращается в строй",
+          i18nStore.t("game_logs.crisis_solar_ended"),
           "info",
+          "system",
         );
       }
     },
@@ -528,8 +564,11 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       );
       if (infected.length > 0) {
         get().addLog(
-          `🦠 Вспышка болезни на борту: заражены ${formatNames(infected.map((crewMember) => getCrewDisplayName(crewMember)))}`,
+          i18nStore.t("game_logs.crisis_epidemic_started", {
+            crew: formatNames(infected.map((crewMember) => getCrewDisplayName(crewMember))),
+          }),
           "error",
+          "system",
         );
       }
       return { infectedCrewIds: infected.map((crewMember) => crewMember.id) };
@@ -595,15 +634,23 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       }));
       if (newlyInfected.length > 0) {
         get().addLog(
-          `🦠 Карантин прорван: заражён ${formatNames(newlyInfected.map((crewMember) => getCrewDisplayName(crewMember)))}`,
+          i18nStore.t("game_logs.crisis_epidemic_spread", {
+            crew: formatNames(
+              newlyInfected.map((crewMember) => getCrewDisplayName(crewMember)),
+            ),
+          }),
           "error",
+          "system",
         );
       }
       get().addLog(
-        hasMedicSupport
-          ? "🦠 Эпидемия сдерживается медиками, но заражённые всё ещё слабеют"
-          : "🦠 Эпидемия распространяется по жилым отсекам и давит на мораль экипажа",
+        i18nStore.t(
+          hasMedicSupport
+            ? "game_logs.crisis_epidemic_turn_with_medic"
+            : "game_logs.crisis_epidemic_turn_without_medic",
+        ),
         "warning",
+        "system",
       );
       return newlyInfected.length > 0
         ? {
@@ -623,7 +670,7 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
           health: Math.min(crewMember.maxHealth, crewMember.health + 4),
         })),
       }));
-      get().addLog("🦠 Карантин снят: экипаж приходит в себя", "info");
+      get().addLog(i18nStore.t("game_logs.crisis_epidemic_ended"), "info", "system");
     },
   },
 
@@ -664,13 +711,17 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       }));
       if (throttled.length > 0) {
         get().addLog(
-          `⛽ Топливный кризис: тяга ограничена в системах ${formatNames(throttled.map((module) => module.name))}`,
+          i18nStore.t("game_logs.crisis_fuel_modules_throttled", {
+            modules: formatNames(throttled.map(getLocalizedModuleName)),
+          }),
           "warning",
+          "system",
         );
       } else {
         get().addLog(
-          "⛽ Топливный кризис: баки пустеют быстрее обычного",
+          i18nStore.t("game_logs.crisis_fuel_empty_tanks"),
           "warning",
+          "system",
         );
       }
       return { throttledModuleIds: throttledIds };
@@ -724,8 +775,9 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
         ),
       );
       get().addLog(
-        `⛽ Нормирование топлива: -${drain} топлива, экипажу урезаны перелёты и пайки`,
+        i18nStore.t("game_logs.crisis_fuel_turn", { drain }),
         "warning",
+        "system",
       );
     },
     onEndEffect: (set, get, activeCrisis) => {
@@ -733,8 +785,9 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
         (activeCrisis.data?.throttledModuleIds as number[] | undefined) ?? [];
       setModulesManualDisabled(set, throttledIds, false);
       get().addLog(
-        "⛽ Топливные поставки стабилизировались, двигатели снова доступны",
+        i18nStore.t("game_logs.crisis_fuel_ended"),
         "info",
+        "system",
       );
     },
   },
@@ -767,6 +820,7 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
           count: createdNebulae.length,
         }),
         "error",
+        "system",
       );
       return { nebulaIds: createdNebulae.map((nebula) => nebula.id) };
     },
@@ -781,6 +835,7 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
           remaining: progress?.remaining ?? 0,
         }),
         progress?.remaining ? "warning" : "info",
+        "system",
       );
     },
   },

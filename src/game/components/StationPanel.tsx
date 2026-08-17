@@ -1023,8 +1023,9 @@ export function StationPanel() {
                                 },
                             }));
                             addLog(
-                                `📊 Проданы исследовательские данные: ${qty}× → +${earned}₢`,
+                                t("game_logs.research_data_sold", { qty, earned }),
                                 "info",
+                                "research",
                             );
                         }}
                         onBuyResearchResource={(type, qty) => {
@@ -1045,8 +1046,9 @@ export function StationPanel() {
                             }
                             if (currentState.credits < cost) {
                                 addLog(
-                                    "Недостаточно кредитов для закупки материалов!",
+                                    t("game_logs.research_materials_not_enough_credits"),
                                     "error",
+                                    "research",
                                 );
                                 return;
                             }
@@ -1073,8 +1075,9 @@ export function StationPanel() {
                                 },
                             }));
                             addLog(
-                                `🔬 Закуплены исследовательские материалы: ${qty}× → -${cost}₢`,
+                                t("game_logs.research_materials_bought", { qty, cost }),
                                 "info",
+                                "research",
                             );
                         }}
                     />
