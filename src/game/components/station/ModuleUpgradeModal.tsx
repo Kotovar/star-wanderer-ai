@@ -438,20 +438,20 @@ function ModuleUpgradeCard({
                             size={30}
                         />
                         {module.capacity}
-                        {module.type === "cargo" && "т"}
+                        {module.type === "cargo" && t("station.ton_short")}
                         {capacityAfter !== undefined &&
                             capacityAfter !== module.capacity && (
                                 <span className="text-[#ffb000]">
                                     {" "}
                                     → {capacityAfter}
-                                    {module.type === "cargo" && "т"}
+                                    {module.type === "cargo" && t("station.ton_short")}
                                 </span>
                             )}
                     </span>
                 )}
                 {module.fuelEfficiency !== undefined && (
                     <span className="inline-flex items-center gap-1">
-                        <StatIcon type="fuel_efficiency" size={30} /> эф. {module.fuelEfficiency}
+                        <StatIcon type="fuel_efficiency" size={30} /> {t("station.efficiency_short")} {module.fuelEfficiency}
                         {fuelEfficiencyAfter !== undefined &&
                             fuelEfficiencyAfter !== module.fuelEfficiency && (
                                 <span className="text-[#ffb000]">

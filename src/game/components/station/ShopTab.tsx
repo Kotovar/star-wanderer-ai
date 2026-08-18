@@ -404,7 +404,7 @@ function ShopItemCard({
                     {displayName}
                     {item.type === "module" && item.level && (
                         <span className="ml-1.5 text-[10px] font-normal text-[#888] bg-[rgba(255,255,255,0.08)] px-1.5 py-0.5 rounded">
-                            Ур.{item.level}
+                            {t("station.level_short")}{item.level}
                         </span>
                     )}
                 </div>
@@ -590,7 +590,9 @@ function ItemDescription({ item }: ItemDescriptionProps) {
                 `🔬 +${item.effect?.researchOutput ?? 3} ${t("module_list.search_per_turn")}`}
             {item.type === "upgrade" &&
                 item.targetType === "medical" &&
-                `🏥 +${item.effect?.healing ?? 6} ${t("crew_member.regen_short").replace("❤ Регенерация: +", "").replace("/ход", "")}`}
+                t("station.healing_per_turn", {
+                    value: item.effect?.healing ?? 6,
+                })}
         </div>
     );
 }

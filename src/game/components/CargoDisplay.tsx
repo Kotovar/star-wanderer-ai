@@ -15,6 +15,7 @@ import { WeaponDetailDialog } from "./WeaponDetailDialog";
 import { ModuleDetailDialog } from "./ModuleList";
 import { canPlaceModule } from "@/game/slices/ship/helpers/canPlaceModule";
 import { isModuleActive } from "@/game/modules";
+import { getStationInstallationCapabilities } from "@/game/galaxy/config";
 import {
     Dialog,
     DialogDescription,
@@ -221,6 +222,8 @@ export function CargoDisplay() {
     );
     const activeContracts = useGameStore((s) => s.activeContracts);
     const turn = useGameStore((s) => s.turn);
+    const currentLocation = useGameStore((s) => s.currentLocation);
+    const gameMode = useGameStore((s) => s.gameMode);
     const { t } = useTranslation();
 
     const [infoGood, setInfoGood] = useState<Goods | null>(null);
@@ -294,6 +297,22 @@ export function CargoDisplay() {
             isModuleActive(m) &&
             m.weapons?.some((w) => !w),
     );
+    const installationCapabilities = getStationInstallationCapabilities(
+        currentLocation?.type === "station"
+            ? currentLocation.stationType
+            : undefined,
+        currentLocation?.type === "station"
+            ? currentLocation.stationConfig
+            : undefined,
+    );
+    const canInstallModules =
+        gameMode === "station" &&
+        currentLocation?.type === "station" &&
+        installationCapabilities.modules;
+    const canInstallWeapons =
+        gameMode === "station" &&
+        currentLocation?.type === "station" &&
+        installationCapabilities.weapons;
 
     const toggle = (key: SectionKey) =>
         setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -419,28 +438,34 @@ export function CargoDisplay() {
                                                         )}
                                                     </span>
                                                 </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setExpandedWeaponIdx(
-                                                            isExpanded
-                                                                ? null
-                                                                : idx,
-                                                        )
-                                                    }
-                                                    className="text-[10px] border px-1.5 py-0.5 cursor-pointer hover:bg-[rgba(255,255,255,0.08)] transition-colors"
-                                                    style={{
-                                                        color:
-                                                            weapon?.color ??
-                                                            "#00d4ff",
-                                                        borderColor:
-                                                            weapon?.color ??
-                                                            "#00d4ff",
-                                                    }}
-                                                >
-                                                    {t("cargo.install")}{" "}
-                                                    {isExpanded ? "▲" : "▼"}
-                                                </button>
+                                                {canInstallWeapons ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setExpandedWeaponIdx(
+                                                                isExpanded
+                                                                    ? null
+                                                                    : idx,
+                                                            )
+                                                        }
+                                                        className="text-[10px] border px-1.5 py-0.5 cursor-pointer hover:bg-[rgba(255,255,255,0.08)] transition-colors"
+                                                        style={{
+                                                            color:
+                                                                weapon?.color ??
+                                                                "#00d4ff",
+                                                            borderColor:
+                                                                weapon?.color ??
+                                                                "#00d4ff",
+                                                        }}
+                                                    >
+                                                        {t("cargo.install")}{" "}
+                                                        {isExpanded ? "▲" : "▼"}
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-[10px] text-[#888]">
+                                                        {t("cargo.install_weapons_at_military")}
+                                                    </span>
+                                                )}
                                             </div>
                                             {isExpanded && (
                                                 <div className="mt-2 pt-2 border-t border-[rgba(255,255,255,0.08)]">
@@ -538,7 +563,11 @@ export function CargoDisplay() {
                                                         )}
                                                     </span>
                                                 </button>
-                                                {freePos ? (
+                                                {!canInstallModules ? (
+                                                    <span className="text-[10px] text-[#888]">
+                                                        {t("cargo.install_modules_at_shipyard")}
+                                                    </span>
+                                                ) : freePos ? (
                                                     <button
                                                         type="button"
                                                         onClick={() =>

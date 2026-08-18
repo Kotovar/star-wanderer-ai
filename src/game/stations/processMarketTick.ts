@@ -3,13 +3,15 @@ import {
     STOCK_RANGE,
     getTierPriceMultiplier,
 } from "@/game/slices/trade/constants";
-import type { GameStore, SetState } from "@/game/types";
+import type { GameStore, Goods, SetState } from "@/game/types";
 import {
     driftStationPrices,
     restockStations,
     PRICE_DRIFT_INTERVAL,
     RESTOCK_INTERVAL,
     type BasePrices,
+    getStationSellPriceMultiplier,
+    type StationSellPriceMultipliers,
     type StationTierMultipliers,
 } from "./marketTick";
 
@@ -34,11 +36,21 @@ export const processMarketTick = (
     if (turn > 0 && turn % PRICE_DRIFT_INTERVAL === 0) {
         // Коридор дрейфа учитывает тир сектора станции
         const tierMultipliers: StationTierMultipliers = {};
+        const sellPriceMultipliers: StationSellPriceMultipliers = {};
         for (const sector of get().galaxy.sectors) {
             for (const loc of sector.locations) {
                 if (loc.type === "station" && loc.stationId) {
                     tierMultipliers[loc.stationId] = getTierPriceMultiplier(
                         sector.tier,
+                    );
+                    sellPriceMultipliers[loc.stationId] = Object.fromEntries(
+                        Object.keys(TRADE_GOODS).map((goodId) => [
+                            goodId,
+                            getStationSellPriceMultiplier(
+                                loc.stationConfig,
+                                goodId as Goods,
+                            ),
+                        ]),
                     );
                 }
             }
@@ -49,6 +61,7 @@ export const processMarketTick = (
                 BASE_PRICES,
                 Math.random,
                 tierMultipliers,
+                sellPriceMultipliers,
             ),
         }));
     }

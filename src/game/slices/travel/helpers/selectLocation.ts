@@ -185,6 +185,7 @@ export const selectLocation = (
         case "station": {
             const stationRace = loc.dominantRace;
             if (
+                loc.stationType !== "diplomatic" &&
                 stationRace &&
                 getRaceReputationLevel(state.raceReputation, stationRace) === "hostile"
             ) {

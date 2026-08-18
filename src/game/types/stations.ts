@@ -26,7 +26,10 @@ export type StationConfig = {
     // Service availability flags
     allowsTrade: boolean; // Торговля товарами (магазин)
     allowsCraft: boolean; // Крафт
-    allowsModuleInstall: boolean; // Установка модулей и оружия
+    allowsWeaponCraft?: boolean; // Крафт оружия
+    allowsModuleCraft?: boolean; // Сборка модулей
+    allowsModuleInstall: boolean; // Установка модулей
+    allowsWeaponInstall?: boolean; // Установка оружия
     allowsCrewHeal: boolean; // Лечение экипажа
     isPirate?: boolean; // Пиратская станция (чёрный рынок, контракты, риск засады)
 };

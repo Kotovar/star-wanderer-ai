@@ -190,7 +190,8 @@ export const generateStation = (
     );
     const stationType =
         availableTypes[Math.floor(Math.random() * availableTypes.length)];
-    const dominantRace = getRandomRace([]);
+    const dominantRace =
+        stationType === "diplomatic" ? undefined : getRandomRace([]);
     const stationConfig = STATION_CONFIG[stationType];
 
     const base: Location = {

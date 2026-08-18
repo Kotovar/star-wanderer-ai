@@ -1,6 +1,6 @@
 // Без runtime-импортов: файл покрыт scripts/check-market-tick.mjs,
 // который запускается через node --experimental-strip-types.
-import type { StationPrices, StationStock } from "@/game/types";
+import type { Goods, StationConfig, StationPrices, StationStock } from "@/game/types";
 
 /** Период дрейфа цен (в ходах) */
 export const PRICE_DRIFT_INTERVAL = 5;
@@ -26,6 +26,27 @@ export type BasePrices = Record<string, number>;
 /** Множители цен станций по тиру сектора: stationId -> multiplier */
 export type StationTierMultipliers = Record<string, number>;
 
+/** Множители цены продажи по станции и товару, сохраняемые при дрейфе. */
+export type StationSellPriceMultipliers = Record<
+    string,
+    Partial<Record<Goods, number>>
+>;
+
+export const getStationSellPriceMultiplier = (
+    config: StationConfig | undefined,
+    goodId: Goods,
+): number => {
+    const priceDiscount =
+        goodId === "contraband" ? 1 : (config?.priceDiscount ?? 1);
+    const mineralBonus =
+        goodId === "minerals"
+            ? (config?.mineralSellBonus ?? 1)
+            : goodId === "rare_minerals"
+              ? (config?.rareMineralSellBonus ?? 1)
+              : 1;
+    return priceDiscount * mineralBonus;
+};
+
 /**
  * Дрейф цен всех станций: каждая цена смещается на случайный множитель
  * в пределах ±MAX_PRICE_DRIFT. Цена продажи зажимается в коридор
@@ -37,6 +58,7 @@ export type StationTierMultipliers = Record<string, number>;
  * @param basePrices - Базовые цены товаров (для коридора)
  * @param random - Источник случайности (подменяется в тестах)
  * @param tierMultipliers - Множители цен по тиру сектора станции
+ * @param sellPriceMultipliers - Постоянные множители специализации станции
  * @returns Новые цены станций
  */
 export const driftStationPrices = (
@@ -44,26 +66,29 @@ export const driftStationPrices = (
     basePrices: BasePrices,
     random: () => number = Math.random,
     tierMultipliers: StationTierMultipliers = {},
+    sellPriceMultipliers: StationSellPriceMultipliers = {},
 ): StationPrices => {
     const next: StationPrices = {};
 
     for (const stationId of Object.keys(prices)) {
         const stationPrices = prices[stationId];
         const tierMult = tierMultipliers[stationId] ?? 1;
+        const stationMultipliers = sellPriceMultipliers[stationId] ?? {};
         next[stationId] = { ...stationPrices };
 
         for (const goodId of Object.keys(stationPrices)) {
             const current = stationPrices[goodId as keyof typeof stationPrices];
             const basePrice = basePrices[goodId];
             if (!current || !basePrice) continue;
+            const stationMult = stationMultipliers[goodId as Goods] ?? 1;
 
             const drift = 1 + (random() * 2 - 1) * MAX_PRICE_DRIFT;
 
             const minSell = Math.floor(
-                basePrice * tierMult * PRICE_FLOOR_MULTIPLIER,
+                basePrice * tierMult * stationMult * PRICE_FLOOR_MULTIPLIER,
             );
             const maxSell = Math.floor(
-                basePrice * tierMult * PRICE_CEIL_MULTIPLIER,
+                basePrice * tierMult * stationMult * PRICE_CEIL_MULTIPLIER,
             );
             const sell = Math.min(
                 maxSell,

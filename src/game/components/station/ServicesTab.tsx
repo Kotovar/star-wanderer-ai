@@ -139,6 +139,7 @@ interface ServicesTabProps {
     // Station type flags
     allowsCrewHeal: boolean;
     allowsModuleInstall: boolean;
+    allowsWeaponInstall: boolean;
     allowsMutationCure: boolean;
     allowsGeneticTherapy: boolean;
     allowsAugmentation: boolean;
@@ -192,6 +193,7 @@ export function ServicesTab({
     canHeal,
     allowsCrewHeal,
     allowsModuleInstall,
+    allowsWeaponInstall,
     allowsMutationCure,
     allowsGeneticTherapy,
     allowsAugmentation,
@@ -290,7 +292,7 @@ export function ServicesTab({
                     onInstall={installModuleFromCargo}
                 />
             )}
-            {allowsModuleInstall && (
+            {allowsWeaponInstall && (
                 <InstallWeaponSection
                     ship={ship}
                     onInstall={installCraftedWeapon}
@@ -408,16 +410,18 @@ function ProbeSection({
     freeCargoSpace: number;
     onBuyProbe: (count: number) => void;
 }) {
+    const { t } = useTranslation();
+
     return (
         <div className="bg-[rgba(123,79,255,0.05)] border border-[#7b4fff] p-4">
             <div className="text-[#7b4fff] font-bold mb-2">
-                🔬 Исследовательские зонды
+                🔬 {t("services.probes_title")}
             </div>
             <div className="text-sm text-[#00ff41] mb-1">
-                На борту: <span className="font-bold">{probes}</span>
+                {t("services.probes_onboard", { probes })}
             </div>
             <div className="text-xs text-[#888] mb-3">
-                {PROBE_PRICE}₢ за зонд · расходуется при погружении в газовый гигант
+                {t("services.probes_price_desc", { price: PROBE_PRICE })}
             </div>
             <div className="flex gap-2">
                 {[1, 3, 5].map((count) => (
@@ -460,6 +464,7 @@ function RefuelSection({
     onClaimEmergencyFuel: () => void;
 }) {
     const { t } = useTranslation();
+    const fuelChunks = [10, 25].filter((amount) => fuelNeeded >= amount);
 
     return (
         <div className="bg-[rgba(153,51,255,0.05)] border border-[#9933ff] p-4">
@@ -477,22 +482,15 @@ function RefuelSection({
                 </span>
             </div>
             <div className="flex flex-wrap gap-2">
-                <RefuelButton
-                    amount={10}
-                    price={fuelPricePerUnit * 10}
-                    disabled={
-                        fuelNeeded <= 0 || credits < fuelPricePerUnit * 10
-                    }
-                    onRefuel={onRefuel}
-                />
-                <RefuelButton
-                    amount={25}
-                    price={fuelPricePerUnit * 25}
-                    disabled={
-                        fuelNeeded <= 0 || credits < fuelPricePerUnit * 25
-                    }
-                    onRefuel={onRefuel}
-                />
+                {fuelChunks.map((amount) => (
+                    <RefuelButton
+                        key={amount}
+                        amount={amount}
+                        price={fuelPricePerUnit * amount}
+                        disabled={credits < fuelPricePerUnit * amount}
+                        onRefuel={onRefuel}
+                    />
+                ))}
                 <RefuelButton
                     amount={fuelNeeded}
                     price={fullRefuelPrice}
@@ -977,7 +975,7 @@ function InstallModuleSection({
                                                 : "text-[#888]"
                                         }
                                     >
-                                        {item.module?.name ?? item.item} (Ур.
+                                        {item.module?.name ?? item.item} ({t("station.level_short")}
                                         {item.module?.level ?? 4})
                                     </div>
                                     <div className="text-[#888]">
@@ -1332,7 +1330,7 @@ function BuyResearchSection({
                                     {res.icon}
                                 </span>{" "}
                                 <span className="text-sm text-[#ccc]">
-                                    {res.name}
+                                    {t(`research.resources.${type}.name`)}
                                 </span>
                                 <span className="ml-2 text-xs text-[#888]">
                                     {t("services.research_stock", {
@@ -1342,7 +1340,7 @@ function BuyResearchSection({
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-xs text-[#ffb000]">
-                                    {price}₢/ед.
+                                    {t("services.research_unit_price", { price })}
                                 </span>
                                 <Button
                                     disabled={credits < price || available < 1}
@@ -1377,24 +1375,25 @@ function SellResearchSection({
     onSell: (type: ResearchResourceType, qty: number) => void;
 }) {
     void credits;
+    const { t } = useTranslation();
     const resourceTypes = Object.keys(
         RESEARCH_RESOURCES,
     ) as ResearchResourceType[];
     const ownedResources = resourceTypes.filter(
-        (t) => (researchResources[t] ?? 0) > 0,
+        (resourceType) => (researchResources[resourceType] ?? 0) > 0,
     );
 
     return (
         <SectionPanel tone="cyan">
             <div className="text-[#00d4ff] font-bold mb-1">
-                📊 Продажа исследовательских данных
+                📊 {t("services.research_sell_title")}
             </div>
             <div className="text-xs text-[#888] mb-3">
-                Исследовательская станция скупает редкие научные материалы
+                {t("services.research_sell_desc")}
             </div>
             {ownedResources.length === 0 ? (
                 <div className="text-sm text-[#555]">
-                    Нет исследовательских ресурсов для продажи
+                    {t("services.research_sell_empty")}
                 </div>
             ) : (
                 <div className="flex flex-col gap-2">
@@ -1412,7 +1411,7 @@ function SellResearchSection({
                                         {res.icon}
                                     </span>{" "}
                                     <span className="text-sm text-[#ccc]">
-                                        {res.name}
+                                        {t(`research.resources.${type}.name`)}
                                     </span>
                                     <span className="text-xs text-[#888] ml-2">
                                         ×{qty}
@@ -1420,7 +1419,7 @@ function SellResearchSection({
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs text-[#ffb000]">
-                                        {price}₢/ед.
+                                        {t("services.research_unit_price", { price })}
                                     </span>
                                     <Button
                                         disabled={qty < 1}
@@ -1434,7 +1433,7 @@ function SellResearchSection({
                                         onClick={() => onSell(type, qty)}
                                         className="cursor-pointer bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-[9px] px-2 py-1 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        ВСЁ
+                                        {t("services.all")}
                                     </Button>
                                 </div>
                             </div>

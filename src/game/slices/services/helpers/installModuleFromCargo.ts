@@ -6,6 +6,7 @@ import { createModuleFromShopItem } from "@/game/modules/createModuleFromShopIte
 import { applyTechBonusesToNewModule } from "@/game/slices/research/helpers/researchHelpers";
 import { canPlaceModule } from "@/game/slices/ship/helpers/canPlaceModule";
 import { takeCargoItem } from "@/game/slices/ship/helpers/takeCargoItem";
+import { getStationInstallationCapabilities } from "@/game/galaxy/config";
 
 /**
  * Создаёт модуль из грузового элемента
@@ -61,6 +62,21 @@ export const installModuleFromCargo = (
     y: number,
 ): void => {
     const state = get();
+    const location = state.currentLocation;
+    if (
+        state.gameMode !== "station" ||
+        location?.type !== "station" ||
+        !getStationInstallationCapabilities(
+            location.stationType,
+            location.stationConfig,
+        ).modules
+    ) {
+        get().addLog(
+            i18nStore.t("game_logs.installModuleFromCargo_5"),
+            "error",
+        );
+        return;
+    }
     const cargoItem = state.ship.cargo[cargoIndex];
 
     // Проверка: это модуль и есть данные ShopItem

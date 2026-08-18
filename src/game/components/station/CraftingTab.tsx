@@ -19,7 +19,15 @@ import {
 } from "@/lib/translationHelpers";
 import { getFreeCargoSpace } from "@/game/slices/ship/helpers/getCargoCapacity";
 
-export function CraftingTab() {
+type CraftingKind = "weapons" | "modules";
+
+export function CraftingTab({
+  allowsWeaponCraft = true,
+  allowsModuleCraft = true,
+}: {
+  allowsWeaponCraft?: boolean;
+  allowsModuleCraft?: boolean;
+}) {
   const { t } = useTranslation();
   const research = useGameStore((s) => s.research);
   const credits = useGameStore((s) => s.credits);
@@ -31,12 +39,18 @@ export function CraftingTab() {
   const craftModule = useGameStore((s) => s.craftModule);
   const unlockedRecipes = research.unlockedRecipes ?? [];
 
-  const [activeTab, setActiveTab] = useState<"weapons" | "modules">(
-    "weapons",
+  const [selectedTab, setSelectedTab] = useState<CraftingKind>(
+    allowsWeaponCraft ? "weapons" : "modules",
   );
+  const activeTab =
+    selectedTab === "weapons" && !allowsWeaponCraft
+      ? "modules"
+      : selectedTab === "modules" && !allowsModuleCraft
+        ? "weapons"
+        : selectedTab;
 
-  const hasWeaponRecipes = unlockedRecipes.length > 0;
-  const hasModuleRecipes = moduleRecipes.length > 0;
+  const hasWeaponRecipes = allowsWeaponCraft && unlockedRecipes.length > 0;
+  const hasModuleRecipes = allowsModuleCraft && moduleRecipes.length > 0;
 
   if (!hasWeaponRecipes && !hasModuleRecipes) {
     return (
@@ -61,30 +75,34 @@ export function CraftingTab() {
 
       {/* Tabs */}
       <div className="flex gap-1">
-        <button
-          onClick={() => setActiveTab("weapons")}
-          className={`cursor-pointer px-3 py-1 text-xs uppercase border transition-colors ${activeTab === "weapons"
-              ? "border-[#00ff41] bg-[rgba(0,255,65,0.15)] text-[#00ff41]"
-              : "border-[#333] text-[#555] hover:border-[#555]"
-            }`}
-        >
-          {t("crafting.tab_weapons")}{" "}
-          {hasWeaponRecipes && `(${unlockedRecipes.length})`}
-        </button>
-        <button
-          onClick={() => setActiveTab("modules")}
-          className={`cursor-pointer px-3 py-1 text-xs uppercase border transition-colors ${activeTab === "modules"
-              ? "border-[#00d4ff] bg-[rgba(0,212,255,0.15)] text-[#00d4ff]"
-              : "border-[#333] text-[#555] hover:border-[#555]"
-            }`}
-        >
-          {t("crafting.tab_modules")}{" "}
-          {hasModuleRecipes && (
-            <span className="text-[#ffb000]">
-              ({moduleRecipes.length})
-            </span>
-          )}
-        </button>
+        {allowsWeaponCraft && (
+          <button
+            onClick={() => setSelectedTab("weapons")}
+            className={`cursor-pointer px-3 py-1 text-xs uppercase border transition-colors ${activeTab === "weapons"
+                ? "border-[#00ff41] bg-[rgba(0,255,65,0.15)] text-[#00ff41]"
+                : "border-[#333] text-[#555] hover:border-[#555]"
+              }`}
+          >
+            {t("crafting.tab_weapons")}{" "}
+            {hasWeaponRecipes && `(${unlockedRecipes.length})`}
+          </button>
+        )}
+        {allowsModuleCraft && (
+          <button
+            onClick={() => setSelectedTab("modules")}
+            className={`cursor-pointer px-3 py-1 text-xs uppercase border transition-colors ${activeTab === "modules"
+                ? "border-[#00d4ff] bg-[rgba(0,212,255,0.15)] text-[#00d4ff]"
+                : "border-[#333] text-[#555] hover:border-[#555]"
+              }`}
+          >
+            {t("crafting.tab_modules")}{" "}
+            {hasModuleRecipes && (
+              <span className="text-[#ffb000]">
+                ({moduleRecipes.length})
+              </span>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Weapon recipes */}

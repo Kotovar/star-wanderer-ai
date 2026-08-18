@@ -1095,11 +1095,13 @@ export function generateStationItems(
   // - Tier 2+: tier 1 and tier 2 upgrades (1→2, 2→3)
   // Level 4 modules are boss rewards only — no tier 3 upgrades exist
   const upgradesToAdd: ShopItem[] = [];
-  if (sectorTier >= 1) {
-    upgradesToAdd.push(...(UPGRADES_BY_TIER[1] || []));
-  }
-  if (sectorTier >= 2) {
-    upgradesToAdd.push(...(UPGRADES_BY_TIER[2] || []));
+  if (stationConfig?.allowsModuleInstall ?? true) {
+    if (sectorTier >= 1) {
+      upgradesToAdd.push(...(UPGRADES_BY_TIER[1] || []));
+    }
+    if (sectorTier >= 2) {
+      upgradesToAdd.push(...(UPGRADES_BY_TIER[2] || []));
+    }
   }
 
   upgradesToAdd.forEach((upgrade) => {
@@ -1130,15 +1132,18 @@ export function generateStationItems(
     }
   });
 
-  const numModules = 4 + (Math.abs(hash) % 5);
+  const numModules = 2 + (Math.abs(hash) % 2);
   let modulePool: ShopItem[] = [];
   availableLevels.forEach((level) => {
     modulePool = modulePool.concat(MODULES_BY_LEVEL[level] || []);
   });
 
-  // Remove guaranteed modules from the random pool to avoid duplicates
+  // Случайная часть витрины остаётся внутри специализации станции, а не
+  // превращает любую точку ремонта в универсальный магазин модулей.
   modulePool = modulePool.filter(
-    (m) => !guaranteedModules.includes(m.moduleType),
+    (m) =>
+      guaranteedModules.includes(m.moduleType) &&
+      !guaranteedModuleIds.has(`${m.id}-${stationId}`),
   );
 
   const shuffled = shuffle(modulePool, nextSeeded);
@@ -1156,23 +1161,12 @@ export function generateStationItems(
   // Weapons - use guaranteedWeapons from station config
   const guaranteedWeapons = stationConfig?.guaranteedWeapons || [];
 
-  if (guaranteedWeapons.length > 0) {
-    // Add guaranteed weapons
-    guaranteedWeapons.forEach((weaponType) => {
-      const weapon = WEAPONS.find((w) => w.weaponType === weaponType);
-      if (weapon) {
-        items.push({ ...withBasePrice(weapon), id: `${weapon.id}-${stationId}` });
-      }
-    });
-  } else {
-    // Random weapons for stations without guaranteed weapons
-    const numWeapons = 1 + (Math.abs(hash >> 4) % 2);
-    const shuffledWeapons = shuffle(WEAPONS, nextSeeded);
-    for (let i = 0; i < numWeapons; i++) {
-      const weapon = shuffledWeapons[i];
+  guaranteedWeapons.forEach((weaponType) => {
+    const weapon = WEAPONS.find((w) => w.weaponType === weaponType);
+    if (weapon) {
       items.push({ ...withBasePrice(weapon), id: `${weapon.id}-${stationId}` });
     }
-  }
+  });
 
   // Скидки станции на оружие (военные) и модули (верфи) — применяются
   // к уже собранному списку, независимо от того, гарантированный товар или случайный

@@ -45,6 +45,40 @@ assert.ok(up.st1.water.sell > TRADE_GOODS.water.basePrice, "дрейф ввер�
 const down = driftStationPrices(makePrices(), basePrices, () => 0); // максимум вниз
 assert.ok(down.st1.water.sell < TRADE_GOODS.water.basePrice, "дрейф вниз не сработал");
 
+// 2б. Коридор станции сохраняет её скидку, а не позволяет дрейфу стереть её.
+const discountedMultipliers = {
+  st1: Object.fromEntries(goodIds.map((id) => [id, 0.85])),
+};
+let discountedPrices = {
+  st1: Object.fromEntries(
+    goodIds.map((id) => [
+      id,
+      {
+        sell: Math.floor(TRADE_GOODS[id].basePrice * 0.85),
+        buy: Math.floor(TRADE_GOODS[id].basePrice * 0.85 * 1.6),
+      },
+    ]),
+  ),
+};
+for (let i = 0; i < 200; i++) {
+  discountedPrices = driftStationPrices(
+    discountedPrices,
+    basePrices,
+    () => 1,
+    {},
+    discountedMultipliers,
+  );
+  for (const id of goodIds) {
+    assert.ok(
+      discountedPrices.st1[id].sell <=
+        Math.floor(
+          TRADE_GOODS[id].basePrice * 0.85 * PRICE_CEIL_MULTIPLIER,
+        ),
+      `${id}: discounted station drift erased its price ceiling`,
+    );
+  }
+}
+
 // 2а. Тир сектора расширяет коридор дрейфа: цены станции тира 3 живут в коридоре base×2
 const tierMult = getTierPriceMultiplier(3);
 assert.equal(tierMult, 2, "множитель тира 3 должен быть ×2");

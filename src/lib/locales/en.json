@@ -204,6 +204,8 @@
         "install_in_bay": "Bay",
         "no_free_bays": "No free weapon bays",
         "no_free_slots": "No space on ship grid",
+        "install_modules_at_shipyard": "Module fitting is available at a shipyard",
+        "install_weapons_at_military": "Weapon fitting is available at a military station",
         "jettison_title": "Jettison cargo",
         "jettison_hint": "Open the airlock: get rid of some cargo",
         "jettison_warning": "Cargo goes into the void for good, with no compensation. Pick an amount with the slider, then press twice.",
@@ -1322,6 +1324,10 @@
             "tech_salvage": {
                 "name": "Tech Salvage",
                 "description": "Recovered components from enemy technologies"
+            },
+            "void_membrane": {
+                "name": "Void Membrane",
+                "description": "Organic membrane from creatures in gas-giant depths"
             }
         }
     },
@@ -1690,6 +1696,10 @@
         "hire_button": "HIRE",
         "close": "Close",
         "energy_consumption": "consumption",
+        "level_short": "Lvl.",
+        "ton_short": "t",
+        "efficiency_short": "eff.",
+        "healing_per_turn": "🏥 +{{value}} HP/turn",
         "diplomacy_tab": "DIPLOMACY",
         "diplomacy_title": "Diplomatic Relations",
         "diplomacy_buy_rep": "Buy +{{amount}} reputation",
@@ -1764,10 +1774,10 @@
         "no_guarantees": "no guarantee",
         "summary": {
             "trade": "Discounted goods and minerals, plus cargo modules with increased capacity.",
-            "military": "Discounted weapons and blueprint crafting.",
+            "military": "Discounted weapons, weapon blueprint crafting, and weapon fitting.",
             "research": "Research resources, laboratory modules, and scientists.",
             "mining": "Higher mineral buyback from the player and extraction equipment.",
-            "shipyard": "Discounted modules, crafting, and cargo installation.",
+            "shipyard": "Discounted modules, module blueprint crafting, and cargo module fitting.",
             "medical": "Crew healing and medical equipment.",
             "diplomatic": "Race reputation, translators, and lifted visit bans.",
             "pirate": "Black market, contraband, wanted-heat laundering, and pirate jobs."
@@ -1976,6 +1986,14 @@
         "research_buy_title": "Research material purchase",
         "research_buy_desc": "Limited stock of common research materials",
         "research_stock": "Stock: {{stock}}",
+        "probes_title": "Research probes",
+        "probes_onboard": "On board: {{probes}}",
+        "probes_price_desc": "{{price}}₢ per probe · consumed when diving into a gas giant",
+        "research_sell_title": "Sell research data",
+        "research_sell_desc": "The research station buys rare scientific materials",
+        "research_sell_empty": "No research resources to sell",
+        "research_unit_price": "{{price}}₢/unit",
+        "all": "ALL",
         "nebula_front": {
             "title": "Veil stabilizer",
             "description": "A coalition of species synchronizes the lattice; your cargo powers one stabilizer.",
@@ -6224,6 +6242,9 @@
         "craftingSlice_12": "Not enough credits: {{credits}}₢ required",
         "craftingSlice_13": "Not enough of resource \"{{goodName}}\": {{required}} required, {{available}} available",
         "craftingSlice_14": "🔧 Module assembled: {{icon}} {{recipe_name}} — added to the cargo hold",
+        "craftingSlice_15": "Weapon crafting is available only at a military station",
+        "craftingSlice_16": "Weapon fitting is available only at a military station",
+        "craftingSlice_17": "Module assembly is available only at a shipyard",
         "crewSlice_1": "{{crewMember_name}} is resting and cannot take a new task yet",
         "crewSlice_2": "{{crewMember_name}} has already moved this turn!",
         "crewSlice_3": "Module not found!",
@@ -6574,6 +6595,7 @@
         "installModuleFromCargo_1": "Error: this is not a module!",
         "installModuleFromCargo_2": "Spot occupied by module \"{{name}}\"!",
         "installModuleFromCargo_3": "✅ Module \"{{item}}\" installed at position ({{x}}, {{y}})!",
+        "installModuleFromCargo_5": "Module fitting is available only at a shipyard",
         "removeWeapon_1": "Module not found or is not a weapons deck.",
         "removeWeapon_2": "No weapon installed in this slot.",
         "removeWeapon_3": "🔧 Removed: {{weaponType}} (+{{scrapValue}}₢)",

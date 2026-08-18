@@ -37,16 +37,18 @@ export const refuel = (
         return { success: false, actualAmount: 0 };
     }
 
-    if (state.credits < price) {
+    const actualPrice = Math.ceil((price * actualAmount) / amount);
+
+    if (state.credits < actualPrice) {
         addLog( i18nStore.t("game_logs.refuel_2"), "error");
         return { success: false, actualAmount: 0 };
     }
 
     set((s) => ({
-        credits: s.credits - price,
+        credits: s.credits - actualPrice,
         ship: { ...s.ship, fuel: (s.ship.fuel || 0) + actualAmount },
     }));
-    addLog( i18nStore.t("game_logs.refuel_3", { actualAmount, price }), "info");
+    addLog( i18nStore.t("game_logs.refuel_3", { actualAmount, price: actualPrice }), "info");
     playSound("world_refuel");
 
     return { success: true, actualAmount };

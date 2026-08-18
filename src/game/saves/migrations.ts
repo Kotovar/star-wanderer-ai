@@ -3,6 +3,7 @@ import { RESEARCH_TREE } from "@/game/constants/research";
 import { getArchiveHintLocations } from "@/game/artifacts/utils";
 import { isContractTargetAvailable } from "@/game/contracts/targetAvailability";
 import { generateSpaceMonster } from "@/game/galaxy/generate";
+import { STATION_CONFIG } from "@/game/galaxy/config";
 import { assignGridPositions } from "@/game/sectorGrid";
 import { MODULE_HEALTH_BY_LEVEL } from "@/game/slices/shop/constants";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
@@ -664,6 +665,44 @@ const migrations: Record<number, Migration> = {
           storedCargo: storedCargo.filter((cargo) => !isStaleContractCargo(cargo)),
         };
       }),
+    };
+  },
+  32: (raw) => {
+    const state = raw as Partial<GameState>;
+    const normalizeStation = (location: Location): Location => {
+      if (location.type !== "station" || !location.stationType) return location;
+      const stationConfig = STATION_CONFIG[location.stationType];
+      if (!stationConfig) return location;
+      return {
+        ...location,
+        stationConfig,
+        ...(location.stationType === "diplomatic"
+          ? { dominantRace: undefined }
+          : {}),
+      };
+    };
+    const sectors = state.galaxy?.sectors.map((sector) => ({
+      ...sector,
+      locations: sector.locations.map(normalizeStation),
+    }));
+
+    return {
+      ...state,
+      stateVersion: 33,
+      galaxy: state.galaxy && sectors
+        ? { ...state.galaxy, sectors }
+        : state.galaxy,
+      currentSector: state.currentSector
+        ? {
+            ...state.currentSector,
+            locations: state.currentSector.locations.map(
+              normalizeStation,
+            ),
+          }
+        : state.currentSector,
+      currentLocation: state.currentLocation
+        ? normalizeStation(state.currentLocation)
+        : state.currentLocation,
     };
   },
 };

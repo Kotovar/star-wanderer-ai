@@ -156,7 +156,8 @@ export const ensureStation = (
         name: getLocationNameKey("station", sector.id, sector.locations.length),
         stationType,
         stationConfig: STATION_CONFIG[stationType],
-        dominantRace: stationRace,
+        dominantRace:
+            stationType === "diplomatic" ? undefined : stationRace,
         population: 50 + Math.floor(Math.random() * 200),
     };
 
@@ -384,7 +385,18 @@ export const ensureDiplomaticStation = (sectors: Sector[]): void => {
             (l) => l.type === "station" && l.stationType === "diplomatic",
         ),
     );
-    if (hasDiplomatic) return;
+    if (hasDiplomatic) {
+        for (const sector of sectors) {
+            sector.locations = sector.locations.map((location) =>
+                location.type === "station" &&
+                location.stationType === "diplomatic" &&
+                location.dominantRace
+                    ? { ...location, dominantRace: undefined }
+                    : location,
+            );
+        }
+        return;
+    }
 
     // Find a tier-1 sector with an existing station to replace
     const tier1Sectors = sectors.filter(
@@ -410,7 +422,7 @@ export const ensureDiplomaticStation = (sectors: Sector[]): void => {
                 ...existing,
                 stationType: "diplomatic",
                 stationConfig: STATION_CONFIG["diplomatic"],
-                dominantRace: getRandomRace([]),
+                dominantRace: undefined,
             };
             return;
         }
@@ -433,7 +445,7 @@ export const ensureDiplomaticStation = (sectors: Sector[]): void => {
                 ...existing,
                 stationType: "diplomatic",
                 stationConfig: STATION_CONFIG.diplomatic,
-                dominantRace: getRandomRace([]),
+                dominantRace: undefined,
             };
             return;
         }
@@ -449,7 +461,7 @@ export const ensureDiplomaticStation = (sectors: Sector[]): void => {
             name: getLocationNameKey("station", sector.id, sector.locations.length),
             stationType: "diplomatic",
             stationConfig: STATION_CONFIG["diplomatic"],
-            dominantRace: getRandomRace([]),
+            dominantRace: undefined,
         });
     }
 };

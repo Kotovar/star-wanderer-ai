@@ -1,4 +1,10 @@
-import type { GalaxyTierAll, StationConfig, StormType, StarType } from "../types";
+import type {
+    GalaxyTierAll,
+    StationConfig,
+    StationName,
+    StormType,
+    StarType,
+} from "../types";
 
 // ============================================================================
 // Константы конфигурации галактики
@@ -134,11 +140,14 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         cargoBonus: 1.5,
         priceDiscount: 0.85,
         mineralDiscount: 0.9,
-        guaranteedWeapons: ["missile"],
+        guaranteedWeapons: [],
         guaranteedModules: ["cargo", "reactor", "fueltank"],
         allowsTrade: true,
         allowsCraft: false,
+        allowsWeaponCraft: false,
+        allowsModuleCraft: false,
         allowsModuleInstall: false,
+        allowsWeaponInstall: false,
         allowsCrewHeal: false,
     },
     military: {
@@ -147,7 +156,10 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         guaranteedModules: ["weaponbay", "shield", "reactor"],
         allowsTrade: false,
         allowsCraft: true,
+        allowsWeaponCraft: true,
+        allowsModuleCraft: false,
         allowsModuleInstall: false,
+        allowsWeaponInstall: true,
         allowsCrewHeal: false,
     },
     research: {
@@ -156,7 +168,10 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         guaranteedModules: ["scanner", "reactor", "lifesupport", "lab"],
         allowsTrade: false,
         allowsCraft: false,
+        allowsWeaponCraft: false,
+        allowsModuleCraft: false,
         allowsModuleInstall: false,
+        allowsWeaponInstall: false,
         allowsCrewHeal: false,
     },
     mining: {
@@ -167,7 +182,10 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         guaranteedModules: ["drill", "cargo", "fueltank"],
         allowsTrade: false,
         allowsCraft: false,
+        allowsWeaponCraft: false,
+        allowsModuleCraft: false,
         allowsModuleInstall: false,
+        allowsWeaponInstall: false,
         allowsCrewHeal: false,
     },
     shipyard: {
@@ -177,7 +195,10 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         guaranteedModules: ["reactor", "shield", "cargo"],
         allowsTrade: false,
         allowsCraft: true,
+        allowsWeaponCraft: false,
+        allowsModuleCraft: true,
         allowsModuleInstall: true,
+        allowsWeaponInstall: false,
         allowsCrewHeal: false,
     },
     medical: {
@@ -186,7 +207,10 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         guaranteedModules: ["lifesupport", "medical"],
         allowsTrade: false,
         allowsCraft: false,
+        allowsWeaponCraft: false,
+        allowsModuleCraft: false,
         allowsModuleInstall: false,
+        allowsWeaponInstall: false,
         allowsCrewHeal: true,
     },
     diplomatic: {
@@ -195,7 +219,10 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         guaranteedModules: ["scanner"],
         allowsTrade: false,
         allowsCraft: false,
+        allowsWeaponCraft: false,
+        allowsModuleCraft: false,
         allowsModuleInstall: false,
+        allowsWeaponInstall: false,
         allowsCrewHeal: false,
     },
     pirate: {
@@ -205,11 +232,44 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         guaranteedModules: [],
         allowsTrade: true,
         allowsCraft: false,
+        allowsWeaponCraft: false,
+        allowsModuleCraft: false,
         allowsModuleInstall: false,
+        allowsWeaponInstall: false,
         allowsCrewHeal: false,
         isPirate: true,
     },
 };
+
+/**
+ * Старые сохранения содержат только общий allowsCraft. Для известных
+ * специализированных станций сохраняем новую роль и без новых полей.
+ */
+export const getStationCraftingCapabilities = (
+    stationType?: StationName,
+    config?: StationConfig,
+) => {
+    const legacyAllowsCraft = config?.allowsCraft ?? true;
+    return {
+        weapons:
+            config?.allowsWeaponCraft ??
+            (stationType === "shipyard" ? false : legacyAllowsCraft),
+        modules:
+            config?.allowsModuleCraft ??
+            (stationType === "military" ? false : legacyAllowsCraft),
+    };
+};
+
+/** Одна верфь собирает корпусные модули, военная станция — орудия. */
+export const getStationInstallationCapabilities = (
+    stationType?: StationName,
+    config?: StationConfig,
+) => ({
+    modules:
+        config?.allowsModuleInstall ?? (stationType === "military" ? false : true),
+    weapons:
+        config?.allowsWeaponInstall ?? (stationType === "shipyard" ? false : true),
+});
 
 /**
  * Модификаторы весов локаций для каждого типа звезды.

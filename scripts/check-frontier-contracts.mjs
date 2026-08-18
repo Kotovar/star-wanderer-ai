@@ -651,6 +651,8 @@ assert.equal(
 
 const makeStoreStub = (state) => {
   let syncCalls = 0;
+  state.gameMode ??= "station";
+  state.currentLocation ??= { type: "station", stationType: "trade" };
   state.addLog = () => {};
   state.frontierCombatOffersSeeded ??= hasCombatArmament(state.ship?.modules ?? []);
   state.syncCombatContractOffers = () => {

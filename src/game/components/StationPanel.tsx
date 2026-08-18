@@ -85,6 +85,10 @@ import { getNebulaFrontProgress } from "@/game/crises/nebulaFront";
 import { getPirateRank } from "@/game/slices/pirate/standing";
 import { hasRequiredDeliveryCargo } from "@/game/contracts/contractCargo";
 import { getFreeCargoSpace } from "@/game/slices/ship/helpers/getCargoCapacity";
+import {
+    getStationCraftingCapabilities,
+    getStationInstallationCapabilities,
+} from "@/game/galaxy/config";
 
 const STATION_BACKGROUNDS = {
     trade: "/assets/station-backgrounds/trade-hub.webp",
@@ -372,8 +376,18 @@ export function StationPanel() {
 
     // Station service flags (default true for backwards compat with old saves)
     const allowsTrade = stationConfig?.allowsTrade ?? true;
-    const allowsCraft = stationConfig?.allowsCraft ?? true;
-    const allowsModuleInstall = stationConfig?.allowsModuleInstall ?? true;
+    const craftingCapabilities = getStationCraftingCapabilities(
+        stationType ?? undefined,
+        stationConfig,
+    );
+    const installationCapabilities = getStationInstallationCapabilities(
+        stationType ?? undefined,
+        stationConfig,
+    );
+    const allowsCraft =
+        craftingCapabilities.weapons || craftingCapabilities.modules;
+    const allowsModuleInstall = installationCapabilities.modules;
+    const allowsWeaponInstall = installationCapabilities.weapons;
     const allowsCrewHeal = stationConfig?.allowsCrewHeal ?? true;
     const allowsMutationCure =
         allowsCrewHeal && researchedTechs.includes("xenobiology");
@@ -975,6 +989,7 @@ export function StationPanel() {
                         canHeal={canHealCrew()}
                         allowsCrewHeal={allowsCrewHeal}
                         allowsModuleInstall={allowsModuleInstall}
+                        allowsWeaponInstall={allowsWeaponInstall}
                         allowsMutationCure={allowsMutationCure}
                         allowsGeneticTherapy={allowsGeneticTherapy}
                         allowsAugmentation={allowsAugmentation}
@@ -1091,7 +1106,10 @@ export function StationPanel() {
                         value="crafting"
                         className="mt-4 min-h-0 overflow-hidden flex flex-col"
                     >
-                        <CraftingTab />
+                        <CraftingTab
+                            allowsWeaponCraft={craftingCapabilities.weapons}
+                            allowsModuleCraft={craftingCapabilities.modules}
+                        />
                     </TabsContent>
                 )}
                 {!isPirateStation && hasDiplomacy && (

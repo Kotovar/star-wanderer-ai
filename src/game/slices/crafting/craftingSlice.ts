@@ -11,6 +11,10 @@ import type { GasType } from "@/game/types/outposts";
 import { isModuleActive } from "@/game/modules";
 import { getFreeCargoSpace } from "@/game/slices/ship/helpers/getCargoCapacity";
 import { takeCargoItem } from "@/game/slices/ship/helpers/takeCargoItem";
+import {
+    getStationCraftingCapabilities,
+    getStationInstallationCapabilities,
+} from "@/game/galaxy/config";
 
 export interface CraftingSlice {
     craftWeapon: (recipeId: CraftingWeapon) => void;
@@ -24,6 +28,18 @@ export const createCraftingSlice = (
 ): CraftingSlice => ({
     craftWeapon: (recipeId) => {
         const state = get();
+        const location = state.currentLocation;
+        if (
+            state.gameMode !== "station" ||
+            location?.type !== "station" ||
+            !getStationCraftingCapabilities(
+                location.stationType,
+                location.stationConfig,
+            ).weapons
+        ) {
+            get().addLog(i18nStore.t("game_logs.craftingSlice_15"), "error");
+            return;
+        }
         const recipe = CRAFTING_RECIPES[recipeId];
 
         if (!recipe) {
@@ -99,6 +115,18 @@ export const createCraftingSlice = (
 
     installCraftedWeapon: (cargoIndex, weaponBayId) => {
         const state = get();
+        const location = state.currentLocation;
+        if (
+            state.gameMode !== "station" ||
+            location?.type !== "station" ||
+            !getStationInstallationCapabilities(
+                location.stationType,
+                location.stationConfig,
+            ).weapons
+        ) {
+            get().addLog(i18nStore.t("game_logs.craftingSlice_16"), "error");
+            return;
+        }
         const cargoItem = state.ship.cargo[cargoIndex];
 
         if (!cargoItem?.isCraftedWeapon || !cargoItem.weaponType) {
@@ -165,6 +193,18 @@ export const createCraftingSlice = (
 
     craftModule: (recipeId) => {
         const state = get();
+        const location = state.currentLocation;
+        if (
+            state.gameMode !== "station" ||
+            location?.type !== "station" ||
+            !getStationCraftingCapabilities(
+                location.stationType,
+                location.stationConfig,
+            ).modules
+        ) {
+            get().addLog(i18nStore.t("game_logs.craftingSlice_17"), "error");
+            return;
+        }
         const recipe = MODULE_RECIPES[recipeId];
         const moduleTemplate = HYBRID_MODULE_SHOP_ITEMS[recipeId];
 

@@ -10,6 +10,7 @@ import {
     getTierPriceMultiplier,
 } from "@/game/slices/trade/constants";
 import type { Sector, Goods, StationPrices, StationStock } from "@/game/types";
+import { getStationSellPriceMultiplier } from "./marketTick";
 
 /**
  * Инициализирует данные для всех станций в секторах.
@@ -44,29 +45,20 @@ export const initializeStationData = (sectors: Sector[]) => {
                     stationConfig?.mineralDiscount ?? DEFAULT_DISCOUNT;
                 const rareMineralDiscount =
                     stationConfig?.rareMineralDiscount ?? DEFAULT_DISCOUNT;
-                const mineralSellBonus =
-                    stationConfig?.mineralSellBonus ?? DEFAULT_DISCOUNT;
-                const rareMineralSellBonus =
-                    stationConfig?.rareMineralSellBonus ?? DEFAULT_DISCOUNT;
-                const priceDiscount =
-                    stationConfig?.priceDiscount ?? DEFAULT_DISCOUNT;
-
                 for (const goodId of typedKeys(TRADE_GOODS)) {
                     const good = TRADE_GOODS[goodId];
 
                     const priceVar =
                         MIN_PRICE_VARIATION +
                         Math.random() * MAX_PRICE_VARIATION;
-                    // Скидка станции на контрабанду не распространяется: у
-                    // пиратов priceDiscount 0.75 съедал почти всю надбавку
-                    // чёрного рынка (×1.3), и «платим больше» было фикцией
-                    const goodDiscount =
-                        goodId === "contraband" ? DEFAULT_DISCOUNT : priceDiscount;
                     const baseSellPrice = Math.floor(
                         good.basePrice *
                             tierMultiplier *
                             priceVar *
-                            goodDiscount,
+                            getStationSellPriceMultiplier(
+                                stationConfig,
+                                goodId,
+                            ),
                     );
 
                     let buyPrice = Math.floor(
@@ -84,16 +76,7 @@ export const initializeStationData = (sectors: Sector[]) => {
                     // Шахтёрские станции платят больше за сырую руду, сданную игроком
                     // (mineralSellBonus/rareMineralSellBonus) — считается от baseSellPrice,
                     // buyPrice (цена покупки игроком) при этом не растёт.
-                    let sellPrice = baseSellPrice;
-                    if (goodId === "minerals") {
-                        sellPrice = Math.floor(
-                            baseSellPrice * mineralSellBonus,
-                        );
-                    } else if (goodId === "rare_minerals") {
-                        sellPrice = Math.floor(
-                            baseSellPrice * rareMineralSellBonus,
-                        );
-                    }
+                    const sellPrice = baseSellPrice;
 
                     prices[loc.stationId][goodId] = {
                         buy: buyPrice,

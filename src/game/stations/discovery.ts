@@ -1,4 +1,8 @@
 import type { StationConfig, StationName } from "@/game/types";
+import {
+  getStationCraftingCapabilities,
+  getStationInstallationCapabilities,
+} from "../galaxy/config.ts";
 
 export const STATION_DISCOVERY_ICONS = {
   trade: "⚖️",
@@ -107,9 +111,12 @@ export function getStationServiceKeys(
     "weapon_removal",
   ];
 
+  const crafting = getStationCraftingCapabilities(stationType, config);
+  const installation = getStationInstallationCapabilities(stationType, config);
+
   if (config?.allowsTrade ?? true) services.push("trade");
-  if (config?.allowsCraft) services.push("crafting");
-  if (config?.allowsModuleInstall) services.push("install");
+  if (crafting.weapons || crafting.modules) services.push("crafting");
+  if (installation.modules || installation.weapons) services.push("install");
   if (config?.allowsCrewHeal) {
     services.push(
       "healing",
