@@ -314,6 +314,7 @@ const deliveryState = {
   showSectorMap: () => {},
   attackFriendlyShip: () => {},
   addLog: () => {},
+  changeReputation: () => {},
 };
 globalThis.__playerFeedbackState = deliveryState;
 
@@ -393,6 +394,133 @@ assert.ok(
 assert.ok(
   localizedFriendlyShipMarkup.includes("📡 Сканирование: Ледяная"),
   "панель должна форматировать описание скан-контракта через каталог",
+);
+
+deliveryState.currentLocation = {
+  id: "barge-profile",
+  type: "friendly_ship",
+  name: "friendly_ship.names.barge",
+  friendlyShipType: "barge",
+  dominantRace: "human",
+  hasTrader: true,
+  hasCrew: false,
+  hasQuest: false,
+  hasDistress: false,
+};
+deliveryState.currentSector = {
+  tier: 1,
+  locations: [deliveryState.currentLocation],
+};
+deliveryState.friendlyShipStock = {
+  "barge-profile": { water: 5, food: 5, minerals: 5, spares: 5 },
+};
+deliveryState.ship = { modules: [], cargo: [], tradeGoods: [], fuel: 100 };
+const bargeMarkup = renderToStaticMarkup(createElement(FriendlyShipPanel));
+assert.ok(bargeMarkup.includes("Минералы"), "баржа должна продавать минералы");
+assert.ok(bargeMarkup.includes("Запчасти"), "баржа должна продавать запчасти");
+assert.equal(
+  bargeMarkup.includes("Медикаменты"),
+  false,
+  "баржа не должна повторять базовый ассортимент",
+);
+
+deliveryState.currentLocation = {
+  id: "probe-profile",
+  type: "friendly_ship",
+  name: "friendly_ship.names.probe",
+  friendlyShipType: "probe",
+  dominantRace: "human",
+  hasTrader: true,
+  hasCrew: false,
+  hasQuest: false,
+  hasDistress: false,
+};
+deliveryState.currentSector = {
+  tier: 1,
+  locations: [deliveryState.currentLocation],
+};
+deliveryState.friendlyShipStock = {
+  "probe-profile": { electronics: 5, rare_minerals: 5 },
+};
+const probeMarkup = renderToStaticMarkup(createElement(FriendlyShipPanel));
+assert.ok(probeMarkup.includes("Электроника"), "зонд должен продавать электронику");
+assert.ok(
+  probeMarkup.includes("Редкие минералы"),
+  "зонд должен продавать редкие минералы",
+);
+assert.equal(probeMarkup.includes("Вода"), false, "зонд не должен продавать воду");
+
+deliveryState.currentLocation = {
+  id: "mercenary-profile",
+  type: "friendly_ship",
+  name: "friendly_ship.names.mercenary",
+  friendlyShipType: "mercenary",
+  dominantRace: "human",
+  hasTrader: false,
+  hasCrew: true,
+  hasQuest: false,
+  hasDistress: false,
+};
+deliveryState.currentSector = {
+  tier: 1,
+  locations: [deliveryState.currentLocation],
+};
+const mercenaryMarkup = renderToStaticMarkup(createElement(FriendlyShipPanel));
+assert.ok(
+  mercenaryMarkup.includes("Стрелок"),
+  "корабль наёмников должен предлагать боевого специалиста",
+);
+
+deliveryState.currentLocation = {
+  id: "explorer-profile",
+  type: "friendly_ship",
+  name: "friendly_ship.names.explorer",
+  friendlyShipType: "explorer",
+  dominantRace: "human",
+  hasTrader: false,
+  hasCrew: true,
+  hasQuest: false,
+  hasDistress: false,
+};
+deliveryState.currentSector = {
+  tier: 1,
+  locations: [deliveryState.currentLocation],
+};
+const explorerMarkup = renderToStaticMarkup(createElement(FriendlyShipPanel));
+assert.ok(
+  explorerMarkup.includes("Учёный"),
+  "исследовательский корабль должен предлагать учёного или разведчика",
+);
+
+deliveryState.currentLocation = {
+  id: "distress-profile",
+  type: "friendly_ship",
+  name: "friendly_ship.names.distress",
+  friendlyShipType: "distress",
+  dominantRace: "human",
+  hasTrader: false,
+  hasCrew: false,
+  hasQuest: false,
+  hasDistress: true,
+};
+deliveryState.currentSector = {
+  tier: 1,
+  locations: [deliveryState.currentLocation],
+};
+deliveryState.friendlyShipStock = { "distress-profile": {} };
+const distressMarkup = renderToStaticMarkup(createElement(FriendlyShipPanel));
+assert.ok(
+  distressMarkup.includes("+2 к репутации с расой Люди"),
+  "помощь бедствующему кораблю должна заранее показывать награду репутацией",
+);
+const friendlyShipPanelSource = readFileSync(
+  "src/game/components/FriendlyShipPanel.tsx",
+  "utf8",
+);
+assert.match(
+  friendlyShipPanelSource,
+  /changeReputation\(dominantRace, FRIENDLY_SHIP_DISTRESS_REPUTATION\)/,
+  "помощь бедствующему кораблю должна применять награду репутацией",
 );
 
 globalThis.__playerFeedbackState = {

@@ -128,6 +128,7 @@
         "distress_required": "Требуется",
         "distress_aboard": "На борту",
         "distress_reward": "Награда",
+        "distress_reputation": "+{{amount}} к репутации с расой {{race}}",
         "distress_helped": "Вы уже оказали помощь этому кораблю.",
         "help": "ПОМОЧЬ",
         "default_greeting": "Вы встретили дружественный корабль.",

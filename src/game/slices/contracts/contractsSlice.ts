@@ -77,9 +77,7 @@ export interface ContractsSlice {
      */
     handleGasDiveContracts: (locationIdx: number) => void;
 
-    /**
-     * Завершает контракты на планетарное исследование при возврате на исходную планету
-     */
+    /** Завершает контракты на планетарное исследование у заказчика. */
     handleExpeditionSurveyContracts: (locationIdx: number) => void;
     handleCrisisResponseContracts: (locationIdx: number) => void;
     handleFabricationContracts: (locationIdx: number) => void;
@@ -226,7 +224,8 @@ export const createContractsSlice = (
     handleExpeditionSurveyContracts: (locationIdx: number) => {
         const state = get();
         const loc = state.currentSector?.locations[locationIdx];
-        if (!loc || loc.type !== "planet") return;
+        if (!loc || (loc.type !== "planet" && loc.type !== "friendly_ship"))
+            return;
 
         handleExpeditionSurveyContractsFn(loc, set, get);
     },

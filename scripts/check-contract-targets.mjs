@@ -49,6 +49,7 @@ const {
   generateStation,
 } = jiti("../src/game/galaxy/generate.ts");
 const { PLANET_TYPES } = jiti("../src/game/constants/planets.ts");
+const { SHIP_TYPES } = jiti("../src/game/galaxy/consts.ts");
 const { populateShipQuests } = jiti("../src/game/contracts/populateShipQuests.ts");
 const { refreshVisitedPlanetContracts } = jiti(
   "../src/game/contracts/refreshPlanetContracts.ts",
@@ -281,6 +282,34 @@ assert.equal(
   emptyProbe.hasQuest,
   false,
   "another Scout Probe must get an independent quest roll",
+);
+
+const friendlyShipProfile = (id) =>
+  SHIP_TYPES.find((shipType) => shipType.id === id);
+assert.deepEqual(
+  friendlyShipProfile("barge")?.stockGoods,
+  ["water", "food", "minerals", "spares"],
+  "Trade Barge must stock bulk supplies",
+);
+assert.equal(
+  friendlyShipProfile("barge")?.hasQuest,
+  true,
+  "Trade Barge must offer a supply contract",
+);
+assert.deepEqual(
+  friendlyShipProfile("probe")?.stockGoods,
+  ["electronics", "rare_minerals"],
+  "Scout Probe must trade technical goods",
+);
+assert.deepEqual(
+  friendlyShipProfile("mercenary")?.crewProfessions,
+  ["gunner", "engineer"],
+  "Mercenary vessel must recruit combat specialists",
+);
+assert.deepEqual(
+  friendlyShipProfile("explorer")?.crewProfessions,
+  ["scout", "scientist"],
+  "Research vessel must recruit exploration specialists",
 );
 
 const sectors = [
@@ -644,6 +673,53 @@ assert.deepEqual(
   "scan progress must be saved after visiting the planet",
 );
 
+useGameStore.setState({
+  credits: 0,
+  crew: [],
+  completedContractIds: [],
+  pendingContractCompletions: [],
+  currentSector: {
+    id: 98,
+    tier: 1,
+    locations: [
+      {
+        id: "survey-return-ship",
+        type: "friendly_ship",
+        name: "friendly_ship.names.explorer",
+      },
+    ],
+  },
+  activeContracts: [
+    {
+      id: "survey-return-contract",
+      type: "expedition_survey",
+      desc: "contracts.desc_expedition_survey",
+      reward: 300,
+      sourcePlanetId: "survey-return-ship",
+      sourceDominantRace: "human",
+      expeditionDone: true,
+    },
+  ],
+  raceReputation: { human: 0 },
+  knownRaces: ["human"],
+});
+useGameStore.getState().handleExpeditionSurveyContracts(0);
+const surveyReturnState = useGameStore.getState();
+assert.equal(
+  surveyReturnState.credits,
+  300,
+  "completed expedition survey must pay out at its friendly ship issuer",
+);
+assert.ok(
+  surveyReturnState.completedContractIds.includes("survey-return-contract"),
+  "completed expedition survey must close at its friendly ship issuer",
+);
+assert.equal(
+  surveyReturnState.raceReputation.human,
+  2,
+  "friendly ship expedition survey must retain its reputation reward",
+);
+
 // expedition_survey: завершённую экспедицию нельзя выдать повторно
 assert.ok(
   ok({ type: "expedition_survey", targetPlanetId: "1-expedition" }),
@@ -787,17 +863,18 @@ try {
 assert.ok(generatedScan, "генератор не выдал scan_planet для проверки");
 assert.ok(generatedSurvey, "генератор не выдал expedition_survey для проверки");
 
-const createFriendlyQuestSectors = () => [
+const createFriendlyQuestSectors = (friendlyShipType, sourceTier = 1) => [
   {
     id: 91,
     name: "sector_names.sector_01_1",
-    tier: 1,
+    tier: sourceTier,
     locations: [
       {
         id: "friendly-quest-source",
         type: "friendly_ship",
         name: "friendly_ship.names.courier",
         dominantRace: "human",
+        friendlyShipType,
         hasQuest: true,
       },
     ],
@@ -814,8 +891,12 @@ const createFriendlyQuestSectors = () => [
     })),
   },
 ];
-const generateFriendlyQuest = (randomValues) => {
-  const questSectors = createFriendlyQuestSectors();
+const generateFriendlyQuest = (
+  randomValues,
+  friendlyShipType,
+  sourceTier,
+) => {
+  const questSectors = createFriendlyQuestSectors(friendlyShipType, sourceTier);
   const previousRandom = Math.random;
   try {
     Math.random = () => randomValues.shift() ?? 0;
@@ -838,6 +919,34 @@ for (const [type, randomValues] of [
     `${type}: friendly ship quest must preserve issuer reputation race`,
   );
 }
+for (const [shipType, type, randomValues] of [
+  ["courier", "delivery", [0.9, 0, 0, 0, 0]],
+  ["barge", "supply_run", [0.1, 0, 0, 0, 0]],
+  ["probe", "scan_planet", [0.1, 0, 0, 0, 0]],
+  ["explorer", "expedition_survey", [0.9, 0, 0, 0, 0]],
+]) {
+  const quest = generateFriendlyQuest(randomValues, shipType);
+  assert.equal(quest?.type, type, `${shipType} must generate ${type}`);
+  assert.equal(
+    quest?.sourceType,
+    "ship",
+    `${shipType}: quest must return to the issuing ship`,
+  );
+}
+const tierFourExplorerQuest = generateFriendlyQuest(
+  [0.9, 0, 0, 0, 0],
+  "explorer",
+  4,
+);
+assert.equal(
+  tierFourExplorerQuest?.requiredDiscoveries,
+  7,
+  "tier-four explorer must use the highest expedition requirement",
+);
+assert.ok(
+  Number.isFinite(tierFourExplorerQuest?.reward),
+  "tier-four explorer must not generate a NaN expedition reward",
+);
 
 // derelict_recovery: нужен конкретный ещё не исследованный покинутый корабль
 assert.ok(

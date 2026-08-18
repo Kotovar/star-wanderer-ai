@@ -5,7 +5,7 @@ import { PLANET_TYPES } from "@/game/constants/planets";
 import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
 import { typedKeys } from "@/lib/utils";
 import { shuffle } from "@/game/utils/shuffle";
-import { DELIVERY_GOODS } from "../constants/contracts";
+import { DELIVERY_GOODS, EXPEDITION_DISCOVERIES } from "../constants/contracts";
 import { CONTRACT_REWARDS as REWARD } from "./rewards";
 import { getGeneratedContractTimeLimit } from "./contractDeadline";
 import type { RunProfile } from "../galaxy/runProfiles";
@@ -27,9 +27,6 @@ const GAS_DIVE_MEMBRANES = {
     min:   [2, 4, 7],
     range: [2, 3, 4],
 } as const;
-
-/** Количество клеток для expedition_survey по тирам */
-const EXPEDITION_DISCOVERIES = [3, 5, 7] as const;
 
 /** Количество тонн груза для delivery по тирам */
 const DELIVERY_QTY_BY_TIER = [10, 20, 30] as const;

@@ -128,6 +128,7 @@
         "distress_required": "Required",
         "distress_aboard": "Aboard",
         "distress_reward": "Reward",
+        "distress_reputation": "+{{amount}} reputation with {{race}}",
         "distress_helped": "You have already helped this ship.",
         "help": "HELP",
         "default_greeting": "You have encountered a friendly ship.",

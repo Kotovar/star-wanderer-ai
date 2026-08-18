@@ -9,7 +9,7 @@ type SetState = {
 };
 
 /**
- * Завершает контракты expedition_survey при возврате на исходную планету.
+ * Завершает контракты expedition_survey при возврате к заказчику.
  * Контракт помечается выполненным в endExpedition.ts — здесь просто выдаётся награда.
  */
 export const handleExpeditionSurveyContracts = (

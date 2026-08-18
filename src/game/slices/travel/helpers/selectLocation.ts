@@ -362,9 +362,10 @@ export const selectLocation = (
                 set({ gameMode: "hostile_approach_warning" });
                 break;
             }
-            // Сдача квестов этого корабля: скан планет и поставки
+            // Сдача квестов этого корабля: скан планет, поставки и экспедиции
             get().completeScanContracts();
             get().handleSupplyRunContracts(locationIdx);
+            get().handleExpeditionSurveyContracts(locationIdx);
             set({ gameMode: "friendly_ship" });
             break;
         }

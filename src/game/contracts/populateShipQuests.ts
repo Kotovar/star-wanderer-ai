@@ -1,21 +1,26 @@
-import type { Sector } from "../types";
+import type { FriendlyShipTypeId, Sector } from "../types";
 import type { RaceId } from "../types/races";
 import type { Contract } from "../types/contracts";
 import { TRADE_GOODS } from "../constants/goods";
-import { DELIVERY_GOODS } from "../constants/contracts";
+import { DELIVERY_GOODS, EXPEDITION_DISCOVERIES } from "../constants/contracts";
 import { PLANET_TYPES } from "../constants/planets";
+import { getFriendlyShipType } from "../galaxy/consts";
 import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
 import { typedKeys } from "@/lib/utils";
 import { getGeneratedContractTimeLimit } from "./contractDeadline";
+import { CONTRACT_REWARDS } from "./rewards";
 
 const generateShipQuest = (
     shipId: string,
     shipName: string,
     shipRace: RaceId | undefined,
+    shipType: FriendlyShipTypeId | undefined,
     shipSectorId: number,
     allSectors: Sector[],
 ): Contract | null => {
-    const shipSectorName = allSectors.find((s) => s.id === shipSectorId)?.name ?? "";
+    const shipSector = allSectors.find((s) => s.id === shipSectorId);
+    const shipSectorName = shipSector?.name ?? "";
+    const shipTier = shipSector?.tier ?? 1;
     const otherSectors = allSectors.filter(
         (s) => s.id !== shipSectorId && s.tier < 4,
     );
@@ -29,8 +34,15 @@ const generateShipQuest = (
         sourceDominantRace: shipRace,
     };
 
+    const questTypes = getFriendlyShipType(shipType)?.questTypes;
     const roll = Math.random();
-    const questType = roll < 0.5 ? "delivery" : roll < 0.75 ? "supply_run" : "scan_planet";
+    const questType = questTypes
+        ? questTypes[Math.floor(roll * questTypes.length)]
+        : roll < 0.5
+          ? "delivery"
+          : roll < 0.75
+            ? "supply_run"
+            : "scan_planet";
 
     const targetSector = otherSectors[Math.floor(Math.random() * otherSectors.length)];
 
@@ -67,8 +79,6 @@ const generateShipQuest = (
         const cargo = TRADE_GOODS[cargoKey];
         const quantity = [10, 15, 20][Math.floor(Math.random() * 3)];
         // Закупка дорожает с тиром сектора корабля — награда масштабируется той же ставкой
-        const shipTier =
-            allSectors.find((s) => s.id === shipSectorId)?.tier ?? 1;
         const stationBuyPrice = Math.floor(
             cargo.basePrice * getTierPriceMultiplier(shipTier) * 0.4,
         );
@@ -81,6 +91,49 @@ const generateShipQuest = (
             quantity,
             ...source,
             reward,
+        };
+    }
+
+    if (questType === "expedition_survey") {
+        const candidatePlanets = otherSectors.flatMap((sector) =>
+            sector.locations
+                .filter(
+                    (location) =>
+                        location.type === "planet" &&
+                        !location.isEmpty &&
+                        !location.expeditionCompleted,
+                )
+                .map((planet) => ({ planet, sector })),
+        );
+        if (candidatePlanets.length === 0) return null;
+
+        const target =
+            candidatePlanets[Math.floor(Math.random() * candidatePlanets.length)];
+        const expeditionTierIndex = Math.min(
+            shipTier - 1,
+            EXPEDITION_DISCOVERIES.length - 1,
+        );
+        return {
+            id: `ship-${shipId}-expedition-${Date.now()}-${Math.random()}`,
+            type: "expedition_survey",
+            desc: "contracts.desc_expedition_survey",
+            targetPlanetId: target.planet.id,
+            targetPlanetName: target.planet.name,
+            targetSector: target.sector.id,
+            targetSectorName: target.sector.name,
+            requiredDiscoveries: EXPEDITION_DISCOVERIES[expeditionTierIndex],
+            expeditionDone: false,
+            ...source,
+            timeLimit: getGeneratedContractTimeLimit(
+                "expedition_survey",
+                shipTier,
+                target.sector.tier ?? shipTier,
+            ),
+            reward:
+                CONTRACT_REWARDS.expedition_survey.base[expeditionTierIndex] +
+                Math.floor(
+                    Math.random() * CONTRACT_REWARDS.expedition_survey.range[expeditionTierIndex],
+                ),
         };
     }
 
@@ -98,7 +151,6 @@ const generateShipQuest = (
     const dest = validDestinations[Math.floor(Math.random() * validDestinations.length)];
     const destType =
         dest.type === "planet" ? "planet" : dest.type === "station" ? "station" : "ship";
-    const shipTier = allSectors.find((s) => s.id === shipSectorId)?.tier ?? 1;
     return {
         id: `ship-${shipId}-delivery-${Date.now()}-${Math.random()}`,
         type: "delivery",
@@ -132,6 +184,7 @@ export const populateShipQuests = (sectors: Sector[]): void => {
                         loc.id,
                         loc.name,
                         loc.dominantRace,
+                        loc.friendlyShipType,
                         sector.id,
                         sectors,
                     ) ?? undefined;

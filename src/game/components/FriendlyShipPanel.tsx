@@ -10,7 +10,7 @@ import { getRandomName } from "@/game/crew/utils";
 import { generateCrewTraits } from "@/game/crew/utils";
 import { CREW_BASE_PRICES } from "@/game/constants/crew";
 import { Goods } from "@/game/types/goods";
-import { Profession } from "@/game/types/crew";
+import { ALL_PROFESSIONS, Profession } from "@/game/types/crew";
 import { useTranslation } from "@/lib/useTranslation";
 import { getRaceReputationLevel } from "@/game/reputation/utils";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
@@ -24,7 +24,11 @@ import { GoodInfoModal } from "./GoodInfoModal";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
 import { hasRequiredDeliveryCargo } from "@/game/contracts/contractCargo";
 import { getFreeCargoSpace } from "@/game/slices/ship/helpers/getCargoCapacity";
-import { getFriendlyShipGreetingKey } from "@/game/galaxy/consts";
+import {
+  FRIENDLY_SHIP_DISTRESS_REPUTATION,
+  getFriendlyShipGreetingKey,
+  getFriendlyShipType,
+} from "@/game/galaxy/consts";
 import { getLocationName } from "@/lib/translationHelpers";
 
 const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
@@ -71,6 +75,7 @@ export function FriendlyShipPanel() {
     (s) => s.distressRespondedShips,
   );
   const addLog = useGameStore((s) => s.addLog);
+  const changeReputation = useGameStore((s) => s.changeReputation);
 
   const [infoGood, setInfoGood] = useState<Goods | null>(null);
 
@@ -82,6 +87,12 @@ export function FriendlyShipPanel() {
     currentLocation?.friendlyShipType,
     currentLocation?.greeting,
   );
+  const friendlyShipProfile = getFriendlyShipType(
+    currentLocation?.friendlyShipType,
+  );
+  const stockGoods = friendlyShipProfile?.stockGoods ?? INITIAL_STOCK;
+  const crewProfessions =
+    friendlyShipProfile?.crewProfessions ?? ALL_PROFESSIONS;
   const shipGreeting = greetingKey
     ? t(greetingKey)
     : currentLocation?.greeting || t("friendly_ship.default_greeting");
@@ -110,7 +121,7 @@ export function FriendlyShipPanel() {
     if (!shipId || friendlyShipStock[shipId]) return;
 
     const initialStock: Record<string, number> = {};
-    INITIAL_STOCK.forEach((gid, idx) => {
+    stockGoods.forEach((gid, idx) => {
       initialStock[gid] =
         5 + Math.floor(seedRandom(seed + idx + 10) * 10);
     });
@@ -121,7 +132,7 @@ export function FriendlyShipPanel() {
         [shipId]: initialStock,
       },
     }));
-  }, [friendlyShipStock, seed, shipId]);
+  }, [friendlyShipStock, seed, shipId, stockGoods]);
 
   // Initialize or get stock for this friendly ship
   const getShipStock = (goodId: string): number => {
@@ -135,14 +146,7 @@ export function FriendlyShipPanel() {
 
   // Memoize crew data to prevent regeneration on every render
   const crewData = useMemo(() => {
-    const professions: Profession[] = [
-      "pilot",
-      "engineer",
-      "medic",
-      "scout",
-      "scientist",
-      "gunner",
-    ];
+    const professions: readonly Profession[] = crewProfessions;
     const availableProfession =
       professions[
       Math.floor(seedRandom(seed + 100) * professions.length)
@@ -199,7 +203,7 @@ export function FriendlyShipPanel() {
       traits,
       crewPrice,
     };
-  }, [seed]);
+  }, [crewProfessions, seed]);
 
   if (!currentLocation) return null;
 
@@ -238,7 +242,7 @@ export function FriendlyShipPanel() {
   );
 
   // Цены торговца привязаны к тиру сектора, как и у станций (анти-арбитраж)
-  const tradeGoods = INITIAL_STOCK.map((gid, idx) => ({
+  const tradeGoods = stockGoods.map((gid, idx) => ({
     id: gid,
     ...TRADE_GOODS[gid],
     price: Math.floor(
@@ -670,6 +674,9 @@ export function FriendlyShipPanel() {
               "info",
               "exploration",
             );
+            if (dominantRace) {
+              changeReputation(dominantRace, FRIENDLY_SHIP_DISTRESS_REPUTATION);
+            }
           };
 
           const needIcon = needType === "fuel" ? "⛽" : "💊";
@@ -702,6 +709,14 @@ export function FriendlyShipPanel() {
                   </div>
                   <div className="text-[#00d4ff] text-xs mb-3">
                     {t("friendly_ship.distress_reward")}: <span className="font-bold">{creditReward}₢</span>
+                    {dominantRace && (
+                      <span className="ml-2 text-[#00ff41]">
+                        {t("friendly_ship.distress_reputation", {
+                          amount: FRIENDLY_SHIP_DISTRESS_REPUTATION,
+                          race: t(`races.${dominantRace}.plural`),
+                        })}
+                      </span>
+                    )}
                     {hasResearchReward && (
                       <span className="ml-2 text-[#888]">
                         + {researchRewardAmount}×{" "}

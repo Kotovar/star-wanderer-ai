@@ -1,4 +1,12 @@
 import type { FriendlyShipTypeId, StationName } from "../types";
+import type { ContractType } from "../types/contracts";
+import type { Profession } from "../types/crew";
+import type { Goods } from "../types/goods";
+
+type FriendlyShipQuestType = Extract<
+    ContractType,
+    "delivery" | "scan_planet" | "supply_run" | "expedition_survey"
+>;
 
 export const getSectorNameKey = (sectorIdx: number, tier: number): string =>
     `sector_names.sector_${String(sectorIdx + 1).padStart(2, "0")}_${tier}`;
@@ -15,7 +23,12 @@ type ShipType = {
     hasDistress?: boolean;
     crewChance?: number;
     questChance?: number;
+    stockGoods?: Goods[];
+    crewProfessions?: Profession[];
+    questTypes?: FriendlyShipQuestType[];
 };
+
+export const FRIENDLY_SHIP_DISTRESS_REPUTATION = 2;
 
 export const SHIP_TYPES: ShipType[] = [
     {
@@ -27,6 +40,7 @@ export const SHIP_TYPES: ShipType[] = [
         hasTrader: true,
         hasCrew: false,
         hasQuest: false,
+        stockGoods: ["water", "food", "medicine"],
     },
     {
         id: "mercenary",
@@ -37,6 +51,7 @@ export const SHIP_TYPES: ShipType[] = [
         hasTrader: false,
         hasCrew: true,
         hasQuest: false,
+        crewProfessions: ["gunner", "engineer"],
     },
     {
         id: "courier",
@@ -48,6 +63,7 @@ export const SHIP_TYPES: ShipType[] = [
         hasTrader: false,
         hasCrew: false,
         hasQuest: true,
+        questTypes: ["delivery"],
     },
     {
         id: "barge",
@@ -58,8 +74,10 @@ export const SHIP_TYPES: ShipType[] = [
             "Массивная баржа дрейфует в космосе. Экипаж готов торговать.",
         hasTrader: true,
         hasCrew: false,
-        hasQuest: false,
+        hasQuest: true,
         crewChance: 0.5,
+        stockGoods: ["water", "food", "minerals", "spares"],
+        questTypes: ["supply_run"],
     },
     {
         id: "probe",
@@ -72,6 +90,8 @@ export const SHIP_TYPES: ShipType[] = [
         hasCrew: false,
         hasQuest: false,
         questChance: 0.4,
+        stockGoods: ["electronics", "rare_minerals"],
+        questTypes: ["scan_planet"],
     },
     {
         id: "explorer",
@@ -82,6 +102,8 @@ export const SHIP_TYPES: ShipType[] = [
         hasTrader: false,
         hasCrew: true,
         hasQuest: true,
+        crewProfessions: ["scout", "scientist"],
+        questTypes: ["scan_planet", "expedition_survey"],
     },
     {
         id: "distress",
@@ -103,12 +125,17 @@ export const getFriendlyShipNameKey = (name: string): string | undefined =>
             name === shipType.nameKey || name.endsWith(shipType.legacyName),
     )?.nameKey;
 
+export const getFriendlyShipType = (
+    type?: FriendlyShipTypeId,
+): ShipType | undefined =>
+    type ? SHIP_TYPES.find((shipType) => shipType.id === type) : undefined;
+
 export const getFriendlyShipGreetingKey = (
     type?: FriendlyShipTypeId,
     greeting?: string,
 ): string | undefined =>
     (type
-        ? SHIP_TYPES.find((shipType) => shipType.id === type)
+        ? getFriendlyShipType(type)
         : SHIP_TYPES.find(
               (shipType) =>
                   greeting === shipType.greetingKey ||
