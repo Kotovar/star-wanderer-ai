@@ -7,11 +7,21 @@ import {
     getUnavailableOutcomes,
 } from "@/game/constants";
 import {
+    GIFT_MULTIPLIER,
+    PARTNER_SHARE_CAP,
+    PARTNER_SHARE_INTERVAL_TURNS,
+    PROTECTED_MATURATION_TURNS,
+} from "@/game/constants/preSpacefaringTemperaments";
+import {
     getPreSpacefaringActionReward,
     getPreSpacefaringContactActionBlocker,
     getPreSpacefaringContactSummary,
 } from "@/game/slices/locations/helpers/preSpacefaringContact";
-import { resolvePreSpacefaringState } from "@/game/slices/locations/helpers/preSpacefaringState";
+import {
+    getPreSpacefaringPayoutUnits,
+    resolvePreSpacefaringState,
+    splitPayoutUnits,
+} from "@/game/slices/locations/helpers/preSpacefaringState";
 import { useGameStore } from "@/game/store";
 import type { Location, PreSpacefaringAction } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
@@ -73,6 +83,43 @@ export function PreSpacefaringContactCard({ location }: { location: Location }) 
             .filter((effect): effect is string => effect !== null)
             .join(" · ");
     };
+    const formatActionPreview = (action: PreSpacefaringAction) => {
+        if (action.grantsGiftBonus) {
+            return t("pre_spacefaring.preview.gift", {
+                percent: Math.round((GIFT_MULTIPLIER - 1) * 100),
+            });
+        }
+        if (!action.outcome) return null;
+        if (
+            action.outcome === "protected" ||
+            action.outcome === "partnered"
+        ) {
+            const units = getPreSpacefaringPayoutUnits(
+                contact.development,
+                contact.temperament,
+                action.outcome,
+                contact.giftGiven === true,
+            );
+            if (units === null) return null;
+            const value = splitPayoutUnits(contact.development, units)
+                .map(
+                    (entry) =>
+                        `+${entry.quantity} ${t(`blueprints.resources.${entry.type}`)}`,
+                )
+                .join(", ");
+            return action.outcome === "protected"
+                ? t("pre_spacefaring.preview.protected", {
+                      turns: PROTECTED_MATURATION_TURNS,
+                      value,
+                  })
+                : t("pre_spacefaring.preview.partnered", {
+                      turns: PARTNER_SHARE_INTERVAL_TURNS,
+                      cap: PARTNER_SHARE_CAP,
+                      value,
+                  });
+        }
+        return t(`pre_spacefaring.preview.${action.outcome}`);
+    };
     const spentTotals = Object.entries(contactSummary.goodsSpent)
         .map(([good, quantity]) => `${quantity} × ${t(`trade.goods.${good}`)}`)
         .join(", ");
@@ -130,6 +177,13 @@ export function PreSpacefaringContactCard({ location }: { location: Location }) 
                         <div className="text-[10px] text-[#8faab5]">
                             {t("pre_spacefaring.growing_countdown", {
                                 count: world.turnsUntilMaturity,
+                            })}
+                        </div>
+                    )}
+                    {world.turnsUntilNextShare !== undefined && (
+                        <div className="text-[10px] text-[#8faab5]">
+                            {t("pre_spacefaring.partner_countdown", {
+                                count: world.turnsUntilNextShare,
                             })}
                         </div>
                     )}
@@ -208,6 +262,7 @@ export function PreSpacefaringContactCard({ location }: { location: Location }) 
                             action.id,
                             action.step,
                         );
+                        const preview = formatActionPreview(action);
                         return (
                             <div key={action.id}>
                                 <Button
@@ -226,6 +281,11 @@ export function PreSpacefaringContactCard({ location }: { location: Location }) 
                                 <div className="mt-1 text-[10px] text-[#8faab5]">
                                     {formatActionEffect(action)}
                                 </div>
+                                {preview && (
+                                    <div className="mt-1 text-[10px] text-[#ffb000]">
+                                        {preview}
+                                    </div>
+                                )}
                                 {blocker && (
                                     <div className="mt-1 text-[10px] text-[#ffb000]">
                                         {t(`pre_spacefaring.blocked.${blocker}`)}

@@ -27,12 +27,14 @@ export type PreSpacefaringWorldStatus =
     | "matured"
     | "dependent"
     | "partner"
-    | "collapsed";
+    | "collapsed"
+    | "legacy";
 
 export interface PreSpacefaringWorldState {
     status: PreSpacefaringWorldStatus;
     claimable: { type: ResearchResourceType; quantity: number }[];
     turnsUntilMaturity?: number;
+    turnsUntilNextShare?: number;
 }
 
 /**
@@ -99,15 +101,15 @@ export function resolvePreSpacefaringState(
     if (contact.step !== 3 || !contact.outcome) {
         return { status: "unresolved", claimable: [] };
     }
+    if (contact.resolvedAtTurn === undefined) {
+        return { status: "legacy", claimable: [] };
+    }
     const { outcome, development, temperament } = contact;
     if (outcome === "assisted") return { status: "dependent", claimable: [] };
     if (outcome === "exploited") return { status: "collapsed", claimable: [] };
 
     const pendingStatus: PreSpacefaringWorldStatus =
         outcome === "partnered" ? "partner" : "growing";
-    if (contact.resolvedAtTurn === undefined) {
-        return { status: pendingStatus, claimable: [] };
-    }
 
     const perPayout = getPreSpacefaringPayoutUnits(
         development,
@@ -136,14 +138,20 @@ export function resolvePreSpacefaringState(
     }
 
     const since = contact.lastClaimTurn ?? contact.resolvedAtTurn;
+    const elapsed = Math.max(0, currentTurn - since);
     const shares = Math.min(
-        Math.floor((currentTurn - since) / PARTNER_SHARE_INTERVAL_TURNS),
+        Math.floor(elapsed / PARTNER_SHARE_INTERVAL_TURNS),
         PARTNER_SHARE_CAP,
     );
     return {
         status: "partner",
         claimable:
             shares > 0 ? splitPayoutUnits(development, perPayout * shares) : [],
+        turnsUntilNextShare:
+            shares === 0
+                ? PARTNER_SHARE_INTERVAL_TURNS -
+                  (elapsed % PARTNER_SHARE_INTERVAL_TURNS)
+                : undefined,
     };
 }
 

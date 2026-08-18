@@ -328,8 +328,14 @@ const contactSummaryKeys = [
   "summary_spent",
   "summary_received",
   "summary_turns",
-  "summary_permanent_effect",
   "legacy_history_unavailable",
+];
+const actionPreviewKeys = [
+  "gift",
+  "protected",
+  "assisted",
+  "partnered",
+  "exploited",
 ];
 
 for (const { language, catalog } of translations) {
@@ -338,6 +344,12 @@ for (const { language, catalog } of translations) {
     assert.ok(
       catalog.pre_spacefaring[key],
       `${language}: contact summary ${key}`,
+    );
+  }
+  for (const key of actionPreviewKeys) {
+    assert.ok(
+      catalog.pre_spacefaring.preview?.[key],
+      `${language}: action preview ${key}`,
     );
   }
   for (const civilization of PRE_SPACEFARING_CIVILIZATIONS) {
@@ -534,12 +546,12 @@ assert.ok(
 );
 
 const legacyContact = {
-  civilizationId: "forge_cities",
-  development: "industrial",
+  civilizationId: "river_clans",
+  development: "primitive",
   temperament: "curious",
   step: 3,
   outcome: "partnered",
-  actionHistory: ["review_factories"],
+  actionHistory: ["partner_with_clans"],
 };
 const legacyLocation = {
   id: "planet-legacy",
@@ -565,7 +577,8 @@ assert.equal(migrated.stateVersion, CURRENT_STATE_VERSION);
 
 const migratedContact =
   migrated.galaxy.sectors[0].locations[0].preSpacefaringContact;
-assert.equal(migratedContact.temperament, "martial");
+assert.equal(migratedContact.temperament, "insular");
+assert.equal(migratedContact.outcome, "partnered");
 assert.equal(migratedContact.resolvedAtTurn, undefined);
 assert.equal(
   migratedContact.actionHistory,
@@ -577,8 +590,13 @@ assert.deepEqual(
   [],
 );
 assert.equal(
+  resolvePreSpacefaringState(migratedContact, 999999).status,
+  "legacy",
+  "migrated partnership without a payout timestamp stays archival",
+);
+assert.equal(
   migrated.currentSector.locations[0].preSpacefaringContact.temperament,
-  "martial",
+  "insular",
 );
 assert.equal(
   migrated.currentSector.locations[0].preSpacefaringContact.actionHistory,
@@ -586,7 +604,7 @@ assert.equal(
 );
 assert.equal(
   migrated.currentLocation.preSpacefaringContact.temperament,
-  "martial",
+  "insular",
 );
 assert.equal(
   migrated.currentLocation.preSpacefaringContact.actionHistory,
@@ -734,10 +752,12 @@ const partner = (turn, over = {}) =>
   );
 assert.deepEqual(partner(5).claimable, []);
 assert.equal(partner(5).status, "partner");
+assert.equal(partner(5).turnsUntilNextShare, 1);
 assert.deepEqual(partner(6).claimable, [
   { type: "alien_biology", quantity: 1 },
   { type: "ancient_data", quantity: 1 },
 ]);
+assert.equal(partner(6).turnsUntilNextShare, undefined);
 assert.deepEqual(partner(18).claimable, [
   { type: "alien_biology", quantity: 3 },
   { type: "ancient_data", quantity: 3 },
@@ -754,6 +774,7 @@ assert.deepEqual(partner(30, { lastClaimTurn: 24 }).claimable, [
 
 for (const outcome of ALL_OUTCOMES) {
   const legacy = resolvePreSpacefaringState(contact({ outcome }), 100000);
+  assert.equal(legacy.status, "legacy", `legacy ${outcome}`);
   assert.deepEqual(legacy.claimable, [], `legacy ${outcome}`);
 }
 assert.equal(PARTNER_SHARE_INTERVAL_TURNS, 6);
@@ -1213,13 +1234,15 @@ const requiredKeys = [
     ),
   ]),
   ...ALL_OUTCOMES.map((outcome) => `pre_spacefaring.outcomes.${outcome}`),
-  ...["growing", "matured", "dependent", "partner", "collapsed"].map(
+  ...["growing", "matured", "dependent", "partner", "collapsed", "legacy"].map(
     (status) => `pre_spacefaring.status.${status}`,
   ),
   "pre_spacefaring.temperament_unknown",
   "pre_spacefaring.claim_button",
   "pre_spacefaring.claim_nothing",
   "pre_spacefaring.growing_countdown",
+  "pre_spacefaring.partner_countdown",
+  ...actionPreviewKeys.map((preview) => `pre_spacefaring.preview.${preview}`),
   "game_logs.pre_spacefaring_yield_claimed",
 ];
 
@@ -1252,6 +1275,9 @@ assert.match(cardSource, /resolvePreSpacefaringState/);
 assert.match(cardSource, /pre_spacefaring\.status\.\$\{[^}]+\}/);
 assert.match(cardSource, /claimPreSpacefaringYield/);
 assert.match(cardSource, /growing_countdown/);
+assert.match(cardSource, /turnsUntilNextShare/);
+assert.match(cardSource, /partner_countdown/);
+assert.match(cardSource, /pre_spacefaring\.preview/);
 assert.ok(
   !/civilization\.actions/.test(cardSource),
   "карточка всё ещё читает civilization.actions",

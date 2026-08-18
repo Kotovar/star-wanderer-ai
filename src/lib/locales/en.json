@@ -5979,21 +5979,22 @@
         },
         "temperament_unknown": "Temperament unknown. Begin with observation.",
         "actions": {
-            "insular_observe": "Observe from a distance, unseen", "insular_withdraw": "End the observation and withdraw", "curious_observe": "Study their workshops and records", "curious_gift": "Hand over an electronics sample (1 electronics)", "curious_abstain": "Hand over nothing", "devout_observe": "Attend the rite", "devout_gift": "Accept the offering and answer with a gift (1 rare minerals)", "devout_abstain": "Refuse the role of messenger", "martial_observe": "Scout the lines of the conflict", "martial_gift": "Hand tools to one of the sides (2 spares)", "martial_abstain": "Stay out of their war", "waning_observe": "Assess how long they have left", "waning_gift": "Hand over medicine (2 medicine)", "waning_abstain": "Give them no false hope", "contact_protected": "Declare the world a preserve and leave", "contact_assisted": "Step in and solve their present crisis", "contact_partnered": "Arrange a standing exchange", "contact_exploited": "Take everything the world can give"
+            "insular_observe": "Observe from a distance, unseen", "insular_withdraw": "Keep your distance and consider the outcome", "curious_observe": "Study their workshops and records", "curious_gift": "Hand over an electronics sample (1 electronics)", "curious_abstain": "Hand over nothing", "devout_observe": "Attend the rite", "devout_gift": "Accept the offering and answer with a gift (1 rare minerals)", "devout_abstain": "Refuse the role of messenger", "martial_observe": "Scout the lines of the conflict", "martial_gift": "Hand tools to one of the sides (2 spares)", "martial_abstain": "Stay out of their war", "waning_observe": "Assess how long they have left", "waning_gift": "Hand over medicine (2 medicine)", "waning_abstain": "Give them no false hope", "contact_protected": "Declare the world a preserve and leave", "contact_assisted": "Step in and solve their present crisis", "contact_partnered": "Arrange a standing exchange", "contact_exploited": "Take everything the world can give"
         },
         "outcomes": {
             "protected": "The world is a preserve now. It grows on its own, and one day it will have something to share.", "assisted": "Their crisis was solved by your hands. From here they get by on you rather than on themselves.", "partnered": "A standing exchange is in place. Come back — your share accumulates and waits.", "exploited": "The world has been stripped. What was here is gone."
         },
-        "status": { "growing": "The civilization is developing without your involvement.", "matured": "The civilization has reached a new stage.", "dependent": "The civilization lives on your aid and produces nothing further.", "partner": "Your partner accumulates your share between visits.", "collapsed": "Only ruins remain. The planet is free for a base." },
+        "status": { "growing": "The civilization is developing without your involvement.", "matured": "The civilization has reached a new stage.", "dependent": "The civilization lives on your aid and produces nothing further.", "partner": "Your partner accumulates your share between visits.", "collapsed": "Only ruins remain. The planet is free for a base.", "legacy": "Archived contact: its outcome remains, but no new rewards are available." },
         "growing_countdown": "Until it flourishes: {{count}} turns",
+        "partner_countdown": "Until next share: {{count}} turns",
         "claim_button": "Collect share: {{value}}",
         "claim_nothing": "Nothing to collect yet.",
         "summary_title": "CONTACT SUMMARY",
         "summary_spent": "Spent: {{value}}",
         "summary_received": "Received: {{value}}",
         "summary_turns": "Turns spent: {{count}}",
-        "summary_permanent_effect": "Permanent effect depends on the outcome: exploitation lifts the base restriction, while protection and partnership change the world's future.",
-        "legacy_history_unavailable": "This contact was completed before decision history was recorded. Its earlier rewards cannot be reconstructed exactly.",
+        "preview": { "gift": "Final resource payout: +{{percent}}%", "protected": "Base unavailable · one payout in {{turns}} turns: {{value}}", "assisted": "Base unavailable · no further rewards", "partnered": "Base unavailable · every {{turns}} turns: {{value}} (up to {{cap}} shares)", "exploited": "Planet is free for a base" },
+        "legacy_history_unavailable": "This contact was completed before decision history was recorded. Historical rewards and new shares cannot be restored.",
         "blocked": {
             "wrong_location": "Return to this planet to continue contact.",
             "no_contact": "No local contact is recorded here.",
