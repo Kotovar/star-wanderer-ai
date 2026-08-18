@@ -1,4 +1,3 @@
-import { RACES } from "@/game/constants/races";
 import type {
     GalaxyTierAll,
     Sector,
@@ -222,18 +221,23 @@ export const generateFriendlyShip = (
 ): Location => {
     const shipType = SHIP_TYPES[Math.floor(Math.random() * SHIP_TYPES.length)];
     const shipRace = getRandomRace([]);
-    const raceInfo = RACES[shipRace];
-    const shipName = `${raceInfo.adjective || raceInfo.name} ${shipType.name}`;
 
     return {
         id: `${sectorIdx}-${locIdx}`,
         type: "friendly_ship",
-        name: shipName,
-        greeting: shipType.greeting,
+        name: shipType.nameKey,
+        greeting: shipType.greetingKey,
         hasTrader: shipType.hasTrader,
-        hasCrew: shipType.hasCrew,
-        hasQuest: shipType.hasQuest,
+        hasCrew:
+            shipType.crewChance === undefined
+                ? shipType.hasCrew
+                : Math.random() < shipType.crewChance,
+        hasQuest:
+            shipType.questChance === undefined
+                ? shipType.hasQuest
+                : Math.random() < shipType.questChance,
         hasDistress: shipType.hasDistress,
+        friendlyShipType: shipType.id,
         dominantRace: shipRace,
         shipRace,
     };

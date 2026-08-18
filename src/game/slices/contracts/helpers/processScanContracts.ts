@@ -24,7 +24,12 @@ export const processScanContracts = (state: GameState) => {
 
     // Контракты на сканирование для текущего типа планеты
     const scanContracts = state.activeContracts.filter(
-        (c) => c.type === "scan_planet" && c.planetType === location.planetType,
+        (c) =>
+            c.type === "scan_planet" &&
+            c.planetType === location.planetType &&
+            (c.targetPlanetId === undefined || c.targetPlanetId === location.id) &&
+            (c.targetSector === undefined ||
+                c.targetSector === state.currentSector?.id),
     );
 
     if (scanContracts.length === 0) {
@@ -99,7 +104,7 @@ export const processScanContracts = (state: GameState) => {
             const returnLocation = c.sourcePlanetName
                 ? `${getLocationName(c.sourceSectorName ?? "", t)}, ${getLocationName(c.sourcePlanetName, t)}`
                 : c.sourceName && c.sourceSectorName
-                  ? `${c.sourceName} (${getLocationName(c.sourceSectorName, t)})`
+                  ? `${getLocationName(c.sourceName, t)} (${getLocationName(c.sourceSectorName, t)})`
                   : getLocationName(
                         c.sourceSectorName ||
                             i18nStore.t("game_logs.scan_contract_base"),

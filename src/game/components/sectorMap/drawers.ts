@@ -1903,7 +1903,7 @@ export function drawFriendlyShip(
     return "default";
   };
 
-  const shipType = getShipType(shipName);
+  const shipType = loc.friendlyShipType ?? getShipType(shipName);
 
   // Race colors
   const raceColors: Record<

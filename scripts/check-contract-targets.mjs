@@ -18,6 +18,9 @@ const { getGalaxyMapObjectives } = jiti(
   "../src/game/components/galaxyMapObjectives.ts",
 );
 const { getLocationName } = jiti("../src/lib/translationHelpers.ts");
+const { getScannerInfo } = jiti(
+  "../src/game/components/sectorMap/helpers.ts",
+);
 const { formatContractDescription } = jiti(
   "../src/game/contracts/formatContractDescription.ts",
 );
@@ -40,7 +43,13 @@ const { completeMiningContracts } = jiti(
 const { generatePlanetContracts } = jiti(
   "../src/game/contracts/generatePlanetContracts.ts",
 );
-const { generatePlanet, generateStation } = jiti("../src/game/galaxy/generate.ts");
+const {
+  generateFriendlyShip,
+  generatePlanet,
+  generateStation,
+} = jiti("../src/game/galaxy/generate.ts");
+const { PLANET_TYPES } = jiti("../src/game/constants/planets.ts");
+const { populateShipQuests } = jiti("../src/game/contracts/populateShipQuests.ts");
 const { refreshVisitedPlanetContracts } = jiti(
   "../src/game/contracts/refreshPlanetContracts.ts",
 );
@@ -158,6 +167,8 @@ assert.equal(
 const locationTranslations = {
   "location_names.station_01": "Meridian Foundry",
   "location_names.planet_01": "Asterion",
+  "friendly_ship.names.barge": "Trade Barge",
+  "friendly_ship.greetings.barge": "A massive barge drifts through space.",
   "sector_map.station_prefix": "Station",
 };
 const translateLocation = (key) => locationTranslations[key] ?? key;
@@ -177,6 +188,32 @@ assert.equal(
   "legacy station names stay readable",
 );
 assert.equal(
+  getLocationName("Человеческая Торговая Баржа", translateLocation),
+  "Trade Barge",
+  "legacy friendly ship names are localized",
+);
+const friendlyShipScannerInfo = getScannerInfo(
+  {
+    id: "scanner-friendly-barge",
+    type: "friendly_ship",
+    name: "friendly_ship.names.barge",
+    greeting: "friendly_ship.greetings.barge",
+    friendlyShipType: "barge",
+    hasTrader: true,
+  },
+  15,
+  false,
+  translateLocation,
+);
+assert.ok(
+  friendlyShipScannerInfo.includes("📍 Trade Barge"),
+  "scanner must localize a friendly ship name",
+);
+assert.ok(
+  friendlyShipScannerInfo.includes('📡 "A massive barge drifts through space."'),
+  "scanner must localize a friendly ship greeting",
+);
+assert.equal(
   generateStation(2, 3).name,
   "location_names.station_18",
   "station names use the deterministic localized catalog",
@@ -185,6 +222,65 @@ assert.equal(
   generatePlanet(2, 3, 1, false).name,
   "location_names.planet_18",
   "planet names use the deterministic localized catalog",
+);
+
+const originalFriendlyShipRandom = Math.random;
+const friendlyShipRandomValues = [
+  0.5,
+  0,
+  0.1,
+  0.5,
+  0,
+  0.9,
+  0.6,
+  0,
+  0.1,
+  0.6,
+  0,
+  0.9,
+];
+let crewedBarge;
+let emptyBarge;
+let questProbe;
+let emptyProbe;
+try {
+  Math.random = () => friendlyShipRandomValues.shift() ?? 0;
+  crewedBarge = generateFriendlyShip(9, 1);
+  emptyBarge = generateFriendlyShip(9, 2);
+  questProbe = generateFriendlyShip(9, 3);
+  emptyProbe = generateFriendlyShip(9, 4);
+} finally {
+  Math.random = originalFriendlyShipRandom;
+}
+assert.equal(
+  crewedBarge.name,
+  "friendly_ship.names.barge",
+  "generated friendly ship names must be locale keys",
+);
+assert.equal(
+  crewedBarge.greeting,
+  "friendly_ship.greetings.barge",
+  "generated friendly ship greetings must be locale keys",
+);
+assert.equal(
+  crewedBarge.hasCrew,
+  true,
+  "a Trade Barge must roll its crew per ship",
+);
+assert.equal(
+  emptyBarge.hasCrew,
+  false,
+  "another Trade Barge must get an independent crew roll",
+);
+assert.equal(
+  questProbe.hasQuest,
+  true,
+  "a Scout Probe must roll its quest per ship",
+);
+assert.equal(
+  emptyProbe.hasQuest,
+  false,
+  "another Scout Probe must get an independent quest roll",
 );
 
 const sectors = [
@@ -414,6 +510,94 @@ assert.equal(
   1,
   "scan_planet: пустая планета не засчитана",
 );
+const wrongShipScanTarget = processScanContracts({
+  currentSector: { id: 3 },
+  currentLocation: {
+    id: "wrong-ship-scan-target",
+    type: "planet",
+    planetType: "Ледяная",
+  },
+  activeContracts: [
+    {
+      id: "ship-scan-target",
+      type: "scan_planet",
+      planetType: "Ледяная",
+      targetSector: 3,
+      targetPlanetId: "exact-ship-scan-target",
+      requiresVisit: 1,
+      visited: 0,
+    },
+  ],
+  ship: {
+    modules: [
+      { type: "scanner", disabled: false, manualDisabled: false, health: 100 },
+    ],
+  },
+});
+assert.equal(
+  wrongShipScanTarget.contracts[0].visited,
+  0,
+  "scan_planet: дружественный контракт засчитал нецелевую планету",
+);
+const exactShipScanTarget = processScanContracts({
+  currentSector: { id: 3 },
+  currentLocation: {
+    id: "exact-ship-scan-target",
+    type: "planet",
+    planetType: "Ледяная",
+  },
+  activeContracts: [
+    {
+      id: "ship-scan-target",
+      type: "scan_planet",
+      planetType: "Ледяная",
+      targetSector: 3,
+      targetPlanetId: "exact-ship-scan-target",
+      requiresVisit: 1,
+      visited: 0,
+    },
+  ],
+  ship: {
+    modules: [
+      { type: "scanner", disabled: false, manualDisabled: false, health: 100 },
+    ],
+  },
+});
+assert.equal(
+  exactShipScanTarget.contracts[0].visited,
+  1,
+  "scan_planet: дружественный контракт не засчитал целевую планету",
+);
+const localizedShipScanReturn = processScanContracts({
+  currentSector: { id: 3 },
+  currentLocation: {
+    id: "localized-ship-scan-target",
+    type: "planet",
+    planetType: "Ледяная",
+  },
+  activeContracts: [
+    {
+      id: "localized-ship-scan-contract",
+      type: "scan_planet",
+      planetType: "Ледяная",
+      targetSector: 3,
+      targetPlanetId: "localized-ship-scan-target",
+      sourceName: "friendly_ship.names.courier",
+      sourceSectorName: "sector_names.sector_01_1",
+      requiresVisit: 1,
+      visited: 0,
+    },
+  ],
+  ship: {
+    modules: [
+      { type: "scanner", disabled: false, manualDisabled: false, health: 100 },
+    ],
+  },
+});
+assert.ok(
+  localizedShipScanReturn.logs[0].message.includes("Курьерский фрегат"),
+  "scan_planet: возврат к дружественному кораблю должен локализовать источник",
+);
 const scanPersistenceSnapshots = [];
 const scanPersistenceState = {
   activeContracts: [
@@ -602,6 +786,58 @@ try {
 }
 assert.ok(generatedScan, "генератор не выдал scan_planet для проверки");
 assert.ok(generatedSurvey, "генератор не выдал expedition_survey для проверки");
+
+const createFriendlyQuestSectors = () => [
+  {
+    id: 91,
+    name: "sector_names.sector_01_1",
+    tier: 1,
+    locations: [
+      {
+        id: "friendly-quest-source",
+        type: "friendly_ship",
+        name: "friendly_ship.names.courier",
+        dominantRace: "human",
+        hasQuest: true,
+      },
+    ],
+  },
+  {
+    id: 92,
+    name: "sector_names.sector_02_1",
+    tier: 1,
+    locations: PLANET_TYPES.map((planetType, index) => ({
+      id: `friendly-quest-target-${index}`,
+      type: "planet",
+      name: `location_names.planet_${String(index + 1).padStart(2, "0")}`,
+      planetType,
+    })),
+  },
+];
+const generateFriendlyQuest = (randomValues) => {
+  const questSectors = createFriendlyQuestSectors();
+  const previousRandom = Math.random;
+  try {
+    Math.random = () => randomValues.shift() ?? 0;
+    populateShipQuests(questSectors);
+  } finally {
+    Math.random = previousRandom;
+  }
+  return questSectors[0].locations[0].pregeneratedQuest;
+};
+for (const [type, randomValues] of [
+  ["delivery", [0.1, 0, 0, 0, 0]],
+  ["supply_run", [0.6, 0, 0, 0]],
+  ["scan_planet", [0.9, 0, 0, 0, 0]],
+]) {
+  const quest = generateFriendlyQuest(randomValues);
+  assert.equal(quest?.type, type, `friendly ship must generate ${type}`);
+  assert.equal(
+    quest?.sourceDominantRace,
+    "human",
+    `${type}: friendly ship quest must preserve issuer reputation race`,
+  );
+}
 
 // derelict_recovery: нужен конкретный ещё не исследованный покинутый корабль
 assert.ok(
@@ -796,6 +1032,22 @@ assert.equal(
   ),
   "📡 Сканирование: Ледяная",
   "описание контракта не передаёт параметры перевода",
+);
+assert.equal(
+  formatContractDescription(
+    {
+      type: "scan_planet",
+      desc: "📡 Найти и отсканировать планету: Ледяная",
+      planetType: "Ледяная",
+    },
+    (key, params) => {
+      if (key === "locations.planet_types.ice") return "Ice";
+      if (key === "contracts.name_scan") return `📡 Scanning: ${params?.planetType}`;
+      return key;
+    },
+  ),
+  "📡 Scanning: Ice",
+  "описание дружественного scan-контракта должно локализоваться",
 );
 assert.equal(
   formatContractDescription(

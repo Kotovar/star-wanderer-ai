@@ -181,9 +181,9 @@ function ContractDescription({
                     cargo: getTradeGoodName(c.cargo, t),
                     quantity: c.quantity || 0,
                     progress: cargoOwned,
-                    destination:
-                        c.sourceName ||
-                        getLocationName(c.sourceSectorName || "", t),
+                    destination: c.sourceName
+                        ? getLocationName(c.sourceName, t)
+                        : getLocationName(c.sourceSectorName || "", t),
                 });
             })()}
             {c.type === "expedition_survey" &&

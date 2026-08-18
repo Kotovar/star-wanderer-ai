@@ -157,7 +157,22 @@ export const acceptContract = (
 
     // Special message for supply_run contracts
     if (contract.type === "supply_run") {
-        get().addLog( i18nStore.t("game_logs.acceptContract_8", { value: i18nStore.t(contract.sourceType === "planet" ? "game_logs.deliver_to_planet" : "game_logs.deliver_to_ship"), sourceName: contract.sourceName ?? "", sourceSectorName: getLocationName(contract.sourceSectorName ?? "", i18nStore.t.bind(i18nStore)) }),
+        get().addLog(
+            i18nStore.t("game_logs.acceptContract_8", {
+                value: i18nStore.t(
+                    contract.sourceType === "planet"
+                        ? "game_logs.deliver_to_planet"
+                        : "game_logs.deliver_to_ship",
+                ),
+                sourceName: getLocationName(
+                    contract.sourceName ?? "",
+                    i18nStore.t.bind(i18nStore),
+                ),
+                sourceSectorName: getLocationName(
+                    contract.sourceSectorName ?? "",
+                    i18nStore.t.bind(i18nStore),
+                ),
+            }),
             "warning",
         );
     }

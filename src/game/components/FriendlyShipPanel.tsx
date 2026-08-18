@@ -24,6 +24,8 @@ import { GoodInfoModal } from "./GoodInfoModal";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
 import { hasRequiredDeliveryCargo } from "@/game/contracts/contractCargo";
 import { getFreeCargoSpace } from "@/game/slices/ship/helpers/getCargoCapacity";
+import { getFriendlyShipGreetingKey } from "@/game/galaxy/consts";
+import { getLocationName } from "@/lib/translationHelpers";
 
 const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
 
@@ -46,7 +48,18 @@ export function FriendlyShipPanel() {
   const completeDeliveryContract = useGameStore(
     (s) => s.completeDeliveryContract,
   );
+  const handleSupplyRunContracts = useGameStore(
+    (s) => s.handleSupplyRunContracts,
+  );
   const activeContracts = useGameStore((s) => s.activeContracts);
+  const currentLocationIndex = useGameStore((s) => {
+    const currentLocationId = s.currentLocation?.id;
+    return currentLocationId
+      ? (s.currentSector?.locations.findIndex(
+          (location) => location.id === currentLocationId,
+        ) ?? -1)
+      : -1;
+  });
 
   const showSectorMap = useGameStore((s) => s.showSectorMap);
   const attackFriendlyShip = useGameStore((s) => s.attackFriendlyShip);
@@ -64,13 +77,14 @@ export function FriendlyShipPanel() {
   const dominantRace = currentLocation?.dominantRace;
   const race = dominantRace ? RACES[dominantRace] : null;
 
-  // Strip race adjective from ship name (e.g. "Человеческий Торговец" → "Торговец")
-  const shipDisplayName = (() => {
-    const name = currentLocation?.name ?? "";
-    if (!race) return name;
-    const prefix = race.adjective || race.name;
-    return name.startsWith(prefix + " ") ? name.slice(prefix.length + 1) : name;
-  })();
+  const shipDisplayName = getLocationName(currentLocation?.name ?? "", t);
+  const greetingKey = getFriendlyShipGreetingKey(
+    currentLocation?.friendlyShipType,
+    currentLocation?.greeting,
+  );
+  const shipGreeting = greetingKey
+    ? t(greetingKey)
+    : currentLocation?.greeting || t("friendly_ship.default_greeting");
 
   // Discover race when encountering a friendly ship
   useEffect(() => {
@@ -214,6 +228,14 @@ export function FriendlyShipPanel() {
       c.targetLocationId === currentLocation.id &&
       hasRequiredDeliveryCargo(ship.cargo, c),
   );
+  const completableSupplyContracts = activeContracts.filter(
+    (c) =>
+      c.type === "supply_run" &&
+      c.sourcePlanetId === currentLocation.id &&
+      c.cargo &&
+      (ship.tradeGoods.find((good) => good.item === c.cargo)?.quantity ?? 0) >=
+        (c.quantity || 15),
+  );
 
   // Цены торговца привязаны к тиру сектора, как и у станций (анти-арбитраж)
   const tradeGoods = INITIAL_STOCK.map((gid, idx) => ({
@@ -292,7 +314,7 @@ export function FriendlyShipPanel() {
         )}
         {!currentLocation.hasDistress && (
           <div className="text-sm text-[#aaa] mt-2">
-            {currentLocation.greeting || t("friendly_ship.default_greeting")}
+            {shipGreeting}
           </div>
         )}
       </div>
@@ -426,6 +448,39 @@ export function FriendlyShipPanel() {
         </div>
       )}
 
+      {completableSupplyContracts.length > 0 && (
+        <div className="border-t border-[#333] pt-3">
+          <div className="font-['Orbitron'] font-bold text-sm text-[#00ff41] mb-1 uppercase tracking-wider">
+            {t("friendly_ship.deliver_cargo")}
+          </div>
+          <div className="text-xs text-[#555] mb-2">
+            {t("friendly_ship.supply_ready")}
+          </div>
+          <SectionPanel
+            padding="sm"
+            className="flex justify-between items-center gap-3"
+          >
+            <div className="flex-1 text-[#00d4ff] font-bold text-sm">
+              {completableSupplyContracts.map((contract) => (
+                <div key={contract.id}>
+                  {formatContractDescription(contract, t)}
+                </div>
+              ))}
+            </div>
+            <Button
+              onClick={() => {
+                if (currentLocationIndex >= 0) {
+                  handleSupplyRunContracts(currentLocationIndex);
+                }
+              }}
+              className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs"
+            >
+              {t("friendly_ship.deliver")}
+            </Button>
+          </SectionPanel>
+        </div>
+      )}
+
       {/* Quest */}
       {currentLocation.hasQuest && !questAlreadyTaken && (
         <div className="border-t border-[#333] pt-3">
@@ -440,7 +495,7 @@ export function FriendlyShipPanel() {
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="text-ring font-bold flex items-center gap-2 flex-wrap">
-                    {shipQuest.desc}
+                    {formatContractDescription(shipQuest, t)}
                     {dominantRace && (
                       <span
                         className="inline-flex items-center gap-1 text-xs px-1 py-0.5 rounded"

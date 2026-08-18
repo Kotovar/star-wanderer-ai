@@ -54,6 +54,15 @@ export type LocationType =
     | "space_monster"
     | "profile_signal";
 
+export type FriendlyShipTypeId =
+    | "trader"
+    | "mercenary"
+    | "courier"
+    | "barge"
+    | "probe"
+    | "explorer"
+    | "distress";
+
 export const SHIP_LOCATION_TYPES: LocationType[] = [
     "boss",
     "enemy",
@@ -127,6 +136,7 @@ export interface Location {
     hasCrew?: boolean;
     hasQuest?: boolean;
     hasDistress?: boolean;
+    friendlyShipType?: FriendlyShipTypeId;
     shipRace?: RaceId; // Race of the friendly ship
     x?: number;
     y?: number;

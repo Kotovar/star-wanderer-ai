@@ -253,7 +253,16 @@ for (const [locale, expected] of [
 }
 
 const deliveryState = {
-  currentSector: { tier: 1 },
+  currentSector: {
+    tier: 1,
+    locations: [
+      {
+        id: "delivery-ship",
+        type: "friendly_ship",
+        name: "Курьер",
+      },
+    ],
+  },
   currentLocation: {
     id: "delivery-ship",
     type: "friendly_ship",
@@ -278,6 +287,7 @@ const deliveryState = {
     fuel: 0,
   },
   crew: [],
+  research: { researchedTechs: [] },
   knownRaces: [],
   raceReputation: {},
   activeContracts: [
@@ -300,6 +310,7 @@ const deliveryState = {
   getCrewCapacity: () => 5,
   acceptContract: () => false,
   completeDeliveryContract: () => {},
+  handleSupplyRunContracts: () => {},
   showSectorMap: () => {},
   attackFriendlyShip: () => {},
   addLog: () => {},
@@ -320,6 +331,68 @@ const legacyDeliveryMarkup = renderToStaticMarkup(
 assert.ok(
   legacyDeliveryMarkup.includes("legacy_payload"),
   "неизвестный груз должен сохранить legacy-значение",
+);
+
+deliveryState.activeContracts = [
+  {
+    id: "supply-1",
+    type: "supply_run",
+    sourcePlanetId: "delivery-ship",
+    cargo: "medicine",
+    quantity: 10,
+    reward: 250,
+    desc: "📦 Поставка ресурсов: Медицина (10т)",
+  },
+];
+deliveryState.ship = {
+  ...deliveryState.ship,
+  cargo: [],
+  tradeGoods: [{ item: "medicine", quantity: 10, buyPrice: 20 }],
+};
+const supplyMarkup = renderToStaticMarkup(createElement(FriendlyShipPanel));
+assert.ok(
+  supplyMarkup.includes("Запрошенный груз на борту"),
+  "дружественный корабль должен предлагать сдать готовую поставку без повторного входа",
+);
+
+deliveryState.currentLocation = {
+  id: "localized-ship",
+  type: "friendly_ship",
+  name: "friendly_ship.names.courier",
+  greeting: "friendly_ship.greetings.courier",
+  hasTrader: false,
+  hasCrew: false,
+  hasQuest: true,
+  hasDistress: false,
+  pregeneratedQuest: {
+    id: "localized-scan-quest",
+    type: "scan_planet",
+    desc: "📡 Найти и отсканировать планету: Ледяная",
+    planetType: "Ледяная",
+    reward: 250,
+  },
+};
+deliveryState.currentSector = {
+  tier: 1,
+  locations: [deliveryState.currentLocation],
+};
+deliveryState.activeContracts = [];
+const localizedFriendlyShipMarkup = renderToStaticMarkup(
+  createElement(FriendlyShipPanel),
+);
+assert.ok(
+  localizedFriendlyShipMarkup.includes("Курьерский фрегат"),
+  "панель должна переводить название дружественного корабля",
+);
+assert.ok(
+  localizedFriendlyShipMarkup.includes(
+    "Капитан фрегата ищет надёжного партнёра для срочной доставки.",
+  ),
+  "панель должна переводить приветствие дружественного корабля",
+);
+assert.ok(
+  localizedFriendlyShipMarkup.includes("📡 Сканирование: Ледяная"),
+  "панель должна форматировать описание скан-контракта через каталог",
 );
 
 globalThis.__playerFeedbackState = {

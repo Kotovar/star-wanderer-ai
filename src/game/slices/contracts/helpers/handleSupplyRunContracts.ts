@@ -4,6 +4,7 @@ import { giveCrewExperience } from "@/game/crew";
 import type { GameState, GameStore, Location } from "@/game/types";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
 import { getReputationChanges } from "@/game/contracts/completionRewards";
+import { getLocationName } from "@/lib/translationHelpers";
 
 // Тип для set с поддержкой immer (позволяет и мутации, и объекты)
 type SetState = {
@@ -55,7 +56,10 @@ export const handleSupplyRunContracts = (
         }));
         get().addLog( i18nStore.t("game_logs.handleSupplyRunContracts_1", {
             desc: formatContractDescription(c, i18nStore.t.bind(i18nStore)),
-            loc_name: c.sourceName || loc.name,
+            loc_name: getLocationName(
+                c.sourceName || loc.name,
+                i18nStore.t.bind(i18nStore),
+            ),
             reward: c.reward,
         }),
             "info",

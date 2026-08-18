@@ -1,4 +1,5 @@
 import { getLocationName } from "@/lib/translationHelpers";
+import { getFriendlyShipGreetingKey } from "@/game/galaxy/consts";
 import { ANCIENT_BOSSES } from "@/game/constants/bosses";
 import { RACES } from "@/game/constants/races";
 import { canDetectObject } from "@/game/slices/scanner/helpers/canDetectObject";
@@ -325,7 +326,7 @@ export function getScannerInfo(
   // Friendly ship progressive scanner info
   if (loc.type === "friendly_ship") {
     // Strip race adjective from the name (e.g. "Человеческий Торговец" → "Торговец")
-    let displayName = loc.name;
+    let displayName = getLocationName(loc.name, t);
     if (loc.shipRace) {
       const raceInfo = RACES[loc.shipRace];
       const prefix = raceInfo?.adjective || raceInfo?.name;
@@ -349,10 +350,15 @@ export function getScannerInfo(
     if (scanRange >= 8 && loc.hasDistress) {
       info.push(`⚠️ ${t("locations.scan_ship_distress")}`);
     }
-    if (scanRange >= 15 && loc.greeting) {
-      const snippet = loc.greeting.length > 60
-        ? loc.greeting.slice(0, 57) + "..."
-        : loc.greeting;
+    const greetingKey = getFriendlyShipGreetingKey(
+      loc.friendlyShipType,
+      loc.greeting,
+    );
+    const greeting = greetingKey ? t(greetingKey) : loc.greeting;
+    if (scanRange >= 15 && greeting) {
+      const snippet = greeting.length > 60
+        ? greeting.slice(0, 57) + "..."
+        : greeting;
       info.push(`📡 "${snippet}"`);
     }
     return info;

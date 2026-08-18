@@ -1,4 +1,5 @@
 import { store } from "./useTranslation";
+import { getFriendlyShipNameKey } from "@/game/galaxy/consts";
 
 // Helper function to get translated planet type name
 export function getPlanetTypeName(
@@ -63,6 +64,12 @@ export function getLocationName(
     locationName: string,
     i18nT: (key: string) => string,
 ): string {
+    const friendlyShipNameKey = getFriendlyShipNameKey(locationName);
+    if (friendlyShipNameKey) {
+        const translated = i18nT(friendlyShipNameKey);
+        return translated === friendlyShipNameKey ? locationName : translated;
+    }
+
     if (locationName.startsWith("sector_names.")) {
         return getSectorName(locationName, i18nT);
     }

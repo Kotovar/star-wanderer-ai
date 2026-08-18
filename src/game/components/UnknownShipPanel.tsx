@@ -7,6 +7,7 @@ import { ShipStatsPanel } from "./ShipStatsPanel";
 import { getRaceReputationLevel } from "@/game/reputation/utils";
 import { addEnemyCodexEntry, getEnemyCodexId } from "@/game/constants/enemyCodex";
 import type { Location, RaceId } from "@/game/types";
+import { getLocationName } from "@/lib/translationHelpers";
 
 export function UnknownShipPanel() {
     const { t } = useTranslation();
@@ -89,7 +90,7 @@ export function UnknownShipPanel() {
     // Get appropriate title and description
     const getTitle = () => {
         if (isRevealed) {
-            return currentLocation.name;
+            return getLocationName(currentLocation.name, t);
         }
         if (
             currentLocation.type === "friendly_ship" ||

@@ -1,4 +1,5 @@
 import type { Sector } from "../types";
+import type { RaceId } from "../types/races";
 import type { Contract } from "../types/contracts";
 import { TRADE_GOODS } from "../constants/goods";
 import { DELIVERY_GOODS } from "../constants/contracts";
@@ -10,6 +11,7 @@ import { getGeneratedContractTimeLimit } from "./contractDeadline";
 const generateShipQuest = (
     shipId: string,
     shipName: string,
+    shipRace: RaceId | undefined,
     shipSectorId: number,
     allSectors: Sector[],
 ): Contract | null => {
@@ -18,6 +20,14 @@ const generateShipQuest = (
         (s) => s.id !== shipSectorId && s.tier < 4,
     );
     if (otherSectors.length === 0) return null;
+
+    const source = {
+        sourcePlanetId: shipId,
+        sourceName: shipName,
+        sourceSectorName: shipSectorName,
+        sourceType: "ship" as const,
+        sourceDominantRace: shipRace,
+    };
 
     const roll = Math.random();
     const questType = roll < 0.5 ? "delivery" : roll < 0.75 ? "supply_run" : "scan_planet";
@@ -43,10 +53,7 @@ const generateShipQuest = (
             targetSectorName: tgt.name,
             targetPlanetId: targetPlanet?.id,
             targetPlanetName: targetPlanet?.name,
-            sourcePlanetId: shipId,
-            sourceName: shipName,
-            sourceSectorName: shipSectorName,
-            sourceType: "ship",
+            ...source,
             requiresVisit: 1,
             visited: 0,
             requiresScanner: true,
@@ -72,10 +79,7 @@ const generateShipQuest = (
             desc: `📦 Поставка ресурсов: ${cargo.name} (${quantity}т)`,
             cargo: cargoKey,
             quantity,
-            sourcePlanetId: shipId,
-            sourceName: shipName,
-            sourceSectorName: shipSectorName,
-            sourceType: "ship",
+            ...source,
             reward,
         };
     }
@@ -106,10 +110,7 @@ const generateShipQuest = (
         targetLocationId: dest.id,
         targetLocationName: dest.name,
         targetLocationType: destType,
-        sourcePlanetId: shipId,
-        sourceName: shipName,
-        sourceSectorName: shipSectorName,
-        sourceType: "ship",
+        ...source,
         timeLimit: getGeneratedContractTimeLimit(
             "delivery",
             shipTier,
@@ -127,7 +128,13 @@ export const populateShipQuests = (sectors: Sector[]): void => {
         sector.locations.forEach((loc) => {
             if (loc.type === "friendly_ship" && loc.hasQuest) {
                 loc.pregeneratedQuest =
-                    generateShipQuest(loc.id, loc.name, sector.id, sectors) ?? undefined;
+                    generateShipQuest(
+                        loc.id,
+                        loc.name,
+                        loc.dominantRace,
+                        sector.id,
+                        sectors,
+                    ) ?? undefined;
             }
         });
     });

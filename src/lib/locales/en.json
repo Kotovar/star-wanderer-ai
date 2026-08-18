@@ -93,14 +93,33 @@
         "cancel": "Cancel",
         "confirm": "Confirm"
     },
-    "friendly_ship": {
-        "contract": "Contract",
+  "friendly_ship": {
+    "contract": "Contract",
+    "names": {
+      "trader": "Wandering Trader",
+      "mercenary": "Mercenary Vessel",
+      "courier": "Courier Frigate",
+      "barge": "Trade Barge",
+      "probe": "Scout Probe",
+      "explorer": "Research Vessel",
+      "distress": "Distressed Transport"
+    },
+    "greetings": {
+      "trader": "Trader hails you. Rare goods are available.",
+      "mercenary": "Veteran mercenaries offer their services.",
+      "courier": "The frigate captain is looking for a reliable partner for an urgent delivery.",
+      "barge": "A massive barge drifts through space. Its crew is ready to trade.",
+      "probe": "An automated probe offers data in exchange for resources.",
+      "explorer": "Scientist-explorers are seeking help with their expedition.",
+      "distress": "⚠️ DISTRESS SIGNAL: The ship has suffered critical damage and is requesting assistance."
+    },
         "leave": "LEAVE",
         "attack": "⚔️ ATTACK (-20 REP)",
         "trade": "Trade",
         "crew_section": "Hire Crew",
         "deliver_cargo": "Turn In Cargo",
-        "arrived_destination": "You have arrived at the destination",
+    "arrived_destination": "You have arrived at the destination",
+    "supply_ready": "Requested cargo is aboard",
         "hire": "HIRE",
         "deliver": "TURN IN",
         "quest_taken": "Quest from this ship already taken.",

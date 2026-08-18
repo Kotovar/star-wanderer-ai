@@ -79,6 +79,8 @@ export const formatContractDescription = (
       ? "contracts.name_delivery"
       : contract.type === "supply_run"
         ? "contracts.name_supply"
+        : contract.type === "scan_planet"
+          ? "contracts.name_scan"
         : contract.desc;
 
   return t(descriptionKey, {
