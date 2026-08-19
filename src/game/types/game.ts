@@ -21,6 +21,7 @@ import type {
   LocationType,
   AnomalyApproach,
   DerelictApproach,
+  DerelictDiscoveryChoice,
   DistressApproach,
   SurfaceLogEntry,
   WreckApproach,
@@ -438,6 +439,10 @@ export interface GameScouting {
   orbitalScan: (planetId: string) => void;
   resolveScoutEvent: (choiceIndex: number) => SurfaceLogEntry | null;
   exploreDerelictShip: (locationId: string, approach: DerelictApproach) => void;
+  resolveDerelictDiscovery: (
+    locationId: string,
+    choice: DerelictDiscoveryChoice,
+  ) => void;
   startExpedition: (planetId: string, crewIds: number[]) => void;
   revealExpeditionTile: (tileIndex: number) => void;
   scanExpeditionTile: (

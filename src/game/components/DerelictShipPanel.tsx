@@ -22,6 +22,9 @@ export function DerelictShipPanel() {
     const crew = useGameStore((s) => s.crew);
     const modules = useGameStore((s) => s.ship.modules);
     const exploreDerelictShip = useGameStore((s) => s.exploreDerelictShip);
+    const resolveDerelictDiscovery = useGameStore(
+        (s) => s.resolveDerelictDiscovery,
+    );
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const { t } = useTranslation();
 
@@ -29,6 +32,9 @@ export function DerelictShipPanel() {
 
     const isExplored = currentLocation.derelictExplored ?? false;
     const loot = currentLocation.derelictLoot;
+    const profile = currentLocation.derelictProfile;
+    const pendingDiscovery =
+        isExplored && profile && !loot?.discovery;
     const approaches: DerelictApproach[] = [
         "boarding",
         "engineering",
@@ -63,10 +69,24 @@ export function DerelictShipPanel() {
 
             <EventIllustration variant="derelict" accent="#00d4ff" muted={isExplored} />
 
-            <div className="border border-[#00d4ff33] bg-[rgba(0,212,255,0.03)] p-4">
+            <div className="rounded border border-[#00d4ff33] bg-[rgba(0,212,255,0.03)] p-4">
                 <p className="text-sm text-[#aaa] mb-3">
                     {t("derelict_ship.description")}
                 </p>
+
+                {profile && (
+                    <div className="mb-3 rounded border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-3 py-2">
+                        <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-ring">
+                            {t("derelict_ship.signature_title")}
+                        </div>
+                        <div className="mt-1 text-xs font-bold text-[#67e8f9]">
+                            {t(`derelict_ship.profile.${profile}.name`)}
+                        </div>
+                        <div className="mt-0.5 text-[11px] leading-snug text-[#a8c5d2]">
+                            {t(`derelict_ship.profile.${profile}.description`)}
+                        </div>
+                    </div>
+                )}
 
                 {isExplored ? (
                     <div className="space-y-3">
@@ -132,8 +152,81 @@ export function DerelictShipPanel() {
                                 </div>
                             </>
                         ) : (
-                            <div className="text-[#888] text-sm p-2 border border-[#00d4ff33] bg-[rgba(0,212,255,0.03)]">
+                            <div className="rounded border border-[#00d4ff33] bg-[rgba(0,212,255,0.03)] p-2 text-sm text-[#888]">
                                 ✓ {t("derelict_ship.explored_empty")}
+                            </div>
+                        )}
+
+                        {pendingDiscovery && (
+                            <div className="rounded border border-[#ffb00077] bg-[rgba(255,176,0,0.06)] p-3">
+                                <div className="text-xs font-bold uppercase tracking-wider text-[#ffcb57]">
+                                    {t("derelict_ship.discovery.title")}
+                                </div>
+                                <p className="mt-1 text-[11px] leading-snug text-[#b8d9e8]">
+                                    {t("derelict_ship.discovery.intro")}
+                                </p>
+                                <p className="mt-1 text-[11px] leading-snug text-[#ffcb57]">
+                                    {t(`derelict_ship.profile.${profile}.discovery`)}
+                                </p>
+                                <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                                    <Button
+                                        onClick={() =>
+                                            resolveDerelictDiscovery(
+                                                currentLocation.id,
+                                                "deepen",
+                                            )
+                                        }
+                                        className="h-auto cursor-pointer border border-[#ffb000] bg-transparent px-2.5 py-2 text-xs text-[#ffcb57] hover:bg-[#ffb000] hover:text-[#050810]"
+                                    >
+                                        {t("derelict_ship.discovery.deepen")}
+                                    </Button>
+                                    <Button
+                                        onClick={() =>
+                                            resolveDerelictDiscovery(
+                                                currentLocation.id,
+                                                "secure",
+                                            )
+                                        }
+                                        className="h-auto cursor-pointer border border-[#00d4ff88] bg-transparent px-2.5 py-2 text-xs text-[#67e8f9] hover:bg-[#00d4ff] hover:text-[#050810]"
+                                    >
+                                        {t("derelict_ship.discovery.secure")}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {loot?.discovery && (
+                            <div className="rounded border border-[#00d4ff44] bg-[rgba(0,212,255,0.035)] p-3 text-sm">
+                                <div className="text-xs font-bold uppercase tracking-wider text-[#67e8f9]">
+                                    {loot.discovery.choice === "deepen"
+                                        ? t("derelict_ship.discovery.result_deepen")
+                                        : t("derelict_ship.discovery.result_secure")}
+                                </div>
+                                {loot.discovery.choice === "deepen" && (
+                                    <div className="mt-1 space-y-1 text-xs text-[#b8d9e8]">
+                                        {loot.discovery.credits && (
+                                            <div>₢ {t("derelict_ship.loot_credits")}: ×{loot.discovery.credits}</div>
+                                        )}
+                                        {loot.discovery.spares && (
+                                            <div><Wrench size={14} className="mr-1 inline" />{t("derelict_ship.loot_spares")}: ×{loot.discovery.spares}</div>
+                                        )}
+                                        {loot.discovery.electronics && (
+                                            <div><Cpu size={14} className="mr-1 inline" />{t("derelict_ship.loot_electronics")}: ×{loot.discovery.electronics}</div>
+                                        )}
+                                        {loot.discovery.ancient_data && (
+                                            <div><Database size={14} className="mr-1 inline" />{t("derelict_ship.loot_ancient_data")}: ×{loot.discovery.ancient_data}</div>
+                                        )}
+                                        {loot.discovery.tech_salvage && (
+                                            <div><Wrench size={14} className="mr-1 inline" />{t("derelict_ship.loot_tech_salvage")}: ×{loot.discovery.tech_salvage}</div>
+                                        )}
+                                        {loot.discovery.crewDamage && (
+                                            <div className="text-[#ff6644]">{t("derelict_ship.result_crew_damage", { damage: loot.discovery.crewDamage })}</div>
+                                        )}
+                                        {loot.discovery.moduleDamage && loot.discovery.damagedModuleName && (
+                                            <div className="text-[#ff6644]">{t("derelict_ship.result_module_damage", { damage: loot.discovery.moduleDamage, module_name: loot.discovery.damagedModuleName })}</div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

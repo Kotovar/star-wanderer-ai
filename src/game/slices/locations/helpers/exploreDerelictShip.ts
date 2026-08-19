@@ -3,6 +3,7 @@ import { maybeRevealRunProfileArcTarget } from "@/game/galaxy/runProfileArcs";
 import type {
     CrewMember,
     DerelictApproach,
+    DerelictDiscoveryChoice,
     GameStore,
     Module,
     SetState,
@@ -19,11 +20,13 @@ import type { ModuleRecipeId } from "@/game/types/crafting";
 import { handleDerelictRecoveryContracts } from "@/game/slices/contracts/helpers/handleDerelictRecoveryContracts";
 import {
     DERELICT_APPROACH_CONFIG,
+    DERELICT_DISCOVERY_CONFIG,
     DERELICT_RISK_CHANCE,
 } from "@/game/slices/locations/constants";
 import { isModuleActive } from "@/game/modules/utils";
 import { getRunModifierValue } from "@/game/constants/launchModifiers";
 import { getLivingShipCrew } from "@/game/crew/stationed";
+import { removeDeadCrew } from "@/game/slices/gameLoop/helpers/crewUtils";
 
 // Шанс найти рецепт модуля при исследовании обломков (10%)
 const DERELICT_RECIPE_CHANCE = 0.99;
@@ -196,7 +199,7 @@ export const exploreDerelictShip = (
 
     const scoutDamage =
         approach === "boarding" && riskTriggered
-            ? Math.max(0, Math.min(config.scoutDamage ?? 0, scout.health - 1))
+            ? Math.max(0, Math.min(config.scoutDamage ?? 0, scout.health))
             : 0;
     const damageCandidates =
         approach === "engineering"
@@ -262,7 +265,7 @@ export const exploreDerelictShip = (
                       member.id === scout.id
                           ? {
                                 ...member,
-                                health: Math.max(1, member.health - scoutDamage),
+                                health: Math.max(0, member.health - scoutDamage),
                             }
                           : member,
                   )
@@ -370,6 +373,229 @@ export const exploreDerelictShip = (
     }
 
     get().updateShipStats();
+    removeDeadCrew(set, get);
+    get().checkGameOver();
+};
+
+/**
+ * После базового обыска игрок может закрепить находку или потратить ещё ход
+ * на тематический отсек. Старые сохранения без профиля остаются одношаговыми.
+ */
+export const resolveDerelictDiscovery = (
+    locationId: string,
+    choice: DerelictDiscoveryChoice,
+    set: SetState,
+    get: () => GameStore,
+): void => {
+    if (choice !== "secure" && choice !== "deepen") return;
+
+    const state = get();
+    const location = state.currentSector?.locations.find(
+        (candidate) => candidate.id === locationId,
+    );
+    if (
+        !location ||
+        location.type !== "derelict_ship" ||
+        !location.derelictExplored ||
+        !location.derelictProfile ||
+        !location.derelictLoot ||
+        location.derelictLoot.discovery
+    ) {
+        return;
+    }
+
+    if (choice === "secure") {
+        set((current) => ({
+            ...patchLocation(current, locationId, (derelict) => ({
+                derelictLoot: {
+                    ...derelict.derelictLoot,
+                    discovery: { choice },
+                },
+            })),
+        }));
+        get().addLog(
+            i18nStore.t("game_logs.derelict_discovery_secure"),
+            "info",
+        );
+        return;
+    }
+
+    const config = DERELICT_DISCOVERY_CONFIG[location.derelictProfile];
+    const riskTriggered = Math.random() < DERELICT_RISK_CHANCE;
+    const activeCrew = getLivingShipCrew(state.crew);
+    const scout = activeCrew.find((member) => member.profession === "scout");
+    const activeModules = state.ship.modules.filter(isModuleActive);
+    const scanner = getActiveScanner(state.ship.modules);
+    const getRandomActiveModule = () =>
+        activeModules[Math.floor(Math.random() * activeModules.length)];
+    const damageTarget =
+        !riskTriggered
+            ? undefined
+            : config.riskTarget === "module"
+              ? getRandomActiveModule()
+            : config.riskTarget === "scanner"
+                ? scanner ?? getRandomActiveModule()
+                : undefined;
+    const scoutDamage =
+        riskTriggered && config.riskTarget === "scout" && scout
+            ? Math.max(0, Math.min(config.riskDamage, scout.health))
+            : 0;
+    const moduleDamage =
+        riskTriggered && damageTarget
+            ? Math.max(
+                  0,
+                  Math.min(config.riskDamage, damageTarget.health),
+              )
+            : 0;
+
+    let cargoSpace =
+        config.spares || config.electronics ? getFreeCargoSpace(state) : 0;
+    let tradeGoods = state.ship.tradeGoods;
+    let discardedCargo = 0;
+    const electronicsCargo = config.electronics
+        ? addTradeGoodWithinCapacity(
+              tradeGoods,
+              "electronics",
+              config.electronics,
+              cargoSpace,
+          )
+        : null;
+    if (electronicsCargo) {
+        tradeGoods = electronicsCargo.tradeGoods;
+        cargoSpace -= electronicsCargo.accepted;
+        discardedCargo += electronicsCargo.discarded;
+    }
+    const sparesCargo = config.spares
+        ? addTradeGoodWithinCapacity(
+              tradeGoods,
+              "spares",
+              config.spares,
+              cargoSpace,
+          )
+        : null;
+    if (sparesCargo) {
+        tradeGoods = sparesCargo.tradeGoods;
+        discardedCargo += sparesCargo.discarded;
+    }
+
+    const credits = config.credits ?? 0;
+    const ancientData = config.ancientData ?? 0;
+    const techSalvage = config.techSalvage ?? 0;
+    const discovery = {
+        choice,
+        credits: credits || undefined,
+        electronics: electronicsCargo?.accepted || undefined,
+        spares: sparesCargo?.accepted || undefined,
+        ancient_data: ancientData || undefined,
+        tech_salvage: techSalvage || undefined,
+        crewDamage: scoutDamage || undefined,
+        damagedModuleName:
+            moduleDamage > 0 ? damageTarget?.name : undefined,
+        moduleDamage: moduleDamage || undefined,
+    };
+
+    set((current) => {
+        const resources = { ...current.research.resources };
+        if (ancientData > 0) {
+            resources.ancient_data = (resources.ancient_data ?? 0) + ancientData;
+        }
+        if (techSalvage > 0) {
+            resources.tech_salvage = (resources.tech_salvage ?? 0) + techSalvage;
+        }
+
+        const crew =
+            scoutDamage > 0 && scout
+                ? current.crew.map((member) =>
+                      member.id === scout.id
+                          ? {
+                                ...member,
+                                health: Math.max(0, member.health - scoutDamage),
+                            }
+                          : member,
+                  )
+                : current.crew;
+        const modules =
+            moduleDamage > 0 && damageTarget
+                ? current.ship.modules.map((module) =>
+                      module.id === damageTarget.id
+                          ? {
+                                ...module,
+                                health: Math.max(0, module.health - moduleDamage),
+                            }
+                          : module,
+                  )
+                : current.ship.modules;
+
+        return {
+            turn: current.turn + 1,
+            credits: current.credits + credits,
+            ship: { ...current.ship, modules, tradeGoods },
+            crew,
+            research: { ...current.research, resources },
+            ...patchLocation(current, locationId, (derelict) => ({
+                derelictLoot: {
+                    ...derelict.derelictLoot,
+                    discovery,
+                },
+            })),
+        };
+    });
+
+    const lootParts: string[] = [];
+    if (credits > 0) lootParts.push(`${credits}₢`);
+    if (electronicsCargo?.accepted) {
+        lootParts.push(
+            `${i18nStore.t("derelict_ship.loot_electronics")} ×${electronicsCargo.accepted}`,
+        );
+    }
+    if (sparesCargo?.accepted) {
+        lootParts.push(
+            `${i18nStore.t("derelict_ship.loot_spares")} ×${sparesCargo.accepted}`,
+        );
+    }
+    if (ancientData > 0) {
+        lootParts.push(
+            `${i18nStore.t("derelict_ship.loot_ancient_data")} ×${ancientData}`,
+        );
+    }
+    if (techSalvage > 0) {
+        lootParts.push(
+            `${i18nStore.t("derelict_ship.loot_tech_salvage")} ×${techSalvage}`,
+        );
+    }
+    get().addLog(
+        i18nStore.t("game_logs.derelict_discovery_deepen", {
+            value: lootParts.join(", "),
+        }),
+        "info",
+    );
+    if (discardedCargo > 0) {
+        get().addLog(
+            i18nStore.t("game_logs.cargo_overflow", { discarded: discardedCargo }),
+            "warning",
+        );
+    }
+    if (scoutDamage > 0 && scout) {
+        get().addLog(
+            i18nStore.t("game_logs.exploreDerelictShip_scout_damage", {
+                scout_name: getCrewDisplayName(scout),
+                damage: scoutDamage,
+            }),
+            "warning",
+        );
+    }
+    if (moduleDamage > 0 && damageTarget) {
+        get().addLog(
+            i18nStore.t("game_logs.exploreDerelictShip_module_damage", {
+                module_name: damageTarget.name,
+                damage: moduleDamage,
+            }),
+            "warning",
+        );
+    }
+    get().updateShipStats();
+    removeDeadCrew(set, get);
+    get().checkGameOver();
 };
 
 /**

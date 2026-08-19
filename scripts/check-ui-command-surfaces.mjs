@@ -17,6 +17,9 @@ const { StationPanel } = await import("../src/game/components/StationPanel.tsx")
 const { EmptyPlanetPanel } = await import(
   "../src/game/components/EmptyPlanetPanel.tsx"
 );
+const { DerelictShipPanel } = await import(
+  "../src/game/components/DerelictShipPanel.tsx"
+);
 
 const noop = () => {};
 const damage = {
@@ -241,6 +244,25 @@ const planetMarkup = () => {
   return renderToStaticMarkup(createElement(EmptyPlanetPanel));
 };
 
+const derelictMarkup = () => {
+  setUiState({
+    currentLocation: {
+      id: "profile-derelict",
+      name: "Profile test",
+      type: "derelict_ship",
+      derelictProfile: "military",
+      derelictExplored: true,
+      derelictLoot: { approach: "boarding", spares: 2 },
+    },
+    crew: [],
+    ship: { modules: [] },
+    exploreDerelictShip: noop,
+    resolveDerelictDiscovery: noop,
+    showSectorMap: noop,
+  });
+  return renderToStaticMarkup(createElement(DerelictShipPanel));
+};
+
 const combat = combatMarkup();
 const commandTitle = i18nStore.t("combat.command_title");
 const targetingTitle = i18nStore.t("combat.targeting_single");
@@ -282,6 +304,18 @@ assert.ok(
     }),
   ),
   "the first available action must be promoted in the route",
+);
+
+const derelict = derelictMarkup();
+const signatureTitle = i18nStore.t("derelict_ship.signature_title");
+const deepenLabel = i18nStore.t("derelict_ship.discovery.deepen");
+assert.ok(
+  derelict.includes(signatureTitle),
+  "a scanned derelict must identify its profile before the player commits",
+);
+assert.ok(
+  derelict.includes(deepenLabel),
+  "a searched derelict must offer an explicit deepen-or-secure decision",
 );
 
 console.log("UI command-surface checks passed");

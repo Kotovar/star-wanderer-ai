@@ -8,6 +8,7 @@ import type {
     StationName,
     AnomalyApproach,
     DerelictApproach,
+    DerelictDiscoveryChoice,
     DistressApproach,
     ExpeditionScanMode,
     SurfaceLogEntry,
@@ -29,7 +30,10 @@ import { planetaryDrill as planetaryDrillHelper } from "./helpers";
 import { atmosphericAnalysis as atmosphericAnalysisHelper } from "./helpers";
 import { orbitalScan as orbitalScanHelper } from "./helpers";
 import { resolveScoutEvent as resolveScoutEventHelper } from "./helpers";
-import { exploreDerelictShip as exploreDerelictShipHelper } from "./helpers";
+import {
+    exploreDerelictShip as exploreDerelictShipHelper,
+    resolveDerelictDiscovery as resolveDerelictDiscoveryHelper,
+} from "./helpers";
 import {
     startExpedition as startExpeditionHelper,
     revealExpeditionTile as revealExpeditionTileHelper,
@@ -115,6 +119,12 @@ export interface LocationsSlice {
      * @param locationId - ID локации с обломками
      */
     exploreDerelictShip: (locationId: string, approach: DerelictApproach) => void;
+
+    /** Закрепляет базовую добычу либо углубляет поиск тематической находки. */
+    resolveDerelictDiscovery: (
+        locationId: string,
+        choice: DerelictDiscoveryChoice,
+    ) => void;
 
     /**
      * Открывает новую расу
@@ -253,6 +263,10 @@ export const createLocationsSlice = (
 
     exploreDerelictShip: (locationId, approach) => {
         exploreDerelictShipHelper(locationId, approach, set, get);
+    },
+
+    resolveDerelictDiscovery: (locationId, choice) => {
+        resolveDerelictDiscoveryHelper(locationId, choice, set, get);
     },
 
     startExpedition: (planetId, crewIds) => {

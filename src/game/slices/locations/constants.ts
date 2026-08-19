@@ -6,6 +6,7 @@ import type {
     AnomalyApproach,
     AsteroidTier,
     DerelictApproach,
+    DerelictProfile,
     WreckApproach,
 } from "@/game/types";
 
@@ -336,6 +337,55 @@ export const getRadiationModuleDamage = (overflowDamage: number): number =>
 // ============================================================================
 
 export const DERELICT_RISK_CHANCE = 0.25;
+/** Резолвер ограничивает урон текущими HP: модуль отключается, разведчик погибает. */
+const DERELICT_CATASTROPHIC_DAMAGE = 999;
+
+export const DERELICT_PROFILES = [
+    "military",
+    "industrial",
+    "research",
+] as const satisfies readonly DerelictProfile[];
+
+/** Не меняет последовательность случайной генерации сектора и стабилен для сохранения. */
+export const getDerelictProfile = (
+    sectorIdx: number,
+    locIdx: number,
+): DerelictProfile =>
+    DERELICT_PROFILES[Math.abs(sectorIdx * 2 + locIdx) % DERELICT_PROFILES.length];
+
+type DerelictDiscoveryRiskTarget = "scout" | "module" | "scanner";
+
+export const DERELICT_DISCOVERY_CONFIG: Record<
+    DerelictProfile,
+    {
+        credits?: number;
+        spares?: number;
+        electronics?: number;
+        ancientData?: number;
+        techSalvage?: number;
+        riskTarget: DerelictDiscoveryRiskTarget;
+        riskDamage: number;
+    }
+> = {
+    military: {
+        credits: 200,
+        techSalvage: 1,
+        riskTarget: "module",
+        riskDamage: DERELICT_CATASTROPHIC_DAMAGE,
+    },
+    industrial: {
+        spares: 3,
+        electronics: 2,
+        riskTarget: "scout",
+        riskDamage: DERELICT_CATASTROPHIC_DAMAGE,
+    },
+    research: {
+        ancientData: 1,
+        techSalvage: 1,
+        riskTarget: "scanner",
+        riskDamage: DERELICT_CATASTROPHIC_DAMAGE,
+    },
+};
 
 export const DERELICT_APPROACH_CONFIG: Record<
     DerelictApproach,

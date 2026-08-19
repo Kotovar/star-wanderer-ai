@@ -18,6 +18,22 @@ export type WreckApproach = "surface" | "standard" | "deep";
 
 export type DerelictApproach = "boarding" | "engineering" | "archive";
 
+export type DerelictProfile = "military" | "industrial" | "research";
+
+export type DerelictDiscoveryChoice = "secure" | "deepen";
+
+export interface DerelictDiscoveryOutcome {
+    choice: DerelictDiscoveryChoice;
+    credits?: number;
+    spares?: number;
+    electronics?: number;
+    ancient_data?: number;
+    tech_salvage?: number;
+    crewDamage?: number;
+    damagedModuleName?: string;
+    moduleDamage?: number;
+}
+
 export type StormType =
     | "radiation"
     | "ionic"
@@ -225,6 +241,8 @@ export interface Location {
 
     // Derelict ship fields
     derelictExplored?: boolean; // Whether this derelict ship has been explored
+    /** Сигнатура корпуса, читаемая после сканирования. В старых сохранениях её может не быть. */
+    derelictProfile?: DerelictProfile;
     derelictLoot?: {
         approach?: DerelictApproach;
         spares?: number;
@@ -236,5 +254,6 @@ export interface Location {
         crewDamage?: number;
         damagedModuleName?: string;
         moduleDamage?: number;
+        discovery?: DerelictDiscoveryOutcome;
     };
 }

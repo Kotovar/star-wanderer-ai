@@ -23,6 +23,7 @@ import {
     getSpaceMonsterTypeForStar,
     SPACE_MONSTERS,
 } from "@/game/constants/spaceMonsters";
+import { getDerelictProfile } from "@/game/slices/locations/constants";
 
 
 const ENEMY_TYPES: EnemyShip[] = ["pirate", "raider", "mercenary", "marauder"];
@@ -511,6 +512,7 @@ export const generateDerelictShip = (
     type: "derelict_ship",
     name: "location_types.derelict_ship",
     derelictExplored: false,
+    derelictProfile: getDerelictProfile(sectorIdx, locIdx),
 });
 
 /**

@@ -2654,11 +2654,37 @@
         "requires_scanner": "Requires an active scanner or deep survey array",
         "explore_button": "Search the Wreck",
         "choose_approach": "CHOOSE APPROACH",
+        "signature_title": "HULL SIGNATURE",
+        "profile": {
+            "military": {
+                "name": "WARSHIP HULL",
+                "description": "Armor plating and tactical hardpoints identify a fallen warship.",
+                "discovery": "A black box remains behind an armored hatch: +200₢ and tech salvage. 1 turn · 25% chance: automated defenses disable a random active module."
+            },
+            "industrial": {
+                "name": "FREIGHTER HULL",
+                "description": "Cargo spines and service shafts still read on the schematic.",
+                "discovery": "A sealed bay holds +3 spares and +2 electronics. 1 turn · 25% chance: decompression kills the scout."
+            },
+            "research": {
+                "name": "RESEARCH VESSEL HULL",
+                "description": "The scanner sees a shielded laboratory circuit.",
+                "discovery": "An isolated lab holds +1 ancient data and +1 tech salvage. 1 turn · 25% chance: a power surge disables the scanner or a random active module."
+            }
+        },
+        "discovery": {
+            "title": "SEALED COMPARTMENT",
+            "intro": "The main search is complete. Leave now, or risk opening the sealed compartment.",
+            "deepen": "GO DEEPER",
+            "secure": "SECURE AND LEAVE",
+            "result_deepen": "Additional find:",
+            "result_secure": "The sealed compartment was left untouched."
+        },
         "approach": {
             "boarding": {
                 "name": "HULK SEARCH",
                 "description": "Search the interior for cargo and possible blueprints.",
-                "risk": "Risk: 25% chance the scout takes 5 HP damage."
+                "risk": "Risk: 25% chance the scout takes 5 HP damage; fatal at critical health."
             },
             "engineering": {
                 "name": "ENGINEERING SALVAGE",
@@ -2676,6 +2702,7 @@
         "loot_spares": "Spare Parts",
         "loot_electronics": "Electronics",
         "loot_rare_minerals": "Rare Minerals",
+        "loot_credits": "Credits",
         "loot_blueprint": "Module Blueprint",
         "loot_ancient_data": "Ancient Data",
         "loot_tech_salvage": "Tech Salvage",
@@ -6472,6 +6499,8 @@
         "exploreDerelictShip_requires_scanner": "Archive extraction requires an active scanner!",
         "exploreDerelictShip_scout_damage": "⚠ {{scout_name}} was injured in the wreck: -{{damage}} HP",
         "exploreDerelictShip_module_damage": "⚠ Module \"{{module_name}}\" was damaged: -{{damage}} HP",
+        "derelict_discovery_secure": "🔒 The sealed compartment was left behind. The search is complete.",
+        "derelict_discovery_deepen": "🔓 Sealed compartment opened: {{value}}",
         "abandonDive_1": "🪸 Dive aborted. Probe lost.",
         "diveDeeper_1": "Cannot dive deeper — the storm core has been reached.",
         "diveDeeper_2": "🔽 Diving to layer {{nextDepth}}: {{value}}",
