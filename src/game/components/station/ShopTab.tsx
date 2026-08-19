@@ -374,9 +374,7 @@ function ShopItemCard({
             <button
                 type="button"
                 onClick={onViewDetails}
-                className={`shrink-0 w-14 h-14 flex items-center justify-center bg-[rgba(0,0,0,0.35)] border ${
-                    isUnique ? "border-[#ffb00055]" : "border-[#00ff4155]"
-                } cursor-pointer hover:border-[#00ff41] transition-colors`}
+                className="shrink-0 w-14 h-14 flex items-center justify-center overflow-hidden bg-[rgba(0,0,0,0.22)] cursor-pointer hover:bg-[rgba(0,212,255,0.08)] transition-colors"
             >
                 {moduleArtUrl ? (
                     <GameImage

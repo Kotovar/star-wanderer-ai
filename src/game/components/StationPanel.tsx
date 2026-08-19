@@ -656,7 +656,7 @@ export function StationPanel() {
 
     return (
         <div className="flex flex-col gap-2 sm:gap-4 lg:h-full">
-            <section className="relative min-h-0 sm:min-h-52 overflow-hidden rounded border border-[#00ff4155]">
+            <section className="cockpit-feed-scene relative min-h-0 sm:min-h-52 overflow-hidden rounded border border-[#00ff4155]">
                 <Image
                     src={stationBackground}
                     alt=""
@@ -664,7 +664,15 @@ export function StationPanel() {
                     sizes="(min-width: 1024px) 50vw, 100vw"
                     preload
                     unoptimized
-                    className="object-cover"
+                    className="cockpit-feed-image object-cover"
+                />
+                <div
+                    aria-hidden="true"
+                    className="cockpit-feed-tint absolute inset-0 pointer-events-none"
+                />
+                <div
+                    aria-hidden="true"
+                    className="cockpit-feed-sweep absolute inset-0 pointer-events-none"
                 />
                 <div
                     className="absolute inset-0"

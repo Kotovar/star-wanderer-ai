@@ -47,6 +47,7 @@
     "check:expedition-abort": "node --no-warnings scripts/check-expedition-abort.mjs",
     "check:expedition-environments": "node --no-warnings --experimental-strip-types scripts/check-expedition-environments.mjs",
     "check:expedition-orbital-scan": "node scripts/check-expedition-orbital-scan.mjs",
+    "check:expedition-scan-pulse": "node --no-warnings scripts/check-expedition-scan-pulse.mjs",
     "check:expedition-ruins": "node --no-warnings --experimental-strip-types scripts/check-expedition-ruins.mjs",
     "check:research-abilities": "node --no-warnings --experimental-strip-types scripts/check-research-special-abilities.mjs",
     "check:tech-actions": "node --no-warnings scripts/check-tech-action-extensions.mjs",

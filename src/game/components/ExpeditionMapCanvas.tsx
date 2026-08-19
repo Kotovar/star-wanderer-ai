@@ -7,7 +7,12 @@ import type {
   ExploreTileType,
 } from "@/game/types/exploration";
 import { isTileReachable } from "@/game/slices/locations/helpers/expedition";
+import { useGameStore } from "@/game/store";
 import { setupHiDPICanvas } from "./canvas-utils";
+import {
+  getExpeditionScanPulsePosition,
+  shouldAnimateExpeditionScan,
+} from "./expeditionScanPulse";
 
 interface Props {
   grid: ExploreTile[];
@@ -740,6 +745,11 @@ export function ExpeditionMapCanvas({
   const [locationSprite, setLocationSprite] = useState<HTMLImageElement | null>(
     null,
   );
+  const [scanPulse, setScanPulse] = useState<{
+    index: number;
+    id: number;
+  } | null>(null);
+  const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
   const isOrbitalScan = scanMode === "orbital";
 
   useEffect(() => {
@@ -813,9 +823,9 @@ export function ExpeditionMapCanvas({
             ctx.fill();
 
             if (tile.peeked) {
-                // Сканированная клетка: тип виден приглушённо, эффект не применён
+                // Сканированная клетка остаётся заметной после краткого импульса.
                 ctx.save();
-                ctx.globalAlpha = 0.45;
+                ctx.globalAlpha = 0.68;
                 drawTile(
                     ctx,
                     locationSprite,
@@ -825,14 +835,41 @@ export function ExpeditionMapCanvas({
                     cellSize,
                 );
                 ctx.restore();
-                // Пунктирная голубая рамка — признак сканирования
+
                 ctx.beginPath();
                 ctx.roundRect(x + padding, y + padding, tileWidth, tileWidth, 4);
-                ctx.setLineDash([5, 4]);
-                ctx.strokeStyle = "rgba(0, 212, 255, 0.75)";
-                ctx.lineWidth = 1.5;
+                ctx.fillStyle = "rgba(0, 212, 255, 0.14)";
+                ctx.fill();
+                ctx.strokeStyle = "rgba(0, 212, 255, 0.95)";
+                ctx.lineWidth = 2.5;
+                ctx.shadowColor = "rgba(0, 212, 255, 0.72)";
+                ctx.shadowBlur = 12;
                 ctx.stroke();
-                ctx.setLineDash([]);
+                ctx.shadowBlur = 0;
+
+                const cornerSize = 15;
+                ctx.beginPath();
+                ctx.moveTo(x + padding, y + padding + cornerSize);
+                ctx.lineTo(x + padding, y + padding);
+                ctx.lineTo(x + padding + cornerSize, y + padding);
+                ctx.moveTo(x + cellSize - padding - cornerSize, y + padding);
+                ctx.lineTo(x + cellSize - padding, y + padding);
+                ctx.lineTo(x + cellSize - padding, y + padding + cornerSize);
+                ctx.moveTo(x + padding, y + cellSize - padding - cornerSize);
+                ctx.lineTo(x + padding, y + cellSize - padding);
+                ctx.lineTo(x + padding + cornerSize, y + cellSize - padding);
+                ctx.moveTo(
+                    x + cellSize - padding - cornerSize,
+                    y + cellSize - padding,
+                );
+                ctx.lineTo(x + cellSize - padding, y + cellSize - padding);
+                ctx.lineTo(
+                    x + cellSize - padding,
+                    y + cellSize - padding - cornerSize,
+                );
+                ctx.strokeStyle = "#d7fbff";
+                ctx.lineWidth = 3;
+                ctx.stroke();
             } else if (!reachable && !isOrbitalScan) {
                 // Locked (out of reach) tiles are dimmed to read as inaccessible fog
                 ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
@@ -947,7 +984,18 @@ export function ExpeditionMapCanvas({
           return;
         }
         if (scanMode) {
-            if (!tile.peeked) onScanClick(index, scanMode);
+            if (!tile.peeked) {
+              const prefersReducedMotion =
+                typeof window.matchMedia === "function" &&
+                window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+              if (shouldAnimateExpeditionScan(animationsEnabled, prefersReducedMotion)) {
+                setScanPulse((previous) => ({
+                  index,
+                  id: (previous?.id ?? 0) + 1,
+                }));
+              }
+              onScanClick(index, scanMode);
+            }
         } else {
             onTileClick(index);
         }
@@ -1023,17 +1071,28 @@ export function ExpeditionMapCanvas({
 
   return (
     <div className="expedition-map-frame relative w-fit max-w-full">
-      <canvas
-        ref={canvasRef}
-        width={500}
-        height={500}
-        className={`expedition-map-canvas w-full max-w-125 h-auto ${canReveal || scanMode ? "cursor-pointer" : "cursor-not-allowed"}`}
-        style={{ touchAction: "manipulation" }}
-        onClick={handleClick}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        onTouchStart={handleTouchStart}
-      />
+      <div className="relative">
+        <canvas
+          ref={canvasRef}
+          width={500}
+          height={500}
+          className={`expedition-map-canvas w-full max-w-125 h-auto ${canReveal || scanMode ? "cursor-pointer" : "cursor-not-allowed"}`}
+          style={{ touchAction: "manipulation" }}
+          onClick={handleClick}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchStart}
+        />
+        {scanPulse !== null && (
+          <span
+            key={scanPulse.id}
+            aria-hidden="true"
+            className="expedition-scan-pulse"
+            style={getExpeditionScanPulsePosition(scanPulse.index)}
+            onAnimationEnd={() => setScanPulse(null)}
+          />
+        )}
+      </div>
       {/* AP indicators */}
       <div className="expedition-ap-rail flex justify-center gap-1 mt-2">
         {Array.from({ length: apTotal }).map((_, i) => (

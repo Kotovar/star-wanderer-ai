@@ -303,7 +303,7 @@ function ModuleCard({ module, onClick, isMerged }: ModuleCardProps) {
         >
             {/* Thumbnail */}
             {artUrl && (
-                <div className="shrink-0 w-12 h-12 flex items-center justify-center bg-[rgba(0,0,0,0.3)] border border-[#00ff4122] rounded-sm overflow-hidden">
+                <div className="shrink-0 w-12 h-12 flex items-center justify-center rounded-sm overflow-hidden bg-[rgba(0,0,0,0.22)]">
                     <GameImage
                         src={artUrl}
                         alt={getTranslatedModuleName(module.type, t)}
@@ -449,11 +449,13 @@ export function ModuleDetailDialog({
                         if (!artUrl) return null;
                         return (
                             <div className="flex justify-center">
-                                <GameImage
-                                    src={artUrl}
-                                    alt={getTranslatedModuleName(module.type, t)}
-                                    className="max-h-32 object-contain rounded border border-[#00ff4133] bg-[rgba(0,0,0,0.3)]"
-                                />
+                                <div className="flex justify-center overflow-hidden rounded bg-[rgba(0,0,0,0.22)]">
+                                    <GameImage
+                                        src={artUrl}
+                                        alt={getTranslatedModuleName(module.type, t)}
+                                        className="max-h-32 object-contain"
+                                    />
+                                </div>
                             </div>
                         );
                     })()}

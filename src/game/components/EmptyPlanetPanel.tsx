@@ -345,7 +345,7 @@ export function EmptyPlanetPanel() {
         >
             <div className="relative z-10 min-h-0 overflow-hidden rounded border border-[#333] bg-[rgba(5,8,16,0.9)] lg:flex-1 lg:overflow-y-auto">
                 {/* Полноширинная сцена планеты */}
-                <section className="relative overflow-hidden border-b border-[#333]">
+                <section className="cockpit-feed-scene relative overflow-hidden border-b border-[#333]">
                     {background && (
                         <Image
                             src={background}
@@ -353,9 +353,17 @@ export function EmptyPlanetPanel() {
                             fill
                             sizes="(min-width: 1024px) 50vw, 100vw"
                             unoptimized
-                            className="object-cover"
+                            className="cockpit-feed-image object-cover"
                         />
                     )}
+                    <div
+                        aria-hidden="true"
+                        className="cockpit-feed-tint absolute inset-0 pointer-events-none"
+                    />
+                    <div
+                        aria-hidden="true"
+                        className="cockpit-feed-sweep absolute inset-0 pointer-events-none"
+                    />
                     <div
                         className="absolute inset-0"
                         style={{

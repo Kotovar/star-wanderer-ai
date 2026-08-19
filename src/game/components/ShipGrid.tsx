@@ -353,7 +353,58 @@ export function ShipGrid() {
             else cancelModuleDrag();
           }}
         >
-        <Grid gridSize={gridSize} cellSize={CELL_SIZE} />
+        <defs>
+          <filter id="ship-module-backdrop-blur" x="-12%" y="-12%" width="124%" height="124%">
+            <feGaussianBlur stdDeviation="26" />
+          </filter>
+          <clipPath id="ship-module-footprint">
+            {modules.map((module) =>
+              module.type === "weaponShed" ? null : (
+                <rect
+                  key={module.id}
+                  x={module.x * CELL_SIZE}
+                  y={module.y * CELL_SIZE}
+                  width={module.width * CELL_SIZE}
+                  height={module.height * CELL_SIZE}
+                />
+              ),
+            )}
+          </clipPath>
+        </defs>
+        <rect
+          width={gridSize * CELL_SIZE}
+          height={gridSize * CELL_SIZE}
+          fill="#050810"
+          pointerEvents="none"
+        />
+        <g
+          clipPath="url(#ship-module-footprint)"
+          filter="url(#ship-module-backdrop-blur)"
+          opacity="0.82"
+          pointerEvents="none"
+        >
+          {modules.map((module) => {
+            if (module.type === "weaponShed") return null;
+
+            const moduleStyle = MODULE_TYPES[module.type] ?? {
+              borderColor: "#ffffff",
+            };
+
+            return (
+              <rect
+                key={module.id}
+                x={module.x * CELL_SIZE}
+                y={module.y * CELL_SIZE}
+                width={module.width * CELL_SIZE}
+                height={module.height * CELL_SIZE}
+                fill={moduleStyle.borderColor}
+                fillOpacity={
+                  module.disabled || module.manualDisabled ? 0.1 : 0.34
+                }
+              />
+            );
+          })}
+        </g>
         {modules.map((mod) => (
           <g
             key={mod.id}
@@ -435,37 +486,6 @@ export function ShipGrid() {
   );
 }
 
-function Grid({ gridSize, cellSize }: { gridSize: number; cellSize: number }) {
-  const lines: React.ReactElement[] = [];
-
-  for (let i = 0; i <= gridSize; i++) {
-    lines.push(
-      <line
-        key={`v${i}`}
-        x1={i * cellSize}
-        y1={0}
-        x2={i * cellSize}
-        y2={gridSize * cellSize}
-        stroke="#00ff4133"
-        strokeWidth={1}
-      />,
-    );
-    lines.push(
-      <line
-        key={`h${i}`}
-        x1={0}
-        y1={i * cellSize}
-        x2={gridSize * cellSize}
-        y2={i * cellSize}
-        stroke="#00ff4133"
-        strokeWidth={1}
-      />,
-    );
-  }
-
-  return <g>{lines}</g>;
-}
-
 interface ModuleRendererProps {
   module: Module;
   cellSize: number;
@@ -508,6 +528,12 @@ function ModuleRenderer({
   };
   const moduleArt =
     MODULE_ART[module.type]?.[`${module.width}x${module.height}`];
+  const artOverlayOpacity =
+    module.disabled || module.manualDisabled
+      ? 0.66
+      : module.health < 30
+        ? 0.5
+        : 0.28;
 
   const crewInModule = crew.filter((c) => c.moduleId === module.id);
   const hasSymbiosis = hasMergedXenosymbiont(crew, module.id);
@@ -518,11 +544,11 @@ function ModuleRenderer({
       style={{ userSelect: "none", WebkitUserSelect: "none" }}
     >
       <rect
-        x={x + 2}
-        y={y + 2}
-        width={w - 4}
-        height={h - 4}
-        fill={moduleArt ? "#050810" : style.color}
+        x={x + 1}
+        y={y + 1}
+        width={w - 2}
+        height={h - 2}
+        fill={moduleArt ? "rgba(5, 8, 16, 0.58)" : style.color}
         className="select-none"
       />
       {moduleArt && (
@@ -535,35 +561,37 @@ function ModuleRenderer({
                 image.setAttribute("href", moduleArt);
               }
             }}
-            x={x + 2}
-            y={y + 2}
-            width={w - 4}
-            height={h - 4}
+            x={x + 1}
+            y={y + 1}
+            width={w - 2}
+            height={h - 2}
             preserveAspectRatio="xMidYMid meet"
             pointerEvents="none"
             aria-hidden="true"
           />
           <rect
-            x={x + 2}
-            y={y + 2}
-            width={w - 4}
-            height={h - 4}
+            x={x + 1}
+            y={y + 1}
+            width={w - 2}
+            height={h - 2}
             fill={style.color}
-            fillOpacity={0.35}
+            fillOpacity={artOverlayOpacity}
             pointerEvents="none"
           />
         </>
       )}
-      <rect
-        x={x + 2}
-        y={y + 2}
-        width={w - 4}
-        height={h - 4}
-        fill="none"
-        stroke={isDragging ? "#ffb000" : style.borderColor}
-        strokeWidth={isDragging ? 3 : 2}
-        className="select-none"
-      />
+      {(isDragging || module.health < 30) && (
+        <rect
+          x={x + 1}
+          y={y + 1}
+          width={w - 2}
+          height={h - 2}
+          fill="none"
+          stroke={isDragging ? "#ffb000" : "#ff0040"}
+          strokeWidth={isDragging ? 3 : 2}
+          className="select-none"
+        />
+      )}
       {hasSymbiosis && <SymbiosisModuleOverlay x={x} y={y} w={w} h={h} />}
       <text
         x={x + w / 2}
