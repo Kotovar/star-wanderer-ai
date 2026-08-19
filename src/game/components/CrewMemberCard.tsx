@@ -187,7 +187,7 @@ export function ModuleMoveButtons({
               onMove(crewMember.id, module.id);
               onSelect(null);
             }}
-            className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-[9px] px-2 h-6 rounded-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-[9px] px-2 h-6 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {getModuleName(adjacentModules, t, module.id)} #{typeIndex} (
             {module.x},{module.y})
@@ -292,7 +292,7 @@ function TaskRow({
                         null,
                       );
                     }}
-                    className={`cursor-pointer bg-transparent border text-[9px] px-2 h-6 rounded-none disabled:cursor-not-allowed disabled:opacity-50 ${isActive
+                    className={`cursor-pointer bg-transparent border text-[9px] px-2 h-6 disabled:cursor-not-allowed disabled:opacity-50 ${isActive
                         ? "bg-[#ffb000] text-[#050810] border-[#ffb000]"
                         : "border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
                       }`}

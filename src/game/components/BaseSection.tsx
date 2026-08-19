@@ -723,7 +723,7 @@ export function BaseSection({ location }: Props) {
             )}
 
             <Tabs defaultValue="overview" className="mt-2">
-                <TabsList className="flex h-auto w-full justify-start overflow-x-auto rounded-none border border-[#ffb00055] bg-[rgba(5,8,16,0.9)] p-0">
+                <TabsList className="flex h-auto w-full justify-start overflow-x-auto border border-[#ffb00055] bg-[rgba(5,8,16,0.9)] p-0">
                     <TabsTrigger value="overview" className={TAB_CLASS}>
                         🏗 {t("outposts.tab_overview")}
                     </TabsTrigger>

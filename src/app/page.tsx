@@ -395,7 +395,7 @@ export default function Home() {
         }}
         className="h-full flex flex-col"
       >
-        <TabsList className="grid grid-cols-4 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] rounded-none h-8 shrink-0">
+        <TabsList className="grid grid-cols-4 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] h-8 shrink-0">
           <TabsTrigger value="layout" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_layout")}</TabsTrigger>
           <TabsTrigger value="stats" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_stats")}</TabsTrigger>
           <TabsTrigger value="modules" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_modules")}</TabsTrigger>
@@ -482,8 +482,8 @@ export default function Home() {
             {(!isMobile || !showEventStage) && (
               <div className="panel cockpit-panel cockpit-panel--controls flex flex-col min-w-0 flex-1 rounded-lg overflow-hidden min-h-0">
                 {/* Верхний таб-бар — только десктоп (на мобильном его заменяет нижняя навигация) */}
-                <div className="cockpit-tabs hidden lg:flex shrink-0 border-b border-[#00ff4155]">
-                  {leftTabs.map((tab, idx) => {
+                <div className="cockpit-tabs hidden lg:flex shrink-0 gap-1 overflow-x-auto border-b border-[#00ff4155]">
+                  {leftTabs.map((tab) => {
                     const isActive = activeTab === tab.id;
                     const hasAlert =
                       (tab.id === "ship" && moduleMovedThisTurn) ||
@@ -494,16 +494,15 @@ export default function Home() {
                         key={tab.id}
                         onClick={() => selectTab(tab.id)}
                         title={tab.label}
-                        className={`relative flex-1 flex flex-col items-center justify-center py-2.5 min-h-11 gap-0.5 text-[10px] font-['Orbitron'] font-bold transition-all duration-150 cursor-pointer select-none
-                                                ${idx < leftTabs.length - 1 ? "border-r border-[#1a3320]" : ""}
-                                                ${isActive ? "text-accent bg-[rgba(255,176,0,0.1)]" : "text-[#445544] hover:text-[#00ff41] hover:bg-[rgba(0,255,65,0.05)]"}`}
+                        className={`relative flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-md border px-3 text-[10px] font-['Orbitron'] font-bold transition-all duration-150 cursor-pointer select-none
+                                                ${isActive ? "border-[#ffb00099] text-accent bg-[rgba(255,176,0,0.1)]" : "border-transparent text-[#445544] hover:border-[#00ff4144] hover:text-[#00ff41] hover:bg-[rgba(0,255,65,0.05)]"}`}
                         style={isActive ? { boxShadow: "inset 0 -2px 0 #ffb000" } : {}}
                       >
                         {isActive && (
                           <div className="absolute top-0 left-0 right-0 h-0.5 bg-accent opacity-50" />
                         )}
                         <span className="text-sm leading-none">{tab.icon}</span>
-                        <span className="hidden sm:block truncate w-full text-center px-0.5 leading-tight">{tab.label}</span>
+                        <span className="whitespace-nowrap leading-tight">{tab.label}</span>
                         {hasAlert && (
                           <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-destructive" />
                         )}

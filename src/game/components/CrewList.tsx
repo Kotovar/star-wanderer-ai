@@ -459,7 +459,7 @@ export function CrewList() {
 
                             return (
                                 <Tabs defaultValue="profile" className="mt-2 h-[60vh] flex flex-col">
-                                    <TabsList className="grid grid-cols-4 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] rounded-none h-8 w-full shrink-0">
+                                    <TabsList className="grid grid-cols-4 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] h-8 w-full shrink-0">
                                         <TabsTrigger value="profile" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("crew.tab_profile")}</TabsTrigger>
                                         <TabsTrigger value="assignment" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("crew.tab_assignment")}</TabsTrigger>
                                         <TabsTrigger value="bonuses" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("crew.tab_bonuses")}</TabsTrigger>

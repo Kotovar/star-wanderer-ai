@@ -18,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getSectorName } from "@/lib/translationHelpers";
 
+const HEADER_UTILITY_BUTTON_CLASS = "cockpit-utility-button flex w-9 cursor-pointer items-center justify-center gap-1 px-2 py-2.5 md:w-auto md:gap-2 md:px-3 md:py-1";
+
 export function GameHeader() {
   const [showHelp, setShowHelp] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -241,7 +243,7 @@ export function GameHeader() {
           <div className="flex items-center gap-2 flex-wrap justify-center">
             <button
               onClick={handleEffectsClick}
-              className="relative flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
+              className={`relative ${HEADER_UTILITY_BUTTON_CLASS}`}
               title={t("header.tooltip_effects")}
             >
               <span className="text-[#9933ff]">⚡</span>
@@ -256,7 +258,7 @@ export function GameHeader() {
             </button>
             <button
               onClick={handleArtifactsClick}
-              className="flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#ff00ff] hover:bg-[rgba(255,0,255,0.2)] transition-colors cursor-pointer"
+              className={HEADER_UTILITY_BUTTON_CLASS}
               title={t("header.tooltip_artifacts")}
             >
               <span className="text-[#ff00ff]">★</span>
@@ -269,7 +271,7 @@ export function GameHeader() {
             </button>
             <button
               onClick={handleResearchClick}
-              className="flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
+              className={HEADER_UTILITY_BUTTON_CLASS}
               title={t("header.tooltip_research")}
             >
               <span className="text-[#9933ff]">🔬</span>
@@ -279,7 +281,7 @@ export function GameHeader() {
             </button>
             <button
               onClick={handleNavigatorClick}
-              className="flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.16)] transition-colors cursor-pointer"
+              className={HEADER_UTILITY_BUTTON_CLASS}
               title={t("navigator.title")}
             >
               <span className="text-ring">⌕</span>
@@ -289,7 +291,7 @@ export function GameHeader() {
             </button>
             <button
               onClick={handleEnemyCodexClick}
-              className="flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.16)] transition-colors cursor-pointer"
+              className={HEADER_UTILITY_BUTTON_CLASS}
               title={t("enemy_codex.button")}
             >
               <span className="text-ring">👾</span>
@@ -305,7 +307,7 @@ export function GameHeader() {
                   showReputation();
                 }
               }}
-              className="flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
+              className={HEADER_UTILITY_BUTTON_CLASS}
               title={t("reputation.button_tooltip")}
             >
               <span className="text-[#9933ff] xl:hidden">🤝</span>
@@ -321,7 +323,7 @@ export function GameHeader() {
                   showCrises();
                 }
               }}
-              className="flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#ff4444] hover:bg-[rgba(255,68,68,0.2)] transition-colors cursor-pointer"
+              className={HEADER_UTILITY_BUTTON_CLASS}
               title={t("crisis_panel.title")}
             >
               <span className="text-[#ff4444]">🚨</span>
@@ -337,7 +339,7 @@ export function GameHeader() {
           <div className="flex items-center gap-1 md:gap-2">
             <button
               onClick={() => setShowSettings(true)}
-              className="flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-ring hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
+              className={HEADER_UTILITY_BUTTON_CLASS}
               title={t("save_load.menu_title")}
             >
               <span className="text-ring">☰</span>

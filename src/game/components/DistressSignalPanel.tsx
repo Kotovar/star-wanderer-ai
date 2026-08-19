@@ -262,7 +262,7 @@ function SignalProtocolCard({
         <Button
             disabled={disabled}
             onClick={onClick}
-            className="h-auto min-h-0 w-full min-w-0 max-w-full flex-col items-stretch justify-start rounded-none border bg-transparent p-3 text-left normal-case whitespace-normal shadow-none transition-all duration-150 cursor-pointer enabled:hover:-translate-y-px enabled:hover:brightness-125 enabled:hover:shadow-[0_0_18px_rgba(0,212,255,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-[#050810] disabled:cursor-not-allowed disabled:opacity-100"
+            className="h-auto min-h-0 w-full min-w-0 max-w-full flex-col items-stretch justify-start border bg-transparent p-3 text-left normal-case whitespace-normal shadow-none transition-all duration-150 cursor-pointer enabled:hover:-translate-y-px enabled:hover:brightness-125 enabled:hover:shadow-[0_0_18px_rgba(0,212,255,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-[#050810] disabled:cursor-not-allowed disabled:opacity-100"
             style={{
                 borderColor: disabled ? "#334155" : `${color}99`,
                 backgroundColor: disabled ? "rgba(21,29,40,0.52)" : `${color}0d`,

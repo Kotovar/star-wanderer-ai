@@ -58,7 +58,7 @@ export function StartMenu({
   };
 
   return (
-    <section className="fixed inset-x-2 bottom-2 z-20 mx-auto flex h-[58dvh] max-w-4xl flex-col overflow-hidden border border-[#00d4ff] bg-[rgba(3,8,14,0.96)] font-['Share_Tech_Mono'] shadow-[0_0_50px_rgba(0,212,255,0.18)] sm:inset-x-6 sm:bottom-6">
+    <section className="fixed inset-x-2 bottom-2 z-20 mx-auto flex h-[58dvh] max-w-4xl flex-col overflow-hidden rounded-xl border border-[#00d4ff] bg-[rgba(3,8,14,0.96)] font-['Share_Tech_Mono'] shadow-[0_0_50px_rgba(0,212,255,0.18)] sm:inset-x-6 sm:bottom-6">
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#00d4ff55] px-3 py-2 sm:px-4">
         <div>
           <div className="font-['Orbitron'] text-[10px] font-bold uppercase tracking-[0.22em] text-[#00d4ff]">
@@ -75,12 +75,12 @@ export function StartMenu({
       </header>
 
       <Tabs defaultValue="start" className="flex min-h-0 flex-1 flex-col">
-        <TabsList className="grid h-auto shrink-0 grid-cols-5 rounded-none border-b border-[#122a32] bg-transparent p-0">
+        <TabsList className="grid h-auto shrink-0 grid-cols-5 border-b border-[#122a32] bg-transparent p-0">
           {(["start", "saves", "settings", "achievements", "help"] as const).map((tab) => (
             <TabsTrigger
               key={tab}
               value={tab}
-              className="rounded-none border-r border-[#122a32] px-1 py-2 font-['Orbitron'] text-[9px] uppercase tracking-wide text-[#667780] data-[state=active]:bg-[rgba(0,212,255,0.08)] data-[state=active]:text-[#00d4ff] sm:text-[10px]"
+              className="border-r border-[#122a32] px-1 py-2 font-['Orbitron'] text-[9px] uppercase tracking-wide text-[#667780] data-[state=active]:bg-[rgba(0,212,255,0.08)] data-[state=active]:text-[#00d4ff] sm:text-[10px]"
             >
               {t(`start_menu.tab_${tab}`)}
             </TabsTrigger>
@@ -97,7 +97,7 @@ export function StartMenu({
             >
               <Button
                 onClick={onNewGame}
-                className="w-full cursor-pointer rounded-none border border-[#00ff41] bg-[rgba(0,255,65,0.08)] font-['Orbitron'] text-xs font-bold uppercase tracking-widest text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
+                className="w-full cursor-pointer border border-[#00ff41] bg-[rgba(0,255,65,0.08)] font-['Orbitron'] text-xs font-bold uppercase tracking-widest text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
               >
                 {t("start_menu.configure_launch")} →
               </Button>
@@ -116,7 +116,7 @@ export function StartMenu({
               <Button
                 onClick={() => onLoad("auto")}
                 disabled={!autoSave}
-                className="w-full cursor-pointer rounded-none border border-[#ffb000] bg-[rgba(255,176,0,0.08)] font-['Orbitron'] text-xs font-bold uppercase tracking-widest text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] disabled:cursor-not-allowed disabled:opacity-30"
+                className="w-full cursor-pointer border border-[#ffb000] bg-[rgba(255,176,0,0.08)] font-['Orbitron'] text-xs font-bold uppercase tracking-widest text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] disabled:cursor-not-allowed disabled:opacity-30"
               >
                 {t("start_menu.resume")} ▶
               </Button>
@@ -161,7 +161,7 @@ export function StartMenu({
 
           <TabsContent value="settings" className="m-0">
             <div className="space-y-2">
-              <div className="flex items-center justify-between gap-4 border border-[#1c3944] bg-[rgba(0,212,255,0.025)] p-4">
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-[#1c3944] bg-[rgba(0,212,255,0.025)] p-4">
                 <div>
                   <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-wide text-[#00d4ff]">
                     {t("start_menu.language")}
@@ -170,7 +170,7 @@ export function StartMenu({
                     {t("start_menu.language_desc")}
                   </p>
                 </div>
-                <div className="grid shrink-0 grid-cols-2 border border-[#33454d]">
+                <div className="grid shrink-0 grid-cols-2 overflow-hidden rounded-md border border-[#33454d]">
                   {(["ru", "en"] as const).map((language) => (
                     <button
                       key={language}
@@ -189,7 +189,7 @@ export function StartMenu({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between gap-4 border border-[#1c3944] bg-[rgba(0,212,255,0.025)] p-4">
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-[#1c3944] bg-[rgba(0,212,255,0.025)] p-4">
                 <div>
                   <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-wide text-[#00d4ff]">
                     {t("start_menu.animations")}
@@ -203,14 +203,14 @@ export function StartMenu({
                   role="switch"
                   aria-checked={animationsEnabled}
                   onClick={() => onAnimationsChange(!animationsEnabled)}
-                  className={`relative h-7 w-13 shrink-0 cursor-pointer border transition-colors ${
+                  className={`relative h-7 w-13 shrink-0 cursor-pointer rounded-full border transition-colors ${
                     animationsEnabled
                       ? "border-[#00ff41] bg-[rgba(0,255,65,0.18)]"
                       : "border-[#445] bg-[#111820]"
                   }`}
                 >
                   <span
-                    className={`absolute top-1 h-4 w-4 transition-all ${
+                    className={`absolute top-1 h-4 w-4 rounded-full transition-all ${
                       animationsEnabled
                         ? "left-7 bg-[#00ff41]"
                         : "left-1 bg-[#556]"
@@ -219,7 +219,7 @@ export function StartMenu({
                 </button>
               </div>
 
-              <div className="flex items-center justify-between gap-4 border border-[#1c3944] bg-[rgba(0,212,255,0.025)] p-4">
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-[#1c3944] bg-[rgba(0,212,255,0.025)] p-4">
                 <div>
                   <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-wide text-[#00d4ff]">
                     {t("start_menu.sound")}
@@ -233,14 +233,14 @@ export function StartMenu({
                   role="switch"
                   aria-checked={soundEnabled}
                   onClick={() => onSoundChange(!soundEnabled)}
-                  className={`relative h-7 w-13 shrink-0 cursor-pointer border transition-colors ${
+                  className={`relative h-7 w-13 shrink-0 cursor-pointer rounded-full border transition-colors ${
                     soundEnabled
                       ? "border-[#00ff41] bg-[rgba(0,255,65,0.18)]"
                       : "border-[#445] bg-[#111820]"
                   }`}
                 >
                   <span
-                    className={`absolute top-1 h-4 w-4 transition-all ${
+                    className={`absolute top-1 h-4 w-4 rounded-full transition-all ${
                       soundEnabled
                         ? "left-7 bg-[#00ff41]"
                         : "left-1 bg-[#556]"
@@ -249,7 +249,7 @@ export function StartMenu({
                 </button>
               </div>
 
-              <div className="border border-[#ff444455] bg-[rgba(255,68,68,0.03)] p-4">
+              <div className="rounded-lg border border-[#ff444455] bg-[rgba(255,68,68,0.03)] p-4">
                 {confirmReset ? (
                   <>
                     <p className="text-xs leading-relaxed text-[#ffb0b0]">
@@ -289,7 +289,7 @@ export function StartMenu({
             {(["map", "turn", "crew", "survival"] as const).map((item) => (
               <div
                 key={item}
-                className="border-l-2 border-[#ffb000] bg-[rgba(255,176,0,0.035)] px-3 py-2"
+                className="rounded-lg border-l-2 border-[#ffb000] bg-[rgba(255,176,0,0.035)] px-3 py-2"
               >
                 <div className="font-['Orbitron'] text-[10px] font-bold uppercase tracking-wide text-[#ffb000]">
                   {t(`start_menu.help_${item}_title`)}
@@ -320,7 +320,7 @@ function LaunchCard({
   children: React.ReactNode;
 }) {
   return (
-    <article className="flex min-h-35 flex-col border border-[#1c3944] bg-[rgba(0,0,0,0.18)] p-3">
+    <article className="flex min-h-35 flex-col rounded-lg border border-[#1c3944] bg-[rgba(0,0,0,0.18)] p-3">
       <div className="flex items-start gap-3">
         <span className="text-xl" style={{ color: accent }}>
           {icon}
