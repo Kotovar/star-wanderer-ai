@@ -6,6 +6,25 @@ export type ModulePointerUpAction =
     | null;
 
 const MODULE_DRAG_THRESHOLD = 5;
+export const SHIP_GRID_VIEWBOX_PADDING = 12;
+
+export const getShipGridPoint = (
+    clientX: number,
+    clientY: number,
+    bounds: Pick<DOMRect, "left" | "top" | "width" | "height">,
+    svgSize: number,
+): { x: number; y: number } => {
+    const viewBoxSize = svgSize + SHIP_GRID_VIEWBOX_PADDING * 2;
+
+    return {
+        x:
+            (clientX - bounds.left) * (viewBoxSize / bounds.width) -
+            SHIP_GRID_VIEWBOX_PADDING,
+        y:
+            (clientY - bounds.top) * (viewBoxSize / bounds.height) -
+            SHIP_GRID_VIEWBOX_PADDING,
+    };
+};
 
 export const hasModulePointerDragged = (
     start: { x: number; y: number } | null,

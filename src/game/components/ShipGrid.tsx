@@ -17,11 +17,6 @@ import {
   hasMergedXenosymbiont,
   SymbiosisModuleOverlay,
 } from "./SymbiosisModuleOverlay";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { WeaponSlotsRenderer } from "./WeaponSlotsRenderer";
 import { MODULE_ART } from "./moduleArt";
 import {
@@ -29,10 +24,13 @@ import {
   DisabledOverlay,
   LevelBadge,
 } from "./shipGrid/ModuleCellParts";
+import { getShipHullRects } from "./shipGrid/hullGeometry";
 import { ModuleDetailDialog } from "./ModuleList";
 import {
+  getShipGridPoint,
   hasModulePointerDragged,
   resolveModulePointerUp,
+  SHIP_GRID_VIEWBOX_PADDING,
 } from "./shipGridInteraction";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
 
@@ -79,7 +77,6 @@ export function ShipGrid() {
 
   const [draggedModule, setDraggedModule] = useState<Module | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
-  const [showLegend, setShowLegend] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [tempPos, setTempPos] = useState<{ x: number; y: number } | null>(
     null,
@@ -99,6 +96,14 @@ export function ShipGrid() {
   ).length;
   // SVG dimensions
   const svgSize = gridSize * CELL_SIZE;
+  const svgViewBoxSize = svgSize + SHIP_GRID_VIEWBOX_PADDING * 2;
+  const hullModules =
+    draggedModule && tempPos
+      ? modules.map((module) =>
+          module.id === draggedModule.id ? { ...module, ...tempPos } : module,
+        )
+      : modules;
+  const hullRects = getShipHullRects(hullModules, CELL_SIZE);
 
   const handlePointerDown = (
     e: React.PointerEvent<SVGGElement>,
@@ -110,10 +115,12 @@ export function ShipGrid() {
     // Захват указателя: события move/up продолжат идти на <svg> даже за пределами
     svg.setPointerCapture?.(e.pointerId);
     const rect = svg.getBoundingClientRect();
-    const scaleX = svgSize / rect.width;
-    const scaleY = svgSize / rect.height;
-    const mouseX = (e.clientX - rect.left) * scaleX;
-    const mouseY = (e.clientY - rect.top) * scaleY;
+    const { x: mouseX, y: mouseY } = getShipGridPoint(
+      e.clientX,
+      e.clientY,
+      rect,
+      svgSize,
+    );
     // Далее вычисляем смещение внутри модуля:
     const moduleX = module.x * CELL_SIZE;
     const moduleY = module.y * CELL_SIZE;
@@ -129,10 +136,12 @@ export function ShipGrid() {
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     if (draggedCrew) {
       const rect = e.currentTarget.getBoundingClientRect();
-      const point = {
-        x: (e.clientX - rect.left) * (svgSize / rect.width),
-        y: (e.clientY - rect.top) * (svgSize / rect.height),
-      };
+      const point = getShipGridPoint(
+        e.clientX,
+        e.clientY,
+        rect,
+        svgSize,
+      );
       const target = modules.find(
         (module) =>
           !module.disabled &&
@@ -161,12 +170,12 @@ export function ShipGrid() {
     const rect = svg.getBoundingClientRect();
 
     // масштаб между CSS-размером и viewBox
-    const scaleX = svgSize / rect.width;
-    const scaleY = svgSize / rect.height;
-
-    // указатель в координатах SVG
-    const mouseX = (e.clientX - rect.left) * scaleX;
-    const mouseY = (e.clientY - rect.top) * scaleY;
+    const { x: mouseX, y: mouseY } = getShipGridPoint(
+      e.clientX,
+      e.clientY,
+      rect,
+      svgSize,
+    );
 
     // позиция модуля с учётом offset
     const newX = Math.floor(
@@ -248,10 +257,9 @@ export function ShipGrid() {
     svg.setPointerCapture?.(e.pointerId);
     const rect = svg.getBoundingClientRect();
     setDraggedCrew(member);
-    setCrewDragPos({
-      x: (e.clientX - rect.left) * (svgSize / rect.width),
-      y: (e.clientY - rect.top) * (svgSize / rect.height),
-    });
+    setCrewDragPos(
+      getShipGridPoint(e.clientX, e.clientY, rect, svgSize),
+    );
   };
 
   const cancelCrewDrag = () => {
@@ -268,70 +276,10 @@ export function ShipGrid() {
         }`}
     >
       {!isCombatMode && (
-        <div className="relative min-h-5">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 py-0.5 pr-7 pl-1 text-[9px] uppercase tracking-[0.14em] text-[#526452] pointer-events-none">
-            <span className={idleCrewCount > 0 ? "text-accent" : "text-[#00ff41]"}>
-              {t("crew.idle_count")}: {idleCrewCount}
-            </span>
-          </div>
-          <button
-            onClick={() => setShowLegend((s) => !s)}
-            className="absolute right-0 top-0 z-10 w-5 h-5 flex items-center justify-center border border-[#00ff4166] bg-[rgba(0,255,65,0.08)] text-[#00ff41] text-[10px] hover:bg-[rgba(0,255,65,0.2)] transition-colors cursor-pointer"
-            title={showLegend ? "Скрыть легенду" : "Показать легенду"}
-          >
-            {showLegend ? "✕" : "?"}
-          </button>
-          {showLegend && (
-            <div className="absolute right-0 top-6 z-20 w-64 max-w-[80vw] px-2 py-2 text-[10px] text-[#666] space-y-1 border border-[#00ff4155] bg-[#050810] shadow-[0_0_15px_rgba(0,255,65,0.2)]">
-              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-                {[
-                  { type: "reactor", color: "#ffb000" },
-                  { type: "cockpit", color: "#00d4ff" },
-                  { type: "weaponbay", color: "#ff00ff" },
-                  { type: "shield", color: "#0080ff" },
-                  { type: "engine", color: "#ff6600" },
-                  { type: "lifesupport", color: "#00ff41" },
-                  { type: "cargo", color: "#ff0040" },
-                  { type: "fueltank", color: "#9933ff" },
-                  { type: "medical", color: "#00ffaa" },
-                  { type: "scanner", color: "#ffff00" },
-                  { type: "lab", color: "#00ff41" },
-                  { type: "quarters", color: "#ffa500" },
-                  { type: "repair_bay", color: "#c0c0c0" },
-                  { type: "ai_core", color: "#00ffff" },
-                  { type: "drill", color: "#cd853f" },
-                ].map(({ type, color }) => (
-                  <Tooltip key={type} delayDuration={600}>
-                    <TooltipTrigger asChild>
-                      <span className="flex items-center gap-0.5 cursor-help">
-                        <span style={{ color }}>■</span>
-                        <span>{getModuleTranslation(type, currentLanguage).name}</span>
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">{t(`module_descriptions.${type}`)}</TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-x-3 gap-y-0.5 border-t border-[#ffffff11] pt-1">
-                {[
-                  { type: "bio_research_lab", color: "#00ffaa" },
-                  { type: "pulse_drive", color: "#ff6600" },
-                  { type: "habitat_module", color: "#ffa500" },
-                  { type: "deep_survey_array", color: "#ffff00" },
-                ].map(({ type, color }) => (
-                  <Tooltip key={type} delayDuration={600}>
-                    <TooltipTrigger asChild>
-                      <span className="flex items-center gap-0.5 cursor-help">
-                        <span style={{ color }}>■</span>
-                        <span>{getModuleTranslation(type, currentLanguage).name}</span>
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">{t(`module_descriptions.${type}`)}</TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="flex min-h-5 flex-wrap items-center gap-x-2 gap-y-0.5 py-0.5 pl-1 text-[9px] uppercase tracking-[0.14em] text-[#526452] pointer-events-none">
+          <span className={idleCrewCount > 0 ? "text-accent" : "text-[#00ff41]"}>
+            {t("crew.idle_count")}: {idleCrewCount}
+          </span>
         </div>
       )}
 
@@ -339,7 +287,7 @@ export function ShipGrid() {
         <svg
           width={gridSize * CELL_SIZE}
           height={gridSize * CELL_SIZE}
-          viewBox={`0 0 ${gridSize * CELL_SIZE} ${gridSize * CELL_SIZE}`}
+          viewBox={`${-SHIP_GRID_VIEWBOX_PADDING} ${-SHIP_GRID_VIEWBOX_PADDING} ${svgViewBoxSize} ${svgViewBoxSize}`}
           preserveAspectRatio="xMidYMid meet"
           className={`w-full h-auto select-none max-h-100 lg:w-[min(100cqw,100cqh)] lg:h-[min(100cqw,100cqh)] lg:max-h-none ${isCombatMode
             ? "cursor-not-allowed"
@@ -353,58 +301,87 @@ export function ShipGrid() {
             else cancelModuleDrag();
           }}
         >
-        <defs>
-          <filter id="ship-module-backdrop-blur" x="-12%" y="-12%" width="124%" height="124%">
-            <feGaussianBlur stdDeviation="26" />
-          </filter>
-          <clipPath id="ship-module-footprint">
-            {modules.map((module) =>
-              module.type === "weaponShed" ? null : (
-                <rect
-                  key={module.id}
-                  x={module.x * CELL_SIZE}
-                  y={module.y * CELL_SIZE}
-                  width={module.width * CELL_SIZE}
-                  height={module.height * CELL_SIZE}
-                />
-              ),
-            )}
-          </clipPath>
-        </defs>
-        <rect
-          width={gridSize * CELL_SIZE}
-          height={gridSize * CELL_SIZE}
-          fill="#050810"
-          pointerEvents="none"
-        />
-        <g
-          clipPath="url(#ship-module-footprint)"
-          filter="url(#ship-module-backdrop-blur)"
-          opacity="0.82"
-          pointerEvents="none"
-        >
-          {modules.map((module) => {
-            if (module.type === "weaponShed") return null;
-
-            const moduleStyle = MODULE_TYPES[module.type] ?? {
-              borderColor: "#ffffff",
-            };
-
-            return (
-              <rect
-                key={module.id}
-                x={module.x * CELL_SIZE}
-                y={module.y * CELL_SIZE}
-                width={module.width * CELL_SIZE}
-                height={module.height * CELL_SIZE}
-                fill={moduleStyle.borderColor}
-                fillOpacity={
-                  module.disabled || module.manualDisabled ? 0.1 : 0.34
-                }
+          <defs>
+            <linearGradient
+              id="ship-hull-deck"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" stopColor="#1a2a30" />
+              <stop offset="52%" stopColor="#0a1419" />
+              <stop offset="100%" stopColor="#03070a" />
+            </linearGradient>
+            <filter
+              id="ship-hull-rim"
+              x="-12%"
+              y="-12%"
+              width="124%"
+              height="124%"
+            >
+              <feMorphology
+                in="SourceGraphic"
+                operator="dilate"
+                radius="9"
+                result="expanded"
               />
-            );
-          })}
-        </g>
+              <feComposite
+                in="expanded"
+                in2="SourceGraphic"
+                operator="out"
+                result="outerRim"
+              />
+              <feMorphology
+                in="SourceGraphic"
+                operator="erode"
+                radius="5"
+                result="inset"
+              />
+              <feComposite
+                in="SourceGraphic"
+                in2="inset"
+                operator="out"
+                result="innerRim"
+              />
+              <feMerge result="rimMask">
+                <feMergeNode in="outerRim" />
+                <feMergeNode in="innerRim" />
+              </feMerge>
+              <feFlood
+                floodColor="#24383f"
+                floodOpacity="0.95"
+                result="rimColor"
+              />
+              <feComposite in="rimColor" in2="rimMask" operator="in" />
+            </filter>
+            <clipPath id="ship-module-footprint">
+              {hullRects.map((rect) => (
+                <rect
+                  key={rect.id}
+                  x={rect.x}
+                  y={rect.y}
+                  width={rect.width}
+                  height={rect.height}
+                />
+              ))}
+            </clipPath>
+          </defs>
+          <rect
+            x={-SHIP_GRID_VIEWBOX_PADDING}
+            y={-SHIP_GRID_VIEWBOX_PADDING}
+            width={svgViewBoxSize}
+            height={svgViewBoxSize}
+            fill="#020609"
+            pointerEvents="none"
+          />
+          <g clipPath="url(#ship-module-footprint)" pointerEvents="none">
+            <rect
+              width={svgSize}
+              height={svgSize}
+              fill="url(#ship-hull-deck)"
+            />
+          </g>
         {modules.map((mod) => (
           <g
             key={mod.id}
@@ -433,6 +410,18 @@ export function ShipGrid() {
             />
           </g>
         ))}
+        <g filter="url(#ship-hull-rim)" pointerEvents="none">
+          {hullRects.map((rect) => (
+            <rect
+              key={`rim-${rect.id}`}
+              x={rect.x}
+              y={rect.y}
+              width={rect.width}
+              height={rect.height}
+              fill="#ffffff"
+            />
+          ))}
+        </g>
         {draggedCrew &&
           modules
             .filter(
@@ -523,17 +512,10 @@ function ModuleRenderer({
   const w = module.width * cellSize;
   const h = module.height * cellSize;
   const style = MODULE_TYPES[module.type] || {
-    color: "#ffffff33",
     borderColor: "#ffffff",
   };
   const moduleArt =
     MODULE_ART[module.type]?.[`${module.width}x${module.height}`];
-  const artOverlayOpacity =
-    module.disabled || module.manualDisabled
-      ? 0.66
-      : module.health < 30
-        ? 0.5
-        : 0.28;
 
   const crewInModule = crew.filter((c) => c.moduleId === module.id);
   const hasSymbiosis = hasMergedXenosymbiont(crew, module.id);
@@ -548,7 +530,7 @@ function ModuleRenderer({
         y={y + 1}
         width={w - 2}
         height={h - 2}
-        fill={moduleArt ? "rgba(5, 8, 16, 0.58)" : style.color}
+        fill="rgba(2, 7, 10, 0.46)"
         className="select-none"
       />
       {moduleArt && (
@@ -568,15 +550,6 @@ function ModuleRenderer({
             preserveAspectRatio="xMidYMid meet"
             pointerEvents="none"
             aria-hidden="true"
-          />
-          <rect
-            x={x + 1}
-            y={y + 1}
-            width={w - 2}
-            height={h - 2}
-            fill={style.color}
-            fillOpacity={artOverlayOpacity}
-            pointerEvents="none"
           />
         </>
       )}
@@ -600,6 +573,9 @@ function ModuleRenderer({
         fontSize="11"
         fontFamily="Share Tech Mono"
         textAnchor="middle"
+        stroke="#020609"
+        strokeWidth="3"
+        paintOrder="stroke"
         className="select-none"
         style={{ userSelect: "none", WebkitUserSelect: "none" }}
       >
@@ -800,9 +776,9 @@ function CrewIcon({
         height={size + 1}
         rx={2}
         fill="#050810"
-        fillOpacity={0.82}
+        fillOpacity={0.96}
         stroke={raceColor}
-        strokeOpacity={0.9}
+        strokeOpacity={1}
         strokeWidth={atRisk ? 1.75 : 1}
         pointerEvents="none"
       />
