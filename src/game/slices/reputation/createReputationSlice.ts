@@ -16,6 +16,7 @@ import {
     MAX_DIPLOMATIC_REP,
     TRANSLATOR_HIRE_COST,
 } from "@/game/reputation/diplomacy";
+import { isRaceAgreementActive } from "@/game/reputation/agreements";
 
 export const createReputationSlice = (
     set: (fn: (s: GameState) => void) => void,
@@ -52,6 +53,14 @@ export const createReputationSlice = (
                 return { raceId: affectedRaceId, change: nextRep - currentRep };
             })
             .filter(({ change }) => change !== 0);
+        const agreementWasActive = isRaceAgreementActive(
+            currentState.raceReputation,
+            raceId,
+        );
+        const agreementIsActive = isRaceAgreementActive(
+            { ...currentState.raceReputation, [raceId]: result.newValue },
+            raceId,
+        );
 
         set((state) => {
             // Обновляем основную расу
@@ -89,6 +98,24 @@ export const createReputationSlice = (
             } else {
                 get().addLog( i18nStore.t("game_logs.createReputationSlice_2", { raceName, sign, amount: appliedAmount }),
                     logType,
+                    "reputation",
+                );
+            }
+
+            if (agreementWasActive !== agreementIsActive) {
+                get().addLog(
+                    i18nStore.t(
+                        agreementIsActive
+                            ? "game_logs.race_agreement_activated"
+                            : "game_logs.race_agreement_suspended",
+                        {
+                            raceName,
+                            agreement: i18nStore.t(
+                                `reputation.agreements.${raceId}.name`,
+                            ),
+                        },
+                    ),
+                    agreementIsActive ? "info" : "warning",
                     "reputation",
                 );
             }

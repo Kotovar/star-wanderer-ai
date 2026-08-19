@@ -12,6 +12,10 @@ import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getTechBonusSum } from "@/game/research";
 import { getDiminishingResearchSpeedBonus } from "@/game/constants/augmentations";
 import { getTechPerkValue } from "@/game/constants/techTree";
+import {
+    isRaceAgreementActive,
+    RACE_AGREEMENT_EFFECTS,
+} from "@/game/reputation/agreements";
 import { typedKeys } from "@/lib/utils";
 import { DEFAULT_MODULE_HEALTH } from "./constants";
 import type {
@@ -70,7 +74,10 @@ export interface ResearchOutputData {
  * @returns Данные о производительности исследования
  */
 export const calculateResearchOutput = (
-    state: Pick<GameStore, "ship" | "crew" | "research" | "activeEffects">,
+    state: Pick<
+        GameStore,
+        "ship" | "crew" | "research" | "activeEffects" | "raceReputation"
+    >,
 ): ResearchOutputData => {
     // Производительность от лабораторий (включая гибридные модули с researchOutput)
     const labs = state.ship.modules.filter(
@@ -186,6 +193,12 @@ export const calculateResearchOutput = (
         const bonus = Math.floor(totalOutput * boostMultiplier);
         totalOutput += bonus;
         stationBoostBonus = bonus;
+    }
+
+    if (isRaceAgreementActive(state.raceReputation, "synthetic")) {
+        totalOutput = Math.floor(
+            totalOutput * RACE_AGREEMENT_EFFECTS.synthetic.researchMultiplier,
+        );
     }
 
     return {

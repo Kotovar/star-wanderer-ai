@@ -191,7 +191,10 @@ export const createCombatSlice = (
 
         // Отступлением управляет пилот за штурвалом
         const pilot = getPilotInCockpit(state.crew, state.ship.modules);
-        const retreatChance = helpers.calculateRetreatChance(pilot);
+        const retreatChance = helpers.calculateRetreatChance(
+            pilot,
+            state.raceReputation,
+        );
 
         if (Math.random() < retreatChance) {
             const combatRound = state.currentCombat.round;

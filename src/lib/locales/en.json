@@ -3292,6 +3292,34 @@
             "price_modifier": "Trade: {{value}}",
             "combat_modifier": "Combat: {{value}}"
         },
+        "agreement_active": "Agreement active",
+        "agreement_progress": "{{amount}} reputation to agreement",
+        "agreements": {
+            "human": {
+                "name": "Logistics pact",
+                "description": "+2 turns for timed contracts at acceptance"
+            },
+            "synthetic": {
+                "name": "Data exchange",
+                "description": "+10% final research output"
+            },
+            "xenosymbiont": {
+                "name": "Medical accord",
+                "description": "−15% crew treatment cost"
+            },
+            "krylorian": {
+                "name": "Evacuation protocol",
+                "description": "+5 pp retreat chance"
+            },
+            "voidborn": {
+                "name": "Star charts",
+                "description": "−8% fuel consumption"
+            },
+            "crystalline": {
+                "name": "Resonance network",
+                "description": "+1 pp artifact discovery chance"
+            }
+        },
         "hostile_territory": "⚠ DANGER ZONE",
         "hostile_ship_warning": "opens fire — you are enemies!",
         "approach_combat": "⚔ Approach — engage in combat",
@@ -4412,6 +4440,7 @@
         "combat": "Place a Gunner in a weapon bay (weaponbay) — it boosts accuracy and damage for all onboard weapons.",
         "research": "Build a lab and assign a Scientist to it to start researching technologies.",
         "contracts": "Contracts give credits, reputation with a race, and crew experience — take ones your ship can handle.",
+        "diplomacy_consequences": "Accepting this contract changes relations with several known races. Check the consequences on the card before choosing.",
         "low_happiness": "A crew member's happiness is low. At 0 happiness for 3 turns straight they desert — assign a Morale task or let them rest.",
         "xenosymbiont_merge": "A xenosymbiont is aboard! Assign it the \"🧬 Merge\" task in a module — it grants a permanent bonus depending on the module type.",
         "first_mutation": "A crew member has mutated — a permanent random trait (can be helpful or harmful). See details in the crew card's Profile tab."
@@ -6018,6 +6047,8 @@
         "pre_spacefaring_action_invalid_action": "The local contact choice is invalid.",
         "pre_spacefaring_action_base_present": "Local contact is blocked by a player base.",
         "pre_spacefaring_action_missing_goods": "The cargo hold lacks the goods required for this contact choice.",
+        "race_agreement_activated": "🤝 {{raceName}}: {{agreement}} agreement active.",
+        "race_agreement_suspended": "⚠️ {{raceName}}: {{agreement}} agreement suspended.",
         "frontier_military_contact": "Military contact established. The station is marked in the navigator; the armament subsidy is available.",
         "cargo_jettisoned": "🗑 Jettisoned: {{name}} ×{{qty}}",
         "nebula_front_started": "🌀 The Veil of Ancient Beacons created {{count}} new nebulae. Research stations are activating a stabilizer network.",

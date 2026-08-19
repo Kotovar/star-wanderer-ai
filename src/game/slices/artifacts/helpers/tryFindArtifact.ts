@@ -8,6 +8,10 @@ import {
 import { sumRaceTraitEffect } from "@/game/races";
 import { ARTIFACT_FIND_BASE_CHANCE, ARTIFACT_BOOST_BONUS } from "../constants";
 import { getTechBonusSum } from "@/game/research";
+import {
+    isRaceAgreementActive,
+    RACE_AGREEMENT_EFFECTS,
+} from "@/game/reputation/agreements";
 
 export const rollArtifactFind = (
     state: GameStore,
@@ -15,7 +19,16 @@ export const rollArtifactFind = (
 ): Artifact | null => {
     const artifactFinderBonus = calculateArtifactFinderBonus(state);
     const tier = state.currentSector?.tier ?? 1;
-    const baseChance = ARTIFACT_FIND_BASE_CHANCE * tier * artifactFinderBonus;
+    const agreementBonus = isRaceAgreementActive(
+        state.raceReputation,
+        "crystalline",
+    )
+        ? RACE_AGREEMENT_EFFECTS.crystalline.artifactFindChanceBonus
+        : 0;
+    const baseChance = Math.min(
+        1,
+        ARTIFACT_FIND_BASE_CHANCE * tier * artifactFinderBonus + agreementBonus,
+    );
 
     if (Math.random() > baseChance) return null;
 

@@ -152,6 +152,9 @@ const { store: uiI18nStore } = await import("../src/lib/useTranslation.ts");
 const { ReputationPanel } = await import(
   "../src/game/components/ReputationPanel.tsx"
 );
+const { acceptContract } = await import(
+  "../src/game/slices/contracts/helpers/acceptContract.ts"
+);
 
 const reputationLogs = [];
 const localizedLogState = {
@@ -174,6 +177,22 @@ localizedLogSlice.changeReputation("human", 10);
 assert.ok(
   reputationLogs.includes("Синтетики: -2"),
   "ripple logs must use localized race names",
+);
+reputationLogs.length = 0;
+localizedLogSlice.changeReputation("human", 1);
+assert.ok(
+  reputationLogs.includes(
+    "🤝 Люди: соглашение «Логистический пакт» активно.",
+  ),
+  "reaching friendly reputation must log agreement activation",
+);
+reputationLogs.length = 0;
+localizedLogSlice.changeReputation("human", -1);
+assert.ok(
+  reputationLogs.includes(
+    "⚠️ Люди: соглашение «Логистический пакт» приостановлено.",
+  ),
+  "dropping below friendly reputation must log agreement suspension",
 );
 reputationLogs.length = 0;
 localizedLogState.raceReputation.human = 100;
@@ -209,6 +228,99 @@ assert.doesNotMatch(
   /[А-Яа-яЁё]/,
   "Russian constants must not leak into the English reputation panel",
 );
+setUiState({
+  raceReputation: { ...neutralReputation, human: 10 },
+  knownRaces: ["human"],
+  showSectorMap: () => undefined,
+});
+const lockedAgreementMarkup = renderToStaticMarkup(
+  createElement(ReputationPanel),
+);
+assert.ok(
+  lockedAgreementMarkup.includes("1 reputation to agreement"),
+  "the reputation panel must show the exact points remaining until an agreement",
+);
+assert.ok(
+  lockedAgreementMarkup.includes("+2 turns for timed contracts at acceptance"),
+  "the reputation panel must explain the human agreement before it unlocks",
+);
+setUiState({
+  raceReputation: { ...neutralReputation, human: 11 },
+  knownRaces: ["human"],
+  showSectorMap: () => undefined,
+});
+const activeAgreementMarkup = renderToStaticMarkup(
+  createElement(ReputationPanel),
+);
+assert.ok(
+  activeAgreementMarkup.includes("Agreement active"),
+  "the reputation panel must mark an unlocked agreement as active",
+);
 uiI18nStore.changeLanguage("ru");
+
+const onboardingLogs = [];
+const onboardingState = {
+  activeContracts: [],
+  galaxy: { sectors: [{ id: 1, locations: [] }] },
+  completedLocations: [],
+  artifacts: [],
+  research: { researchedTechs: [], unlockedRecipes: [] },
+  activeCrisis: null,
+  ship: { modules: [] },
+  raceReputation: { ...neutralReputation },
+  knownRaces: ["human", "synthetic"],
+  turn: 1,
+};
+const setOnboardingState = (update) => {
+  const patch =
+    typeof update === "function" ? update(onboardingState) : update;
+  if (patch) Object.assign(onboardingState, patch);
+};
+const getOnboardingState = () => ({
+  ...onboardingState,
+  addLog: (message) => onboardingLogs.push(message),
+});
+const contractWithRipple = (id) => ({
+  id,
+  type: "bounty",
+  desc: "contracts.desc_bounty",
+  reward: 100,
+  sourceDominantRace: "human",
+  reputationReward: 4,
+});
+const hintStorage = new Map();
+const previousWindow = globalThis.window;
+const previousLocalStorage = globalThis.localStorage;
+try {
+  globalThis.window = {};
+  globalThis.localStorage = {
+    getItem: (key) => hintStorage.get(key) ?? null,
+    setItem: (key, value) => hintStorage.set(key, value),
+  };
+  assert.equal(
+    acceptContract(
+      contractWithRipple("diplomacy-hint-1"),
+      setOnboardingState,
+      getOnboardingState,
+    ),
+    true,
+  );
+  assert.equal(
+    acceptContract(
+      contractWithRipple("diplomacy-hint-2"),
+      setOnboardingState,
+      getOnboardingState,
+    ),
+    true,
+  );
+  assert.equal(
+    onboardingLogs.filter((message) => message.startsWith("💡")).length,
+    1,
+    "the first multi-race contract must explain diplomacy consequences once",
+  );
+} finally {
+  globalThis.window = previousWindow;
+  globalThis.localStorage = previousLocalStorage;
+}
 
 console.log("Reputation ripple checks passed");

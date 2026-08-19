@@ -12,6 +12,8 @@ import { isContractTargetAvailable } from "@/game/contracts/targetAvailability";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
 import { getLocationName } from "@/lib/translationHelpers";
 import { PIRATE_PURGE_STANDING_LIMIT } from "@/game/slices/pirate/purge";
+import { getAcceptedContractTimeLimit } from "@/game/reputation/agreements";
+import { showHintOnce } from "@/game/hints/showHint";
 
 /**
  * Принимает контракт
@@ -111,10 +113,21 @@ export const acceptContract = (
         get().addLog( i18nStore.t("game_logs.acceptContract_6", { cargoName, cargoAmount }), "info");
     }
 
+    const acceptedTimeLimit = getAcceptedContractTimeLimit(
+        contract.timeLimit,
+        state.raceReputation,
+    );
+
     set((s) => ({
         activeContracts: [
             ...s.activeContracts,
-            { ...contract, acceptedAt: s.turn },
+            {
+                ...contract,
+                ...(acceptedTimeLimit === undefined
+                    ? {}
+                    : { timeLimit: acceptedTimeLimit }),
+                acceptedAt: s.turn,
+            },
         ],
         galaxy: {
             ...s.galaxy,
@@ -152,6 +165,11 @@ export const acceptContract = (
                     .join(" · "),
             }),
             "warning",
+        );
+        showHintOnce(
+            get().addLog,
+            "diplomacy_consequences",
+            "hints.diplomacy_consequences",
         );
     }
 

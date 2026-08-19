@@ -920,6 +920,7 @@ export function ResearchPanel() {
   const crew = useGameStore((s) => s.crew);
   const ship = useGameStore((s) => s.ship);
   const activeEffects = useGameStore((s) => s.activeEffects);
+  const raceReputation = useGameStore((s) => s.raceReputation);
   const researchBoostEffect = useMemo(
     () => activeEffects.find((e) => e.id === RESEARCH_BOOST_EFFECT_ID),
     [activeEffects],
@@ -997,9 +998,15 @@ export function ResearchPanel() {
 
   const sciencePerTurn = useMemo(
     () =>
-      calculateResearchOutput({ ship, crew, research, activeEffects })
+      calculateResearchOutput({
+        ship,
+        crew,
+        research,
+        activeEffects,
+        raceReputation,
+      })
         .totalOutput,
-    [ship, crew, research, activeEffects],
+    [ship, crew, research, activeEffects, raceReputation],
   );
 
   const selectedTechnology = selectedTech

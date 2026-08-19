@@ -3,6 +3,10 @@ import type { GameState } from "@/game/types";
 import type { RaceId } from "@/game/types/races";
 import type { ServiceCostResult } from "./types";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
+import {
+    isRaceAgreementActive,
+    RACE_AGREEMENT_EFFECTS,
+} from "@/game/reputation/agreements";
 
 /**
  * Рассчитывает стоимость лечения экипажа
@@ -45,6 +49,20 @@ export const calculateHealCost = (
             state.raceReputation,
             raceId,
             baseCost,
+        );
+    }
+
+    if (
+        baseCost > 0 &&
+        isRaceAgreementActive(state.raceReputation, "xenosymbiont")
+    ) {
+        baseCost = Math.max(
+            1,
+            Math.floor(
+                baseCost *
+                    RACE_AGREEMENT_EFFECTS.xenosymbiont
+                        .healingCostMultiplier,
+            ),
         );
     }
 

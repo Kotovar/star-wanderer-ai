@@ -15,6 +15,11 @@ import { RaceSprite } from "./RaceSprite";
 import { Button } from "@/components/ui/button";
 import { formatCrewBonuses } from "./RaceDiscoveryModal";
 import type { RaceId } from "../types";
+import {
+    isRaceAgreementActive,
+    MIN_FRIENDLY_REPUTATION,
+    RACE_AGREEMENT_COPY_KEYS,
+} from "../reputation/agreements";
 
 const ALL_RACE_IDS = Object.keys(RACES) as RaceId[];
 
@@ -85,6 +90,14 @@ export function ReputationPanel() {
                     const description = t(`reputation.descriptions.${level}`);
                     const raceName = t(`races.${raceId}.name`);
                     const raceHomeworld = t(`races.${raceId}.homeworld`);
+                    const agreementActive = isRaceAgreementActive(
+                        raceReputation,
+                        raceId,
+                    );
+                    const agreementPointsRemaining = Math.max(
+                        0,
+                        MIN_FRIENDLY_REPUTATION - reputation,
+                    );
                     const expanded = expandedRaceId === raceId;
                     const bonuses = formatCrewBonuses(
                         race.crewBonuses ?? {},
@@ -179,6 +192,43 @@ export function ReputationPanel() {
                             <p className="text-xs text-gray-300">
                                 {description}
                             </p>
+
+                            <div
+                                className="mt-2 border px-2 py-1.5 text-xs"
+                                style={{
+                                    borderColor: agreementActive
+                                        ? "#00ff4166"
+                                        : "#9933ff66",
+                                    backgroundColor: agreementActive
+                                        ? "#00ff410d"
+                                        : "#9933ff0d",
+                                }}
+                            >
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="font-bold text-[#d9b8ff]">
+                                        🤝 {t(`reputation.agreements.${raceId}.name`)}
+                                    </span>
+                                    <span
+                                        className={
+                                            agreementActive
+                                                ? "shrink-0 text-[#00ff41]"
+                                                : "shrink-0 text-[#d9b8ff]"
+                                        }
+                                    >
+                                        {agreementActive
+                                            ? t("reputation.agreement_active")
+                                            : t(
+                                                  "reputation.agreement_progress",
+                                                  {
+                                                      amount: agreementPointsRemaining,
+                                                  },
+                                              )}
+                                    </span>
+                                </div>
+                                <p className="mt-1 text-[#b7c1cb]">
+                                    {t(RACE_AGREEMENT_COPY_KEYS[raceId])}
+                                </p>
+                            </div>
 
                             {/* Effects preview */}
                             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">

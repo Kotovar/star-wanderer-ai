@@ -17,6 +17,10 @@ import { getSectorRule } from "@/game/galaxy/sectorRules";
 import type { GameState, Sector } from "@/game/types";
 import { hasWarpTravel } from "@/game/research/specialAbilities";
 import { getPilotInCockpit } from "@/game/crew/getPilotInCockpit";
+import {
+    isRaceAgreementActive,
+    RACE_AGREEMENT_EFFECTS,
+} from "@/game/reputation/agreements";
 
 /**
  * Множитель расхода топлива без пилота в кабине
@@ -158,8 +162,20 @@ const collectFuelModifiers = (state: GameState): number => {
     const mergeFuelModifier = mergeBonus.fuelEfficiency
         ? 1 - mergeBonus.fuelEfficiency / 100
         : 1;
+    const agreementModifier = isRaceAgreementActive(
+        state.raceReputation,
+        "voidborn",
+    )
+        ? RACE_AGREEMENT_EFFECTS.voidborn.fuelMultiplier
+        : 1;
 
-    return raceModifier * pilotModifier * planetModifier * mergeFuelModifier;
+    return (
+        raceModifier *
+        pilotModifier *
+        planetModifier *
+        mergeFuelModifier *
+        agreementModifier
+    );
 };
 
 /**

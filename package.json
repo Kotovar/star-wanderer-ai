@@ -32,6 +32,7 @@
     "check:black-hole-sectors": "node --no-warnings scripts/check-black-hole-sectors.mjs",
     "check:run-profile-arcs": "node --no-warnings scripts/check-run-profile-arcs.mjs",
     "check:reputation": "node --no-warnings --experimental-strip-types scripts/check-reputation-ripple.mjs",
+    "check:race-agreements": "node --no-warnings --experimental-strip-types scripts/check-race-agreements.mjs",
     "check:crew-relation-events": "node --no-warnings --experimental-strip-types scripts/check-crew-relation-events.mjs",
     "check:crew-tech-tree": "node --no-warnings --experimental-strip-types scripts/check-crew-tech-tree.mjs",
     "check:star-effects": "node --no-warnings --experimental-strip-types scripts/check-star-effects.mjs",
