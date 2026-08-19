@@ -101,6 +101,9 @@ const STATION_BACKGROUNDS = {
     pirate: "/assets/station-backgrounds/pirate-haven.webp",
 } satisfies Record<StationName, string>;
 
+const STATION_TAB_BASE_CLASS =
+    "min-h-8 shrink-0 cursor-pointer whitespace-nowrap rounded-md border border-transparent px-3 py-2 text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:py-1.5";
+
 function StationDiscoveryModal({
     stationType,
     stationConfig,
@@ -413,7 +416,6 @@ export function StationPanel() {
             activeTab === "trophies"
           ? "shop"
           : activeTab;
-
     useEffect(() => {
         if (isPirateStation) refreshPirateStationContracts();
     }, [
@@ -773,26 +775,26 @@ export function StationPanel() {
                 className="w-full mt-2 flex-1 min-h-0"
             >
                 <TabsList
-                    className="sticky top-0 z-20 flex h-auto w-full overflow-x-auto border border-[#00ff41] bg-[rgba(5,8,16,0.98)]"
+                    className="cockpit-tabs sticky top-0 z-20 flex h-auto w-full gap-1 overflow-x-auto rounded border border-[#00ff4155] bg-[rgba(5,8,16,0.98)] p-1"
                 >
                     {isPirateStation ? (
                         <>
                             <TabsTrigger
                                 value="black-market"
-                                className="cursor-pointer data-[state=active]:bg-[#ff0040] data-[state=active]:text-[#050810] text-[#ff0040] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                                className={`${STATION_TAB_BASE_CLASS} text-[#ff6677] hover:border-[#ff004088] hover:bg-[#ff004011] data-[state=active]:border-[#ff0040] data-[state=active]:bg-[#ff0040] data-[state=active]:text-[#050810]`}
                             >
                                 ☠ {t("pirate.black_market")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="trophies"
                                 title={t("pirate.trophies_hint")}
-                                className="cursor-pointer data-[state=active]:bg-[#ffb000] data-[state=active]:text-[#050810] text-[#ffb000] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                                className={`${STATION_TAB_BASE_CLASS} text-[#ffcb57] hover:border-[#ffb00088] hover:bg-[#ffb00011] data-[state=active]:border-[#ffb000] data-[state=active]:bg-[#ffb000] data-[state=active]:text-[#050810]`}
                             >
                                 🛠 {t("pirate.trophies")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="pirate-contracts"
-                                className="cursor-pointer data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810] text-[#00d4ff] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                                className={`${STATION_TAB_BASE_CLASS} text-[#67e8f9] hover:border-[#00d4ff88] hover:bg-[#00d4ff11] data-[state=active]:border-[#00d4ff] data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]`}
                             >
                                 📜 {t("pirate.contract_board")}
                             </TabsTrigger>
@@ -802,7 +804,7 @@ export function StationPanel() {
                             <TabsTrigger
                                 value="shop"
                                 title={t("station.modules_tab_hint")}
-                                className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                                className={`${STATION_TAB_BASE_CLASS} text-[#8ca7b1] hover:border-[#00ff4155] hover:text-[#00ff41] data-[state=active]:border-[#00ff41] data-[state=active]:bg-[rgba(0,255,65,0.12)] data-[state=active]:text-[#00ff41]`}
                             >
                                 🛠 {t("station.modules_tab")}
                             </TabsTrigger>
@@ -810,7 +812,7 @@ export function StationPanel() {
                                 <TabsTrigger
                                     value="trade"
                                     title={t("station.trade_tab_hint")}
-                                    className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                                    className={`${STATION_TAB_BASE_CLASS} text-[#8ca7b1] hover:border-[#00ff4155] hover:text-[#00ff41] data-[state=active]:border-[#00ff41] data-[state=active]:bg-[rgba(0,255,65,0.12)] data-[state=active]:text-[#00ff41]`}
                                 >
                                     💱 {t("station.trade_tab")}
                                 </TabsTrigger>
@@ -819,7 +821,7 @@ export function StationPanel() {
                                 <TabsTrigger
                                     value="minerals"
                                     title={t("station.minerals_tab_hint")}
-                                    className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                                    className={`${STATION_TAB_BASE_CLASS} text-[#8ca7b1] hover:border-[#00ff4155] hover:text-[#00ff41] data-[state=active]:border-[#00ff41] data-[state=active]:bg-[rgba(0,255,65,0.12)] data-[state=active]:text-[#00ff41]`}
                                 >
                                     ⛏ {t("station.minerals_tab")}
                                 </TabsTrigger>
@@ -827,7 +829,7 @@ export function StationPanel() {
                             <TabsTrigger
                                 value="crew"
                                 title={t("station.crew_tab_hint")}
-                                className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                                className={`${STATION_TAB_BASE_CLASS} text-[#8ca7b1] hover:border-[#00ff4155] hover:text-[#00ff41] data-[state=active]:border-[#00ff41] data-[state=active]:bg-[rgba(0,255,65,0.12)] data-[state=active]:text-[#00ff41]`}
                             >
                                 👥 {t("station.crew_tab")}
                             </TabsTrigger>
@@ -836,7 +838,9 @@ export function StationPanel() {
                     <TabsTrigger
                         value="services"
                         title={t("station.services_tab_hint")}
-                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                        className={`${STATION_TAB_BASE_CLASS} ${isPirateStation
+                            ? "text-[#ffcb57] hover:border-[#ffb00088] hover:text-[#ffcb57] data-[state=active]:border-[#ffb000] data-[state=active]:bg-[#ffb000] data-[state=active]:text-[#050810]"
+                            : "text-[#8ca7b1] hover:border-[#00ff4155] hover:text-[#00ff41] data-[state=active]:border-[#00ff41] data-[state=active]:bg-[rgba(0,255,65,0.12)] data-[state=active]:text-[#00ff41]"}`}
                     >
                         🔧 {t("station.services_tab")}
                     </TabsTrigger>
@@ -844,7 +848,7 @@ export function StationPanel() {
                         <TabsTrigger
                             value="crafting"
                             title={t("station.craft_tab_hint")}
-                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                            className={`${STATION_TAB_BASE_CLASS} text-[#8ca7b1] hover:border-[#00ff4155] hover:text-[#00ff41] data-[state=active]:border-[#00ff41] data-[state=active]:bg-[rgba(0,255,65,0.12)] data-[state=active]:text-[#00ff41]`}
                         >
                             📐 {t("station.craft")}
                         </TabsTrigger>
@@ -853,7 +857,7 @@ export function StationPanel() {
                         <TabsTrigger
                             value="diplomacy"
                             title={t("station.diplomacy_tab_hint")}
-                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
+                            className={`${STATION_TAB_BASE_CLASS} text-[#8ca7b1] hover:border-[#00ff4155] hover:text-[#00ff41] data-[state=active]:border-[#00ff41] data-[state=active]:bg-[rgba(0,255,65,0.12)] data-[state=active]:text-[#00ff41]`}
                         >
                             <span>🤝 {t("station.diplomacy_tab")}</span>
                         </TabsTrigger>

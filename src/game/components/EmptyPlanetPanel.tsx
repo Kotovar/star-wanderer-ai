@@ -288,6 +288,51 @@ export function EmptyPlanetPanel() {
           PLANET_POINT_OF_INTERESTS[planetType]
         : undefined;
     const hasExpeditionKits = researchedTechs.includes("expedition_kits");
+    const orbitComplete = !!currentLocation.orbitalScanned;
+    const surfaceComplete = !!currentLocation.explored;
+    const findingComplete = !!currentLocation.expeditionCompleted;
+    const orbitReady = !orbitComplete && hasWorkingScanner;
+    const surfaceReady = !surfaceComplete && hasScout && canScout;
+    const findingReady = surfaceComplete && !findingComplete && hasExpeditionKits;
+    const nextRouteAction = orbitReady
+        ? {
+              label: t("planet_panel.orbital_scan"),
+              onClick: () => orbitalScan(planetId),
+          }
+        : surfaceReady
+          ? {
+                label: t("planet.scout_surface"),
+                onClick: () => sendScoutingMission(planetId),
+            }
+          : findingReady
+            ? {
+                  label: t("planet_panel.explore_planet"),
+                  onClick: () => setShowExpeditionSetup(true),
+              }
+            : null;
+    const routeSteps = [
+        {
+            label: t("planet_panel.route_orbit"),
+            hint: t("planet_panel.route_orbit_hint"),
+            complete: orbitComplete,
+            ready: orbitReady,
+            optional: !orbitComplete && !hasWorkingScanner,
+        },
+        {
+            label: t("planet_panel.route_surface"),
+            hint: t("planet_panel.route_surface_hint"),
+            complete: surfaceComplete,
+            ready: surfaceReady,
+            optional: false,
+        },
+        {
+            label: t("planet_panel.route_finding"),
+            hint: t("planet_panel.route_finding_hint"),
+            complete: findingComplete,
+            ready: findingReady,
+            optional: false,
+        },
+    ];
 
     // Телеметрия (детерминирована по id планеты)
     const telemetry = planetType ? PLANET_TELEMETRY[planetType] : undefined;
@@ -453,45 +498,74 @@ export function EmptyPlanetPanel() {
                                     </span>
                                 )}
 
-                                {/* Орбитальное сканирование */}
-                                {canOrbitalScan && (
-                                    <div className="inline-flex flex-wrap items-center gap-1.5">
-                                        <Button
-                                            onClick={() => orbitalScan(planetId)}
-                                            disabled={!hasWorkingScanner}
-                                            title={
-                                                hasWorkingScanner
-                                                    ? undefined
-                                                    : t(
-                                                          "planet_panel.orbital_scan_requires_scanner",
-                                                      )
-                                            }
-                                            className="h-auto cursor-pointer border border-ring bg-transparent px-2 py-0.5 text-[10px] sm:text-xs uppercase tracking-wider text-ring hover:bg-ring hover:text-[#050810] disabled:opacity-40"
-                                        >
-                                            {t("planet_panel.orbital_scan")}
-                                        </Button>
-                                        {!hasWorkingScanner ? (
-                                            <span
-                                                aria-live="polite"
-                                                className="text-[10px] text-[#ffb000]"
-                                            >
-                                                {t(
-                                                    "planet_panel.orbital_scan_requires_scanner",
-                                                )}
-                                            </span>
-                                        ) : (
-                                            featuresRevealed && (
-                                                <span className="text-[10px] text-[#00d4ffaa]">
-                                                    {t(
-                                                        "planet_panel.orbital_scan_prep_hint",
-                                                    )}
-                                                </span>
-                                            )
+                                {canOrbitalScan && !hasWorkingScanner && (
+                                    <span
+                                        aria-live="polite"
+                                        className="text-[10px] text-[#ffb000]"
+                                    >
+                                        {t(
+                                            "planet_panel.orbital_scan_requires_scanner",
                                         )}
-                                    </div>
+                                    </span>
                                 )}
                             </div>
                         </div>
+
+                        <section
+                            aria-label={t("planet_panel.route_title")}
+                            className="rounded border border-[#00d4ff55] bg-[rgba(0,212,255,0.035)] p-2.5 sm:p-3"
+                        >
+                            <div className="font-['Orbitron'] text-[10px] font-bold uppercase tracking-[0.14em] text-ring">
+                                {t("planet_panel.route_title")}
+                            </div>
+                            <div className="mt-2 grid gap-1.5 sm:grid-cols-3">
+                                {routeSteps.map((step, index) => {
+                                    const status = step.complete
+                                        ? t("planet_panel.route_status_complete")
+                                        : step.ready
+                                          ? t("planet_panel.route_status_ready")
+                                          : step.optional
+                                            ? t("planet_panel.route_status_optional")
+                                            : t("planet_panel.route_status_locked");
+                                    const tone = step.complete
+                                        ? "border-[#00ff4166] bg-[rgba(0,255,65,0.06)] text-[#86efac]"
+                                        : step.ready
+                                          ? "border-[#00d4ff66] bg-[rgba(0,212,255,0.07)] text-[#67e8f9]"
+                                          : step.optional
+                                            ? "border-[#ffb00044] bg-[rgba(255,176,0,0.04)] text-[#ffcb57]"
+                                            : "border-[#365062] bg-[rgba(0,0,0,0.18)] text-[#7893a2]";
+
+                                    return (
+                                        <div
+                                            key={step.label}
+                                            className={`rounded border px-2 py-2 ${tone}`}
+                                        >
+                                            <div className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider">
+                                                <span>
+                                                    {String(index + 1).padStart(2, "0")} · {step.label}
+                                                </span>
+                                                <span className="text-[9px] opacity-80">
+                                                    {status}
+                                                </span>
+                                            </div>
+                                            <div className="mt-1 text-[10px] leading-snug text-[#aabec8]">
+                                                {step.hint}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            {nextRouteAction && (
+                                <Button
+                                    onClick={nextRouteAction.onClick}
+                                    className="mt-2 h-auto cursor-pointer border border-ring bg-transparent px-2.5 py-1.5 text-[10px] uppercase tracking-wider text-ring hover:bg-ring hover:text-[#050810]"
+                                >
+                                    {t("planet_panel.route_next", {
+                                        action: nextRouteAction.label,
+                                    })}
+                                </Button>
+                            )}
+                        </section>
                     </div>
                 </section>
 

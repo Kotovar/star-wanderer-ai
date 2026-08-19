@@ -424,6 +424,22 @@ export function CombatPanel() {
       .filter((module) => module.health > 0)
       .map((module) => module.id)
     : [];
+  const playerHull = ship.modules.reduce(
+    (total, module) => total + module.health,
+    0,
+  );
+  const playerMaxHull = ship.modules.reduce(
+    (total, module) => total + (module.maxHealth ?? module.health),
+    0,
+  );
+  const enemyHull = presentedCombat.enemy.modules.reduce(
+    (total, module) => total + module.health,
+    0,
+  );
+  const enemyMaxHull = presentedCombat.enemy.modules.reduce(
+    (total, module) => total + (module.maxHealth ?? module.health),
+    0,
+  );
 
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto pr-2">
@@ -445,15 +461,7 @@ export function CombatPanel() {
         onPlaybackComplete={handlePlaybackComplete}
       />
 
-      {/* Итог предыдущего залпа: пока идёт анимация — прочерк, чтобы результат
-          не опережал кадр. Высота строки не зависит от содержимого. */}
-      <CombatVolleySummaryLine
-        summary={isPlaybackActive ? null : lastVolleySummary}
-        t={t}
-      />
-
-      {/* Attack actions */}
-      <div className="flex gap-2.5 flex-col sm:flex-row">
+      <div className="flex flex-col gap-2.5 sm:flex-row">
         <Button
           disabled={isPlaybackActive || !hasWeaponBay}
           onClick={handleAttack}
@@ -478,80 +486,121 @@ export function CombatPanel() {
         </Button>
       </div>
 
-      {/* Per-bay target selector */}
-      {weaponBays.length > 0 && (
-        <div className="space-y-1.5">
-          <div className="text-xs border-accent font-bold uppercase tracking-wider">
-            {weaponBays.length > 1 ? "Цели по отсекам:" : "Цель:"}
-          </div>
-          {weaponBays.map((bay) => {
-            const targetId = hasGunner ? bayTargets[bay.id] ?? null : null;
-            const targetMod = targetId !== null
-              ? presentedCombat.enemy.modules.find((m) => m.id === targetId)
-              : null;
-            const isActive = activeBayId === bay.id;
-            const bayAccuracyModifier = computeBayAccuracyModifier(
-              useGameStore.getState(),
-              bay.id,
-            );
+      <section
+        aria-label={t("combat.command_title")}
+        className="space-y-3 rounded border border-[#00d4ff66] bg-[rgba(0,212,255,0.035)] p-2.5 sm:p-3"
+      >
+        <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.16em] text-ring">
+          {t("combat.command_title")}
+        </div>
+        <div className="grid grid-cols-2 gap-1.5 text-center text-xs sm:grid-cols-4">
+          <CombatMetric
+            label={`${t("combat.your_ship")} · ${t("combat.hull")}`}
+            value={`${playerHull}/${playerMaxHull}`}
+            color="#00ff41"
+          />
+          <CombatMetric
+            label={`${t("combat.your_ship")} · ${t("combat.shields")}`}
+            value={`${ship.shields}/${ship.maxShields}`}
+            color="#00d4ff"
+          />
+          <CombatMetric
+            label={`${t("combat.enemy_ship")} · ${t("combat.hull")}`}
+            value={`${enemyHull}/${enemyMaxHull}`}
+            color="#ffb000"
+          />
+          <CombatMetric
+            label={`${t("combat.enemy_ship")} · ${t("combat.shields")}`}
+            value={`${presentedCombat.enemy.shields}/${presentedCombat.enemy.maxShields}`}
+            color="#ff6677"
+          />
+        </div>
 
-            return (
-              <WeaponBayTargetRow
-                key={bay.id}
-                bay={bay}
-                targetMod={targetMod}
-                isActive={isActive}
-                dmgMultiplier={dmgMultiplier}
-                bayAccuracyModifier={bayAccuracyModifier}
-                disabled={isPlaybackActive || !hasGunner}
-                onSelect={() => setActiveBayId(isActive ? null : bay.id)}
-                t={t}
-              />
-            );
-          })}
-          <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
-            {presentedCombat.enemy.modules.map((module) => {
-              const isTargeted = selectedModuleIds.includes(module.id);
+        <CombatPhaseStrip activePhase={activeCombatPhase} note={phaseNote} />
+
+        {/* Per-bay target selector */}
+        {weaponBays.length > 0 && (
+          <div className="space-y-1.5">
+            <div className="text-xs border-accent font-bold uppercase tracking-wider">
+              {weaponBays.length > 1
+                ? t("combat.targeting_bays")
+                : t("combat.targeting_single")}
+            </div>
+            {weaponBays.map((bay) => {
+              const targetId = hasGunner ? bayTargets[bay.id] ?? null : null;
+              const targetMod = targetId !== null
+                ? presentedCombat.enemy.modules.find((m) => m.id === targetId)
+                : null;
+              const isActive = activeBayId === bay.id;
+              const bayAccuracyModifier = computeBayAccuracyModifier(
+                useGameStore.getState(),
+                bay.id,
+              );
+
               return (
-                <button
-                  key={module.id}
-                  type="button"
-                  disabled={isPlaybackActive || !hasGunner || module.health <= 0}
-                  onClick={() => handleEnemyModuleClick(module.id)}
-                  className={`min-w-0 border px-2 py-1.5 text-left text-[10px] transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${isTargeted
-                    ? "border-[#ffcb57] bg-[rgba(255,203,87,0.12)] text-[#ffcb57]"
-                    : "cursor-pointer border-[#365062] bg-[rgba(0,0,0,0.28)] text-[#b8d9e8] hover:border-[#67e8f9]"
-                    }`}
-                >
-                  <span className="block truncate">{module.name}</span>
-                  {!isPlaybackActive && (
-                    <span className="mt-0.5 block text-[9px] text-[#7893a2]">
-                      HP {module.health}/{module.maxHealth ?? module.health}
-                      {" · "}{t("combat.armor")} {module.defense ?? 0}
-                      {" · "}{t("combat.damage")} {module.damage ?? 0}
-                      {module.type === "point_defense" && (
-                        <>
-                          {" · "}
-                          {t("module_list.point_defense_chance", {
-                            chance: formatPointDefenseChances(),
-                          })}
-                        </>
-                      )}
-                    </span>
-                  )}
-                </button>
+                <WeaponBayTargetRow
+                  key={bay.id}
+                  bay={bay}
+                  targetMod={targetMod}
+                  isActive={isActive}
+                  dmgMultiplier={dmgMultiplier}
+                  bayAccuracyModifier={bayAccuracyModifier}
+                  disabled={isPlaybackActive || !hasGunner}
+                  onSelect={() => setActiveBayId(isActive ? null : bay.id)}
+                  t={t}
+                />
               );
             })}
-          </div>
-          {!isPlaybackActive && hasGunner && activeBayId !== null && (
-            <div className="text-[10px] text-ring text-center pt-0.5">
-              Нажмите на модуль врага чтобы назначить цель
+            <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
+              {presentedCombat.enemy.modules.map((module) => {
+                const isTargeted = selectedModuleIds.includes(module.id);
+                return (
+                  <button
+                    key={module.id}
+                    type="button"
+                    disabled={isPlaybackActive || !hasGunner || module.health <= 0}
+                    onClick={() => handleEnemyModuleClick(module.id)}
+                    className={`min-w-0 rounded border px-2 py-1.5 text-left text-[10px] transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${isTargeted
+                      ? "border-[#ffcb57] bg-[rgba(255,203,87,0.12)] text-[#ffcb57]"
+                      : "cursor-pointer border-[#365062] bg-[rgba(0,0,0,0.28)] text-[#b8d9e8] hover:border-[#67e8f9]"
+                      }`}
+                  >
+                    <span className="block truncate">{module.name}</span>
+                    {!isPlaybackActive && (
+                      <span className="mt-0.5 block text-[9px] text-[#7893a2]">
+                        HP {module.health}/{module.maxHealth ?? module.health}
+                        {" · "}{t("combat.armor")} {module.defense ?? 0}
+                        {" · "}{t("combat.damage")} {module.damage ?? 0}
+                        {module.type === "point_defense" && (
+                          <>
+                            {" · "}
+                            {t("module_list.point_defense_chance", {
+                              chance: formatPointDefenseChances(),
+                            })}
+                          </>
+                        )}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-          )}
-        </div>
-      )}
+            {!isPlaybackActive && hasGunner && activeBayId !== null && (
+              <div className="pt-0.5 text-center text-[10px] text-ring">
+                {t("combat.select_target_hint")}
+              </div>
+            )}
+          </div>
+        )}
 
-      <CombatPhaseStrip activePhase={activeCombatPhase} note={phaseNote} />
+      </section>
+
+      {/* Итог предыдущего залпа: пока идёт анимация — прочерк, чтобы результат
+          не опережал кадр. Высота строки не зависит от содержимого. */}
+      <CombatVolleySummaryLine
+        summary={isPlaybackActive ? null : lastVolleySummary}
+        t={t}
+      />
 
       <div className="grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
         <CombatMetric label="Раунд боя" value={combatRound} color="#00d4ff" />
