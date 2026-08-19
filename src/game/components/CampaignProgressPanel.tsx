@@ -26,6 +26,7 @@ import { getRunProfile } from "@/game/galaxy/runProfiles";
 import {
   getHighestReachedTier,
   getNextTierAccessRequirements,
+  getTacticalDirective,
 } from "@/game/progression/campaignProgress";
 import { isLocationCountedAsVisited } from "@/game/progression/locationProgress";
 import { getEffectiveScanRange } from "@/game/slices/scanner/helpers/getEffectiveScanRange";
@@ -162,6 +163,10 @@ export function CampaignProgressPanel() {
   const research = useGameStore((s) => s.research);
   const artifacts = useGameStore((s) => s.artifacts);
   const activeContracts = useGameStore((s) => s.activeContracts);
+  const activeCrisis = useGameStore((s) => s.activeCrisis);
+  const turn = useGameStore((s) => s.turn);
+  const showCrises = useGameStore((s) => s.showCrises);
+  const showGalaxyMap = useGameStore((s) => s.showGalaxyMap);
   const completedContractIds = useGameStore((s) => s.completedContractIds);
   const completedVictoryObjectiveIds = useGameStore(
     (s) => s.completedVictoryObjectiveIds,
@@ -310,6 +315,11 @@ export function CampaignProgressPanel() {
     [completedVictoryObjectiveIds],
   );
   const campaignDirective = getCampaignDirective(victoryState);
+  const tacticalDirective = getTacticalDirective({
+    activeCrisis,
+    activeContracts,
+    currentTurn: turn,
+  });
 
   const techTotal = Object.keys(RESEARCH_TREE).length;
   const techDone = research.researchedTechs.length;
@@ -422,20 +432,66 @@ export function CampaignProgressPanel() {
         </section>
       )}
 
-      {campaignDirective && (
-        <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.06)] p-3">
+      {(tacticalDirective || campaignDirective) && (
+        <div
+          className={`border p-3 ${
+            tacticalDirective?.kind === "crisis"
+              ? "border-[#ff444466] bg-[rgba(255,68,68,0.06)]"
+              : "border-[#ffb00066] bg-[rgba(255,176,0,0.06)]"
+          }`}
+        >
           <div className="font-['Orbitron'] text-[10px] uppercase tracking-[0.16em] text-accent">
             {t("campaign_directive.label")}
           </div>
-          <div className="mt-1 text-xs font-bold text-[#ffe0a0]">
-            {t(
-              campaignDirective.displayTitleKey ??
-                campaignDirective.objective.titleKey,
-            )}
-          </div>
-          <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            {t(campaignDirective.detail.key, campaignDirective.detail.params)}
-          </div>
+          {tacticalDirective?.kind === "crisis" ? (
+            <>
+              <div className="mt-1 text-xs font-bold text-[#ffd6de]">
+                {t("campaign_directive.active_crisis.title")}
+              </div>
+              <div className="mt-1 text-xs leading-relaxed text-[#ffb6c4]">
+                {t("campaign_directive.active_crisis.description", {
+                  turns: tacticalDirective.turnsRemaining,
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={showCrises}
+                className="mt-3 cursor-pointer border border-[#ff668055] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#ffd6de] hover:bg-[rgba(255,102,128,0.14)]"
+              >
+                {t("campaign_directive.active_crisis.action")}
+              </button>
+            </>
+          ) : tacticalDirective?.kind === "contract" ? (
+            <>
+              <div className="mt-1 text-xs font-bold text-[#ffe0a0]">
+                {t("campaign_directive.urgent_contract.title")}
+              </div>
+              <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                {t("campaign_directive.urgent_contract.description", {
+                  turns: tacticalDirective.turnsRemaining,
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={showGalaxyMap}
+                className="mt-3 cursor-pointer border border-[#ffb00066] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#ffe0a0] hover:bg-[rgba(255,176,0,0.14)]"
+              >
+                {t("campaign_directive.urgent_contract.action")}
+              </button>
+            </>
+          ) : campaignDirective ? (
+            <>
+              <div className="mt-1 text-xs font-bold text-[#ffe0a0]">
+                {t(
+                  campaignDirective.displayTitleKey ??
+                    campaignDirective.objective.titleKey,
+                )}
+              </div>
+              <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                {t(campaignDirective.detail.key, campaignDirective.detail.params)}
+              </div>
+            </>
+          ) : null}
         </div>
       )}
 

@@ -1,12 +1,22 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import {
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+
+const require = createRequire(import.meta.url);
+const scriptPath = fileURLToPath(import.meta.url);
+const root = path.resolve(path.dirname(scriptPath), "..");
+const jiti = require("jiti")(scriptPath, {
+  alias: { "@": path.join(root, "src") },
+});
+const {
   VICTORY_OBJECTIVES,
   canRevealLateCampaign,
   getCampaignDirective,
   getCompletedVictoryObjective,
   getVictoryObjectives,
-} from "../src/game/constants/victoryObjectives.ts";
+} = jiti("../src/game/constants/victoryObjectives.ts");
 
 const [ruTranslations, enTranslations, triggerVictorySource] = await Promise.all([
   readFile(new URL("../src/lib/locales/ru.json", import.meta.url), "utf8").then(JSON.parse),

@@ -4565,6 +4565,16 @@
     },
     "campaign_directive": {
         "label": "OPERATION",
+        "active_crisis": {
+            "title": "Active crisis",
+            "description": "The crisis needs a response. Turns remaining: {{turns}}.",
+            "action": "Open Crisis Center"
+        },
+        "urgent_contract": {
+            "title": "Urgent contract",
+            "description": "Turns until the contract expires: {{turns}}. Its target is marked on the map.",
+            "action": "Show target on map"
+        },
         "open_progress": "Open campaign plan",
         "explore": {
             "title": "Reconnaissance",
