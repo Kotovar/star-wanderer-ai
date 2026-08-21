@@ -482,11 +482,14 @@ export function ShipGrid() {
         {t("ship.layout.stern")}
       </div>
 
-      {placementResult?.allowed === false && placementResult.reason && (
-        <div className="mt-1 text-center text-[10px] text-destructive">
-          {t(`ship.layout.errors.${placementResult.reason}`)}
-        </div>
-      )}
+      <div
+        aria-live="polite"
+        className="mt-1 h-4 shrink-0 text-center text-[10px] leading-4 text-destructive"
+      >
+        {placementResult?.allowed === false && placementResult.reason
+          ? t(`ship.layout.errors.${placementResult.reason}`)
+          : null}
+      </div>
 
       {isCombatMode && (
         <div className="text-destructive text-[10px] mt-1 text-center">
