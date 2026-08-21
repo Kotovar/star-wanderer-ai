@@ -33,6 +33,8 @@ import {
   SHIP_GRID_VIEWBOX_PADDING,
 } from "./shipGridInteraction";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
+import { analyzeShipLayout } from "@/game/modules/shipLayout";
+import { getModulePlacementResult } from "@/game/slices/ship/helpers/canPlaceModule";
 
 const CELL_SIZE = 100;
 
@@ -104,6 +106,11 @@ export function ShipGrid() {
         )
       : modules;
   const hullRects = getShipHullRects(hullModules, CELL_SIZE);
+  const layoutAnalysis = analyzeShipLayout(hullModules, gridSize);
+  const placementResult =
+    draggedModule && tempPos
+      ? getModulePlacementResult(draggedModule, tempPos.x, tempPos.y, { ship })
+      : undefined;
 
   const handlePointerDown = (
     e: React.PointerEvent<SVGGElement>,
@@ -283,6 +290,10 @@ export function ShipGrid() {
         </div>
       )}
 
+      <div className="text-center text-[9px] uppercase tracking-[0.18em] text-[#00d4ff] pointer-events-none">
+        {t("ship.layout.nose")}
+      </div>
+
       <div className="w-full lg:flex-1 lg:min-h-0 lg:grid lg:place-items-center lg:@container-[size]">
         <svg
           width={gridSize * CELL_SIZE}
@@ -406,6 +417,12 @@ export function ShipGrid() {
               }
               currentLanguage={currentLanguage}
               isCombatMode={isCombatMode}
+              isSpine={layoutAnalysis.spineModuleIds.includes(mod.id)}
+              dropAllowed={
+                draggedModule?.id === mod.id
+                  ? placementResult?.allowed
+                  : undefined
+              }
               onCrewPointerDown={handleCrewPointerDown}
             />
           </g>
@@ -461,6 +478,16 @@ export function ShipGrid() {
         </svg>
       </div>
 
+      <div className="text-center text-[9px] uppercase tracking-[0.18em] text-[#526452] pointer-events-none">
+        {t("ship.layout.stern")}
+      </div>
+
+      {placementResult?.allowed === false && placementResult.reason && (
+        <div className="mt-1 text-center text-[10px] text-destructive">
+          {t(`ship.layout.errors.${placementResult.reason}`)}
+        </div>
+      )}
+
       {isCombatMode && (
         <div className="text-destructive text-[10px] mt-1 text-center">
           {t("ship.cannot_move_combat")}
@@ -483,6 +510,8 @@ interface ModuleRendererProps {
   tempPos?: { x: number; y: number } | null;
   currentLanguage: "ru" | "en";
   isCombatMode: boolean;
+  isSpine: boolean;
+  dropAllowed?: boolean;
   onCrewPointerDown: (
     e: React.PointerEvent<SVGGElement>,
     member: CrewMember,
@@ -497,6 +526,8 @@ function ModuleRenderer({
   tempPos,
   currentLanguage,
   isCombatMode,
+  isSpine,
+  dropAllowed,
   onCrewPointerDown,
 }: ModuleRendererProps) {
   // Use tempPos when dragging, otherwise use module's original position
@@ -553,15 +584,26 @@ function ModuleRenderer({
           />
         </>
       )}
-      {(isDragging || module.health < 30) && (
+      {(isSpine || isDragging || module.health < 30) && (
         <rect
           x={x + 1}
           y={y + 1}
           width={w - 2}
           height={h - 2}
           fill="none"
-          stroke={isDragging ? "#ffb000" : "#ff0040"}
-          strokeWidth={isDragging ? 3 : 2}
+          stroke={
+            isDragging
+              ? dropAllowed
+                ? "#00ff41"
+                : "#ff0040"
+              : module.health < 30
+                ? "#ff0040"
+                : "#00d4ff"
+          }
+          strokeWidth={isDragging ? 3 : isSpine ? 1.5 : 2}
+          strokeDasharray={
+            isSpine && !isDragging && module.health >= 30 ? "6 4" : undefined
+          }
           className="select-none"
         />
       )}

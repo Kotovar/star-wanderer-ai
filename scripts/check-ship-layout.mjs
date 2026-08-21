@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import "./register-ts-loader.mjs";
 
 const {
@@ -283,6 +284,33 @@ try {
     );
 } finally {
     Math.random = originalRandom;
+}
+
+const [ruLocale, enLocale] = await Promise.all([
+    readFile(new URL("../src/lib/locales/ru.json", import.meta.url), "utf8").then(
+        JSON.parse,
+    ),
+    readFile(new URL("../src/lib/locales/en.json", import.meta.url), "utf8").then(
+        JSON.parse,
+    ),
+]);
+for (const locale of [ruLocale, enLocale]) {
+    assert.equal(typeof locale.ship.layout, "object");
+    assert.equal(typeof locale.ship.layout.nose, "string");
+    assert.equal(typeof locale.ship.layout.stern, "string");
+    assert.equal(typeof locale.ship.layout.exterior_status, "string");
+    assert.equal(typeof locale.ship.layout.interior_status, "string");
+    for (const key of [
+        "out_of_bounds",
+        "overlap",
+        "disconnected",
+        "missing_spine",
+        "cockpit_front_blocked",
+        "engine_exhaust_blocked",
+        "weapon_exposure_blocked",
+    ]) {
+        assert.equal(typeof locale.ship.layout.errors[key], "string");
+    }
 }
 
 console.log("ship layout checks passed");

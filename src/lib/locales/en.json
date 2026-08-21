@@ -88,6 +88,21 @@
         "subtab_modules": "MODULES",
         "subtab_cargo": "CARGO",
         "cannot_move_combat": "⚠️ Cannot move modules during combat!",
+        "layout": {
+            "nose": "NOSE ↑",
+            "stern": "STERN · EXHAUST",
+            "exterior_status": "Exterior module · target priority +{{bonus}}",
+            "interior_status": "Interior module",
+            "errors": {
+                "out_of_bounds": "Module extends beyond the hull grid",
+                "overlap": "Another module occupies this position",
+                "disconnected": "This move disconnects the hull",
+                "missing_spine": "No cockpit → reactor → engine path",
+                "cockpit_front_blocked": "The cockpit view is blocked",
+                "engine_exhaust_blocked": "The engine exhaust is blocked",
+                "weapon_exposure_blocked": "Weapons need access to the exterior hull"
+            }
+        },
         "confirm_restart_title": "Restart?",
         "confirm_restart_desc": "The current expedition will be replaced. Manual saves, achievements, and unlocks will be kept.",
         "cancel": "Cancel",

@@ -36,6 +36,10 @@ import {
     type ModuleTechBonus,
 } from "@/game/modules/techBonuses";
 import { getCrewDisplayName } from "@/game/crew/crewNames";
+import {
+    analyzeShipLayout,
+    SHIP_EXTERIOR_TARGET_PRIORITY_BONUS,
+} from "@/game/modules/shipLayout";
 
 // Helper to get translated module name
 function getTranslatedModuleName(
@@ -379,8 +383,15 @@ export function ModuleDetailDialog({
     const crew = useGameStore((s) => s.crew);
     const research = useGameStore((s) => s.research);
     const toggleModule = useGameStore((s) => s.toggleModule);
+    const ship = useGameStore((s) => s.ship);
 
     if (!module) return null;
+
+    const isExterior = !isStationItem
+        ? analyzeShipLayout(ship.modules, ship.gridSize).exteriorModuleIds.has(
+              module.id,
+          )
+        : false;
 
     const mergedCrewMember = isStationItem
         ? undefined
@@ -437,6 +448,18 @@ export function ModuleDetailDialog({
                             </span>
                         )}
                     </div>
+                    {!isStationItem && (
+                        <div className="text-[11px] text-[#9eb5bd]">
+                            {t(
+                                isExterior
+                                    ? "ship.layout.exterior_status"
+                                    : "ship.layout.interior_status",
+                                {
+                                    bonus: SHIP_EXTERIOR_TARGET_PRIORITY_BONUS,
+                                },
+                            )}
+                        </div>
+                    )}
                 </DialogHeader>
 
                 <div className="space-y-4">
