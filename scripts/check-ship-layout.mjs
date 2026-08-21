@@ -258,4 +258,31 @@ assert.equal(
     "a fixed spine violation cannot be reintroduced",
 );
 
+const { selectTargetModule } = await import(
+    "../src/game/slices/combat/helpers/enemyCounterAttack.ts"
+);
+const internalTarget = moduleAt(200, "cargo", 2, 2);
+const exteriorTarget = moduleAt(205, "cargo", 0, 0);
+const targetLayout = [
+    internalTarget,
+    { ...moduleAt(201, "cargo", 1, 2), health: 0 },
+    { ...moduleAt(202, "cargo", 3, 2), health: 0 },
+    { ...moduleAt(203, "cargo", 2, 1), health: 0 },
+    { ...moduleAt(204, "cargo", 2, 3), health: 0 },
+    exteriorTarget,
+];
+const originalRandom = Math.random;
+Math.random = () => 0;
+try {
+    assert.equal(
+        selectTargetModule([internalTarget, exteriorTarget], () => ({
+            ship: { modules: targetLayout, gridSize: 5 },
+            crew: [],
+        }))?.id,
+        exteriorTarget.id,
+    );
+} finally {
+    Math.random = originalRandom;
+}
+
 console.log("ship layout checks passed");

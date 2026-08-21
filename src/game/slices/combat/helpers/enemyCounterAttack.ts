@@ -13,6 +13,10 @@ import { getTotalEvasion } from "@/game/slices/ship/helpers/getTotalEvasion";
 import { shouldPhaseShieldAbsorb } from "@/game/research/specialAbilities";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers/mergeEffects";
 import { isModuleActive } from "@/game/modules/utils";
+import {
+    analyzeShipLayout,
+    getExteriorTargetPriorityBonus,
+} from "@/game/modules/shipLayout";
 import { applyModuleDamage } from "./moduleDamage";
 import { getBossAttackModifiers, processBossRegeneration } from "./bossAbilities";
 import {
@@ -563,15 +567,21 @@ function cleanupAfterEnemyAttack(
 /**
  * Selects target module by priority
  */
-function selectTargetModule(
+export function selectTargetModule(
     activeMods: Module[],
     get: () => GameStore,
 ): Module | null {
     if (activeMods.length === 0) return null;
 
+    const state = get();
+    const { exteriorModuleIds } = analyzeShipLayout(
+        state.ship.modules,
+        state.ship.gridSize,
+    );
+
     const getModuleTargetPriority = (m: Module): number => {
         let priority = 0;
-        const crewInModule = get().crew.filter((c) => c.moduleId === m.id);
+        const crewInModule = state.crew.filter((c) => c.moduleId === m.id);
 
         priority = MODULE_TARGET_PRIORITY[m.type] ?? DEFAULT_MODULE_PRIORITY;
 
@@ -583,6 +593,7 @@ function selectTargetModule(
             priority += MODULE_HEALTH_PRIORITY.HIGH_BONUS;
 
         priority += crewInModule.length * MODULE_HEALTH_PRIORITY.LENGTH_BONUS;
+        priority += getExteriorTargetPriorityBonus(m.id, exteriorModuleIds);
         priority += Math.random() * MODULE_HEALTH_PRIORITY.RANDOM_BONUS;
 
         return priority;

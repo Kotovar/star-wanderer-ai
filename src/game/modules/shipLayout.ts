@@ -59,14 +59,14 @@ const findSpine = (modules: ShipLayoutModule[]) => {
     }
 
     const neighbors = new Map<number, number[]>();
-    for (const module of modules) {
+    for (const shipModule of modules) {
         neighbors.set(
-            module.id,
+            shipModule.id,
             modules
                 .filter(
                     (candidate) =>
-                        candidate.id !== module.id &&
-                        areModulesAdjacent(module, candidate),
+                        candidate.id !== shipModule.id &&
+                        areModulesAdjacent(shipModule, candidate),
                 )
                 .map((candidate) => candidate.id)
                 .sort((left, right) => left - right),
@@ -118,10 +118,10 @@ export function analyzeShipLayout(
     const hullModules = modules.filter((module) => module.type !== "weaponShed");
     const occupied = new Map<string, number>();
 
-    for (const module of hullModules) {
-        for (let x = module.x; x < module.x + module.width; x += 1) {
-            for (let y = module.y; y < module.y + module.height; y += 1) {
-                occupied.set(`${x}:${y}`, module.id);
+    for (const shipModule of hullModules) {
+        for (let x = shipModule.x; x < shipModule.x + shipModule.width; x += 1) {
+            for (let y = shipModule.y; y < shipModule.y + shipModule.height; y += 1) {
+                occupied.set(`${x}:${y}`, shipModule.id);
             }
         }
     }
@@ -134,10 +134,10 @@ export function analyzeShipLayout(
         !occupied.has(`${x}:${y}`);
 
     const exteriorModuleIds = new Set<number>();
-    for (const module of hullModules) {
+    for (const shipModule of hullModules) {
         let isExterior = false;
-        for (let x = module.x; x < module.x + module.width && !isExterior; x += 1) {
-            for (let y = module.y; y < module.y + module.height; y += 1) {
+        for (let x = shipModule.x; x < shipModule.x + shipModule.width && !isExterior; x += 1) {
+            for (let y = shipModule.y; y < shipModule.y + shipModule.height; y += 1) {
                 if (
                     isCellOpen(x - 1, y) ||
                     isCellOpen(x + 1, y) ||
@@ -149,7 +149,7 @@ export function analyzeShipLayout(
                 }
             }
         }
-        if (isExterior) exteriorModuleIds.add(module.id);
+        if (isExterior) exteriorModuleIds.add(shipModule.id);
     }
 
     const violations: ShipLayoutViolation[] = [];
@@ -158,33 +158,36 @@ export function analyzeShipLayout(
         violations.push({ key: "missing_spine", code: "missing_spine" });
     }
 
-    for (const module of hullModules) {
+    for (const shipModule of hullModules) {
         let code: ShipLayoutViolationCode | undefined;
 
-        if (module.type === "cockpit") {
-            const hasOpenFront = Array.from({ length: module.width }, (_, offset) =>
-                isCellOpen(module.x + offset, module.y - 1),
+        if (shipModule.type === "cockpit") {
+            const hasOpenFront = Array.from({ length: shipModule.width }, (_, offset) =>
+                isCellOpen(shipModule.x + offset, shipModule.y - 1),
             ).some(Boolean);
             if (!hasOpenFront) code = "cockpit_front_blocked";
-        } else if (ENGINE_MODULE_TYPES.includes(module.type)) {
+        } else if (ENGINE_MODULE_TYPES.includes(shipModule.type)) {
             const hasOpenExhaust = Array.from(
-                { length: module.width },
+                { length: shipModule.width },
                 (_, offset) =>
-                    isCellOpen(module.x + offset, module.y + module.height),
+                    isCellOpen(
+                        shipModule.x + offset,
+                        shipModule.y + shipModule.height,
+                    ),
             ).some(Boolean);
             if (!hasOpenExhaust) code = "engine_exhaust_blocked";
         } else if (
-            module.type === "weaponbay" &&
-            !exteriorModuleIds.has(module.id)
+            shipModule.type === "weaponbay" &&
+            !exteriorModuleIds.has(shipModule.id)
         ) {
             code = "weapon_exposure_blocked";
         }
 
         if (code) {
             violations.push({
-                key: `${code}:${module.id}`,
+                key: `${code}:${shipModule.id}`,
                 code,
-                moduleId: module.id,
+                moduleId: shipModule.id,
             });
         }
     }
