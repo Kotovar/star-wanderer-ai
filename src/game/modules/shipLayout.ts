@@ -2,6 +2,11 @@ import { ENGINE_MODULE_TYPES } from "@/game/constants/modules";
 import type { Module } from "@/game/types";
 import { areModulesAdjacent } from "./adjacency";
 
+export type ShipLayoutModule = Pick<
+    Module,
+    "id" | "type" | "x" | "y" | "width" | "height"
+>;
+
 export const SHIP_EXTERIOR_TARGET_PRIORITY_BONUS = 20;
 
 export type ShipLayoutViolationCode =
@@ -29,7 +34,7 @@ const VIOLATION_PRIORITY: Record<ShipLayoutViolationCode, number> = {
     weapon_exposure_blocked: 3,
 };
 
-const getCenterY = (module: Module) => module.y + module.height / 2;
+const getCenterY = (module: ShipLayoutModule) => module.y + module.height / 2;
 
 const compareIdPaths = (left: number[], right: number[]) => {
     for (let index = 0; index < Math.min(left.length, right.length); index += 1) {
@@ -39,7 +44,7 @@ const compareIdPaths = (left: number[], right: number[]) => {
     return left.length - right.length;
 };
 
-const findSpine = (modules: Module[]) => {
+const findSpine = (modules: ShipLayoutModule[]) => {
     const moduleById = new Map(modules.map((module) => [module.id, module]));
     const cockpits = modules
         .filter((module) => module.type === "cockpit")
@@ -107,7 +112,7 @@ const findSpine = (modules: Module[]) => {
 };
 
 export function analyzeShipLayout(
-    modules: Module[],
+    modules: ShipLayoutModule[],
     gridSize: number,
 ): ShipLayoutAnalysis {
     const hullModules = modules.filter((module) => module.type !== "weaponShed");

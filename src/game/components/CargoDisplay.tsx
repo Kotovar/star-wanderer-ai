@@ -30,11 +30,13 @@ type SectionKey = "weapons" | "modules" | "contracts" | "trade" | "probes" | "ga
 function findFreeGridPosition(
     modules: Module[],
     gridSize: number,
+    moduleType: Module["type"],
     moduleWidth: number,
     moduleHeight: number,
 ): { x: number; y: number } | null {
     const placementModule = {
         id: Number.MIN_SAFE_INTEGER,
+        type: moduleType,
         x: 0,
         y: 0,
         width: moduleWidth,
@@ -530,6 +532,7 @@ export function CargoDisplay() {
                                     const freePos = findFreeGridPosition(
                                         ship.modules,
                                         ship.gridSize,
+                                        c.module?.moduleType ?? "reactor",
                                         mw,
                                         mh,
                                     );

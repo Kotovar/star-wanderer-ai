@@ -180,4 +180,82 @@ assert.equal(
     "weapon_exposure_blocked:41",
 );
 
+const { getModulePlacementResult } = await import(
+    "../src/game/slices/ship/helpers/canPlaceModule.ts"
+);
+
+const stateWith = (modules, gridSize = 5) => ({ ship: { modules, gridSize } });
+
+const legacy = [
+    moduleAt(101, "cockpit", 1, 1),
+    moduleAt(102, "reactor", 1, 2),
+    moduleAt(103, "engine", 3, 1),
+    moduleAt(104, "cargo", 2, 1),
+];
+assert.equal(
+    getModulePlacementResult(legacy[1], 2, 2, stateWith(legacy)).allowed,
+    true,
+    "an existing missing_spine violation may remain",
+);
+
+assert.equal(
+    getModulePlacementResult(valid[4], 5, 1, stateWith(valid)).reason,
+    "out_of_bounds",
+);
+assert.equal(
+    getModulePlacementResult(valid[4], 2, 1, stateWith(valid)).reason,
+    "overlap",
+);
+assert.equal(
+    getModulePlacementResult(valid[4], 0, 4, stateWith(valid)).reason,
+    "disconnected",
+);
+assert.equal(
+    getModulePlacementResult(valid[4], 2, 4, stateWith(valid)).reason,
+    "engine_exhaust_blocked",
+);
+
+const legacyRing = [
+    moduleAt(110, "cockpit", 0, 0),
+    moduleAt(111, "reactor", 1, 0),
+    moduleAt(112, "engine", 2, 0),
+    moduleAt(113, "cargo", 2, 1),
+    moduleAt(114, "cargo", 1, 1),
+    moduleAt(115, "cargo", 3, 1),
+    moduleAt(116, "cargo", 1, 2),
+    moduleAt(117, "cargo", 3, 2),
+    moduleAt(118, "cargo", 1, 3),
+    moduleAt(119, "cargo", 2, 3),
+    moduleAt(120, "cargo", 3, 3),
+    moduleAt(121, "weaponbay", 4, 2),
+];
+assert.equal(
+    getModulePlacementResult(
+        legacyRing.at(-1),
+        2,
+        2,
+        stateWith(legacyRing),
+    ).reason,
+    "weapon_exposure_blocked",
+);
+
+const validWithAlternateRoute = [
+    moduleAt(130, "cockpit", 2, 0),
+    moduleAt(131, "cargo", 1, 0),
+    moduleAt(132, "reactor", 1, 1),
+    moduleAt(133, "cargo", 2, 1),
+    moduleAt(134, "cargo", 2, 2),
+    moduleAt(135, "engine", 2, 3),
+];
+assert.equal(
+    getModulePlacementResult(
+        validWithAlternateRoute[2],
+        0,
+        0,
+        stateWith(validWithAlternateRoute),
+    ).reason,
+    "missing_spine",
+    "a fixed spine violation cannot be reintroduced",
+);
+
 console.log("ship layout checks passed");

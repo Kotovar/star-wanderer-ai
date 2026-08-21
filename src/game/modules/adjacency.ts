@@ -1,12 +1,17 @@
 import type { Module } from "@/game/types";
 
+type AdjacentModule = Pick<Module, "x" | "y" | "width" | "height">;
+
 /**
  * Проверяет, соседствуют ли два модуля (имеют общую грань, не только угол)
  * @param mod1 - Первый модуль
  * @param mod2 - Второй модуль
  * @returns true если модули соседствуют
  */
-export const areModulesAdjacent = (mod1: Module, mod2: Module): boolean => {
+export const areModulesAdjacent = (
+    mod1: AdjacentModule,
+    mod2: AdjacentModule,
+): boolean => {
     // Проверка горизонтального соседства (рядом по X)
     if (mod1.y < mod2.y + mod2.height && mod1.y + mod1.height > mod2.y) {
         // mod1 слева от mod2

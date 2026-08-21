@@ -1,10 +1,31 @@
 import type { Module, GameState } from "@/game/types";
-import { areAllModulesConnected } from "@/game/modules";
+import {
+    analyzeShipLayout,
+    areAllModulesConnected,
+    getFirstNewShipLayoutViolation,
+    type ShipLayoutViolation,
+    type ShipLayoutViolationCode,
+} from "@/game/modules";
 
-type ModulePlacement = Pick<Module, "id" | "x" | "y" | "width" | "height">;
-type PlacementState = {
+type ModulePlacement = Pick<
+    Module,
+    "id" | "type" | "x" | "y" | "width" | "height"
+>;
+export type PlacementState = {
     ship: Pick<GameState["ship"], "gridSize" | "modules">;
 };
+
+export type ModulePlacementFailureCode =
+    | "out_of_bounds"
+    | "overlap"
+    | "disconnected"
+    | ShipLayoutViolationCode;
+
+export interface ModulePlacementResult {
+    allowed: boolean;
+    reason?: ModulePlacementFailureCode;
+    violation?: ShipLayoutViolation;
+}
 
 /**
  * Проверяет, можно ли разместить модуль на указанных координатах
@@ -15,12 +36,12 @@ type PlacementState = {
  * @param state - Текущее состояние игры
  * @returns true если размещение возможно
  */
-export const canPlaceModule = (
+export const getModulePlacementResult = (
     module: ModulePlacement,
     x: number,
     y: number,
     state: PlacementState,
-): boolean => {
+): ModulePlacementResult => {
     // Check grid bounds
     if (
         x < 0 ||
@@ -28,7 +49,7 @@ export const canPlaceModule = (
         x + module.width > state.ship.gridSize ||
         y + module.height > state.ship.gridSize
     ) {
-        return false;
+        return { allowed: false, reason: "out_of_bounds" };
     }
 
     // Check collision with other modules
@@ -42,14 +63,11 @@ export const canPlaceModule = (
                 y >= other.y + other.height
             )
         ) {
-            return false;
+            return { allowed: false, reason: "overlap" };
         }
     }
 
     const isExistingModule = state.ship.modules.some((m) => m.id === module.id);
-
-    // Moving the only module cannot disconnect the ship.
-    if (isExistingModule && state.ship.modules.length === 1) return true;
 
     const positionedModule = { ...module, x, y };
     const tempModules = isExistingModule
@@ -58,5 +76,25 @@ export const canPlaceModule = (
           )
         : [...state.ship.modules, positionedModule];
 
-    return areAllModulesConnected(tempModules);
+    if (!areAllModulesConnected(tempModules)) {
+        return { allowed: false, reason: "disconnected" };
+    }
+
+    const current = analyzeShipLayout(
+        state.ship.modules,
+        state.ship.gridSize,
+    );
+    const prospective = analyzeShipLayout(tempModules, state.ship.gridSize);
+    const violation = getFirstNewShipLayoutViolation(current, prospective);
+
+    return violation
+        ? { allowed: false, reason: violation.code, violation }
+        : { allowed: true };
 };
+
+export const canPlaceModule = (
+    module: ModulePlacement,
+    x: number,
+    y: number,
+    state: PlacementState,
+): boolean => getModulePlacementResult(module, x, y, state).allowed;

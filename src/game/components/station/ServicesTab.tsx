@@ -924,6 +924,7 @@ function InstallModuleSection({
         const height = module.height ?? 2;
         const placementModule = {
             id: Number.MIN_SAFE_INTEGER,
+            type: module.moduleType ?? "reactor",
             x: 0,
             y: 0,
             width,

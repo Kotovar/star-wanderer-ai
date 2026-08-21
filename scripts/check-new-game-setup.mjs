@@ -17,6 +17,11 @@ import {
   FUEL_PRICE_PER_UNIT,
   REPAIR_CONFIG,
 } from "../src/game/slices/services/constants.ts";
+import "./register-ts-loader.mjs";
+
+const { analyzeShipLayout } = await import(
+  "../src/game/modules/shipLayout.ts"
+);
 
 const modifiersById = Object.fromEntries(
   LAUNCH_MODIFIERS.map((modifier) => [modifier.id, modifier]),
@@ -58,6 +63,13 @@ for (const template of SHIP_TEMPLATES) {
   assert.ok(template.modules.some((module) => module.type === "fueltank"));
 
   const gridSize = template.gridSize ?? 5;
+  if (process.env.NODE_ENV === "production") {
+    assert.deepEqual(
+      analyzeShipLayout(template.modules, gridSize).violations,
+      [],
+      `${template.id} must start with a valid directional hull`,
+    );
+  }
   const occupiedCells = new Set();
   for (const shipModule of template.modules) {
     for (let x = shipModule.x; x < shipModule.x + shipModule.width; x += 1) {
