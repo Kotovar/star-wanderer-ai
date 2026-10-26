@@ -8,6 +8,7 @@
     "start": "NODE_ENV=production node .next/standalone/server.js 2>&1 | tee server.log",
     "lint": "eslint",
     "type-check": "tsc --noEmit --pretty false",
+    "check:all": "node scripts/run-checks.mjs",
     "audio:import": "node --no-warnings scripts/import-audio.mjs",
     "check:log-placeholders": "node --no-warnings scripts/check-log-placeholders.mjs",
     "check:game-log": "node --no-warnings scripts/check-game-log.mjs",
