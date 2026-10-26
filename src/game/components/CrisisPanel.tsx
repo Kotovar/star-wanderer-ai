@@ -111,10 +111,10 @@ export function CrisisPanel() {
           </div>
         </div>
         <Button
-          onClick={state.showSectorMap}
+          onClick={state.closePanel}
           className="cursor-pointer border border-[#00ff41] bg-transparent text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
         >
-          {t("common.back_to_map")}
+          {t("common.back")}
         </Button>
       </div>
 

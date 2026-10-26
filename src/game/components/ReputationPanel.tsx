@@ -26,7 +26,7 @@ const ALL_RACE_IDS = Object.keys(RACES) as RaceId[];
 export function ReputationPanel() {
     const raceReputation = useGameStore((s) => s.raceReputation);
     const knownRaces = useGameStore((s) => s.knownRaces);
-    const showSectorMap = useGameStore((s) => s.showSectorMap);
+    const closePanel = useGameStore((s) => s.closePanel);
     const { t } = useTranslation();
     const [expandedRaceId, setExpandedRaceId] = useState<RaceId | null>(null);
 
@@ -40,10 +40,10 @@ export function ReputationPanel() {
                     <span>{t("reputation.title")}</span>
                 </h3>
                 <Button
-                    onClick={showSectorMap}
+                    onClick={closePanel}
                     className="shrink-0 cursor-pointer border border-[#00ff41] bg-transparent text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
                 >
-                    {t("common.back_to_map")}
+                    {t("common.back")}
                 </Button>
             </div>
 

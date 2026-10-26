@@ -1,8 +1,8 @@
-import type { GameMode } from "@/game/types";
+import type { GameMode, GameState } from "@/game/types";
 
 type GameModeObj = Record<string, Record<string, GameMode>>;
 
-export const GAME_MODES: GameModeObj = {
+export const GAME_MODES = {
     /** Навигация (карты) */
     NAVIGATION: {
         GALAXY_MAP: "galaxy_map",
@@ -36,7 +36,7 @@ export const GAME_MODES: GameModeObj = {
         ENEMY_CODEX: "enemy_codex",
         REPUTATION: "reputation",
     },
-};
+} as const satisfies GameModeObj;
 
 /**
  * Режимы для навигации (основные)
@@ -46,7 +46,7 @@ export const DEFAULT_NAVIGATION_MODE = GAME_MODES.NAVIGATION.GALAXY_MAP;
 /**
  * Панели, закрывающиеся в режим навигации
  */
-export const PANELS_RETURNING_TO_NAVIGATION = [
+export const PANELS_RETURNING_TO_NAVIGATION: readonly GameMode[] = [
     GAME_MODES.MANAGEMENT.ASSIGNMENTS,
     GAME_MODES.MANAGEMENT.ARTIFACTS,
     GAME_MODES.MANAGEMENT.EFFECTS,
@@ -55,14 +55,21 @@ export const PANELS_RETURNING_TO_NAVIGATION = [
     GAME_MODES.MANAGEMENT.CRISES,
     GAME_MODES.MANAGEMENT.ENEMY_CODEX,
     GAME_MODES.MANAGEMENT.REPUTATION,
-] as const;
+];
 
 /**
- * Режим после закрытия панели или перехода на карту. Бой прерывается только
- * игровым исходом (победа, отступление, поражение), а не навигацией по UI.
+ * UI не завершает бой, экспедицию или погружение: их экран сохраняется
+ * до игрового исхода или явного завершения действия.
  */
 export const resolveReturnMode = (
-    state: { currentCombat: unknown; previousGameMode: GameMode | null },
+    state: Pick<GameState, "currentCombat" | "activeExpedition" | "activeDive" | "previousGameMode">,
     fallback: GameMode = DEFAULT_NAVIGATION_MODE,
-): GameMode =>
-    state.currentCombat ? GAME_MODES.COMBAT.COMBAT : state.previousGameMode || fallback;
+): GameMode => {
+    if (state.currentCombat) return GAME_MODES.COMBAT.COMBAT;
+    if (state.activeExpedition) return GAME_MODES.LOCATIONS.PLANET;
+    if (state.activeDive) return "gas_giant";
+    const previous = state.previousGameMode;
+    return previous && previous !== "combat" && !PANELS_RETURNING_TO_NAVIGATION.includes(previous)
+        ? previous
+        : fallback;
+};

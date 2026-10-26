@@ -18,6 +18,7 @@ import type {
 } from "@/game/types";
 import { RACES } from "@/game/constants";
 import { mineAsteroid } from "./helpers";
+import { approachUnknownLocation } from "./helpers/approachUnknownLocation";
 import { handleStormEntry } from "./helpers/enterStorm";
 import { handleAnomaly as handleAnomalyHelper } from "./helpers";
 import { sendScoutingMission as sendScoutingMissionHelper } from "./helpers";
@@ -62,6 +63,7 @@ import { claimPreSpacefaringYield as claimPreSpacefaringYieldHelper } from "./he
  * Содержит методы для обработки действий в локациях
  */
 export interface LocationsSlice {
+    approachUnknownLocation: () => void;
     /**
      * Добывает ресурсы из астероида
      */
@@ -217,6 +219,7 @@ export const createLocationsSlice = (
     set: SetState,
     get: () => GameStore,
 ): LocationsSlice => ({
+    approachUnknownLocation: () => approachUnknownLocation(set, get),
     mineAsteroid: () => {
         mineAsteroid(set, get);
     },

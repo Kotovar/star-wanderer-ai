@@ -4,18 +4,13 @@ import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { ShipStatsPanel } from "./ShipStatsPanel";
-import { getRaceReputationLevel } from "@/game/reputation/utils";
-import { addEnemyCodexEntry, getEnemyCodexId } from "@/game/constants/enemyCodex";
-import type { Location, RaceId } from "@/game/types";
 import { getLocationName } from "@/lib/translationHelpers";
 
 export function UnknownShipPanel() {
     const { t } = useTranslation();
     const currentLocation = useGameStore((s) => s.currentLocation);
-    const currentSector = useGameStore((s) => s.currentSector);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
-    const startCombat = useGameStore((s) => s.startCombat);
-    const startBossCombat = useGameStore((s) => s.startBossCombat);
+    const approachUnknownLocation = useGameStore((s) => s.approachUnknownLocation);
     const canScanObject = useGameStore((s) => s.canScanObject);
 
     if (!currentLocation) return null;
@@ -26,66 +21,6 @@ export function UnknownShipPanel() {
         currentLocation.threat ?? currentLocation.anomalyTier,
     );
     const isRevealed = canScan || !!currentLocation.signalRevealed;
-
-    const handleApproach = () => {
-        // Mark location as revealed - we discovered what it is by approaching
-        const revealedLocation = {
-            ...currentLocation,
-            signalRevealed: true, // Always reveal after approaching (we now know what it is)
-        };
-
-        // Update the location in the current sector
-        if (currentSector) {
-            useGameStore.setState((s) => {
-                const updatedSector = s.currentSector
-                    ? {
-                          ...s.currentSector,
-                          locations: s.currentSector.locations.map((l: Location) =>
-                              l.id === currentLocation.id
-                                  ? revealedLocation
-                                  : l,
-                          ),
-                      }
-                    : null;
-                return {
-                    currentLocation: revealedLocation,
-                    currentSector: updatedSector,
-                    discoveredEnemyCodexIds:
-                        currentLocation.type === "space_monster"
-                            ? addEnemyCodexEntry(
-                                  s.discoveredEnemyCodexIds,
-                                  getEnemyCodexId(currentLocation),
-                              )
-                            : s.discoveredEnemyCodexIds,
-                };
-            });
-        }
-
-        // Now we discover what it actually is
-        if (currentLocation.type === "enemy") {
-            // If no scanner, this is an ambush - enemy attacks first
-            startCombat(currentLocation, !canScan);
-        } else if (currentLocation.type === "boss") {
-            startBossCombat(currentLocation);
-        } else if (currentLocation.type === "friendly_ship") {
-            // After revealing, check if the ship belongs to a hostile race
-            const state = useGameStore.getState();
-            const shipRace = currentLocation.dominantRace as RaceId | undefined;
-            if (shipRace && getRaceReputationLevel(state.raceReputation, shipRace) === "hostile") {
-                useGameStore.setState({ gameMode: "hostile_approach_warning" });
-            } else {
-                useGameStore.setState({ gameMode: "friendly_ship" });
-            }
-        } else if (currentLocation.type === "anomaly") {
-            useGameStore.setState({ gameMode: "anomaly" });
-        } else if (currentLocation.type === "storm") {
-            useGameStore.setState({ gameMode: "storm" });
-        } else if (currentLocation.type === "derelict_ship") {
-            useGameStore.setState({ gameMode: "derelict_ship" });
-        } else if (currentLocation.type === "space_monster") {
-            useGameStore.setState({ gameMode: "space_monster" });
-        }
-    };
 
     // Get appropriate title and description
     const getTitle = () => {
@@ -159,7 +94,7 @@ export function UnknownShipPanel() {
 
             <div className="flex gap-4">
                 <Button
-                    onClick={handleApproach}
+                    onClick={approachUnknownLocation}
                     className="flex-1 bg-[#ff4444] hover:bg-[#ff6666] text-white font-bold cursor-pointer"
                 >
                     {t("unknown_ship.approach")}
