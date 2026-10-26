@@ -60,3 +60,22 @@ cd star-wanderer-ai
 npm install
 npm run dev
 ```
+
+Проверки (Node.js 24; для аудио нужны `ffmpeg` и `ffprobe`):
+
+```bash
+npm run type-check
+npm run lint
+npm run build
+npm run check:all
+```
+
+`check:all` находит все `scripts/check-*.mjs`, запускает до четырёх
+параллельно и выводит сводку с первой строкой каждой ошибки. Проверка
+стартовых шаблонов выполняется в development и production, остальные —
+в production. При падении любой проверки команда завершается с кодом 1.
+В GitHub Actions эти проверки запускаются при push и pull request;
+перед `check:all` выполняется сборка. Известные падения перечислены
+в [плане улучшений](docs/IMPROVEMENT_PLAN.md), пункт 1.2: в частности,
+три проверки ленивой загрузки ожидают статистику, которую текущая
+сборка не создаёт.

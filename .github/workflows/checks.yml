@@ -1,0 +1,30 @@
+name: Checks
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        script: [type-check, lint, "check:all"]
+    name: ${{ matrix.script }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install audio tools
+        if: matrix.script == 'check:all'
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Build for bundle checks
+        if: matrix.script == 'check:all'
+        run: npm run build
+      - run: npm run ${{ matrix.script }}
