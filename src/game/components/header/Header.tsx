@@ -49,7 +49,7 @@ export function GameHeader() {
   const showReputation = useGameStore((s) => s.showReputation);
   const showCrises = useGameStore((s) => s.showCrises);
   const showEnemyCodex = useGameStore((s) => s.showEnemyCodex);
-  const showSectorMap = useGameStore((s) => s.showSectorMap);
+  const closePanel = useGameStore((s) => s.closePanel);
   const gameMode = useGameStore((s) => s.gameMode);
   const { t } = useTranslation();
 
@@ -92,7 +92,7 @@ export function GameHeader() {
 
   const handleArtifactsClick = () => {
     if (gameMode === "artifacts") {
-      showSectorMap();
+      closePanel();
     } else {
       showArtifacts();
     }
@@ -108,7 +108,7 @@ export function GameHeader() {
 
   const handleEffectsClick = () => {
     if (gameMode === "effects") {
-      showSectorMap();
+      closePanel();
     } else {
       showEffects();
     }
@@ -116,7 +116,7 @@ export function GameHeader() {
 
   const handleEnemyCodexClick = () => {
     if (gameMode === "enemy_codex") {
-      showSectorMap();
+      closePanel();
     } else {
       showEnemyCodex();
     }
@@ -302,7 +302,7 @@ export function GameHeader() {
             <button
               onClick={() => {
                 if (gameMode === "reputation") {
-                  showSectorMap();
+                  closePanel();
                 } else {
                   showReputation();
                 }
@@ -318,7 +318,7 @@ export function GameHeader() {
             <button
               onClick={() => {
                 if (gameMode === "crises") {
-                  showSectorMap();
+                  closePanel();
                 } else {
                   showCrises();
                 }

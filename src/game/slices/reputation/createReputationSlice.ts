@@ -17,7 +17,6 @@ import {
     TRANSLATOR_HIRE_COST,
 } from "@/game/reputation/diplomacy";
 import { isRaceAgreementActive } from "@/game/reputation/agreements";
-import { resolveReturnMode } from "@/game/slices/ui/constants";
 
 export const createReputationSlice = (
     set: (fn: (s: GameState) => void) => void,
@@ -240,24 +239,8 @@ export const createReputationSlice = (
         );
     },
 
-    showReputation: () => {
-        const previousMode = get().gameMode;
-        if (previousMode !== "reputation" && previousMode !== "artifacts") {
-            get().savePreviousGameMode();
-        }
-        set((state) => {
-            state.gameMode = "reputation";
-            return state;
-        });
-    },
-
-    closeReputationPanel: () => {
-        set((state) => {
-            state.gameMode = resolveReturnMode(state);
-            state.previousGameMode = null;
-            return state;
-        });
-    },
+    showReputation: () => get().openPanel("reputation"),
+    closeReputationPanel: () => get().closePanel(),
 });
 
 /**

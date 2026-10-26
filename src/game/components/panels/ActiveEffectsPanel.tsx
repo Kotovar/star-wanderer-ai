@@ -45,7 +45,7 @@ export function ActiveEffectsPanel() {
   const [filter, setFilter] = useState<EffectFilter>("all");
   const activeEffects = useGameStore((state) => state.activeEffects);
   const researchedTechs = useGameStore((state) => state.research.researchedTechs);
-  const showSectorMap = useGameStore((state) => state.showSectorMap);
+  const closePanel = useGameStore((state) => state.closePanel);
   const { t, currentLanguage } = useTranslation();
   const permanentTechs = researchedTechs
     .map((techId) => RESEARCH_TREE[techId])
@@ -84,10 +84,10 @@ export function ActiveEffectsPanel() {
           </div>
         </div>
         <Button
-          onClick={showSectorMap}
+          onClick={closePanel}
           className="shrink-0 cursor-pointer border border-[#00ff41] bg-transparent text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
         >
-          {t("common.back_to_map")}
+          {t("common.back")}
         </Button>
       </div>
 

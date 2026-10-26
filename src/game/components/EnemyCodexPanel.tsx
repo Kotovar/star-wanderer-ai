@@ -377,7 +377,7 @@ export function EnemyCodexPanel() {
   const discoveredWeaponTypes = useGameStore(
     (s) => s.discoveredWeaponTypes ?? [],
   );
-  const showSectorMap = useGameStore((s) => s.showSectorMap);
+  const closePanel = useGameStore((s) => s.closePanel);
   const { t } = useTranslation();
   const [combatPreview, setCombatPreview] = useState<CombatPreview | null>(
     null,
@@ -515,10 +515,10 @@ export function EnemyCodexPanel() {
           </div>
         </div>
         <Button
-          onClick={showSectorMap}
+          onClick={closePanel}
           className="cursor-pointer border border-[#00ff41] bg-transparent text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
         >
-          {t("common.back_to_map")}
+          {t("common.back")}
         </Button>
       </div>
 

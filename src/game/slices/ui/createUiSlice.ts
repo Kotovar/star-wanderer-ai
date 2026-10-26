@@ -1,188 +1,73 @@
-import type { SetState } from "@/game/types";
+import type { PanelMode, SetState } from "@/game/types";
 import {
     GAME_MODES,
     PANELS_RETURNING_TO_NAVIGATION,
     resolveReturnMode,
 } from "./constants";
 
-/**
- * Интерфейс UiSlice
- */
 export interface UiSlice {
-    /** Показать карту галактики */
+    openPanel: (mode: PanelMode) => void;
+    closePanel: () => void;
     showGalaxyMap: () => void;
-    /** Показать карту сектора */
     showSectorMap: () => void;
-    /** Показать экран назначений экипажа */
     showAssignments: () => void;
-    /** Закрыть экран назначений экипажа */
     closeAssignments: () => void;
-    /** Показать экран кризисов */
     showCrises: () => void;
-    /** Показать каталог врагов */
     showEnemyCodex: () => void;
-    /** Показать активные эффекты */
     showEffects: () => void;
-    /** Показать панель артефактов */
     showArtifacts: () => void;
-    /** Показать панель исследований */
     showResearch: () => void;
-    /** Показать навигатор известных объектов */
     showNavigator: () => void;
-    /** Закрыть панель артефактов */
     closeArtifactsPanel: () => void;
-    /** Закрыть панель исследований */
     closeResearchPanel: () => void;
-    /** Закрыть навигатор известных объектов */
     closeNavigator: () => void;
-    /** Сохранить текущий режим игры (для возврата из модальных окон) */
-    savePreviousGameMode: () => void;
 }
 
-/**
- * Создаёт ui слайс для управления игровыми режимами и UI-панелями
- */
-export const createUiSlice = (set: SetState): UiSlice => ({
-    showGalaxyMap: () =>
-        set((state) => {
-            // Сохраняем текущий зум и offset сектора перед переключением
-            const sectorZoom = state.sectorZoom ?? 1;
-            const sectorOffset = state.sectorOffset ?? { x: 0, y: 0 };
-            // Восстанавливаем зум и offset галактики (или используем значения по умолчанию)
-            const galaxyZoom = state.galaxyZoom ?? 1;
-            const galaxyOffset = state.galaxyOffset ?? { x: 0, y: 0 };
-            return {
-                galaxyZoom,
-                galaxyOffset,
-                sectorZoom,
-                sectorOffset,
-                gameMode: state.currentCombat
-                    ? GAME_MODES.COMBAT.COMBAT
-                    : GAME_MODES.NAVIGATION.GALAXY_MAP,
-            };
-        }),
-
-    showSectorMap: () =>
-        set((state) => {
-            // Сохраняем текущий зум и offset галактики перед переключением
-            const galaxyZoom = state.galaxyZoom ?? 1;
-            const galaxyOffset = state.galaxyOffset ?? { x: 0, y: 0 };
-            // Восстанавливаем зум и offset сектора (или используем значения по умолчанию)
-            const sectorZoom = state.sectorZoom ?? 1;
-            const sectorOffset = state.sectorOffset ?? { x: 0, y: 0 };
-            return {
-                galaxyZoom,
-                galaxyOffset,
-                sectorZoom,
-                sectorOffset,
-                gameMode: state.currentCombat
-                    ? GAME_MODES.COMBAT.COMBAT
-                    : GAME_MODES.NAVIGATION.SECTOR_MAP,
-            };
-        }),
-
-    showAssignments: () =>
+export const createUiSlice = (set: SetState): UiSlice => {
+    const openPanel = (mode: PanelMode) =>
         set((state) => ({
-            previousGameMode: PANELS_RETURNING_TO_NAVIGATION.includes(
-                state.gameMode as (typeof PANELS_RETURNING_TO_NAVIGATION)[number],
-            )
+            previousGameMode: PANELS_RETURNING_TO_NAVIGATION.includes(state.gameMode)
                 ? state.previousGameMode
                 : state.gameMode,
-            gameMode: GAME_MODES.MANAGEMENT.ASSIGNMENTS,
-        })),
+            gameMode: mode,
+        }));
 
-    closeAssignments: () =>
+    const closePanel = () =>
         set((state) => ({
             gameMode: resolveReturnMode(state),
             previousGameMode: null,
-        })),
+        }));
 
-    showCrises: () =>
+    const showMap = (mode: "galaxy_map" | "sector_map") =>
         set((state) => ({
-            previousGameMode: PANELS_RETURNING_TO_NAVIGATION.includes(
-                state.gameMode as (typeof PANELS_RETURNING_TO_NAVIGATION)[number],
-            )
-                ? state.previousGameMode
-                : state.gameMode,
-            gameMode: GAME_MODES.MANAGEMENT.CRISES,
-        })),
-
-    showEnemyCodex: () =>
-        set((state) => ({
-            previousGameMode: PANELS_RETURNING_TO_NAVIGATION.includes(
-                state.gameMode as (typeof PANELS_RETURNING_TO_NAVIGATION)[number],
-            )
-                ? state.previousGameMode
-                : state.gameMode,
-            gameMode: GAME_MODES.MANAGEMENT.ENEMY_CODEX,
-        })),
-
-    showEffects: () =>
-        set((state) => ({
-            previousGameMode: PANELS_RETURNING_TO_NAVIGATION.includes(
-                state.gameMode as (typeof PANELS_RETURNING_TO_NAVIGATION)[number],
-            )
-                ? state.previousGameMode
-                : state.gameMode,
-            gameMode: GAME_MODES.MANAGEMENT.EFFECTS,
-        })),
-
-    showArtifacts: () =>
-        set((state) => ({
-            // Не перезаписываем previousGameMode если уже в панели
-            previousGameMode: PANELS_RETURNING_TO_NAVIGATION.includes(
-                state.gameMode as (typeof PANELS_RETURNING_TO_NAVIGATION)[number],
-            )
-                ? state.previousGameMode
-                : state.gameMode,
-            gameMode: GAME_MODES.MANAGEMENT.ARTIFACTS,
-        })),
-
-    showResearch: () =>
-        set((state) => ({
-            // Не перезаписываем previousGameMode если уже в панели
-            previousGameMode: PANELS_RETURNING_TO_NAVIGATION.includes(
-                state.gameMode as (typeof PANELS_RETURNING_TO_NAVIGATION)[number],
-            )
-                ? state.previousGameMode
-                : state.gameMode,
-            gameMode: GAME_MODES.MANAGEMENT.RESEARCH,
-        })),
-
-    showNavigator: () =>
-        set((state) => ({
-            previousGameMode: PANELS_RETURNING_TO_NAVIGATION.includes(
-                state.gameMode as (typeof PANELS_RETURNING_TO_NAVIGATION)[number],
-            )
-                ? state.previousGameMode
-                : state.gameMode,
-            gameMode: GAME_MODES.MANAGEMENT.NAVIGATOR,
-        })),
-
-    closeArtifactsPanel: () =>
-        set((state) => ({
-            gameMode: resolveReturnMode(state),
+            galaxyZoom: state.galaxyZoom ?? 1,
+            galaxyOffset: state.galaxyOffset ?? { x: 0, y: 0 },
+            sectorZoom: state.sectorZoom ?? 1,
+            sectorOffset: state.sectorOffset ?? { x: 0, y: 0 },
+            gameMode: resolveReturnMode({
+                currentCombat: state.currentCombat,
+                activeExpedition: state.activeExpedition,
+                activeDive: state.activeDive,
+                previousGameMode: null,
+            }, mode),
             previousGameMode: null,
-        })),
+        }));
 
-    closeResearchPanel: () =>
-        set((state) => ({
-            gameMode: resolveReturnMode(state),
-            previousGameMode: null,
-        })),
-
-    closeNavigator: () =>
-        set((state) => ({
-            gameMode: resolveReturnMode(state),
-            previousGameMode: null,
-        })),
-
-    savePreviousGameMode: () =>
-        set((state) => ({
-            previousGameMode: PANELS_RETURNING_TO_NAVIGATION.includes(
-                state.gameMode,
-            )
-                ? state.previousGameMode
-                : state.gameMode,
-        })),
-});
+    return {
+        openPanel,
+        closePanel,
+        showGalaxyMap: () => showMap(GAME_MODES.NAVIGATION.GALAXY_MAP),
+        showSectorMap: () => showMap(GAME_MODES.NAVIGATION.SECTOR_MAP),
+        showAssignments: () => openPanel(GAME_MODES.MANAGEMENT.ASSIGNMENTS),
+        showCrises: () => openPanel(GAME_MODES.MANAGEMENT.CRISES),
+        showEnemyCodex: () => openPanel(GAME_MODES.MANAGEMENT.ENEMY_CODEX),
+        showEffects: () => openPanel(GAME_MODES.MANAGEMENT.EFFECTS),
+        showArtifacts: () => openPanel(GAME_MODES.MANAGEMENT.ARTIFACTS),
+        showResearch: () => openPanel(GAME_MODES.MANAGEMENT.RESEARCH),
+        showNavigator: () => openPanel(GAME_MODES.MANAGEMENT.NAVIGATOR),
+        closeAssignments: closePanel,
+        closeArtifactsPanel: closePanel,
+        closeResearchPanel: closePanel,
+        closeNavigator: closePanel,
+    };
+};

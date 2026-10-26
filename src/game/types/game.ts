@@ -56,7 +56,17 @@ import type { GalaxyTierAll, Nebula } from "./locations/galaxy";
 import type { KnownLocationIntel, NavigatorTarget } from "./navigator";
 import type { NavigatorSlice } from "@/game/slices/navigator/createNavigatorSlice";
 
-export type GameMode =
+export type PanelMode =
+  | "assignments"
+  | "artifacts"
+  | "effects"
+  | "research"
+  | "navigator"
+  | "reputation"
+  | "crises"
+  | "enemy_codex";
+
+export type GameMode = PanelMode
   | "galaxy_map"
   | "sector_map"
   | "station"
@@ -64,20 +74,12 @@ export type GameMode =
   | "combat"
   | "friendly_ship"
   | "anomaly"
-  | "assignments"
   | "asteroid_belt"
   | "storm"
   | "distress_signal"
-  | "artifacts"
-  | "effects"
   | "unknown_ship"
   | "battle_results"
   | "storm_results"
-  | "research"
-  | "navigator"
-  | "reputation"
-  | "crises"
-  | "enemy_codex"
   | "derelict_ship"
   | "gas_giant"
   | "wreck_field"
@@ -310,6 +312,7 @@ export interface GameActions {
 }
 
 export interface GameActionsClick {
+  approachUnknownLocation: () => void;
   nextTurn: () => void;
   skipTurn: () => CombatTurnTimeline | null;
   resolveCrisis: (response: CrisisResponse) => void;
@@ -324,6 +327,8 @@ export interface GameActionsClick {
 }
 
 export interface GameModeChanges {
+  openPanel: (mode: PanelMode) => void;
+  closePanel: () => void;
   showGalaxyMap: () => void;
   showSectorMap: () => void;
   showAssignments: () => void;
@@ -335,7 +340,6 @@ export interface GameModeChanges {
   closeResearchPanel: () => void;
   showNavigator: () => void;
   closeNavigator: () => void;
-  savePreviousGameMode: () => void;
 }
 
 export interface GameCombat {
