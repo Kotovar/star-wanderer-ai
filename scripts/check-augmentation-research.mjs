@@ -36,6 +36,9 @@ const { getTaskBonusMultiplier, getTaskEfficiencyPercent } = jiti(
 const { getGunnerAccuracyBonus, getGunnerCritBonus } = jiti(
   "../src/game/crew/combatBonuses.ts",
 );
+const { getCrewLaserDamageBonus } = jiti(
+  "../src/game/slices/combat/helpers/playerDamage.ts",
+);
 
 const augmentationResearch = TIER3_TECHS.cybernetic_augmentation;
 
@@ -189,11 +192,21 @@ assert.match(
   /getDiminishingResearchSpeedBonus\(scientists\)/,
   "research output must apply diminishing returns to memory cores",
 );
-assert.match(
-  source("src/game/slices/combat/helpers/playerAttack.ts"),
-  /laserWeaponBayIds\.has\(crewMember\.moduleId\)/,
-  "prismatic lens must require the wearer to be in a laser weapon bay",
-);
+const lensWearer = { moduleId: 1, health: 100, augmentation: "prismatic_lens" };
+const laserBay = { id: 1, type: "weaponbay", health: 100, weapons: [{ type: "laser" }] };
+assert.equal(getCrewLaserDamageBonus([lensWearer], [laserBay]), 0.05);
+for (const inactiveBay of [
+  { ...laserBay, disabled: true },
+  { ...laserBay, manualDisabled: true },
+  { ...laserBay, health: 0 },
+  { ...laserBay, weapons: [{ type: "kinetic" }] },
+  { ...laserBay, type: "reactor" },
+]) {
+  assert.equal(getCrewLaserDamageBonus([lensWearer], [inactiveBay]), 0);
+}
+assert.equal(getCrewLaserDamageBonus([{ ...lensWearer, moduleId: 2 }], [laserBay]), 0);
+assert.equal(getCrewLaserDamageBonus([{ ...lensWearer, health: 0 }], [laserBay]), 0);
+assert.equal(getCrewLaserDamageBonus([{ ...lensWearer, augmentation: null }], [laserBay]), 0);
 assert.match(
   source("src/game/slices/travel/helpers/selectLocation.ts"),
   /discoveredAugmentationIds/,
