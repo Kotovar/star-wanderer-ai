@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import "./register-ts-loader.mjs";
+
+const { formatContractDescription } = await import(
+  "../src/game/contracts/formatContractDescription.ts"
+);
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const source = (file) => readFileSync(path.join(root, file), "utf8");
@@ -9,9 +14,16 @@ const source = (file) => readFileSync(path.join(root, file), "utf8");
 const planetPanel = source("src/game/components/PlanetPanel.tsx");
 assert.match(
   planetPanel,
-  /t\(c\.desc, \{[\s\S]*?sector: c\.targetSectorName \?\? "",/,
-  "available contract titles must interpolate a target sector",
+  /formatContractDescription\(c, t\)/,
+  "available contract titles use the shared translated description",
 );
+const bountyTitle = JSON.parse(formatContractDescription({
+  type: "bounty",
+  desc: "contracts.desc_bounty",
+  targetSectorName: "Сигма",
+  targetThreat: 2,
+}, (key, params) => JSON.stringify({ key, params })));
+assert.equal(bountyTitle.params.sector, "Сигма", "contract titles interpolate a target sector");
 assert.match(
   planetPanel,
   /· \{getContractDestinationText\(c, t\)\}/,

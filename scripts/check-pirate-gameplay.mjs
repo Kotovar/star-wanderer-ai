@@ -1065,10 +1065,16 @@ assert.deepEqual(
   "ассортимент склада обязан быть стабильным между заходами",
 );
 assert.ok(
-  generateStationItems("legal-yard", 2, STATION_CONFIG.trade).some(
+  generateStationItems("legal-yard", 2, STATION_CONFIG.shipyard).some(
     (item) => item.type === "upgrade",
   ),
-  "проверочная сцена: легальная станция апгрейды продавать не перестала",
+  "проверочная сцена: легальная верфь продаёт апгрейды",
+);
+assert.ok(
+  generateStationItems("legal-trade", 2, STATION_CONFIG.trade).every(
+    (item) => item.type !== "upgrade",
+  ),
+  "торговая станция не подменяет услуги верфи",
 );
 
 const { createShopSlice } = await import(

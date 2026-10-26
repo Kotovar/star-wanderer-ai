@@ -648,11 +648,13 @@ assert.match(
   /w-full aspect-\[4\/3\].*sm:aspect-\[16\/9\]/,
   "the persistent stage has a full-width mobile frame and a wider desktop frame",
 );
-assert.match(
-  combatPanelSource,
-  /flex gap-2\.5 flex-col sm:flex-row/,
-  "combat actions stack on mobile and align on desktop",
-);
+const actionClasses = combatPanelSource.match(
+  /className="([^"]+)"\s*>\s*<Button\s+disabled=\{isPlaybackActive \|\| !hasWeaponBay\}/,
+)?.[1].split(/\s+/);
+assert.ok(actionClasses, "combat actions have a layout container");
+for (const className of ["flex", "flex-col", "gap-2.5", "sm:flex-row"]) {
+  assert.ok(actionClasses.includes(className), `combat actions layout needs ${className}`);
+}
 const combatSceneMarkup = combatPanelSource.slice(
   combatPanelSource.indexOf(
     'return (\n    <div className="flex flex-col gap-4 h-full overflow-y-auto pr-2">',
@@ -674,7 +676,8 @@ assert.match(
   "the summary row height never depends on how much the volley did",
 );
 assert.ok(
-  combatSceneMarkup.indexOf("{/* Attack actions */}") <
+  combatSceneMarkup.indexOf("onClick={handleAttack}") >= 0 &&
+  combatSceneMarkup.indexOf("onClick={handleAttack}") <
     combatSceneMarkup.indexOf("<BossAbilityCard"),
   "boss ability cards do not push primary combat actions below the fold",
 );

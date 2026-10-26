@@ -30,6 +30,10 @@ const { calculateRetreatChance } = jiti(
   "../src/game/slices/combat/helpers/retreat.ts",
 );
 const { getGunnerAccuracyBonus } = jiti("../src/game/crew/combatBonuses.ts");
+const { getTotalDamage } = jiti("../src/game/slices/ship/helpers/getTotalDamage.ts");
+const { calculateFinalDamagePerWeapon, resolveProjectileHullDamage } = jiti(
+  "../src/game/slices/combat/helpers/playerDamage.ts",
+);
 const {
   COMBAT_ACTIONS,
   CREW_ACTIONS,
@@ -81,15 +85,42 @@ assert.equal(
 );
 
 const source = (file) => readFileSync(path.join(root, file), "utf8");
-assert.doesNotMatch(
-  source("src/game/slices/combat/helpers/playerDamage.ts"),
-  /hasOverclock: boolean|hasRapidfire: boolean|hasAnalysis: boolean/,
-  "combat assignment damage must not be applied after getTotalDamage",
-);
-assert.match(
-  source("src/game/slices/ship/helpers/getTotalDamage.ts"),
-  /OVERCLOCK_DAMAGE \+ engineerLevel \* 0\.01/,
-  "overclock damage must be applied once in getTotalDamage",
+const damageState = {
+  ship: { modules: [{ id: 1, type: "weaponbay", health: 100, weapons: [{ type: "laser" }] }] },
+  crew: [],
+  artifacts: [],
+  research: { researchedTechs: [] },
+};
+assert.equal(getTotalDamage(damageState).total, 20);
+for (const [profession, combatAssignment, expected, withGunner] of [
+  ["engineer", "overclock", 23, 26],
+  ["gunner", "rapidfire", 25, 28],
+]) {
+  const assigned = {
+    profession, combatAssignment, moduleId: 1, level: 1, health: 100, race: "human",
+  };
+  const total = getTotalDamage({ ...damageState, crew: [assigned] }).total;
+  assert.equal(total, expected, `${combatAssignment} applies its damage bonus once`);
+  assert.equal(calculateFinalDamagePerWeapon(total, false), total);
+  assert.equal(calculateFinalDamagePerWeapon(total, true), withGunner);
+  assert.equal(getTotalDamage({ ...damageState, crew: [{ ...assigned, health: 0 }] }).total, 20);
+}
+const analysisScientist = {
+  profession: "scientist", combatAssignment: "analysis", moduleId: 2, level: 1, health: 100, race: "human",
+};
+const targetingGunner = {
+  profession: "gunner", combatAssignment: "targeting", moduleId: 1, level: 1, health: 100, race: "human",
+};
+assert.equal(getTotalDamage({ ...damageState, crew: [analysisScientist] }).total, 20);
+const analyzedDamage = getTotalDamage({ ...damageState, crew: [analysisScientist, targetingGunner] }).total;
+assert.equal(analyzedDamage, 22, "analysis requires targeting and applies its damage bonus once");
+assert.equal(calculateFinalDamagePerWeapon(analyzedDamage, true), 25);
+const armorHit = [{ weapon: "laser", outcome: "hull", shieldDamage: 0, hullDamage: 100 }];
+assert.equal(resolveProjectileHullDamage(armorHit, 20, false).totalHullDamage, 80);
+assert.equal(
+  resolveProjectileHullDamage(armorHit, 20, true).totalHullDamage,
+  82,
+  "overclock also reduces target armor by 10%, without multiplying damage again",
 );
 
 const passiveExp = [];
