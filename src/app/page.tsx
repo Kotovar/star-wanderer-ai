@@ -298,6 +298,7 @@ export default function Home() {
   }
   // Во время боя на мобильном принудительно показываем сцену.
   const inCombat = useGameStore((s) => !!s.currentCombat);
+  const inBossCombat = useGameStore((s) => !!s.currentCombat?.enemy.isBoss);
   const showEventStage = mobileShowMap || (isMobile && (inCombat || cinematicTimeline !== null));
 
   // Legacy tab compatibility: if a saved state somehow points to merged tabs,
@@ -331,12 +332,14 @@ export default function Home() {
   }, [audioVolumes, soundEnabled]);
 
   useEffect(() => {
-    if (isTitleSetup || !soundEnabled) {
+    if (!soundEnabled) {
       stopMusic();
       return;
     }
-    startMusic(inCombat ? "combat" : "exploration");
-  }, [inCombat, isTitleSetup, soundEnabled]);
+    startMusic(
+      isTitleSetup ? "title" : inBossCombat ? "boss" : inCombat ? "combat" : "exploration",
+    );
+  }, [inBossCombat, inCombat, isTitleSetup, soundEnabled]);
 
   useEffect(() => () => stopMusic(), []);
 

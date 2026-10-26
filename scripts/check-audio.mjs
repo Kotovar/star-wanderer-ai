@@ -2,15 +2,10 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
-import { SFX_PRESETS } from "../audio/source/sfx/presets.mjs";
-import { SYNTH_SAMPLE_RATE, SYNTH_SOUNDS } from "../audio/source/sfx/combat-synth.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const registryUrl = pathToFileURL(resolve(root, "src/sounds/utils.ts")).href;
-const combatLoopSource = readFileSync(
-  resolve(root, "audio/source/music/space-combat.mjs"),
-  "utf8",
-);
+const manifest = JSON.parse(readFileSync(resolve(root, "audio/source/ai-audio.json"), "utf8"));
 const requiredVariantIds = [
   "combat_kinetic",
   "combat_laser",
@@ -129,46 +124,29 @@ if (!SOUND_REGISTRY || !MUSIC_REGISTRY || !DEFAULT_AUDIO_VOLUMES) {
   fail("SOUND_REGISTRY, MUSIC_REGISTRY, and DEFAULT_AUDIO_VOLUMES must be exported");
 }
 
-for (const id of ["exploration", "combat"]) {
+for (const id of ["title", "exploration", "combat", "boss"]) {
   if (!MUSIC_REGISTRY[id]) fail(id + " must be registered as music");
 }
 
-if (/\bgatedNoise\b/.test(combatLoopSource)) {
-  fail("combat music must not mix gated random noise");
+// Каждый файл в public/audio должен быть описан в манифесте AI Studio, и наоборот.
+const registeredUrls = new Set([
+  ...Object.values(SOUND_REGISTRY).flatMap((sound) => sound.urls),
+  ...Object.values(MUSIC_REGISTRY).map((music) => music.url),
+]);
+const manifestUrls = new Set(manifest.map((entry) => `/audio/${entry.out}`));
+for (const url of registeredUrls) {
+  if (!manifestUrls.has(url)) fail(`${url} has no AI Studio manifest entry`);
+}
+for (const entry of manifest) {
+  if (!registeredUrls.has(`/audio/${entry.out}`)) fail(`${entry.out} is in the manifest but not registered`);
+  if (!entry.prompt || !entry.asset || !Number.isInteger(entry.seed)) {
+    fail(`${entry.out} must keep prompt, asset and seed for provenance`);
+  }
 }
 
 for (const id of requiredVariantIds) {
   const urls = SOUND_REGISTRY[id]?.urls;
   if (!urls || urls.length !== 3) fail(`${id} must expose exactly three variants`);
-}
-
-// Выстрелы больше не пресеты jsfxr: у каждого свой слоёный рендер.
-for (const id of Object.keys(SYNTH_SOUNDS)) {
-  if (SFX_PRESETS[id]) fail(`${id} must be synthesised in combat-synth.mjs, not duplicated as a jsfxr preset`);
-}
-for (const id of ["combat_laser", "combat_kinetic", "combat_enemy_fire"]) {
-  if (SYNTH_SOUNDS[id]?.variants.length !== 3) {
-    fail(`${id} must keep three generated variants`);
-  }
-}
-const laserSource = readFileSync(
-  resolve(root, "audio/source/sfx/combat-synth.mjs"),
-  "utf8",
-);
-const laserSweep = /freq: \[2050 \* pitch, (\d+) \* pitch\]/.exec(laserSource);
-if (!laserSweep || Number(laserSweep[1]) >= 2050) {
-  fail("combat_laser must be a falling discharge, not a rising chirp");
-}
-for (const [id, definition] of Object.entries(SYNTH_SOUNDS)) {
-  for (const [index, renderVariant] of definition.variants.entries()) {
-    const samples = renderVariant();
-    let peak = 0;
-    for (const sample of samples) peak = Math.max(peak, Math.abs(sample));
-    // Кодек добавляет свой овершут: без запаса в исходнике ogg вылезает за
-    // потолок -2 dB, который проверяется ниже уже по файлу.
-    if (peak > 0.55) fail(`${id}-${index + 1} leaves no headroom for the opus encoder (${peak.toFixed(2)})`);
-    if (samples.length < 0.06 * SYNTH_SAMPLE_RATE) fail(`${id}-${index + 1} is shorter than an audible shot`);
-  }
 }
 
 for (const [id, sound] of Object.entries(SOUND_REGISTRY)) {

@@ -116,7 +116,11 @@ assert.equal(
 assert.equal(sources[0].stopTime, 0.2, "the earlier fading loop stops at the new handoff");
 
 const pageSource = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
-assert.match(pageSource, /startMusic\(inCombat \? "combat" : "exploration"\)/);
+assert.match(
+  pageSource,
+  /isTitleSetup \? "title" : inBossCombat \? "boss" : inCombat \? "combat" : "exploration"/,
+  "title, boss, combat and exploration each pick their own loop",
+);
 assert.match(
   pageSource,
   /useEffect\(\(\) => \(\) => stopMusic\(\), \[\]\);/,
@@ -124,7 +128,7 @@ assert.match(
 );
 assert.doesNotMatch(
   pageSource,
-  /startMusic\(inCombat \? "combat" : "exploration"\);\s*return \(\) => stopMusic\(\);/,
+  /"exploration",\s*\);\s*return \(\) => stopMusic\(\);/,
   "selecting music does not cancel its transition",
 );
 

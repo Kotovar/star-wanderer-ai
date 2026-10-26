@@ -1,0 +1,572 @@
+[
+  {
+    "out": "music/space-boss.ogg",
+    "kind": "music",
+    "source": "music/a51e1c62e099d229b3d19d5236feb55e.wav",
+    "asset": "a51e1c62e099d229b3d19d5236feb55e",
+    "model": "stable-audio-3-medium",
+    "seed": 702705903,
+    "durationSeconds": 105,
+    "prompt": "Epic boss battle soundtrack in space, heavy dark cinematic synth, massive distorted bass, pounding taiko and electronic drums, ominous brass-like synth swells, menacing and intense, retro sci-fi, 140 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-combat.ogg",
+    "kind": "music",
+    "source": "music/c06119fbc439eb0848c00ef14c99f2ea.wav",
+    "asset": "c06119fbc439eb0848c00ef14c99f2ea",
+    "model": "stable-audio-3-medium",
+    "seed": 2938340460,
+    "durationSeconds": 105,
+    "prompt": "Tense space battle soundtrack, driving dark synthwave, pulsing bass sequencer, punchy electronic drums, aggressive analog synth stabs, industrial percussion, urgent and energetic, retro sci-fi, 128 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-exploration.ogg",
+    "kind": "music",
+    "source": "music/4c737ed922e93c0faeba448a5bb2ec1f.wav",
+    "asset": "4c737ed922e93c0faeba448a5bb2ec1f",
+    "model": "stable-audio-3-medium",
+    "seed": 3142166050,
+    "durationSeconds": 105,
+    "prompt": "Ambient space exploration soundtrack, slow evolving analog synth pads, warm deep drones, soft arpeggiated sequencer, distant shimmering textures, calm and mysterious, cosmic retro sci-fi, 70 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-title.ogg",
+    "kind": "music",
+    "source": "music/63e7cfeed73c73de10879f7776be83e0.wav",
+    "asset": "63e7cfeed73c73de10879f7776be83e0",
+    "model": "stable-audio-3-medium",
+    "seed": 1254638185,
+    "durationSeconds": 105,
+    "prompt": "Main menu theme for a retro sci-fi space strategy game, majestic slow synth melody over lush analog pads, gentle sequencer pulse, sense of vast galaxy and adventure, nostalgic 80s space soundtrack, 80 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "sfx/combat/combat_antimatter.ogg",
+    "kind": "sfx",
+    "source": "sfx/b8b3a8ca2cfebc6b5afa8c237190fa8e.wav",
+    "asset": "b8b3a8ca2cfebc6b5afa8c237190fa8e",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 1692004535,
+    "durationSeconds": 2,
+    "prompt": "antimatter weapon discharge, deep powerful energy implosion followed by heavy boom, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_critical.ogg",
+    "kind": "sfx",
+    "source": "sfx/a9b219035876937c9acc835a1d8b2c34.wav",
+    "asset": "a9b219035876937c9acc835a1d8b2c34",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 2727283276,
+    "durationSeconds": 1,
+    "prompt": "critical hit, sharp heavy impact with metallic crunch and bright electric crackle accent, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_drones.ogg",
+    "kind": "sfx",
+    "source": "sfx/a62b07dea66e8850edf282fe0cfce613.wav",
+    "asset": "a62b07dea66e8850edf282fe0cfce613",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 1493974772,
+    "durationSeconds": 1.2,
+    "prompt": "swarm of small combat drones launching, quick buzzing electric whir passing by, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_enemy_destroyed.ogg",
+    "kind": "sfx",
+    "source": "sfx/fe90d7126961baec5582ffddfe36328b.wav",
+    "asset": "fe90d7126961baec5582ffddfe36328b",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 1783083638,
+    "durationSeconds": 2.5,
+    "prompt": "enemy spaceship destroyed, big explosion with metal debris and fading rumble, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_enemy_fire-1.ogg",
+    "kind": "sfx",
+    "source": "sfx/3bcb096524e9b28d717e11f2921168ba.wav",
+    "asset": "3bcb096524e9b28d717e11f2921168ba",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 416345888,
+    "durationSeconds": 0.8,
+    "prompt": "enemy alien ship weapon fire, harsh distorted energy shot, aggressive, dry, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_enemy_fire-2.ogg",
+    "kind": "sfx",
+    "source": "sfx/cca6d4c8b2e68b69c632a9160e591c7a.wav",
+    "asset": "cca6d4c8b2e68b69c632a9160e591c7a",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 1846822356,
+    "durationSeconds": 0.8,
+    "prompt": "enemy alien ship weapon fire, harsh distorted energy shot, aggressive, dry, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_enemy_fire-3.ogg",
+    "kind": "sfx",
+    "source": "sfx/0d516d3fd67915638ff7bcd8083dca61.wav",
+    "asset": "0d516d3fd67915638ff7bcd8083dca61",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 862115427,
+    "durationSeconds": 0.8,
+    "prompt": "enemy alien ship weapon fire, harsh distorted energy shot, aggressive, dry, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_hull_hit.ogg",
+    "kind": "sfx",
+    "source": "sfx/42cc6fa5c616ddfff8051eb0fcbb02e9.wav",
+    "asset": "42cc6fa5c616ddfff8051eb0fcbb02e9",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 589893898,
+    "durationSeconds": 1,
+    "prompt": "spaceship hull taking a hit, heavy metal impact clang with debris rattle, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_ion_cannon.ogg",
+    "kind": "sfx",
+    "source": "sfx/84ebfdda61ee50763602ac69c607c392.wav",
+    "asset": "84ebfdda61ee50763602ac69c607c392",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 3710840214,
+    "durationSeconds": 1.2,
+    "prompt": "ion cannon shot, crackling electric arc blast with buzzing static, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_kinetic-1.ogg",
+    "kind": "sfx",
+    "source": "sfx/c7d102da05ac6f81cca0b71d10a88682.wav",
+    "asset": "c7d102da05ac6f81cca0b71d10a88682",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 501879352,
+    "durationSeconds": 1,
+    "prompt": "single kinetic railgun cannon shot from a spaceship, sharp metallic crack with short punchy thump, dry, no reverb tail, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_kinetic-2.ogg",
+    "kind": "sfx",
+    "source": "sfx/3c92334c3d44e896553d59019b057be3.wav",
+    "asset": "3c92334c3d44e896553d59019b057be3",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 3284440460,
+    "durationSeconds": 1,
+    "prompt": "single kinetic railgun cannon shot from a spaceship, sharp metallic crack with short punchy thump, dry, no reverb tail, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_kinetic-3.ogg",
+    "kind": "sfx",
+    "source": "sfx/b4591fb7cf904835dd025e5b2f7d7d2e.wav",
+    "asset": "b4591fb7cf904835dd025e5b2f7d7d2e",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 3955250142,
+    "durationSeconds": 1,
+    "prompt": "single kinetic railgun cannon shot from a spaceship, sharp metallic crack with short punchy thump, dry, no reverb tail, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_laser-1.ogg",
+    "kind": "sfx",
+    "source": "sfx/2b672f9348550bfc5a73082147f70cde.wav",
+    "asset": "2b672f9348550bfc5a73082147f70cde",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 1732313377,
+    "durationSeconds": 0.8,
+    "prompt": "single short sci-fi laser blaster shot, bright zap with falling pitch discharge, clean, retro space game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_laser-2.ogg",
+    "kind": "sfx",
+    "source": "sfx/72914a0e4c95f8b4aaaf312dcc789bdc.wav",
+    "asset": "72914a0e4c95f8b4aaaf312dcc789bdc",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 2965140442,
+    "durationSeconds": 0.8,
+    "prompt": "single short sci-fi laser blaster shot, bright zap with falling pitch discharge, clean, retro space game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_laser-3.ogg",
+    "kind": "sfx",
+    "source": "sfx/38278bab7bea66882dda680349cd0313.wav",
+    "asset": "38278bab7bea66882dda680349cd0313",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 98719759,
+    "durationSeconds": 0.8,
+    "prompt": "single short sci-fi laser blaster shot, bright zap with falling pitch discharge, clean, retro space game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_miss.ogg",
+    "kind": "sfx",
+    "source": "sfx/faa0385d6fce5cb2a6395eb823a59154.wav",
+    "asset": "faa0385d6fce5cb2a6395eb823a59154",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 1513295303,
+    "durationSeconds": 0.8,
+    "prompt": "projectile missing target, quick whoosh flyby passing into empty space, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_missile.ogg",
+    "kind": "sfx",
+    "source": "sfx/ecf3ba25365f6b8abd50774a770db59d.wav",
+    "asset": "ecf3ba25365f6b8abd50774a770db59d",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 1643883423,
+    "durationSeconds": 1.5,
+    "prompt": "missile launch from spaceship, short ignition burst and rocket whoosh flying away, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_no_active_weapons.ogg",
+    "kind": "sfx",
+    "source": "sfx/b2108926dbc514a0fd1bde9f1d5583bc.wav",
+    "asset": "b2108926dbc514a0fd1bde9f1d5583bc",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 3294723372,
+    "durationSeconds": 0.5,
+    "prompt": "weapon system offline, short dull electronic denied buzz, sci-fi cockpit interface sound"
+  },
+  {
+    "out": "sfx/combat/combat_plasma.ogg",
+    "kind": "sfx",
+    "source": "sfx/2dc2498439c8dc2eadd07479043b7992.wav",
+    "asset": "2dc2498439c8dc2eadd07479043b7992",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 2348863008,
+    "durationSeconds": 1.2,
+    "prompt": "plasma cannon shot, thick bubbling energy blast with low hum, sci-fi weapon game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_player_destroyed.ogg",
+    "kind": "sfx",
+    "source": "sfx/04202855ca934bd38ec8da1998331bfb.wav",
+    "asset": "04202855ca934bd38ec8da1998331bfb",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 2579302110,
+    "durationSeconds": 3,
+    "prompt": "player spaceship destroyed, massive reactor explosion, deep rumble and metal tearing apart, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_quantum_torpedo.ogg",
+    "kind": "sfx",
+    "source": "sfx/d19549985c08530b07646e1403675527.wav",
+    "asset": "d19549985c08530b07646e1403675527",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 2726683489,
+    "durationSeconds": 1.8,
+    "prompt": "quantum torpedo launch, rising charged shimmer then heavy warping whoosh, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_shield_break.ogg",
+    "kind": "sfx",
+    "source": "sfx/61c133a17fe4b2fac5eeb78cd54f833d.wav",
+    "asset": "61c133a17fe4b2fac5eeb78cd54f833d",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 1069811601,
+    "durationSeconds": 1.6,
+    "prompt": "energy shield collapsing, glassy electric shatter with power-down whine, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_shield_hit.ogg",
+    "kind": "sfx",
+    "source": "sfx/6a7464230653ae5b30ecb4964b56f6bb.wav",
+    "asset": "6a7464230653ae5b30ecb4964b56f6bb",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 3134082507,
+    "durationSeconds": 1,
+    "prompt": "energy shield absorbing a hit, resonant electric shimmer impact with deflection ripple, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/combat/combat_target_select.ogg",
+    "kind": "sfx",
+    "source": "sfx/bb7813702f8e8ec911e16eda5896f5e7.wav",
+    "asset": "bb7813702f8e8ec911e16eda5896f5e7",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 2578561556,
+    "durationSeconds": 0.5,
+    "prompt": "targeting computer lock-on, short clean electronic double beep, sci-fi interface sound"
+  },
+  {
+    "out": "sfx/ui/ui_cancel-1.ogg",
+    "kind": "sfx",
+    "source": "sfx/02887bd6e1499afbe94a2e2f38867057.wav",
+    "asset": "02887bd6e1499afbe94a2e2f38867057",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 3514214592,
+    "durationSeconds": 0.4,
+    "prompt": "short low descending two-note electronic cancel beep, sci-fi cockpit interface, clean UI sound"
+  },
+  {
+    "out": "sfx/ui/ui_cancel-2.ogg",
+    "kind": "sfx",
+    "source": "sfx/3d74fdb7591d5911b9b77f06be820c59.wav",
+    "asset": "3d74fdb7591d5911b9b77f06be820c59",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 3984103615,
+    "durationSeconds": 0.4,
+    "prompt": "short low descending two-note electronic cancel beep, sci-fi cockpit interface, clean UI sound"
+  },
+  {
+    "out": "sfx/ui/ui_cancel-3.ogg",
+    "kind": "sfx",
+    "source": "sfx/0c88f926b92ab945769f5d2399a12a6e.wav",
+    "asset": "0c88f926b92ab945769f5d2399a12a6e",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 526342686,
+    "durationSeconds": 0.4,
+    "prompt": "short low descending two-note electronic cancel beep, sci-fi cockpit interface, clean UI sound"
+  },
+  {
+    "out": "sfx/ui/ui_confirm-1.ogg",
+    "kind": "sfx",
+    "source": "sfx/02c72dd878de8c3d385d1b408e175f1f.wav",
+    "asset": "02c72dd878de8c3d385d1b408e175f1f",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 438912250,
+    "durationSeconds": 0.4,
+    "prompt": "short bright positive two-note electronic confirm beep, sci-fi cockpit interface, clean UI sound"
+  },
+  {
+    "out": "sfx/ui/ui_confirm-2.ogg",
+    "kind": "sfx",
+    "source": "sfx/09f52d65e28459ab00fe39dfb4df09dc.wav",
+    "asset": "09f52d65e28459ab00fe39dfb4df09dc",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 2283501959,
+    "durationSeconds": 0.4,
+    "prompt": "short bright positive two-note electronic confirm beep, sci-fi cockpit interface, clean UI sound"
+  },
+  {
+    "out": "sfx/ui/ui_confirm-3.ogg",
+    "kind": "sfx",
+    "source": "sfx/897906c5cf0e9dbff35ab052586b0590.wav",
+    "asset": "897906c5cf0e9dbff35ab052586b0590",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 3469684283,
+    "durationSeconds": 0.4,
+    "prompt": "short bright positive two-note electronic confirm beep, sci-fi cockpit interface, clean UI sound"
+  },
+  {
+    "out": "sfx/ui/ui_dialog_close.ogg",
+    "kind": "sfx",
+    "source": "sfx/0ed06b4a82a1e7869634b420727009aa.wav",
+    "asset": "0ed06b4a82a1e7869634b420727009aa",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 4247251023,
+    "durationSeconds": 0.5,
+    "prompt": "sci-fi computer terminal panel closing, short soft falling digital swoosh blip, clean UI sound"
+  },
+  {
+    "out": "sfx/ui/ui_dialog_open.ogg",
+    "kind": "sfx",
+    "source": "sfx/e5c57e353c7bd4bc0302f0f00db701c2.wav",
+    "asset": "e5c57e353c7bd4bc0302f0f00db701c2",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 2353868806,
+    "durationSeconds": 0.5,
+    "prompt": "sci-fi computer terminal panel opening, short soft rising digital swoosh blip, clean UI sound"
+  },
+  {
+    "out": "sfx/ui/ui_error-1.ogg",
+    "kind": "sfx",
+    "source": "sfx/73876f640ed300c30487987494ca144a.wav",
+    "asset": "73876f640ed300c30487987494ca144a",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 2679693108,
+    "durationSeconds": 0.4,
+    "prompt": "short harsh electronic error buzzer, access denied, sci-fi cockpit interface, clean UI sound"
+  },
+  {
+    "out": "sfx/ui/ui_error-2.ogg",
+    "kind": "sfx",
+    "source": "sfx/d628b2b3211ea9c72a392f35bcd00d49.wav",
+    "asset": "d628b2b3211ea9c72a392f35bcd00d49",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 2925790964,
+    "durationSeconds": 0.4,
+    "prompt": "short harsh electronic error buzzer, access denied, sci-fi cockpit interface, clean UI sound"
+  },
+  {
+    "out": "sfx/ui/ui_error-3.ogg",
+    "kind": "sfx",
+    "source": "sfx/2b1372ad85158fa058bd3fc5e8db6e08.wav",
+    "asset": "2b1372ad85158fa058bd3fc5e8db6e08",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 3608024325,
+    "durationSeconds": 0.4,
+    "prompt": "short harsh electronic error buzzer, access denied, sci-fi cockpit interface, clean UI sound"
+  },
+  {
+    "out": "sfx/ui/ui_notification.ogg",
+    "kind": "sfx",
+    "source": "sfx/7cad0c1e32df352c861c052732ba1459.wav",
+    "asset": "7cad0c1e32df352c861c052732ba1459",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 2069715131,
+    "durationSeconds": 0.6,
+    "prompt": "incoming message notification, short gentle electronic ping chime, sci-fi interface sound"
+  },
+  {
+    "out": "sfx/ui/ui_purchase.ogg",
+    "kind": "sfx",
+    "source": "sfx/54daec9f975046ebe88319c3899d195b.wav",
+    "asset": "54daec9f975046ebe88319c3899d195b",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 608227017,
+    "durationSeconds": 0.6,
+    "prompt": "purchase complete, short digital credits transaction chime with coin-like sparkle, sci-fi interface sound"
+  },
+  {
+    "out": "sfx/ui/ui_tab.ogg",
+    "kind": "sfx",
+    "source": "sfx/aeb2ed29da585eea70b10777256ba274.wav",
+    "asset": "aeb2ed29da585eea70b10777256ba274",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 2524216595,
+    "durationSeconds": 0.3,
+    "prompt": "very short soft digital click tick, sci-fi cockpit interface tab switch, clean UI sound"
+  },
+  {
+    "out": "sfx/world/travel_arrival.ogg",
+    "kind": "sfx",
+    "source": "sfx/7f1c801ce9d061e4de2336935238821d.wav",
+    "asset": "7f1c801ce9d061e4de2336935238821d",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 964839686,
+    "durationSeconds": 1.5,
+    "prompt": "spaceship dropping out of hyperspace, descending whoosh settling into soft engine hum, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/world/travel_departure.ogg",
+    "kind": "sfx",
+    "source": "sfx/2bf360e9cf3f2dcbac6cb5129028095c.wav",
+    "asset": "2bf360e9cf3f2dcbac6cb5129028095c",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 915321158,
+    "durationSeconds": 1.5,
+    "prompt": "spaceship warp drive spinning up and jumping away, rising hum into whoosh, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/world/world_artifact.ogg",
+    "kind": "sfx",
+    "source": "sfx/dbfccc5f9467270cc1a029ea6af51d81.wav",
+    "asset": "dbfccc5f9467270cc1a029ea6af51d81",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 2814186053,
+    "durationSeconds": 2,
+    "prompt": "ancient alien artifact activating, mysterious shimmering resonant chime with deep hum, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/world/world_contract.ogg",
+    "kind": "sfx",
+    "source": "sfx/5db44651a2d09dd7fe7ccf085f03b8ef.wav",
+    "asset": "5db44651a2d09dd7fe7ccf085f03b8ef",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 1271409091,
+    "durationSeconds": 0.7,
+    "prompt": "contract accepted, short digital stamp confirmation with two-tone chime, sci-fi interface sound"
+  },
+  {
+    "out": "sfx/world/world_crew_milestone.ogg",
+    "kind": "sfx",
+    "source": "sfx/ef214e506cb7c9bae06ca1d165196e42.wav",
+    "asset": "ef214e506cb7c9bae06ca1d165196e42",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 389267343,
+    "durationSeconds": 1.2,
+    "prompt": "crew member level up, short triumphant synth fanfare arpeggio, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/world/world_danger.ogg",
+    "kind": "sfx",
+    "source": "sfx/fb1e76aa24040c915fd8bd63dbd45f97.wav",
+    "asset": "fb1e76aa24040c915fd8bd63dbd45f97",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 3682354289,
+    "durationSeconds": 1.2,
+    "prompt": "spaceship red alert klaxon, two urgent alarm pulses, sci-fi cockpit warning sound"
+  },
+  {
+    "out": "sfx/world/world_discovery.ogg",
+    "kind": "sfx",
+    "source": "sfx/422d1ed831c0b138e58272727bb61715.wav",
+    "asset": "422d1ed831c0b138e58272727bb61715",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 627149020,
+    "durationSeconds": 1,
+    "prompt": "sensor scan discovers something, bright rising sparkle chime with sonar ping, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/world/world_heal.ogg",
+    "kind": "sfx",
+    "source": "sfx/e031132ed91205b4e0b603702bcd5ac0.wav",
+    "asset": "e031132ed91205b4e0b603702bcd5ac0",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 274694882,
+    "durationSeconds": 1,
+    "prompt": "medical bay healing beam, soft warm rising synth tone with gentle sparkle, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/world/world_install.ogg",
+    "kind": "sfx",
+    "source": "sfx/9dad747f985885e94ce688be2dfa14e3.wav",
+    "asset": "9dad747f985885e94ce688be2dfa14e3",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 341151646,
+    "durationSeconds": 0.8,
+    "prompt": "installing ship module, heavy mechanical clamp locking into place with power-on beep, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/world/world_mining.ogg",
+    "kind": "sfx",
+    "source": "sfx/3c4158c2dc280312546fca0d3031689b.wav",
+    "asset": "3c4158c2dc280312546fca0d3031689b",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 3192212048,
+    "durationSeconds": 0.8,
+    "prompt": "mining laser drilling asteroid rock, short grinding crunch with crumbling stone, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/world/world_refuel.ogg",
+    "kind": "sfx",
+    "source": "sfx/b563fc276e0b2a4d69bef1f25f0cf176.wav",
+    "asset": "b563fc276e0b2a4d69bef1f25f0cf176",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 3200965152,
+    "durationSeconds": 1,
+    "prompt": "spaceship refueling, fuel pumping gurgle and pressurized hiss, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/world/world_repair.ogg",
+    "kind": "sfx",
+    "source": "sfx/8a1e658a538e9367ee1ddce21fc6afd7.wav",
+    "asset": "8a1e658a538e9367ee1ddce21fc6afd7",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 2933406894,
+    "durationSeconds": 0.8,
+    "prompt": "robotic repair tools on spaceship hull, quick ratchet and welding spark sizzle, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/world/world_research.ogg",
+    "kind": "sfx",
+    "source": "sfx/82fa61a8e771f984db7d869d183df026.wav",
+    "asset": "82fa61a8e771f984db7d869d183df026",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 1930185930,
+    "durationSeconds": 1.2,
+    "prompt": "research breakthrough complete, computer data processing chirps resolving into bright success chime, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/world/world_scrap.ogg",
+    "kind": "sfx",
+    "source": "sfx/cfd30995b96aebf7461358eddad3f168.wav",
+    "asset": "cfd30995b96aebf7461358eddad3f168",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 1971870933,
+    "durationSeconds": 0.8,
+    "prompt": "scrapping metal ship parts, metal crushing and clattering debris, sci-fi game sound effect"
+  },
+  {
+    "out": "sfx/world/world_upgrade.ogg",
+    "kind": "sfx",
+    "source": "sfx/b72e8ae26224bddf15b72fe5a6b8fdd4.wav",
+    "asset": "b72e8ae26224bddf15b72fe5a6b8fdd4",
+    "model": "stable-audio-3-medium-sfx",
+    "seed": 1421880900,
+    "durationSeconds": 1,
+    "prompt": "ship system upgrade complete, ascending power-up synth tones, sci-fi game sound effect"
+  }
+]
