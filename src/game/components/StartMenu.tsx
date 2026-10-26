@@ -11,6 +11,7 @@ import {
 import { useGameStore } from "@/game/store";
 import { useTranslation } from "@/lib/useTranslation";
 import { AchievementsPanel } from "@/game/components/AchievementsPanel";
+import { AudioVolumeSliders } from "@/game/components/SaveLoadPanel";
 import { getSectorName } from "@/lib/translationHelpers";
 
 const SLOT_IDS: SaveSlotId[] = ["auto", "manual1", "manual2", "manual3", "manual4", "manual5"];
@@ -247,6 +248,10 @@ export function StartMenu({
                     }`}
                   />
                 </button>
+              </div>
+
+              <div className="rounded-lg border border-[#1c3944] bg-[rgba(0,212,255,0.025)] p-4">
+                <AudioVolumeSliders />
               </div>
 
               <div className="rounded-lg border border-[#ff444455] bg-[rgba(255,68,68,0.03)] p-4">

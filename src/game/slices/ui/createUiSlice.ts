@@ -1,8 +1,8 @@
 import type { SetState } from "@/game/types";
 import {
     GAME_MODES,
-    DEFAULT_NAVIGATION_MODE,
     PANELS_RETURNING_TO_NAVIGATION,
+    resolveReturnMode,
 } from "./constants";
 
 /**
@@ -56,7 +56,9 @@ export const createUiSlice = (set: SetState): UiSlice => ({
                 galaxyOffset,
                 sectorZoom,
                 sectorOffset,
-                gameMode: GAME_MODES.NAVIGATION.GALAXY_MAP,
+                gameMode: state.currentCombat
+                    ? GAME_MODES.COMBAT.COMBAT
+                    : GAME_MODES.NAVIGATION.GALAXY_MAP,
             };
         }),
 
@@ -73,7 +75,9 @@ export const createUiSlice = (set: SetState): UiSlice => ({
                 galaxyOffset,
                 sectorZoom,
                 sectorOffset,
-                gameMode: GAME_MODES.NAVIGATION.SECTOR_MAP,
+                gameMode: state.currentCombat
+                    ? GAME_MODES.COMBAT.COMBAT
+                    : GAME_MODES.NAVIGATION.SECTOR_MAP,
             };
         }),
 
@@ -89,7 +93,7 @@ export const createUiSlice = (set: SetState): UiSlice => ({
 
     closeAssignments: () =>
         set((state) => ({
-            gameMode: state.previousGameMode || DEFAULT_NAVIGATION_MODE,
+            gameMode: resolveReturnMode(state),
             previousGameMode: null,
         })),
 
@@ -157,19 +161,19 @@ export const createUiSlice = (set: SetState): UiSlice => ({
 
     closeArtifactsPanel: () =>
         set((state) => ({
-            gameMode: state.previousGameMode || DEFAULT_NAVIGATION_MODE,
+            gameMode: resolveReturnMode(state),
             previousGameMode: null,
         })),
 
     closeResearchPanel: () =>
         set((state) => ({
-            gameMode: state.previousGameMode || DEFAULT_NAVIGATION_MODE,
+            gameMode: resolveReturnMode(state),
             previousGameMode: null,
         })),
 
     closeNavigator: () =>
         set((state) => ({
-            gameMode: state.previousGameMode || DEFAULT_NAVIGATION_MODE,
+            gameMode: resolveReturnMode(state),
             previousGameMode: null,
         })),
 

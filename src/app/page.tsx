@@ -107,7 +107,8 @@ import { useTranslation } from "@/lib/useTranslation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useIsMobile } from "@/game/hooks/useIsMobile";
 import { getContractTurnsRemaining } from "@/game/contracts/contractDeadline";
-import type { LogEntry } from "@/game/types";
+import type { GameMode, LogEntry, RaceId } from "@/game/types";
+import { PANELS_RETURNING_TO_NAVIGATION } from "@/game/slices/ui/constants";
 import {
   playUi,
   setAudioVolumes,
@@ -226,6 +227,29 @@ function useLogAlerts(log: LogEntry[]) {
   };
 }
 
+// Бой выбирается отдельно и важнее всего; затем отдельный геймплей, затем
+// место (станция/планета по расе владельцев); кризис — фон вместо exploration.
+function pickSceneMusic(scene: {
+  gameMode: GameMode;
+  onExpedition: boolean;
+  inGasGiantDive: boolean;
+  inCrisis: boolean;
+  locationRace: RaceId | undefined;
+  onEmptyPlanet: boolean;
+}) {
+  if (scene.onExpedition) return "expedition";
+  if (scene.inGasGiantDive) return "dive";
+  if (scene.gameMode === "storm" || scene.gameMode === "storm_results") return "storm";
+  if (scene.gameMode === "station") {
+    return scene.locationRace ? (`station_${scene.locationRace}` as const) : "station";
+  }
+  if (scene.gameMode === "planet") {
+    if (scene.onEmptyPlanet) return "planet_empty";
+    if (scene.locationRace) return `planet_${scene.locationRace}` as const;
+  }
+  return scene.inCrisis ? "crisis" : "exploration";
+}
+
 export default function Home() {
   const { gameOver, gameOverReason, gameVictory, gameVictoryReason } = useGameStore(
     useShallow((s) => ({
@@ -299,6 +323,18 @@ export default function Home() {
   // Во время боя на мобильном принудительно показываем сцену.
   const inCombat = useGameStore((s) => !!s.currentCombat);
   const inBossCombat = useGameStore((s) => !!s.currentCombat?.enemy.isBoss);
+  const onExpedition = useGameStore((s) => !!s.activeExpedition);
+  const inGasGiantDive = useGameStore((s) => !!s.activeDive);
+  const inCrisis = useGameStore((s) => !!s.activeCrisis);
+  const locationRace = useGameStore((s) => s.currentLocation?.dominantRace);
+  const onEmptyPlanet = useGameStore((s) => !!s.currentLocation?.isEmpty);
+  // Панели (репутация, исследования…) открываются поверх места: музыка
+  // остаётся той, что играла под панелью.
+  const sceneMode = useGameStore((s) =>
+    PANELS_RETURNING_TO_NAVIGATION.includes(s.gameMode) && s.previousGameMode
+      ? s.previousGameMode
+      : s.gameMode,
+  );
   const showEventStage = mobileShowMap || (isMobile && (inCombat || cinematicTimeline !== null));
 
   // Legacy tab compatibility: if a saved state somehow points to merged tabs,
@@ -331,15 +367,32 @@ export default function Home() {
     setAudioVolumes(audioVolumes);
   }, [audioVolumes, soundEnabled]);
 
+  // Победный залп сразу обнуляет currentCombat, но боевая музыка доигрывает
+  // до закрытия окна результатов боя.
+  const inBattleResults = gameMode === "battle_results";
+  const [lastCombatMusic, setLastCombatMusic] = useState<"combat" | "boss">("combat");
+  if (inCombat && lastCombatMusic !== (inBossCombat ? "boss" : "combat")) {
+    setLastCombatMusic(inBossCombat ? "boss" : "combat");
+  }
+  const combatMusic = inCombat || inBattleResults ? lastCombatMusic : null;
+  const sceneMusic =
+    combatMusic ??
+    pickSceneMusic({
+      gameMode: sceneMode,
+      onExpedition,
+      inGasGiantDive,
+      inCrisis,
+      locationRace,
+      onEmptyPlanet,
+    });
+
   useEffect(() => {
     if (!soundEnabled) {
       stopMusic();
       return;
     }
-    startMusic(
-      isTitleSetup ? "title" : inBossCombat ? "boss" : inCombat ? "combat" : "exploration",
-    );
-  }, [inBossCombat, inCombat, isTitleSetup, soundEnabled]);
+    startMusic(isTitleSetup ? "title" : sceneMusic);
+  }, [isTitleSetup, sceneMusic, soundEnabled]);
 
   useEffect(() => () => stopMusic(), []);
 

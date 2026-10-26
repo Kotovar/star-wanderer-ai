@@ -34,6 +34,7 @@ export const GAME_MODES: GameModeObj = {
         NAVIGATOR: "navigator",
         CRISES: "crises",
         ENEMY_CODEX: "enemy_codex",
+        REPUTATION: "reputation",
     },
 };
 
@@ -53,4 +54,15 @@ export const PANELS_RETURNING_TO_NAVIGATION = [
     GAME_MODES.MANAGEMENT.NAVIGATOR,
     GAME_MODES.MANAGEMENT.CRISES,
     GAME_MODES.MANAGEMENT.ENEMY_CODEX,
+    GAME_MODES.MANAGEMENT.REPUTATION,
 ] as const;
+
+/**
+ * Режим после закрытия панели или перехода на карту. Бой прерывается только
+ * игровым исходом (победа, отступление, поражение), а не навигацией по UI.
+ */
+export const resolveReturnMode = (
+    state: { currentCombat: unknown; previousGameMode: GameMode | null },
+    fallback: GameMode = DEFAULT_NAVIGATION_MODE,
+): GameMode =>
+    state.currentCombat ? GAME_MODES.COMBAT.COMBAT : state.previousGameMode || fallback;

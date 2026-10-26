@@ -1388,9 +1388,9 @@ export function SectorMap() {
 
       <canvas
         ref={canvasRef}
-        className="radar-canvas cursor-grab w-full h-full touch-none"
+        className="radar-canvas w-full h-full touch-none"
         style={{
-          cursor: isDragging ? "grabbing" : "grab",
+          cursor: isDragging ? "grabbing" : hoveredLocation ? "pointer" : "default",
           touchAction: "none",
         }}
         onClick={handleClick}

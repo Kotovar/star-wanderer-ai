@@ -124,14 +124,14 @@ if (!SOUND_REGISTRY || !MUSIC_REGISTRY || !DEFAULT_AUDIO_VOLUMES) {
   fail("SOUND_REGISTRY, MUSIC_REGISTRY, and DEFAULT_AUDIO_VOLUMES must be exported");
 }
 
-for (const id of ["title", "exploration", "combat", "boss"]) {
+for (const id of ["title", "exploration", "combat", "boss", "expedition", "dive", "storm", "station", "crisis"]) {
   if (!MUSIC_REGISTRY[id]) fail(id + " must be registered as music");
 }
 
 // Каждый файл в public/audio должен быть описан в манифесте AI Studio, и наоборот.
 const registeredUrls = new Set([
   ...Object.values(SOUND_REGISTRY).flatMap((sound) => sound.urls),
-  ...Object.values(MUSIC_REGISTRY).map((music) => music.url),
+  ...Object.values(MUSIC_REGISTRY).flatMap((music) => music.urls),
 ]);
 const manifestUrls = new Set(manifest.map((entry) => `/audio/${entry.out}`));
 for (const url of registeredUrls) {
@@ -161,9 +161,10 @@ for (const [id, sound] of Object.entries(SOUND_REGISTRY)) {
   }
 }
 
-for (const [id, music] of Object.entries(MUSIC_REGISTRY)) {
-  const file = resolve(root, "public", music.url.replace(/^\//, ""));
-  if (!existsSync(file)) fail(`${id} points to a missing music file: ${music.url}`);
+const musicFiles = Object.entries(MUSIC_REGISTRY).flatMap(([id, music]) => music.urls.map((url) => [id, url]));
+for (const [id, url] of musicFiles) {
+  const file = resolve(root, "public", url.replace(/^\//, ""));
+  if (!existsSync(file)) fail(`${id} points to a missing music file: ${url}`);
   inspectOpus(file);
   const duration = getDuration(file);
   if (!Number.isFinite(duration) || duration < 60 || duration > 120) {

@@ -69,12 +69,38 @@ export const SOUND_REGISTRY = {
 export type SoundId = keyof typeof SOUND_REGISTRY;
 type UiSoundId = Extract<SoundId, `ui_${string}`>;
 
+const musicUrls = (name: string, count: number) =>
+  Array.from({ length: count }, (_, index) =>
+    `/audio/music/space-${name}${index === 0 ? "" : `-${index + 1}`}.ogg`);
+
+// Несколько треков на контекст: при входе выбирается случайный, а после
+// полного проигрыша играющий трек кроссфейдом сменяется другим.
 export const MUSIC_REGISTRY = {
-  title: { url: "/audio/music/space-title.ogg" },
-  exploration: { url: "/audio/music/space-exploration.ogg" },
-  combat: { url: "/audio/music/space-combat.ogg" },
-  boss: { url: "/audio/music/space-boss.ogg" },
-} as const;
+  title: { urls: musicUrls("title", 2) },
+  exploration: { urls: musicUrls("exploration", 3) },
+  combat: { urls: musicUrls("combat", 3) },
+  boss: { urls: musicUrls("boss", 3) },
+  expedition: { urls: musicUrls("expedition", 2) },
+  dive: { urls: musicUrls("dive", 2) },
+  storm: { urls: musicUrls("storm", 2) },
+  station: { urls: musicUrls("station", 2) },
+  crisis: { urls: musicUrls("crisis", 2) },
+  // Станции и планеты звучат по расе владельцев; станции без расы
+  // (дипломатические) остаются на общем station.
+  station_human: { urls: musicUrls("station-human", 1) },
+  station_synthetic: { urls: musicUrls("station-synthetic", 1) },
+  station_xenosymbiont: { urls: musicUrls("station-xenosymbiont", 1) },
+  station_krylorian: { urls: musicUrls("station-krylorian", 1) },
+  station_voidborn: { urls: musicUrls("station-voidborn", 1) },
+  station_crystalline: { urls: musicUrls("station-crystalline", 1) },
+  planet_human: { urls: musicUrls("planet-human", 1) },
+  planet_synthetic: { urls: musicUrls("planet-synthetic", 1) },
+  planet_xenosymbiont: { urls: musicUrls("planet-xenosymbiont", 1) },
+  planet_krylorian: { urls: musicUrls("planet-krylorian", 1) },
+  planet_voidborn: { urls: musicUrls("planet-voidborn", 1) },
+  planet_crystalline: { urls: musicUrls("planet-crystalline", 1) },
+  planet_empty: { urls: musicUrls("planet-empty", 2) },
+} as const satisfies Record<string, { urls: readonly string[] }>;
 
 type MusicId = keyof typeof MUSIC_REGISTRY;
 type AudioVolumes = Record<AudioVolumeCategory, number>;
@@ -89,6 +115,7 @@ interface AudioNodes {
 
 interface ActiveMusic {
   id: MusicId;
+  url: string;
   source: AudioBufferSourceNode;
   gain: GainNode;
 }
@@ -143,7 +170,12 @@ const getNodes = (): AudioNodes | null => {
 
   try {
     const AudioContextConstructor = window.AudioContext;
+    // При горячей перезагрузке модуля в dev старый контекст продолжал бы играть
+    // свою музыку параллельно новой: закрываем его.
+    const audioGlobal = globalThis as { __starWandererAudioContext?: AudioContext };
+    void audioGlobal.__starWandererAudioContext?.close().catch(() => undefined);
     const context = new AudioContextConstructor();
+    audioGlobal.__starWandererAudioContext = context;
     const master = context.createGain();
     const music = context.createGain();
     const sfx = context.createGain();
@@ -167,7 +199,12 @@ const getBuffer = (url: string, context: AudioContext) => {
   const request = fetch(url)
     .then((response) => (response.ok ? response.arrayBuffer() : null))
     .then((data) => (data ? context.decodeAudioData(data) : null))
-    .catch(() => null);
+    .catch(() => null)
+    .then((buffer) => {
+      // Сбой не кэшируем: иначе временная ошибка сети навсегда глушит трек.
+      if (!buffer) bufferCache.delete(url);
+      return buffer;
+    });
   bufferCache.set(url, request);
   return request;
 };
@@ -251,48 +288,77 @@ export const playUi = (id: UiSoundId): void => {
   playSound(id);
 };
 
+const playMusicTrack = async (id: MusicId, requestId: number, previousUrl?: string) => {
+  const audio = getNodes();
+  const { urls } = MUSIC_REGISTRY[id];
+  const url = chooseUrl(urls.length > 1 ? urls.filter((candidate) => candidate !== previousUrl) : urls);
+  if (!audio || !url) return;
+  const buffer = await getBuffer(url, audio.context);
+  if (
+    !buffer ||
+    !enabled ||
+    requestedMusic !== id ||
+    musicRequestId !== requestId
+  ) return;
+
+  stopFadingMusic();
+  const source = audio.context.createBufferSource();
+  const gain = audio.context.createGain();
+  source.buffer = buffer;
+  source.loop = true;
+  gain.gain.setValueAtTime(0, audio.context.currentTime);
+  source.connect(gain);
+  gain.connect(audio.music);
+  const outgoing = activeMusic;
+  activeMusic = { id, url, source, gain };
+  source.onended = () => {
+    if (activeMusic?.source === source) activeMusic = null;
+    if (fadingMusic?.source === source) fadingMusic = null;
+  };
+  source.start();
+  const startedAt = audio.context.currentTime;
+  gain.gain.linearRampToValueAtTime(1, startedAt + MUSIC_FADE_SECONDS);
+  if (outgoing) {
+    fadingMusic = outgoing;
+    fadeOutMusic(outgoing, MUSIC_FADE_SECONDS);
+  }
+
+  if (urls.length < 2 || !Number.isFinite(buffer.duration)) return;
+  // Часы контекста стоят, пока он suspended (до первого жеста), поэтому
+  // остаток считается по ним, а не по setTimeout.
+  const rotateAt = buffer.duration - MUSIC_FADE_SECONDS;
+  const scheduleRotation = () => {
+    const remaining = rotateAt - (audio.context.currentTime - startedAt);
+    setTimeout(() => {
+      if (activeMusic?.source !== source || requestedMusic !== id) return;
+      if (audio.context.currentTime - startedAt < rotateAt) {
+        scheduleRotation();
+        return;
+      }
+      // Сорвавшаяся смена (ошибка загрузки, mute) не должна навсегда
+      // оставить один трек: пока он играет, пробуем снова.
+      void playMusicTrack(id, ++musicRequestId, url).then(() => {
+        if (activeMusic?.source === source) setTimeout(scheduleRotation, 30_000);
+      });
+    }, Math.max(1000, remaining * 1000));
+  };
+  scheduleRotation();
+};
+
 export const startMusic = (id: MusicId = "exploration"): void => {
   if (!enabled) return;
   if (activeMusic?.id === id) {
-    requestedMusic = id;
-    musicRequestId += 1;
+    // Отменяем только ожидающий запрос другого контекста, а не смену трека
+    // текущего: иначе ротация молча обрывается.
+    if (requestedMusic !== id) {
+      requestedMusic = id;
+      musicRequestId += 1;
+    }
     return;
   }
   if (requestedMusic === id) return;
   requestedMusic = id;
-  const requestId = ++musicRequestId;
-  void (async () => {
-    const audio = getNodes();
-    if (!audio) return;
-    const buffer = await getBuffer(MUSIC_REGISTRY[id].url, audio.context);
-    if (
-      !buffer ||
-      !enabled ||
-      requestedMusic !== id ||
-      musicRequestId !== requestId
-    ) return;
-
-    stopFadingMusic();
-    const source = audio.context.createBufferSource();
-    const gain = audio.context.createGain();
-    source.buffer = buffer;
-    source.loop = true;
-    gain.gain.setValueAtTime(0, audio.context.currentTime);
-    source.connect(gain);
-    gain.connect(audio.music);
-    const outgoing = activeMusic;
-    activeMusic = { id, source, gain };
-    source.onended = () => {
-      if (activeMusic?.source === source) activeMusic = null;
-      if (fadingMusic?.source === source) fadingMusic = null;
-    };
-    source.start();
-    gain.gain.linearRampToValueAtTime(1, audio.context.currentTime + MUSIC_FADE_SECONDS);
-    if (outgoing) {
-      fadingMusic = outgoing;
-      fadeOutMusic(outgoing, MUSIC_FADE_SECONDS);
-    }
-  })();
+  void playMusicTrack(id, ++musicRequestId);
 };
 
 export const stopMusic = ({ fadeOut = true }: { fadeOut?: boolean } = {}): void => {

@@ -192,10 +192,8 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
   const resetProgress = useGameStore((s) => s.resetProgress);
   const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
   const soundEnabled = useGameStore((s) => s.settings.soundEnabled);
-  const audioVolumes = useGameStore((s) => s.settings);
   const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
   const setSoundEnabled = useGameStore((s) => s.setSoundEnabled);
-  const setAudioVolume = useGameStore((s) => s.setAudioVolume);
   const { t, currentLanguage, changeLanguage } = useTranslation();
 
   const [view, setView] = useState<"menu" | "save" | "load">("menu");
@@ -261,12 +259,6 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
     { id: "manual3", label: t("save_load.slot_label", { n: "3" }) },
     { id: "manual4", label: t("save_load.slot_label", { n: "4" }) },
     { id: "manual5", label: t("save_load.slot_label", { n: "5" }) },
-  ];
-  const audioSliders: { id: AudioVolumeCategory; label: string }[] = [
-    { id: "master", label: t("start_menu.audio_master") },
-    { id: "music", label: t("start_menu.audio_music") },
-    { id: "sfx", label: t("start_menu.audio_sfx") },
-    { id: "ui", label: t("start_menu.audio_ui") },
   ];
 
   return (
@@ -356,24 +348,7 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
                 </div>
 
                 <div className="border border-[#1a3040] p-3">
-                  <div className="mb-2 text-xs text-[#00d4ff]">{t("start_menu.audio_levels")}</div>
-                  <div className="grid gap-2">
-                    {audioSliders.map(({ id, label }) => (
-                      <label key={id} className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 text-[10px] text-[#91a0a8]">
-                        <span>{label}</span>
-                        <span className="text-[#00d4ff]">{Math.round(audioVolumes[id] * 100)}%</span>
-                        <input
-                          className="col-span-2 h-1 w-full accent-[#00d4ff]"
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.01"
-                          value={audioVolumes[id]}
-                          onChange={(event) => setAudioVolume(id, Number(event.currentTarget.value))}
-                        />
-                      </label>
-                    ))}
-                  </div>
+                  <AudioVolumeSliders />
                 </div>
               </div>
 
@@ -586,5 +561,42 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
         </div>
       </div>
     </div>
+  );
+}
+
+const AUDIO_SLIDERS: { id: AudioVolumeCategory; labelKey: string }[] = [
+  { id: "master", labelKey: "start_menu.audio_master" },
+  { id: "music", labelKey: "start_menu.audio_music" },
+  { id: "sfx", labelKey: "start_menu.audio_sfx" },
+  { id: "ui", labelKey: "start_menu.audio_ui" },
+];
+
+/** Громкость шин: общая для внутриигровых настроек и стартового меню. */
+export function AudioVolumeSliders() {
+  const settings = useGameStore((s) => s.settings);
+  const setAudioVolume = useGameStore((s) => s.setAudioVolume);
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <div className="mb-2 text-xs text-[#00d4ff]">{t("start_menu.audio_levels")}</div>
+      <div className="grid gap-2">
+        {AUDIO_SLIDERS.map(({ id, labelKey }) => (
+          <label key={id} className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 text-[10px] text-[#91a0a8]">
+            <span>{t(labelKey)}</span>
+            <span className="text-[#00d4ff]">{Math.round(settings[id] * 100)}%</span>
+            <input
+              className="col-span-2 h-1 w-full cursor-pointer accent-[#00d4ff]"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={settings[id]}
+              onChange={(event) => setAudioVolume(id, Number(event.currentTarget.value))}
+            />
+          </label>
+        ))}
+      </div>
+    </>
   );
 }

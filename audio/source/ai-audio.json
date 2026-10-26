@@ -1,5 +1,25 @@
 [
   {
+    "out": "music/space-boss-2.ogg",
+    "kind": "music",
+    "source": "music/7db6eabd6f81ea9d417319dd716c8c1f.wav",
+    "asset": "7db6eabd6f81ea9d417319dd716c8c1f",
+    "model": "stable-audio-3-medium",
+    "seed": 973060020,
+    "durationSeconds": 105,
+    "prompt": "Epic boss battle soundtrack in space, heavy dark cinematic synth, massive distorted bass, pounding taiko and electronic drums, ominous brass-like synth swells, menacing and intense, retro sci-fi, 140 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-boss-3.ogg",
+    "kind": "music",
+    "source": "music/ca887370fe55894610f22a52b1c571b2.wav",
+    "asset": "ca887370fe55894610f22a52b1c571b2",
+    "model": "stable-audio-3-medium",
+    "seed": 715209373,
+    "durationSeconds": 105,
+    "prompt": "Climactic space boss fight soundtrack, colossal dark synth orchestra, grinding distorted bass ostinato, thunderous drums and metallic percussion, dramatic rising synth choir pads without words, apocalyptic and relentless, retro sci-fi, 145 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
     "out": "music/space-boss.ogg",
     "kind": "music",
     "source": "music/a51e1c62e099d229b3d19d5236feb55e.wav",
@@ -8,6 +28,26 @@
     "seed": 702705903,
     "durationSeconds": 105,
     "prompt": "Epic boss battle soundtrack in space, heavy dark cinematic synth, massive distorted bass, pounding taiko and electronic drums, ominous brass-like synth swells, menacing and intense, retro sci-fi, 140 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-combat-2.ogg",
+    "kind": "music",
+    "source": "music/8586e20e7d24533650d554ce4117559c.wav",
+    "asset": "8586e20e7d24533650d554ce4117559c",
+    "model": "stable-audio-3-medium",
+    "seed": 3966692768,
+    "durationSeconds": 105,
+    "prompt": "Tense space battle soundtrack, driving dark synthwave, pulsing bass sequencer, punchy electronic drums, aggressive analog synth stabs, industrial percussion, urgent and energetic, retro sci-fi, 128 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-combat-3.ogg",
+    "kind": "music",
+    "source": "music/702209271004b5d22a1466ad830633b3.wav",
+    "asset": "702209271004b5d22a1466ad830633b3",
+    "model": "stable-audio-3-medium",
+    "seed": 3159978915,
+    "durationSeconds": 105,
+    "prompt": "Fast space dogfight soundtrack, dark synthwave, galloping arpeggiated bass, hard electronic drums, distorted analog lead stabs, metallic industrial hits, relentless and tense, retro sci-fi, 132 BPM, instrumental, no vocals, seamless loop"
   },
   {
     "out": "music/space-combat.ogg",
@@ -20,6 +60,86 @@
     "prompt": "Tense space battle soundtrack, driving dark synthwave, pulsing bass sequencer, punchy electronic drums, aggressive analog synth stabs, industrial percussion, urgent and energetic, retro sci-fi, 128 BPM, instrumental, no vocals, seamless loop"
   },
   {
+    "out": "music/space-crisis-2.ogg",
+    "kind": "music",
+    "source": "music/668260ebcd4e72c3252f9116ec787618.wav",
+    "asset": "668260ebcd4e72c3252f9116ec787618",
+    "model": "stable-audio-3-medium",
+    "seed": 632834966,
+    "durationSeconds": 105,
+    "prompt": "Galaxy in peril soundtrack, grim and urgent, low brass-like synth swells, relentless sequenced bass, distant military snare rolls, cold dark pads, dread and resolve, retro sci-fi, 96 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-crisis.ogg",
+    "kind": "music",
+    "source": "music/729e5f4f0d158363f105147959caec68.wav",
+    "asset": "729e5f4f0d158363f105147959caec68",
+    "model": "stable-audio-3-medium",
+    "seed": 3441209401,
+    "durationSeconds": 105,
+    "prompt": "Galactic crisis emergency soundtrack, ominous pulsing alarm-like synth motif, dark driving bass ostinato, tense ticking percussion, dissonant swelling pads, sense of looming catastrophe, retro sci-fi, 100 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-dive-2.ogg",
+    "kind": "music",
+    "source": "music/b308b778a67b973c6c1c98e3d6448a50.wav",
+    "asset": "b308b778a67b973c6c1c98e3d6448a50",
+    "model": "stable-audio-3-medium",
+    "seed": 4194618343,
+    "durationSeconds": 105,
+    "prompt": "Deep gas giant dive soundtrack, crushing pressure, resonant metallic hull groans as tonal synth, slow heartbeat-like bass pulse, churning storm textures, tense dark ambient sci-fi, 65 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-dive.ogg",
+    "kind": "music",
+    "source": "music/15225729735b28351b5410826503b4b0.wav",
+    "asset": "15225729735b28351b5410826503b4b0",
+    "model": "stable-audio-3-medium",
+    "seed": 3091518231,
+    "durationSeconds": 105,
+    "prompt": "Descending into a gas giant atmosphere soundtrack, heavy pressurized low drones, swirling filtered synth textures, slow sub bass pulse, distant thunder rumbles, claustrophobic and awe-inspiring, dark ambient retro sci-fi, 60 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-expedition-2.ogg",
+    "kind": "music",
+    "source": "music/6c198815a57ae9f273fa13a838c7b048.wav",
+    "asset": "6c198815a57ae9f273fa13a838c7b048",
+    "model": "stable-audio-3-medium",
+    "seed": 2382149780,
+    "durationSeconds": 105,
+    "prompt": "Exploring ancient alien ruins on a strange planet, mysterious marimba-like synth pattern, deep pulsing bass, eerie airy pads, light tribal electronic percussion, cautious and wondrous, retro sci-fi, 90 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-expedition.ogg",
+    "kind": "music",
+    "source": "music/05ef8f161855cda0562adde1c276da56.wav",
+    "asset": "05ef8f161855cda0562adde1c276da56",
+    "model": "stable-audio-3-medium",
+    "seed": 3507996462,
+    "durationSeconds": 105,
+    "prompt": "Alien planet surface expedition soundtrack, curious and adventurous, plucked analog synth ostinato, soft hand percussion and electronic shaker, wide pads, sense of exploring unknown terrain, retro 80s sci-fi, 95 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-exploration-2.ogg",
+    "kind": "music",
+    "source": "music/6100224188d371b8900048e331ecd750.wav",
+    "asset": "6100224188d371b8900048e331ecd750",
+    "model": "stable-audio-3-medium",
+    "seed": 662227399,
+    "durationSeconds": 105,
+    "prompt": "Ambient space exploration soundtrack, slow evolving analog synth pads, warm deep drones, soft arpeggiated sequencer, distant shimmering textures, calm and mysterious, cosmic retro sci-fi, 70 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-exploration-3.ogg",
+    "kind": "music",
+    "source": "music/2942d2ee1bc414191beb60868cc6043d.wav",
+    "asset": "2942d2ee1bc414191beb60868cc6043d",
+    "model": "stable-audio-3-medium",
+    "seed": 264172215,
+    "durationSeconds": 105,
+    "prompt": "Ambient deep space drift soundtrack, glassy analog synth pads, slow pulsing bass, gentle bell-like sequencer arpeggios, vast lonely nebula atmosphere, hopeful and mysterious, retro 80s sci-fi, 75 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
     "out": "music/space-exploration.ogg",
     "kind": "music",
     "source": "music/4c737ed922e93c0faeba448a5bb2ec1f.wav",
@@ -28,6 +148,196 @@
     "seed": 3142166050,
     "durationSeconds": 105,
     "prompt": "Ambient space exploration soundtrack, slow evolving analog synth pads, warm deep drones, soft arpeggiated sequencer, distant shimmering textures, calm and mysterious, cosmic retro sci-fi, 70 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-planet-crystalline.ogg",
+    "kind": "music",
+    "source": "music/934252490ed010cc1d6e920102e0cfb7.wav",
+    "asset": "934252490ed010cc1d6e920102e0cfb7",
+    "model": "stable-audio-3-medium",
+    "seed": 2903139937,
+    "durationSeconds": 105,
+    "prompt": "Living crystal planet soundtrack, vast fields of singing crystals, resonant glass harmonics, slow meditative drones, delicate celesta-like melodies, ancient and calm, ethereal ambient sci-fi, 60 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-planet-empty-2.ogg",
+    "kind": "music",
+    "source": "music/c17501d3b0da11800105c585482ec2f2.wav",
+    "asset": "c17501d3b0da11800105c585482ec2f2",
+    "model": "stable-audio-3-medium",
+    "seed": 3553289350,
+    "durationSeconds": 105,
+    "prompt": "Lifeless rocky planet surface soundtrack, cold untouched world, slow glassy pads, faint seismic rumbles, sparse plucked synth notes, solitude and wonder, ambient retro sci-fi, 70 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-planet-empty.ogg",
+    "kind": "music",
+    "source": "music/193b76f129a11fd546ed99aea858bd54.wav",
+    "asset": "193b76f129a11fd546ed99aea858bd54",
+    "model": "stable-audio-3-medium",
+    "seed": 448190760,
+    "durationSeconds": 105,
+    "prompt": "Uninhabited barren alien planet soundtrack, desolate windswept wasteland, lonely sparse synth tones, soft wind textures, distant low drones, quiet and mysterious, ambient retro sci-fi, 65 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-planet-human.ogg",
+    "kind": "music",
+    "source": "music/3149da063580000160decb8ed1d67bdd.wav",
+    "asset": "3149da063580000160decb8ed1d67bdd",
+    "model": "stable-audio-3-medium",
+    "seed": 3065870617,
+    "durationSeconds": 105,
+    "prompt": "Human colony planet soundtrack, hopeful pioneer theme, gentle acoustic-like synth guitar arpeggios, warm pads, soft cinematic swells, settlers building a new home under alien sky, retro sci-fi, 85 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-planet-krylorian.ogg",
+    "kind": "music",
+    "source": "music/d7a0c7f490a281fcd7c0778f4d8f139b.wav",
+    "asset": "d7a0c7f490a281fcd7c0778f4d8f139b",
+    "model": "stable-audio-3-medium",
+    "seed": 3583894596,
+    "durationSeconds": 105,
+    "prompt": "Reptilian warrior homeworld planet soundtrack, harsh desert fortress atmosphere, slow pounding ritual drums, low throat-like synth drones, ancient martial horns, stern and majestic, retro sci-fi, 80 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-planet-synthetic.ogg",
+    "kind": "music",
+    "source": "music/1f3fd90a8dd94d18ecd5db8c76e802e4.wav",
+    "asset": "1f3fd90a8dd94d18ecd5db8c76e802e4",
+    "model": "stable-audio-3-medium",
+    "seed": 469855476,
+    "durationSeconds": 105,
+    "prompt": "Synthetic AI world planet soundtrack, vast server-city ambience, mechanical pulsing sequencer, sterile sine-wave pads, distant machinery hum, calculated and eerie, minimal electronic retro sci-fi, 90 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-planet-voidborn.ogg",
+    "kind": "music",
+    "source": "music/f05cb6876ecba2c22faa303521e5dc58.wav",
+    "asset": "f05cb6876ecba2c22faa303521e5dc58",
+    "model": "stable-audio-3-medium",
+    "seed": 803860633,
+    "durationSeconds": 105,
+    "prompt": "Airless shadow planet of void creatures soundtrack, endless dark emptiness, deep bowed metallic drones, distant eerie harmonics, slow ghostly swells, vast and lonely, dark ambient sci-fi, 55 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-planet-xenosymbiont.ogg",
+    "kind": "music",
+    "source": "music/11d001e9f2f86952fe8e213aff698ae3.wav",
+    "asset": "11d001e9f2f86952fe8e213aff698ae3",
+    "model": "stable-audio-3-medium",
+    "seed": 1356508571,
+    "durationSeconds": 105,
+    "prompt": "Symbiotic alien jungle planet soundtrack, overgrown bio-technological world, slithering organic synth textures, slow throbbing bass, alien chirps and drips, humid and mysterious, dark ambient sci-fi, 75 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-station-2.ogg",
+    "kind": "music",
+    "source": "music/8cc36fc70b92e831bccdad775c94efd9.wav",
+    "asset": "8cc36fc70b92e831bccdad775c94efd9",
+    "model": "stable-audio-3-medium",
+    "seed": 2901614091,
+    "durationSeconds": 105,
+    "prompt": "Orbital trade station ambience soundtrack, friendly mellow synthwave, gentle arpeggios, round analog bass, light drum machine groove, safe harbor feeling, retro 80s sci-fi, 85 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-station-crystalline.ogg",
+    "kind": "music",
+    "source": "music/c38bf11c009ef8a4dd1a4f0761138c2b.wav",
+    "asset": "c38bf11c009ef8a4dd1a4f0761138c2b",
+    "model": "stable-audio-3-medium",
+    "seed": 3777228164,
+    "durationSeconds": 105,
+    "prompt": "Crystalline beings space station soundtrack, glassy bell-like synth tones, shimmering crystal chimes, slow resonant harmonies, serene and wise, gentle sparkling arpeggios, ethereal sci-fi, 70 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-station-human.ogg",
+    "kind": "music",
+    "source": "music/a11a2047c768c57a970f974a2acc5d43.wav",
+    "asset": "a11a2047c768c57a970f974a2acc5d43",
+    "model": "stable-audio-3-medium",
+    "seed": 1349673545,
+    "durationSeconds": 105,
+    "prompt": "Human space station trading hub soundtrack, warm hopeful synthwave, bright analog brass-like chords, steady drum machine groove, bustling frontier port energy, retro 80s sci-fi, 100 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-station-krylorian.ogg",
+    "kind": "music",
+    "source": "music/350c80b21077f5e8be18a6da539e97cb.wav",
+    "asset": "350c80b21077f5e8be18a6da539e97cb",
+    "model": "stable-audio-3-medium",
+    "seed": 487704068,
+    "durationSeconds": 105,
+    "prompt": "Warrior reptilian clan space station soundtrack, martial and proud, heavy tribal war drums, deep growling synth bass, bold horn-like synth fanfares, honor and strength, retro sci-fi, 105 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-station-synthetic.ogg",
+    "kind": "music",
+    "source": "music/67a49c2b887213769c88bb85777e7885.wav",
+    "asset": "67a49c2b887213769c88bb85777e7885",
+    "model": "stable-audio-3-medium",
+    "seed": 3305626444,
+    "durationSeconds": 105,
+    "prompt": "Machine intelligence space station soundtrack, cold precise minimal techno, clean robotic arpeggiator, glitchy digital clicks, data-stream textures, emotionless and perfectly logical, retro sci-fi, 120 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-station-voidborn.ogg",
+    "kind": "music",
+    "source": "music/13c4b11d15a3db8ca0fc5333bb687a12.wav",
+    "asset": "13c4b11d15a3db8ca0fc5333bb687a12",
+    "model": "stable-audio-3-medium",
+    "seed": 2349624469,
+    "durationSeconds": 105,
+    "prompt": "Void-dwelling alien station soundtrack, beings born in deep space, vast hollow drones, sparse reversed tones, cold whispers of filtered noise, slow subsonic pulses, alien and otherworldly, dark ambient sci-fi, 60 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-station-xenosymbiont.ogg",
+    "kind": "music",
+    "source": "music/a655fbdc08e968279a973bcdcbed5da8.wav",
+    "asset": "a655fbdc08e968279a973bcdcbed5da8",
+    "model": "stable-audio-3-medium",
+    "seed": 3070730218,
+    "durationSeconds": 105,
+    "prompt": "Bio-organic alien hive station soundtrack, wet squelching organic textures, breathing pulsating synth pads, heartbeat bass, insect-like clicking percussion, unsettling living machinery, dark sci-fi, 95 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-station.ogg",
+    "kind": "music",
+    "source": "music/f4144323feb6cc010b625f90d7024590.wav",
+    "asset": "f4144323feb6cc010b625f90d7024590",
+    "model": "stable-audio-3-medium",
+    "seed": 2525273272,
+    "durationSeconds": 105,
+    "prompt": "Space station docking bay lounge soundtrack, relaxed retro synth jazz, warm electric piano chords, smooth bass, soft electronic drums, busy trading hub atmosphere, cozy 80s sci-fi, 90 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-storm-2.ogg",
+    "kind": "music",
+    "source": "music/adbda645978a867555a31ac2225a23b0.wav",
+    "asset": "adbda645978a867555a31ac2225a23b0",
+    "model": "stable-audio-3-medium",
+    "seed": 1381694184,
+    "durationSeconds": 105,
+    "prompt": "Navigating a violent space nebula storm soundtrack, howling filtered noise winds, pounding low toms, distorted synth swells, urgent sequencer pulse, perilous atmosphere, retro sci-fi, 115 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-storm.ogg",
+    "kind": "music",
+    "source": "music/f50f73afbabe137099f15270f7b1ecc0.wav",
+    "asset": "f50f73afbabe137099f15270f7b1ecc0",
+    "model": "stable-audio-3-medium",
+    "seed": 930992510,
+    "durationSeconds": 105,
+    "prompt": "Spaceship flying through a cosmic ion storm soundtrack, crackling electric textures, turbulent pulsing synth bass, rising tense string-like pads, irregular glitchy percussion, dangerous and chaotic, retro sci-fi, 110 BPM, instrumental, no vocals, seamless loop"
+  },
+  {
+    "out": "music/space-title-2.ogg",
+    "kind": "music",
+    "source": "music/091b6b5874ae3623fb745f3f7378ac69.wav",
+    "asset": "091b6b5874ae3623fb745f3f7378ac69",
+    "model": "stable-audio-3-medium",
+    "seed": 1100059712,
+    "durationSeconds": 105,
+    "prompt": "Main menu theme for a retro sci-fi space strategy game, majestic slow synth melody over lush analog pads, gentle sequencer pulse, sense of vast galaxy and adventure, nostalgic 80s space soundtrack, 80 BPM, instrumental, no vocals, seamless loop"
   },
   {
     "out": "music/space-title.ogg",

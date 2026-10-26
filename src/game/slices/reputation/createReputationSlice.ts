@@ -17,6 +17,7 @@ import {
     TRANSLATOR_HIRE_COST,
 } from "@/game/reputation/diplomacy";
 import { isRaceAgreementActive } from "@/game/reputation/agreements";
+import { resolveReturnMode } from "@/game/slices/ui/constants";
 
 export const createReputationSlice = (
     set: (fn: (s: GameState) => void) => void,
@@ -252,7 +253,7 @@ export const createReputationSlice = (
 
     closeReputationPanel: () => {
         set((state) => {
-            state.gameMode = state.previousGameMode || "galaxy_map";
+            state.gameMode = resolveReturnMode(state);
             state.previousGameMode = null;
             return state;
         });

@@ -357,6 +357,7 @@ export function GalaxyMap() {
     );
     const [starSpriteImageReady, setStarSpriteImageReady] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [hoveringSector, setHoveringSector] = useState(false);
     const hintDismissed = useSyncExternalStore(
         () => () => {},
         () => !!localStorage.getItem("sw_galaxy_hint_done"),
@@ -1037,18 +1038,16 @@ export function GalaxyMap() {
         [isDragging, offset, setOffsetState, isPinchingRef, setIsDragging],
     );
 
-    const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-        // Don't click if we were dragging (moved mouse)
-        if (hasMovedRef.current) return;
-
+    // Сектор под курсором: общий hit-test для клика и курсора при наведении.
+    const findSectorAt = (clientX: number, clientY: number) => {
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!canvas) return undefined;
         const { width: cw, height: ch } = canvasSizeRef.current;
         const rect = canvas.getBoundingClientRect();
         const scaleX = cw / rect.width;
         const scaleY = ch / rect.height;
-        const clickX = (e.clientX - rect.left) * scaleX;
-        const clickY = (e.clientY - rect.top) * scaleY;
+        const clickX = (clientX - rect.left) * scaleX;
+        const clickY = (clientY - rect.top) * scaleY;
 
         // Account for zoom and pan - transform click coordinates to world coordinates
         const centerX = cw / 2;
@@ -1078,55 +1077,61 @@ export function GalaxyMap() {
 
             // Hitbox size should also scale with zoom for consistent feel
             const hitboxSize = 35 / zoom;
-            if (dist < hitboxSize) {
-                const state = useGameStore.getState();
-                if (sector.id !== state.currentSector?.id) {
-                    const targetCaptainLevel =
-                        getBestByProfession(state.crew, "pilot")?.level ?? 1;
-                    const canTravel =
-                        !state.traveling &&
-                        Boolean(getActiveModule(state.ship.modules, "cockpit")) &&
-                        state.areEnginesFunctional() &&
-                        state.areFuelTanksFunctional() &&
-                        (canWarpJump(state, sector.id) ||
-                            canAccessTier(
-                                sector.tier,
-                                state.ship.modules,
-                                targetCaptainLevel,
-                            )) &&
-                        state.ship.fuel >=
-                            calculateFuelCostForUI(state, sector.id).fuelCost;
+            if (dist < hitboxSize) return sector;
+        }
+        return undefined;
+    };
 
-                    if (!canTravel) {
-                        setDangerousJump(null);
-                        selectSector(sector.id);
-                        break;
-                    }
-
-                    const readiness = getSectorReadiness(state, sector.tier);
-                    if (readiness.needsWarning) {
-                        setDangerousJump({
-                            sectorId: sector.id,
-                            sectorName: getSectorName(sector.name, t),
-                            sectorTier: sector.tier,
-                            rating: readiness.rating,
-                            recommended: readiness.recommended,
-                        });
-                        return;
-                    }
-                }
-                setDangerousJump(null);
-                if (sector.id !== useGameStore.getState().currentSector?.id) {
-                    startTravelTo(
-                        sector.id,
-                        getSectorName(sector.name, t),
+    const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+        // Don't click if we were dragging (moved mouse)
+        if (hasMovedRef.current) return;
+        const sector = findSectorAt(e.clientX, e.clientY);
+        if (!sector) return;
+        const state = useGameStore.getState();
+        if (sector.id !== state.currentSector?.id) {
+            const targetCaptainLevel =
+                getBestByProfession(state.crew, "pilot")?.level ?? 1;
+            const canTravel =
+                !state.traveling &&
+                Boolean(getActiveModule(state.ship.modules, "cockpit")) &&
+                state.areEnginesFunctional() &&
+                state.areFuelTanksFunctional() &&
+                (canWarpJump(state, sector.id) ||
+                    canAccessTier(
                         sector.tier,
-                    );
-                } else {
-                    selectSector(sector.id);
-                }
-                break;
+                        state.ship.modules,
+                        targetCaptainLevel,
+                    )) &&
+                state.ship.fuel >=
+                    calculateFuelCostForUI(state, sector.id).fuelCost;
+
+            if (!canTravel) {
+                setDangerousJump(null);
+                selectSector(sector.id);
+                return;
             }
+
+            const readiness = getSectorReadiness(state, sector.tier);
+            if (readiness.needsWarning) {
+                setDangerousJump({
+                    sectorId: sector.id,
+                    sectorName: getSectorName(sector.name, t),
+                    sectorTier: sector.tier,
+                    rating: readiness.rating,
+                    recommended: readiness.recommended,
+                });
+                return;
+            }
+        }
+        setDangerousJump(null);
+        if (sector.id !== useGameStore.getState().currentSector?.id) {
+            startTravelTo(
+                sector.id,
+                getSectorName(sector.name, t),
+                sector.tier,
+            );
+        } else {
+            selectSector(sector.id);
         }
     };
 
@@ -1468,16 +1473,22 @@ export function GalaxyMap() {
             </div>
             <canvas
                 ref={canvasRef}
-                className="radar-canvas cursor-grab w-full h-full touch-none"
+                className="radar-canvas w-full h-full touch-none"
                 style={{
-                    cursor: isDragging ? "grabbing" : "grab",
+                    cursor: isDragging ? "grabbing" : hoveringSector ? "pointer" : "default",
                     touchAction: "none",
                 }}
                 onClick={handleClick}
                 onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
+                onMouseMove={(e) => {
+                    handleMouseMove(e);
+                    if (!isDragging) setHoveringSector(Boolean(findSectorAt(e.clientX, e.clientY)));
+                }}
                 onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseLeave}
+                onMouseLeave={() => {
+                    handleMouseLeave();
+                    setHoveringSector(false);
+                }}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}

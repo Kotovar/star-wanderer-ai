@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const sources = [];
+const fetchedUrls = [];
+let decodedDuration = Number.NaN;
 const gains = [];
 
 class FakeAudioParam {
@@ -72,7 +74,7 @@ class FakeAudioContext {
   }
 
   decodeAudioData() {
-    return Promise.resolve({});
+    return Promise.resolve({ duration: decodedDuration });
   }
 
   resume() {
@@ -81,7 +83,7 @@ class FakeAudioContext {
 }
 
 globalThis.window = { AudioContext: FakeAudioContext };
-globalThis.fetch = async () => ({
+globalThis.fetch = async (url) => (fetchedUrls.push(url), {
   ok: true,
   arrayBuffer: async () => new ArrayBuffer(0),
 });
@@ -90,7 +92,7 @@ const flushPromises = async () => {
   for (let index = 0; index < 12; index += 1) await Promise.resolve();
 };
 
-const { startMusic } = await import("../src/sounds/utils.ts");
+const { startMusic, stopMusic } = await import("../src/sounds/utils.ts");
 startMusic("exploration");
 await flushPromises();
 startMusic("combat");
@@ -115,11 +117,26 @@ assert.equal(
 );
 assert.equal(sources[0].stopTime, 0.2, "the earlier fading loop stops at the new handoff");
 
+// Длинный контекст сменяет трек другим из того же набора после полного проигрыша.
+decodedDuration = 2.6;
+startMusic("title");
+await flushPromises();
+const firstTitleUrl = fetchedUrls.at(-1);
+assert.match(firstTitleUrl, /space-title/);
+const titleSourceCount = sources.length;
+gains[0].context.currentTime += 1.2;
+await new Promise((done) => setTimeout(done, 1100));
+await flushPromises();
+assert.equal(sources.length, titleSourceCount + 1, "the playing title track rotates after one pass");
+assert.match(fetchedUrls.at(-1), /space-title/);
+assert.notEqual(fetchedUrls.at(-1), firstTitleUrl, "rotation picks a different track of the same context");
+stopMusic();
+
 const pageSource = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
 assert.match(
   pageSource,
-  /isTitleSetup \? "title" : inBossCombat \? "boss" : inCombat \? "combat" : "exploration"/,
-  "title, boss, combat and exploration each pick their own loop",
+  /startMusic\(isTitleSetup \? "title" : sceneMusic\)/,
+  "title and in-game scenes each pick their own loop",
 );
 assert.match(
   pageSource,
@@ -128,8 +145,14 @@ assert.match(
 );
 assert.doesNotMatch(
   pageSource,
-  /"exploration",\s*\);\s*return \(\) => stopMusic\(\);/,
+  /startMusic\(isTitleSetup \? "title" : sceneMusic\);\s*return \(\) => stopMusic\(\);/,
   "selecting music does not cancel its transition",
+);
+
+assert.match(
+  pageSource,
+  /inCombat \|\| inBattleResults \? lastCombatMusic : null/,
+  "combat music keeps playing through the battle results window",
 );
 
 console.log("Music transition checks passed.");
